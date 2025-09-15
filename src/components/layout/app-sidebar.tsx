@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { Button } from '../ui/button';
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -73,16 +74,12 @@ export function AppSidebar() {
         
         <Collapsible open={openUserMenu} onOpenChange={setOpenUserMenu}>
             <SidebarMenuItem>
-                <CollapsibleTrigger className="w-full">
-                     <SidebarMenuButton tooltip="Users" className="w-full">
-                        <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2">
-                                <Users />
-                                <span>Users</span>
-                            </div>
-                            <ChevronDown className={cn("size-4 transition-transform", openUserMenu && "rotate-180")} />
-                        </div>
-                    </SidebarMenuButton>
+                <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start gap-2 px-2">
+                        <Users />
+                        <span className={cn(state === 'collapsed' && 'hidden')}>Users</span>
+                        <ChevronDown className={cn("size-4 transition-transform ml-auto", openUserMenu && "rotate-180", state === 'collapsed' && 'hidden')} />
+                    </Button>
                 </CollapsibleTrigger>
             </SidebarMenuItem>
 
