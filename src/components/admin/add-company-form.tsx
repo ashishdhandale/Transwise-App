@@ -373,5 +373,3 @@ export default function AddCompanyForm() {
     </Form>
   );
 }
-
-    
