@@ -111,8 +111,10 @@ export default function LoginPage() {
                         <Input id="password" type="password" placeholder="PASSWORD" value={password} onChange={(e) => setPassword(e.target.value)} required 
                                className="border-gray-300 focus:border-primary focus:ring-primary"/>
                     </div>
-                    <div className="flex items-center text-sm">
-                        <span className="text-muted-foreground">Forget Password?</span>
+                    <div className="flex justify-between items-center text-sm">
+                        <div>
+                            <span className="text-muted-foreground">Forget Password?</span>
+                        </div>
                         <Dialog>
                         <DialogTrigger asChild>
                             <Button variant="link" className="p-1 h-auto text-primary">Reset</Button>
