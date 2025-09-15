@@ -178,8 +178,7 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, setOpen, openMobile, setOpenMobile } = useSidebar()
-    const [isHovered, setIsHovered] = React.useState(false);
-
+    
     React.useEffect(() => {
         if (!isMobile) {
             setOpen(defaultOpen);
@@ -187,14 +186,14 @@ const Sidebar = React.forwardRef<
     }, [isMobile, defaultOpen, setOpen]);
     
     const handleMouseEnter = () => {
-        setIsHovered(true);
-        setOpen(true);
+        if (!isMobile) {
+            setOpen(true);
+        }
     };
 
     const handleMouseLeave = () => {
-        setIsHovered(false);
-        if (!defaultOpen) {
-            setOpen(false);
+        if (!isMobile) {
+            setOpen(defaultOpen);
         }
     };
 
