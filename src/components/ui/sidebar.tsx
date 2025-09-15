@@ -179,7 +179,6 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, setOpen, openMobile, setOpenMobile } = useSidebar()
-    const wasOpen = React.useRef(defaultOpen);
     
     React.useEffect(() => {
         if (!isMobile) {
@@ -189,14 +188,13 @@ const Sidebar = React.forwardRef<
     
     const handleMouseEnter = () => {
       if (!isMobile && collapsible === 'icon') {
-        wasOpen.current = open;
         setOpen(true);
       }
     }
 
     const handleMouseLeave = () => {
       if (!isMobile && collapsible === 'icon') {
-        setOpen(wasOpen.current);
+        setOpen(false);
       }
     }
 
@@ -587,7 +585,7 @@ const SidebarMenuButton = React.forwardRef<
 
     const button = (
       <Comp
-        ref={ref as any}
+        ref={ref}
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}

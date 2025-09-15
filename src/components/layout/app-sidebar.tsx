@@ -49,20 +49,16 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-          <Link href="/admin" passHref>
-            <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/admin'}>
-                <Home />
-                <span>Dashboard</span>
-            </SidebarMenuButton>
-          </Link>
+          <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/admin'}>
+            <Home />
+            <span>Dashboard</span>
+          </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <Link href="/admin/add-company" passHref>
-            <SidebarMenuButton asChild tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
-                <PlusCircle />
-                <span>Add Company</span>
-            </SidebarMenuButton>
-          </Link>
+          <SidebarMenuButton tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
+            <PlusCircle />
+            <span>Add Company</span>
+          </SidebarMenuButton>
         </SidebarMenuItem>
          <SidebarMenuItem>
             <SidebarMenuButton tooltip="Companies">
