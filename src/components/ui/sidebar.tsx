@@ -186,16 +186,17 @@ const Sidebar = React.forwardRef<
     }, [isMobile, defaultOpen, setOpen]);
     
     const handleMouseEnter = () => {
-        if (!isMobile) {
-            setOpen(true);
-        }
-    };
+      if (!isMobile) {
+        setOpen(true)
+      }
+    }
 
     const handleMouseLeave = () => {
-        if (!isMobile) {
-            setOpen(defaultOpen);
-        }
-    };
+      if (!isMobile) {
+        setOpen(false)
+      }
+    }
+
 
     const { state } = useSidebar();
 
