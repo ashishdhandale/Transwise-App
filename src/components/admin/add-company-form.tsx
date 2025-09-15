@@ -208,7 +208,7 @@ export default function AddCompanyForm() {
                                 <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a city" />
-                                    </Trigger>
+                                    </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                     <SelectItem value="RAIPUR">RAIPUR</SelectItem>
