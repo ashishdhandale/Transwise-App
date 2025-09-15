@@ -184,7 +184,6 @@ const Sidebar = React.forwardRef<
     React.useEffect(() => {
         if (!isMobile) {
             setOpen(defaultOpen);
-            wasOpen.current = defaultOpen;
         }
     }, [isMobile, defaultOpen, setOpen]);
     
@@ -568,7 +567,6 @@ const SidebarMenuButton = React.forwardRef<
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
-    href?: string
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
@@ -579,37 +577,24 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
-      href,
       ...props
     },
     ref
   ) => {
     // If asChild is true, we will use Slot to wrap the children.
-    // We will also need to handle the href for the Link component.
-    const Comp = asChild ? Slot : href ? 'a' : "button"
+    const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
-    
-    let buttonContent = (
+
+    const button = (
       <Comp
-          ref={ref as any}
-          data-sidebar="menu-button"
-          data-size={size}
-          data-active={isActive}
-          className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-          {...props}
-        />
+        ref={ref as any}
+        data-sidebar="menu-button"
+        data-size={size}
+        data-active={isActive}
+        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        {...props}
+      />
     )
-
-    const button = asChild ? (
-      buttonContent
-    ) : href ? (
-      <Link href={href} passHref>
-        {buttonContent}
-      </Link>
-    ) : (
-      buttonContent
-    )
-
 
     if (!tooltip) {
       return button

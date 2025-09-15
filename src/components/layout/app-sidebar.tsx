@@ -49,16 +49,20 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-            <SidebarMenuButton href="/admin" tooltip="Dashboard" isActive={pathname === '/admin'}>
+          <Link href="/admin" passHref>
+            <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/admin'}>
                 <Home />
                 <span>Dashboard</span>
             </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-            <SidebarMenuButton href="/admin/add-company" tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
+          <Link href="/admin/add-company" passHref>
+            <SidebarMenuButton asChild tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
                 <PlusCircle />
                 <span>Add Company</span>
             </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
          <SidebarMenuItem>
             <SidebarMenuButton tooltip="Companies">
@@ -100,10 +104,12 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-          <SidebarMenuButton href="/company" tooltip="Overview" isActive={pathname === '/company'}>
-            <BarChart3 />
-            <span>Overview</span>
-          </SidebarMenuButton>
+           <Link href="/company" passHref>
+            <SidebarMenuButton asChild tooltip="Overview" isActive={pathname === '/company'}>
+              <BarChart3 />
+              <span>Overview</span>
+            </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Branches">
@@ -127,10 +133,12 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-          <SidebarMenuButton href="/employee" tooltip="My Deliveries" isActive={pathname === '/employee'}>
-            <Truck />
-            <span>My Deliveries</span>
-          </SidebarMenuButton>
+          <Link href="/employee" passHref>
+            <SidebarMenuButton asChild tooltip="My Deliveries" isActive={pathname === '/employee'}>
+              <Truck />
+              <span>My Deliveries</span>
+            </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
       </>
     );
@@ -142,10 +150,12 @@ export function AppSidebar() {
     menu = (
        <>
         <SidebarMenuItem>
-            <SidebarMenuButton href="/" tooltip="Dashboard" isActive={pathname === '/'}>
-                <Home />
-                <span>Dashboard</span>
-            </SidebarMenuButton>
+            <Link href="/" passHref>
+              <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/'}>
+                  <Home />
+                  <span>Dashboard</span>
+              </SidebarMenuButton>
+            </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Deliveries">
