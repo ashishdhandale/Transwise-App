@@ -1,0 +1,11 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "map-background",
+      "description": "A stylized, abstract map background for the real-time fleet view.",
+      "imageUrl": "https://picsum.photos/seed/mapview/1200/900",
+      "imageHint": "abstract map"
+    }
+  ]
+}
