@@ -37,18 +37,13 @@ const statusColors: Record<DeliveryStatus, string> = {
 };
 
 function FormattedDate({ dateString }: { dateString: string }) {
-  const [formattedDate, setFormattedDate] = useState('');
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setFormattedDate(format(parseISO(dateString), "MMM d, h:mm a"));
-  }, [dateString]);
+    setIsClient(true);
+  }, []);
 
-  if (!formattedDate) {
-    // Render a placeholder or nothing on the server and initial client render
-    return null; 
-  }
-
-  return <>{formattedDate}</>;
+  return <>{isClient ? format(parseISO(dateString), "MMM d, h:mm a") : null}</>;
 }
 
 
