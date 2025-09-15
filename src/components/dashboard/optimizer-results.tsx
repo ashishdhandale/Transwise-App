@@ -7,10 +7,28 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Truck, Clock, Droplet, MapPin, Milestone } from 'lucide-react';
 import { deliveries } from '@/lib/data';
+import { useEffect, useState } from 'react';
 
 interface OptimizerResultsProps {
   result?: OptimizeDeliveryRoutesOutput;
 }
+
+function FormattedTime({ dateString }: { dateString: string }) {
+  const [formattedTime, setFormattedTime] = useState('');
+
+  useEffect(() => {
+    // This code now runs only on the client, after hydration
+    setFormattedTime(new Date(dateString).toLocaleTimeString());
+  }, [dateString]);
+
+  // Return null on the server and initial client render
+  if (!formattedTime) {
+    return null;
+  }
+
+  return <>{formattedTime}</>;
+}
+
 
 export function OptimizerResults({ result }: OptimizerResultsProps) {
   if (!result) {
@@ -64,7 +82,7 @@ export function OptimizerResults({ result }: OptimizerResultsProps) {
                     <p className="font-semibold">{delivery?.customer}</p>
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5"><MapPin className="size-3" /> {delivery?.destination}</p>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                        <Badge variant="secondary"><Clock className="mr-1.5 size-3" />Arrival: {new Date(route.arrivalTime).toLocaleTimeString()}</Badge>
+                        <Badge variant="secondary"><Clock className="mr-1.5 size-3" />Arrival: <FormattedTime dateString={route.arrivalTime} /></Badge>
                         <Badge variant="secondary"><Milestone className="mr-1.5 size-3" />{route.distance} km</Badge>
                     </div>
                   </div>
