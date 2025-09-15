@@ -25,19 +25,35 @@ import {
   Truck,
   Users,
   Briefcase,
+  ChevronDown,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
+import React from 'react';
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const pathname = usePathname();
+  const [openUserMenu, setOpenUserMenu] = React.useState(false);
+
 
   const isAdmin = pathname.startsWith('/admin');
   const isCompany = pathname.startsWith('/company');
   const isEmployee = pathname.startsWith('/employee');
   const isBranch = !isAdmin && !isCompany && !isEmployee;
+  
+  React.useEffect(() => {
+    if (pathname.startsWith('/admin/add-company')) {
+        setOpenUserMenu(true);
+    }
+  }, [pathname]);
 
   let menu, title, user, email, avatarSeed;
 
@@ -55,12 +71,37 @@ export function AppSidebar() {
           </SidebarMenuButton>
         </SidebarMenuItem>
         
-         <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Companies">
-              <Building />
-              <span>Companies</span>
-            </SidebarMenuButton>
-        </SidebarMenuItem>
+        <Collapsible open={openUserMenu} onOpenChange={setOpenUserMenu}>
+            <SidebarMenuItem>
+                <CollapsibleTrigger className="w-full">
+                     <SidebarMenuButton tooltip="Users" className="w-full">
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2">
+                                <Users />
+                                <span>Users</span>
+                            </div>
+                            <ChevronDown className={cn("size-4 transition-transform", openUserMenu && "rotate-180")} />
+                        </div>
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+            </SidebarMenuItem>
+
+            <CollapsibleContent>
+                <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+                    <SidebarMenuItem>
+                         <SidebarMenuButton href="/admin" tooltip="User Dashboard" size="sm" isActive={pathname === '/admin/users'}>
+                            User Dashboard
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton href="/admin/add-company" tooltip="Add User" size="sm" isActive={pathname === '/admin/add-company'}>
+                            Add User/Company
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
+
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Email">
             <Mail />
@@ -72,20 +113,6 @@ export function AppSidebar() {
             <Ticket />
             <span>Coupons</span>
           </SidebarMenuButton>
-        </SidebarMenuItem>
-
-        <SidebarMenuItem>
-            <SidebarMenuButton tooltip="User">
-                <Users />
-                <span>User</span>
-            </SidebarMenuButton>
-        </SidebarMenuItem>
-
-        <SidebarMenuItem>
-            <SidebarMenuButton href="/admin/add-company" tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
-                <PlusCircle />
-                <span>Add Company</span>
-            </SidebarMenuButton>
         </SidebarMenuItem>
 
         <SidebarMenuItem>
