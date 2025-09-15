@@ -48,13 +48,13 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/admin'}>
+          <SidebarMenuButton href="/admin" tooltip="Dashboard" isActive={pathname === '/admin'}>
             <Home />
             <span>Dashboard</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
+          <SidebarMenuButton href="/admin/add-company" tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
             <PlusCircle />
             <span>Add Company</span>
           </SidebarMenuButton>
@@ -93,7 +93,7 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Overview" isActive={pathname === '/company'}>
+          <SidebarMenuButton href="/company" tooltip="Overview" isActive={pathname === '/company'}>
             <BarChart3 />
             <span>Overview</span>
           </SidebarMenuButton>
@@ -120,7 +120,7 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="My Deliveries" isActive={pathname === '/employee'}>
+          <SidebarMenuButton href="/employee" tooltip="My Deliveries" isActive={pathname === '/employee'}>
             <Truck />
             <span>My Deliveries</span>
           </SidebarMenuButton>
@@ -135,7 +135,7 @@ export function AppSidebar() {
     menu = (
        <>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'}>
+          <SidebarMenuButton href="/" tooltip="Dashboard" isActive={pathname === '/'}>
             <Home />
             <span>Dashboard</span>
           </SidebarMenuButton>
