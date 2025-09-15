@@ -10,9 +10,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarSeparator,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import {
   BarChart3,
@@ -32,11 +29,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -82,26 +74,19 @@ export function AppSidebar() {
           </SidebarMenuButton>
         </SidebarMenuItem>
 
-        <Collapsible asChild>
-           <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="User" className="w-full justify-start">
-                    <Users />
-                    <span>User</span>
-                </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent asChild>
-                <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                        <SidebarMenuSubButton href="/admin/add-company" isActive={pathname === '/admin/add-company'}>
-                            <PlusCircle />
-                            <span>Add Company</span>
-                        </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                </SidebarMenuSub>
-            </CollapsibleContent>
-           </SidebarMenuItem>
-        </Collapsible>
+        <SidebarMenuItem>
+            <SidebarMenuButton tooltip="User">
+                <Users />
+                <span>User</span>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
+
+        <SidebarMenuItem>
+            <SidebarMenuButton href="/admin/add-company" tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
+                <PlusCircle />
+                <span>Add Company</span>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
 
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Membership">
@@ -184,7 +169,7 @@ export function AppSidebar() {
 
 
   return (
-    <Sidebar collapsible="icon" defaultOpen={false}>
+    <Sidebar>
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2">
           <Mountain className="size-6 text-primary" />
