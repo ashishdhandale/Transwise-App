@@ -55,6 +55,20 @@ export default function LoginPage() {
     setPassword('');
   };
 
+  const renderLoading = () => (
+     <Card className="border-2 border-primary rounded-lg overflow-hidden">
+        <header className="bg-primary text-primary-foreground p-4">
+            <div className="flex flex-col items-center text-center">
+                <User className="w-8 h-8 mb-2" />
+                <h2 className="font-bold text-xl"><span className="text-red-600">Sign</span>in</h2>
+            </div>
+        </header>
+        <CardContent className="p-6 bg-white flex items-center justify-center h-[350px]">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </CardContent>
+    </Card>
+  );
+
   const renderForm = () => (
     <Card className="border-2 border-primary rounded-lg overflow-hidden">
         <header className="bg-primary text-primary-foreground p-4">
@@ -131,20 +145,6 @@ export default function LoginPage() {
         </CardContent>
       </Card>
   );
-
-  const renderLoading = () => (
-     <Card className="border-2 border-primary rounded-lg overflow-hidden">
-        <header className="bg-primary text-primary-foreground p-4">
-            <div className="flex flex-col items-center text-center">
-                <User className="w-8 h-8 mb-2" />
-                <h2 className="font-bold text-xl"><span className="text-red-600">Sign</span>in</h2>
-            </div>
-        </header>
-        <CardContent className="p-6 bg-white flex items-center justify-center h-96">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </CardContent>
-    </Card>
-  )
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
