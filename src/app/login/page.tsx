@@ -49,6 +49,12 @@ export default function LoginPage() {
     }
   };
 
+  const handleReset = () => {
+    setRole('');
+    setUserId('');
+    setPassword('');
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-secondary">
        <header className="flex items-center justify-between h-20 px-4 md:px-8 bg-primary text-primary-foreground border-b">
@@ -89,7 +95,7 @@ export default function LoginPage() {
                     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSignin(); }}>
                     <div className="space-y-1">
                         <Label htmlFor="role">Role</Label>
-                        <Select onValueChange={(value) => setRole(value as UserRole)} required>
+                        <Select onValueChange={(value) => setRole(value as UserRole)} value={role} required>
                             <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary">
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
@@ -112,12 +118,13 @@ export default function LoginPage() {
                                className="border-gray-300 focus:border-primary focus:ring-primary"/>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                        <div>
-                            <span className="text-muted-foreground">Forget Password?</span>
-                        </div>
+                       <Button type="button" variant="link" className="p-0 h-auto text-primary" onClick={handleReset}>Reset</Button>
+                    </div>
+
+                    <div className="text-sm">
                         <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="link" className="p-1 h-auto text-primary">Reset</Button>
+                           <Button variant="link" className="p-0 h-auto text-muted-foreground">Forget Password?</Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
