@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
@@ -178,27 +179,29 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, setOpen, openMobile, setOpenMobile } = useSidebar()
+    const wasOpen = React.useRef(defaultOpen);
     
     React.useEffect(() => {
         if (!isMobile) {
             setOpen(defaultOpen);
+            wasOpen.current = defaultOpen;
         }
     }, [isMobile, defaultOpen, setOpen]);
     
     const handleMouseEnter = () => {
-      if (!isMobile) {
-        setOpen(true)
+      if (!isMobile && collapsible === 'icon') {
+        wasOpen.current = open;
+        setOpen(true);
       }
     }
 
     const handleMouseLeave = () => {
-      if (!isMobile) {
-        setOpen(false)
+      if (!isMobile && collapsible === 'icon') {
+        setOpen(wasOpen.current);
       }
     }
 
-
-    const { state } = useSidebar();
+    const { open, state } = useSidebar();
 
     if (collapsible === "none") {
       return (
@@ -565,6 +568,7 @@ const SidebarMenuButton = React.forwardRef<
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
+    href?: string
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
@@ -575,23 +579,37 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
+      href,
       ...props
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
+    // If asChild is true, we will use Slot to wrap the children.
+    // We will also need to handle the href for the Link component.
+    const Comp = asChild ? Slot : href ? 'a' : "button"
     const { isMobile, state } = useSidebar()
-
-    const button = (
+    
+    let buttonContent = (
       <Comp
-        ref={ref}
-        data-sidebar="menu-button"
-        data-size={size}
-        data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props}
-      />
+          ref={ref as any}
+          data-sidebar="menu-button"
+          data-size={size}
+          data-active={isActive}
+          className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+          {...props}
+        />
     )
+
+    const button = asChild ? (
+      buttonContent
+    ) : href ? (
+      <Link href={href} passHref>
+        {buttonContent}
+      </Link>
+    ) : (
+      buttonContent
+    )
+
 
     if (!tooltip) {
       return button

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   Sidebar,
   SidebarContent,
@@ -48,16 +49,26 @@ export function AppSidebar() {
     menu = (
       <>
         <SidebarMenuItem>
-          <SidebarMenuButton href="/admin" tooltip="Dashboard" isActive={pathname === '/admin'}>
-            <Home />
-            <span>Dashboard</span>
-          </SidebarMenuButton>
+            <Link href="/admin" passHref>
+                <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/admin'}>
+                    <Home />
+                    <span>Dashboard</span>
+                </SidebarMenuButton>
+            </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton href="/admin/add-company" tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
-            <PlusCircle />
-            <span>Add Company</span>
-          </SidebarMenuButton>
+             <Link href="/admin/add-company" passHref>
+                <SidebarMenuButton asChild tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
+                    <PlusCircle />
+                    <span>Add Company</span>
+                </SidebarMenuButton>
+            </Link>
+        </SidebarMenuItem>
+         <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Companies">
+              <Building />
+              <span>Companies</span>
+            </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Email">
@@ -135,10 +146,12 @@ export function AppSidebar() {
     menu = (
        <>
         <SidebarMenuItem>
-          <SidebarMenuButton href="/" tooltip="Dashboard" isActive={pathname === '/'}>
-            <Home />
-            <span>Dashboard</span>
-          </SidebarMenuButton>
+            <Link href="/" passHref>
+                <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/'}>
+                    <Home />
+                    <span>Dashboard</span>
+                </SidebarMenuButton>
+            </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Deliveries">
