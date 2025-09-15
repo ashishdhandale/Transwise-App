@@ -19,12 +19,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const formSchema = z.object({
   // Company Details
   companyCode: z.string().optional(),
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
+  companyLogo: z.any().optional(),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   state: z.string().min(1, { message: 'State is required.'}),
@@ -44,6 +45,9 @@ const formSchema = z.object({
 
 export type AddCompanyFormValues = z.infer<typeof formSchema>;
 
+// This would typically come from a database sequence or a counter service
+let companyCounter = 11; 
+
 export default function AddCompanyForm() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -51,7 +55,7 @@ export default function AddCompanyForm() {
     const form = useForm<AddCompanyFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            companyCode: 'CO11',
+            companyCode: '',
             companyName: '',
             headOfficeAddress: '',
             officeAddress2: '',
@@ -69,6 +73,11 @@ export default function AddCompanyForm() {
         },
     });
 
+    useEffect(() => {
+        // Generate and set the next company code when the component mounts
+        form.setValue('companyCode', `CO${companyCounter}`);
+    }, [form]);
+
     async function onSubmit(values: AddCompanyFormValues) {
         setIsSubmitting(true);
         console.log('Form Submitted:', values);
@@ -81,7 +90,11 @@ export default function AddCompanyForm() {
             title: "Company Created Successfully",
             description: `${values.companyName} has been added and the owner account is ready.`,
         });
+        
+        // Increment for the next form load and reset the current form
+        companyCounter++;
         form.reset();
+        form.setValue('companyCode', `CO${companyCounter}`); // set next code
         setIsSubmitting(false);
     }
 
@@ -122,6 +135,20 @@ export default function AddCompanyForm() {
                         )}
                     />
                 </div>
+                 <FormField
+                    control={form.control}
+                    name="companyLogo"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Company Logo</FormLabel>
+                        <FormControl>
+                            <Input type="file" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} />
+                        </FormControl>
+                        <FormDescription>Upload the company's logo (optional).</FormDescription>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <FormField
                     control={form.control}
                     name="headOfficeAddress"
@@ -181,7 +208,7 @@ export default function AddCompanyForm() {
                                 <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a city" />
-                                    </SelectTrigger>
+                                    </Trigger>
                                 </FormControl>
                                 <SelectContent>
                                     <SelectItem value="RAIPUR">RAIPUR</SelectItem>
@@ -346,3 +373,5 @@ export default function AddCompanyForm() {
     </Form>
   );
 }
+
+    
