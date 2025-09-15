@@ -88,16 +88,6 @@ export default function LoginPage() {
                 <CardContent className="p-6 bg-white">
                     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSignin(); }}>
                     <div className="space-y-1">
-                        <Label htmlFor="userId">User ID</Label>
-                        <Input id="userId" placeholder="LOGIN ID" value={userId} onChange={(e) => setUserId(e.target.value)} required 
-                               className="border-gray-300 focus:border-primary focus:ring-primary"/>
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" placeholder="PASSWORD" value={password} onChange={(e) => setPassword(e.target.value)} required 
-                               className="border-gray-300 focus:border-primary focus:ring-primary"/>
-                    </div>
-                    <div className="space-y-1">
                         <Label htmlFor="role">Role</Label>
                         <Select onValueChange={(value) => setRole(value as UserRole)} required>
                             <SelectTrigger className="border-gray-300 focus:border-primary focus:ring-primary">
@@ -111,37 +101,47 @@ export default function LoginPage() {
                             </SelectContent>
                         </Select>
                     </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="userId">User ID</Label>
+                        <Input id="userId" placeholder="LOGIN ID" value={userId} onChange={(e) => setUserId(e.target.value)} required 
+                               className="border-gray-300 focus:border-primary focus:ring-primary"/>
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="password">Password</Label>
+                        <Input id="password" type="password" placeholder="PASSWORD" value={password} onChange={(e) => setPassword(e.target.value)} required 
+                               className="border-gray-300 focus:border-primary focus:ring-primary"/>
+                    </div>
+                    <div className="flex items-center text-sm">
+                        <span className="text-muted-foreground">Forget Password?</span>
+                        <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="link" className="p-1 h-auto text-primary">Reset</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                            <DialogTitle>Recover Password</DialogTitle>
+                            <DialogDescription>
+                                Enter your User ID to receive a password reset link.
+                            </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="recovery-userId" className="text-right">
+                                User ID
+                                </Label>
+                                <Input id="recovery-userId" className="col-span-3" />
+                            </div>
+                            </div>
+                            <DialogFooter>
+                            <Button type="submit">Submit</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                        </Dialog>
+                    </div>
                     
                     <Button type="submit" className="w-full bg-primary hover:bg-primary/90">Sign in</Button>
                     
-                    <div className="flex items-center justify-between text-sm mt-4">
-                         <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Forget Password?</span>
-                            <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="link" className="p-0 h-auto text-primary">Reset</Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
-                                <DialogHeader>
-                                <DialogTitle>Recover Password</DialogTitle>
-                                <DialogDescription>
-                                    Enter your User ID to receive a password reset link.
-                                </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="recovery-userId" className="text-right">
-                                    User ID
-                                    </Label>
-                                    <Input id="recovery-userId" className="col-span-3" />
-                                </div>
-                                </div>
-                                <DialogFooter>
-                                <Button type="submit">Submit</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                            </Dialog>
-                         </div>
+                    <div className="text-sm text-center">
                         <a href="#" className="font-medium text-primary hover:underline">
                         Sign Up
                         </a>
