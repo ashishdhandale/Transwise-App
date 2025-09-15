@@ -17,6 +17,7 @@ import {
   Mail,
   Mountain,
   MoreHorizontal,
+  PlusCircle,
   Settings,
   Star,
   Ticket,
@@ -50,6 +51,12 @@ export function AppSidebar() {
           <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/admin'}>
             <Home />
             <span>Dashboard</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
+            <PlusCircle />
+            <span>Add Company</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
