@@ -178,13 +178,19 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, setOpen, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, setOpen: setOpenContext, openMobile, setOpenMobile } = useSidebar()
+    const [isOpen, setIsOpen] = React.useState(defaultOpen);
+
+    const setOpen = (val: boolean) => {
+      setIsOpen(val);
+      setOpenContext(val);
+    }
     
     React.useEffect(() => {
         if (!isMobile) {
             setOpen(defaultOpen);
         }
-    }, [isMobile, defaultOpen, setOpen]);
+    }, [isMobile, defaultOpen]);
     
     const handleMouseEnter = () => {
       if (!isMobile && collapsible === 'icon') {
@@ -193,12 +199,12 @@ const Sidebar = React.forwardRef<
     }
 
     const handleMouseLeave = () => {
-      if (!isMobile && collapsible === 'icon') {
+      if (!isMobile && collapsible === 'icon' && !defaultOpen) {
         setOpen(false);
       }
     }
 
-    const { open, state } = useSidebar();
+    const { state } = useSidebar();
 
     if (collapsible === "none") {
       return (
@@ -589,7 +595,7 @@ const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
         {...props}
       />
     )
