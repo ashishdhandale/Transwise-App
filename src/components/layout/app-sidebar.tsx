@@ -50,7 +50,7 @@ export function AppSidebar() {
       <>
         <SidebarMenuItem>
           <Link href="/admin" passHref>
-            <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/admin'}>
+            <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/admin'}>
               <Home />
               <span>Dashboard</span>
             </SidebarMenuButton>
@@ -58,7 +58,7 @@ export function AppSidebar() {
         </SidebarMenuItem>
         <SidebarMenuItem>
           <Link href="/admin/add-company" passHref>
-            <SidebarMenuButton asChild tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
+            <SidebarMenuButton tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
               <PlusCircle />
               <span>Add Company</span>
             </SidebarMenuButton>
@@ -105,7 +105,7 @@ export function AppSidebar() {
       <>
         <SidebarMenuItem>
            <Link href="/company" passHref>
-            <SidebarMenuButton asChild tooltip="Overview" isActive={pathname === '/company'}>
+            <SidebarMenuButton tooltip="Overview" isActive={pathname === '/company'}>
               <BarChart3 />
               <span>Overview</span>
             </SidebarMenuButton>
@@ -134,7 +134,7 @@ export function AppSidebar() {
       <>
         <SidebarMenuItem>
           <Link href="/employee" passHref>
-            <SidebarMenuButton asChild tooltip="My Deliveries" isActive={pathname === '/employee'}>
+            <SidebarMenuButton tooltip="My Deliveries" isActive={pathname === '/employee'}>
               <Truck />
               <span>My Deliveries</span>
             </SidebarMenuButton>
@@ -151,7 +151,7 @@ export function AppSidebar() {
        <>
         <SidebarMenuItem>
             <Link href="/" passHref>
-              <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/'}>
+              <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'}>
                   <Home />
                   <span>Dashboard</span>
               </SidebarMenuButton>
