@@ -199,8 +199,11 @@ const Sidebar = React.forwardRef<
     }
 
     const handleMouseLeave = () => {
-      if (!isMobile && collapsible === 'icon' && !defaultOpen) {
-        setOpen(false);
+      if (!isMobile && collapsible === 'icon') {
+        // Only collapse if it wasn't the default state
+        if (!defaultOpen) {
+          setOpen(false);
+        }
       }
     }
 
@@ -568,37 +571,40 @@ const sidebarMenuButtonVariants = cva(
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button"> & {
-    asChild?: boolean
+    href?: string
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
     {
-      asChild = false,
+      href,
       isActive = false,
       variant = "default",
       size = "default",
       tooltip,
       className,
+      children,
       ...props
     },
     ref
   ) => {
-    // If asChild is true, we will use Slot to wrap the children.
-    const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
+    const Comp = href ? Link : "button"
 
     const button = (
       <Comp
         ref={ref}
+        href={href!}
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
         {...props}
-      />
-    )
+      >
+        {children}
+      </Comp>
+    );
 
     if (!tooltip) {
       return button
@@ -794,3 +800,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
