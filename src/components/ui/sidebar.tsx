@@ -178,7 +178,7 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, setOpen, openMobile, setOpenMobile } = useSidebar()
-    const hoverTimeout = React.useRef<NodeJS.Timeout | null>(null);
+    const [isHovered, setIsHovered] = React.useState(false);
 
     React.useEffect(() => {
         if (!isMobile) {
@@ -187,18 +187,15 @@ const Sidebar = React.forwardRef<
     }, [isMobile, defaultOpen, setOpen]);
     
     const handleMouseEnter = () => {
-        if (hoverTimeout.current) {
-            clearTimeout(hoverTimeout.current);
-        }
+        setIsHovered(true);
         setOpen(true);
     };
 
     const handleMouseLeave = () => {
-        hoverTimeout.current = setTimeout(() => {
-            if (!defaultOpen) {
-                 setOpen(false);
-            }
-        }, 200);
+        setIsHovered(false);
+        if (!defaultOpen) {
+            setOpen(false);
+        }
     };
 
     const { state } = useSidebar();
