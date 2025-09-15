@@ -10,6 +10,9 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import {
   BarChart3,
@@ -29,6 +32,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -54,12 +62,7 @@ export function AppSidebar() {
             <span>Dashboard</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton href="/admin/add-company" tooltip="Add Company" isActive={pathname === '/admin/add-company'}>
-            <PlusCircle />
-            <span>Add Company</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        
          <SidebarMenuItem>
             <SidebarMenuButton tooltip="Companies">
               <Building />
@@ -78,12 +81,28 @@ export function AppSidebar() {
             <span>Coupons</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="User">
-            <Users />
-            <span>User</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+
+        <Collapsible asChild>
+           <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+                <SidebarMenuButton tooltip="User" className="w-full justify-start">
+                    <Users />
+                    <span>User</span>
+                </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent asChild>
+                <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                        <SidebarMenuSubButton href="/admin/add-company" isActive={pathname === '/admin/add-company'}>
+                            <PlusCircle />
+                            <span>Add Company</span>
+                        </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                </SidebarMenuSub>
+            </CollapsibleContent>
+           </SidebarMenuItem>
+        </Collapsible>
+
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Membership">
             <Star />
@@ -210,5 +229,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
-    
