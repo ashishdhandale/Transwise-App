@@ -16,22 +16,30 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '../ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
 
 const formSchema = z.object({
   // Company Details
+  companyCode: z.string().optional(),
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
+  headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
+  officeAddress2: z.string().optional(),
+  state: z.string().min(1, { message: 'State is required.'}),
+  city: z.string().min(1, { message: 'City is required.'}),
+  transportId: z.string().optional(),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }).optional().or(z.literal('')),
   gstNo: z.string().length(15, { message: 'GST Number must be 15 characters.' }).optional().or(z.literal('')),
-  address: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
-
-  // Company Owner Details
-  ownerFirstName: z.string().min(2, { message: 'First name is required.' }),
-  ownerLastName: z.string().min(2, { message: 'Last name is required.' }),
-  ownerEmail: z.string().email({ message: 'Please enter a valid email address.' }),
-  ownerPassword: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
+  companyContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
+  companyEmail: z.string().email({ message: 'Please enter a valid company email address.' }),
+  
+  // Auth. Person Details
+  authPersonName: z.string().min(2, { message: 'Authorized person name is required.' }),
+  authContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
+  authEmail: z.string().email({ message: 'Please enter a valid email address for login.' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
 });
 
 export type AddCompanyFormValues = z.infer<typeof formSchema>;
@@ -43,13 +51,21 @@ export default function AddCompanyForm() {
     const form = useForm<AddCompanyFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            companyCode: 'CO11',
             companyName: '',
+            headOfficeAddress: '',
+            officeAddress2: '',
+            state: '',
+            city: '',
+            transportId: '',
+            pan: '',
             gstNo: '',
-            address: '',
-            ownerFirstName: '',
-            ownerLastName: '',
-            ownerEmail: '',
-            ownerPassword: '',
+            companyContactNo: '',
+            companyEmail: '',
+            authPersonName: '',
+            authContactNo: '',
+            authEmail: '',
+            password: '',
         },
     });
 
@@ -74,69 +90,19 @@ export default function AddCompanyForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Company Details</CardTitle>
+                <CardTitle className="font-headline">Company Business Details</CardTitle>
                 <CardDescription>Enter the information for the new company.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <FormField
-                control={form.control}
-                name="companyName"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Company Name</FormLabel>
-                    <FormControl>
-                        <Input placeholder="e.g., Apex Logistics Inc." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                 <FormField
-                control={form.control}
-                name="gstNo"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>GST Number (Optional)</FormLabel>
-                    <FormControl>
-                        <Input placeholder="15-digit GSTIN" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Company Address</FormLabel>
-                    <FormControl>
-                        <Textarea placeholder="123 Main Street, Metropolis, 500001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Company Owner Profile</CardTitle>
-                <CardDescription>
-                    Create the primary user account for the company owner. This user will have the 'Company' role.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
-                        name="ownerFirstName"
+                        name="companyCode"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>First Name</FormLabel>
+                            <FormLabel>Company Code</FormLabel>
                             <FormControl>
-                                <Input placeholder="John" {...field} />
+                                <Input {...field} disabled />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -144,12 +110,112 @@ export default function AddCompanyForm() {
                         />
                     <FormField
                         control={form.control}
-                        name="ownerLastName"
+                        name="companyName"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Last Name</FormLabel>
+                            <FormLabel>Company Name</FormLabel>
                             <FormControl>
-                                <Input placeholder="Doe" {...field} />
+                                <Input placeholder="Example: Transwise Logistics" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+                <FormField
+                    control={form.control}
+                    name="headOfficeAddress"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Head Office Add.</FormLabel>
+                        <FormControl>
+                            <Textarea placeholder="Head Office Address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="officeAddress2"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Office Add. 2</FormLabel>
+                        <FormControl>
+                            <Textarea placeholder="Branch or secondary address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>State</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a state" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="CHHATTISGARH">CHHATTISGARH</SelectItem>
+                                        <SelectItem value="MAHARASHTRA">MAHARASHTRA</SelectItem>
+                                        <SelectItem value="KARNATAKA">KARNATAKA</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>City</FormLabel>
+                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a city" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="RAIPUR">RAIPUR</SelectItem>
+                                    <SelectItem value="BILASPUR">BILASPUR</SelectItem>
+                                    <SelectItem value="DURG">DURG</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="transportId"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Transport ID</FormLabel>
+                            <FormControl>
+                                <Input placeholder="12345678911" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    <FormField
+                        control={form.control}
+                        name="pan"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>PAN</FormLabel>
+                            <FormControl>
+                                <Input placeholder="ABCDE1234F" {...field} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -158,20 +224,99 @@ export default function AddCompanyForm() {
                 </div>
                  <FormField
                     control={form.control}
-                    name="ownerEmail"
+                    name="gstNo"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Owner's Login Email</FormLabel>
+                        <FormLabel>GST No</FormLabel>
+                        <FormControl>
+                            <Input placeholder="15-digit GSTIN" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="companyContactNo"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Contact No</FormLabel>
+                        <FormControl>
+                            <Input placeholder="9890356869, 8888822222" {...field} />
+                        </FormControl>
+                         <FormDescription>
+                            Put "," between numbers to separate them.
+                        </FormDescription>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="companyEmail"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                            <Input type="email" placeholder="contact@company.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Authorized Person Details</CardTitle>
+                <CardDescription>
+                    Create the primary user account for the company. This user will have the 'Company' role.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <FormField
+                    control={form.control}
+                    name="authPersonName"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Auth. Person</FormLabel>
+                        <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="authContactNo"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Contact No (for Auth. Person)</FormLabel>
+                        <FormControl>
+                            <Input placeholder="9890356869, 8888822643" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="authEmail"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Login Email</FormLabel>
                         <FormControl>
                             <Input type="email" placeholder="owner@company.com" {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
-                    />
+                />
                 <FormField
                     control={form.control}
-                    name="ownerPassword"
+                    name="password"
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Initial Password</FormLabel>
@@ -179,19 +324,24 @@ export default function AddCompanyForm() {
                             <Input type="password" {...field} />
                         </FormControl>
                         <FormDescription>
-                            The owner will be prompted to change this on first login.
+                            The owner can change this on first login.
                         </FormDescription>
                         <FormMessage />
                         </FormItem>
                     )}
-                    />
+                />
             </CardContent>
         </Card>
         
-        <Button type="submit" disabled={isSubmitting}>
-             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Company & User
-        </Button>
+        <div className="flex gap-4">
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Add User
+            </Button>
+            <Button type="button" variant="outline" onClick={() => form.reset()}>
+                Reset
+            </Button>
+        </div>
       </form>
     </Form>
   );

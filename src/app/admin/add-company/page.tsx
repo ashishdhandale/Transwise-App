@@ -12,7 +12,7 @@ function AddCompanyPage() {
         <main className="flex-1 p-4 md:p-8">
             <div className="max-w-4xl mx-auto">
                  <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">
-                    Add New Company
+                    Add New User Business Details
                 </h1>
                 <AddCompanyForm />
             </div>
