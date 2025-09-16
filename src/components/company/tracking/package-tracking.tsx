@@ -4,7 +4,6 @@ import { PawPrint } from 'lucide-react';
 import { SearchPanel } from './search-panel';
 import { SearchResults } from './search-results';
 import { ShippingDetails } from './shipping-details';
-import { ContactAndDelivery } from './contact-and-delivery';
 
 export function PackageTracking() {
   return (
@@ -21,14 +20,7 @@ export function PackageTracking() {
         </div>
         <div className="w-full lg:w-3/4 space-y-4">
           <SearchResults />
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <div className="xl:col-span-2">
-              <ShippingDetails />
-            </div>
-            <div>
-              <ContactAndDelivery />
-            </div>
-          </div>
+          <ShippingDetails />
         </div>
       </div>
     </main>
