@@ -37,13 +37,7 @@ export function AppHeader() {
     <header className="flex h-14 items-center gap-4 border-b bg-primary text-primary-foreground px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
       <div className="flex items-center gap-4">
         <SidebarTrigger className="md:hidden" />
-        <Link href="/admin" className="flex items-center gap-2">
-            <Mountain className="size-6" />
-            <div>
-              <h1 className="font-bold text-lg font-headline">Transwise.in</h1>
-              <p className="text-xs text-primary-foreground/80">Simplifying Logistics Business</p>
-            </div>
-        </Link>
+        {/* This title is now handled by the sidebar header */}
       </div>
       <div className="flex flex-1 items-center justify-end gap-4">
         <DropdownMenu>
