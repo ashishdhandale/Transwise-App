@@ -15,16 +15,11 @@ import {
   BarChart3,
   Building,
   Home,
-  Mail,
   Mountain,
   MoreHorizontal,
-  PlusCircle,
   Settings,
-  Star,
-  Ticket,
   Truck,
   Users,
-  Briefcase,
   ChevronDown,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -37,7 +32,6 @@ import {
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import React from 'react';
-import { Button } from '../ui/button';
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -102,6 +96,13 @@ export function AppSidebar() {
                 </div>
             </CollapsibleContent>
         </Collapsible>
+
+        <SidebarMenuItem>
+            <SidebarMenuButton href="/admin/reports" tooltip="Reports" isActive={pathname === '/admin/reports'}>
+                <BarChart3 />
+                <span>Reports</span>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
       </>
     );
   } else if (isCompany) {
