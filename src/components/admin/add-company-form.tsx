@@ -140,12 +140,14 @@ export default function AddCompanyForm() {
                     name="companyLogo"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Company Logo</FormLabel>
-                        <FormControl>
-                            <Input type="file" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} />
-                        </FormControl>
-                        <FormDescription>Upload the company's logo (optional).</FormDescription>
-                        <FormMessage />
+                            <div className="flex items-center gap-4">
+                                <FormLabel>Company Logo</FormLabel>
+                                <FormControl>
+                                    <Input type="file" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} className="w-auto" />
+                                </FormControl>
+                            </div>
+                            <FormDescription>Upload the company's logo (optional).</FormDescription>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
