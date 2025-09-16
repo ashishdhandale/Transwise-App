@@ -85,6 +85,8 @@ export function ItemDetailsTable() {
                                     <SelectContent>
                                         <SelectItem value="Act.wt">Act.wt</SelectItem>
                                         <SelectItem value="Chg.wt">Chg.wt</SelectItem>
+                                        <SelectItem value="Fixed">Fixed</SelectItem>
+                                        <SelectItem value="Quantity">Quantity</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </TableCell>
