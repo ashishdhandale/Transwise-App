@@ -79,15 +79,13 @@ export function AppSidebar() {
         </SidebarMenuItem>
         
         <Collapsible open={openUserMenu} onOpenChange={setOpenUserMenu}>
-            <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                    <SidebarMenuButton variant="ghost" className="w-full justify-start">
-                        <Users />
-                        <span>Users</span>
-                        <ChevronDown className={cn("size-4 transition-transform ml-auto", openUserMenu && "rotate-180")} />
-                    </SidebarMenuButton>
-                </CollapsibleTrigger>
-            </SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+                <SidebarMenuButton variant="ghost" className="w-full justify-start">
+                    <Users />
+                    <span>Users</span>
+                    <ChevronDown className={cn("size-4 transition-transform ml-auto", openUserMenu && "rotate-180")} />
+                </SidebarMenuButton>
+            </CollapsibleTrigger>
 
             <CollapsibleContent>
                 <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
@@ -104,26 +102,6 @@ export function AppSidebar() {
                 </div>
             </CollapsibleContent>
         </Collapsible>
-
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Email">
-            <Mail />
-            <span>Email</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Coupons">
-            <Ticket />
-            <span>Coupons</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Membership">
-            <Star />
-            <span>Membership</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
       </>
     );
   } else if (isCompany) {
