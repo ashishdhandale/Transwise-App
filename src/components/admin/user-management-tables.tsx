@@ -72,7 +72,7 @@ const existingUsers = [
     },
 ];
 
-const thClass = "bg-red-700 text-white";
+const thClass = "bg-primary text-primary-foreground";
 
 export function UserManagementTables() {
   return (
