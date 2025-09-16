@@ -45,7 +45,7 @@ export function SearchResults() {
                 </TableHeader>
                 <TableBody>
                  {searchData.map((row) => (
-                    <TableRow key={row.lrNo}>
+                    <TableRow key={row.lrNo} className="cursor-pointer hover:bg-muted/50">
                         <TableCell>{row.lrNo}</TableCell>
                         <TableCell>{row.date}</TableCell>
                         <TableCell>{row.sender}</TableCell>
