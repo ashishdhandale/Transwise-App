@@ -14,83 +14,96 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 export function SearchPanel() {
   const [date, setDate] = useState<Date | undefined>(new Date('2014-10-03'));
 
   return (
-    <div className="space-y-4">
-      <Card className="border-gray-300">
-        <CardHeader className="p-3">
-          <CardTitle className="text-base font-bold">Search By Number</CardTitle>
+    <Card className="border-gray-300">
+        <CardHeader className="p-3 bg-primary text-primary-foreground rounded-t-md">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+                <Search className="h-5 w-5" />
+                Find Your Package
+            </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 space-y-3">
-          <div className="space-y-1">
-            <Label htmlFor="gr-number">GR Number</Label>
-            <Input id="gr-number" />
-          </div>
-          <p className="text-center font-bold text-sm">OR</p>
-          <div className="space-y-1">
-            <Label htmlFor="tracking-id">Tracking ID</Label>
-            <Input id="tracking-id" />
-          </div>
-        </CardContent>
-      </Card>
+        <CardContent className="p-3 space-y-4">
+             {/* Search By Number */}
+            <div>
+                <Label htmlFor="gr-number" className="font-semibold">GR Number</Label>
+                <Input id="gr-number" placeholder="Enter GR Number" />
+            </div>
 
-      <Card className="border-gray-300">
-        <CardHeader className="p-3">
-          <CardTitle className="text-base font-bold">Search By Name</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 space-y-3">
-          <div className="space-y-1">
-            <Label>Dispatch Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={'outline'}
-                  className={cn(
-                    'w-full justify-between text-left font-normal border-gray-300',
-                    !date && 'text-muted-foreground'
-                  )}
-                >
-                  {date ? format(date, 'dd / MM / yyyy') : <span>Pick a date</span>}
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="sender-name">Sender Name</Label>
-            <Select>
-              <SelectTrigger id="sender-name" className="border-gray-300">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sender1">Sender 1</SelectItem>
-                <SelectItem value="sender2">Sender 2</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="receiver-name">Receiver Name</Label>
-            <Select>
-              <SelectTrigger id="receiver-name" className="border-gray-300">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="receiver1">Receiver 1</SelectItem>
-                <SelectItem value="receiver2">Receiver 2</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="flex items-center gap-2">
+                <Separator className="flex-1" />
+                <span className="text-xs text-muted-foreground">OR</span>
+                <Separator className="flex-1" />
+            </div>
+            
+             <div>
+                <Label htmlFor="tracking-id" className="font-semibold">Tracking ID</Label>
+                <Input id="tracking-id" placeholder="Enter Tracking ID" />
+            </div>
+
+            <Separator />
+            
+            {/* Search By Name */}
+             <div className="space-y-3">
+                <h3 className="font-semibold text-center">Advanced Search</h3>
+                <div className="space-y-2">
+                    <Label>Dispatch Date</Label>
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant={'outline'}
+                        className={cn(
+                            'w-full justify-between text-left font-normal border-gray-300',
+                            !date && 'text-muted-foreground'
+                        )}
+                        >
+                        {date ? format(date, 'dd / MM / yyyy') : <span>Pick a date</span>}
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                    </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="sender-name">Sender Name</Label>
+                    <Select>
+                    <SelectTrigger id="sender-name" className="border-gray-300">
+                        <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="sender1">Sender 1</SelectItem>
+                        <SelectItem value="sender2">Sender 2</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="receiver-name">Receiver Name</Label>
+                    <Select>
+                    <SelectTrigger id="receiver-name" className="border-gray-300">
+                        <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="receiver1">Receiver 1</SelectItem>
+                        <SelectItem value="receiver2">Receiver 2</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <Button className="w-full">
+                <Search className="mr-2 h-4 w-4" />
+                Search
+            </Button>
         </CardContent>
-      </Card>
-    </div>
+    </Card>
   );
 }
