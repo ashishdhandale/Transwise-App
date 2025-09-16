@@ -218,7 +218,7 @@ export function AppSidebar() {
             className="flex items-center gap-2 group-data-[collapsible=icon]:hidden"
           >
             <Mountain />
-            <span className="font-semibold text-lg">AtlasFlow</span>
+            <span className="font-semibold text-lg">Transwise</span>
           </div>
           <div className="hidden group-data-[collapsible=icon]:block">
             <Mountain />
