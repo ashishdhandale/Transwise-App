@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Truck, Package, MapPin, Building, Calendar, Phone } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const DetailRow = ({ label, value }: { label: string; value?: string }) => (
   <div className="grid grid-cols-[150px_1fr] text-sm border-b last:border-b-0">
