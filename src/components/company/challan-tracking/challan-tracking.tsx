@@ -24,7 +24,11 @@ export function ChallanTracking() {
 
       <div className="space-y-4">
         <SearchFilters />
-        <SearchResultsTable challans={challanData} onSelectChallan={setSelectedChallan} selectedChallanId={selectedChallan?.challanId}/>
+        <SearchResultsTable 
+          challans={challanData} 
+          onSelectChallan={setSelectedChallan} 
+          selectedChallanId={selectedChallan?.challanId}
+        />
         
         {selectedChallan && (
             <div className="border bg-card shadow-sm rounded-lg p-4">

@@ -55,9 +55,13 @@ export function SearchResultsTable({ challans, onSelectChallan, selectedChallanI
                 </TableHeader>
                 <TableBody>
                  {challans.map((row) => (
-                    <TableRow key={row.challanId} className={cn('cursor-pointer', selectedChallanId === row.challanId && 'bg-primary/20')}>
-                        <TableCell className="border-r">
-                           <Button variant="link" size="sm" onClick={() => onSelectChallan(row)}>Select</Button>
+                    <TableRow 
+                      key={row.challanId} 
+                      className={cn('cursor-pointer', selectedChallanId === row.challanId && 'bg-primary/20 hover:bg-primary/20')}
+                      onClick={() => onSelectChallan(row)}
+                    >
+                        <TableCell className="border-r text-center">
+                           <Button variant="link" size="sm" className="p-0 h-auto">Select</Button>
                         </TableCell>
                         <TableCell className="border-r">{row.challanId}</TableCell>
                         <TableCell className="border-r">{row.dispatchDate}</TableCell>
