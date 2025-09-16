@@ -20,7 +20,7 @@ export function BookingDetailsSection() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
             <div className="space-y-1">
-                <Label htmlFor="lrNo">New Booking LR No.</Label>
+                <Label htmlFor="lrNo">GR Number</Label>
                 <Input id="lrNo" value="WD123456" className="font-bold text-red-600 border-red-300" readOnly />
             </div>
             <div className="space-y-1">
