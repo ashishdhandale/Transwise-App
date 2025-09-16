@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import type { Challan } from '@/lib/challan-data';
 import { cn } from '@/lib/utils';
 
@@ -39,7 +38,6 @@ export function SearchResultsTable({ challans, onSelectChallan, selectedChallanI
             <Table>
                 <TableHeader>
                 <TableRow>
-                    <TableHead className={cn(thClass, 'w-[80px]')}>Select</TableHead>
                     <TableHead className={thClass}>Challan ID.</TableHead>
                     <TableHead className={thClass}>Dispatch Dt</TableHead>
                     <TableHead className={thClass}>Dispatch To Party</TableHead>
@@ -60,9 +58,6 @@ export function SearchResultsTable({ challans, onSelectChallan, selectedChallanI
                       className={cn('cursor-pointer', selectedChallanId === row.challanId && 'bg-primary/20 hover:bg-primary/20')}
                       onClick={() => onSelectChallan(row)}
                     >
-                        <TableCell className="border-r text-center">
-                           <Button variant="link" size="sm" className="p-0 h-auto">Select</Button>
-                        </TableCell>
                         <TableCell className="border-r">{row.challanId}</TableCell>
                         <TableCell className="border-r">{row.dispatchDate}</TableCell>
                         <TableCell className="border-r">{row.dispatchToParty}</TableCell>
