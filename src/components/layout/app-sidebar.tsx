@@ -51,7 +51,7 @@ export function AppSidebar() {
   const isBranch = !isAdmin && !isCompany && !isEmployee;
   
   React.useEffect(() => {
-    if (pathname.startsWith('/admin/add-company')) {
+    if (pathname.startsWith('/admin/add-company') || pathname.startsWith('/admin/users')) {
         setOpenUserMenu(true);
     }
   }, [pathname]);
@@ -81,7 +81,7 @@ export function AppSidebar() {
         <Collapsible open={openUserMenu} onOpenChange={setOpenUserMenu}>
             <SidebarMenuItem>
                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton variant="ghost" className="w-full justify-start">
+                     <SidebarMenuButton variant="ghost" className="w-full justify-start">
                         <Users />
                         <span>Users</span>
                         <ChevronDown className={cn("size-4 transition-transform ml-auto", openUserMenu && "rotate-180")} />
@@ -92,7 +92,7 @@ export function AppSidebar() {
             <CollapsibleContent>
                 <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
                     <SidebarMenuItem>
-                         <SidebarMenuButton href="/admin" tooltip="User Dashboard" size="sm" isActive={pathname === '/admin/users'}>
+                         <SidebarMenuButton href="/admin/users" tooltip="User Dashboard" size="sm" isActive={pathname === '/admin/users'}>
                             User Dashboard
                         </SidebarMenuButton>
                     </SidebarMenuItem>
