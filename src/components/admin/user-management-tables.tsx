@@ -237,6 +237,7 @@ export function UserManagementTables() {
                           <DropdownMenuItem>View Details</DropdownMenuItem>
                           <DropdownMenuItem>Edit User</DropdownMenuItem>
                           <DropdownMenuItem>Manage Subscription</DropdownMenuItem>
+                          <DropdownMenuItem>Backup</DropdownMenuItem>
                           <DropdownMenuItem className="text-red-500">Deactivate</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
