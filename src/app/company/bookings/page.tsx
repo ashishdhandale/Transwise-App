@@ -3,13 +3,13 @@
 
 import { Suspense } from 'react';
 import DashboardLayout from '../../(dashboard)/layout';
-import { BookingForm } from '@/components/company/bookings/booking-form';
+import { BookingsDashboard } from '@/components/company/bookings/bookings-dashboard';
 
 
 function BookingsPage() {
   return (
     <DashboardLayout>
-      <BookingForm />
+      <BookingsDashboard />
     </DashboardLayout>
   );
 }

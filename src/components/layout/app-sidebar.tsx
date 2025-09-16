@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -233,7 +234,7 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/bookings" size="sm" isActive={pathname === '/company/bookings'}><BookCopy />Bookings</SidebarMenuButton>
+                <SidebarMenuButton href="/company/bookings" size="sm" isActive={pathname.startsWith('/company/bookings')}><BookCopy />Bookings</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm"><FileText />Challan</SidebarMenuButton>
