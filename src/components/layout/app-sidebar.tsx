@@ -219,7 +219,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Settings">
+            <SidebarMenuButton href={isAdmin ? "/admin/settings" : "#"} tooltip="Settings" isActive={pathname.startsWith('/admin/settings')}>
               <Settings />
               <span>Settings</span>
             </SidebarMenuButton>
