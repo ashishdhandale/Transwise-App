@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -12,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Search } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 
 
 const newRequests = [
@@ -75,11 +77,50 @@ const existingUsers = [
 const thClass = "bg-primary text-primary-foreground";
 
 export function UserManagementTables() {
+  const [newRequestSearch, setNewRequestSearch] = useState('');
+  const [existingUserSearch, setExistingUserSearch] = useState('');
+  const [filteredNewRequests, setFilteredNewRequests] = useState(newRequests);
+  const [filteredExistingUsers, setFilteredExistingUsers] = useState(existingUsers);
+
+  useEffect(() => {
+    const lowercasedQuery = newRequestSearch.toLowerCase();
+    const filtered = newRequests.filter(
+      (item) =>
+        item.companyName.toLowerCase().includes(lowercasedQuery) ||
+        item.gstNo.toLowerCase().includes(lowercasedQuery) ||
+        item.transporterId.toLowerCase().includes(lowercasedQuery)
+    );
+    setFilteredNewRequests(filtered);
+  }, [newRequestSearch]);
+
+  useEffect(() => {
+    const lowercasedQuery = existingUserSearch.toLowerCase();
+    const filtered = existingUsers.filter(
+      (item) =>
+        item.companyName.toLowerCase().includes(lowercasedQuery) ||
+        item.userId.toLowerCase().includes(lowercasedQuery) ||
+        item.gstNo.toLowerCase().includes(lowercasedQuery) ||
+        item.transporterId.toLowerCase().includes(lowercasedQuery)
+    );
+    setFilteredExistingUsers(filtered);
+  }, [existingUserSearch]);
+
+
   return (
     <div className="space-y-8">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-headline">New User Request</CardTitle>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search requests..."
+              className="pl-8"
+              value={newRequestSearch}
+              onChange={(e) => setNewRequestSearch(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -97,7 +138,7 @@ export function UserManagementTables() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {newRequests.map((req) => (
+                {filteredNewRequests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell>{req.id}</TableCell>
                     <TableCell>{req.companyName}</TableCell>
@@ -121,8 +162,18 @@ export function UserManagementTables() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-headline">Existing User List</CardTitle>
+           <div className="relative w-full max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search users..."
+              className="pl-8"
+              value={existingUserSearch}
+              onChange={(e) => setExistingUserSearch(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -144,7 +195,7 @@ export function UserManagementTables() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {existingUsers.map((user) => (
+                {filteredExistingUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>{user.id}</TableCell>
                     <TableCell>{user.userId}</TableCell>
