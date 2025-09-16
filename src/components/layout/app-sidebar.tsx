@@ -56,6 +56,12 @@ export function AppSidebar() {
     }
   }, [pathname]);
 
+  React.useEffect(() => {
+    if (state === 'collapsed') {
+      setOpenUserMenu(false);
+    }
+  }, [state]);
+
   let menu, title, user, email, avatarSeed;
 
   if (isAdmin) {
