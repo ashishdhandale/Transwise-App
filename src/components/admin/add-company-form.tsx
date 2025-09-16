@@ -18,8 +18,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
-import React, { useEffect } from 'react';
+import { Loader2, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const formSchema = z.object({
   // Company Details
@@ -51,6 +51,8 @@ let companyCounter = 11;
 export default function AddCompanyForm() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<AddCompanyFormValues>({
         resolver: zodResolver(formSchema),
@@ -94,6 +96,10 @@ export default function AddCompanyForm() {
         // Increment for the next form load and reset the current form
         companyCounter++;
         form.reset();
+        setSelectedFileName(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         form.setValue('companyCode', `CO${companyCounter}`); // set next code
         setIsSubmitting(false);
     }
@@ -140,11 +146,46 @@ export default function AddCompanyForm() {
                     name="companyLogo"
                     render={({ field }) => (
                         <FormItem>
-                            <div className="flex items-center gap-4">
-                                <FormLabel>Company Logo</FormLabel>
+                            <FormLabel>Company Logo</FormLabel>
+                             <div className="flex items-center gap-4">
+                                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                                    Choose File
+                                </Button>
                                 <FormControl>
-                                    <Input type="file" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} className="w-auto" />
+                                     <Input 
+                                        type="file" 
+                                        className="hidden" 
+                                        ref={fileInputRef}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            field.onChange(file);
+                                            setSelectedFileName(file?.name || null);
+                                        }}
+                                        
+                                    />
                                 </FormControl>
+                                {selectedFileName ? (
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span>{selectedFileName}</span>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={() => {
+                                                field.onChange(null);
+                                                setSelectedFileName(null);
+                                                if (fileInputRef.current) {
+                                                    fileInputRef.current.value = '';
+                                                }
+                                            }}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <span className="text-sm text-muted-foreground">No file selected</span>
+                                )}
                             </div>
                             <FormDescription>Upload the company's logo (optional).</FormDescription>
                             <FormMessage />
