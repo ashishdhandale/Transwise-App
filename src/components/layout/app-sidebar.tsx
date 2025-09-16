@@ -212,21 +212,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b bg-primary text-primary-foreground p-4">
+      <SidebarHeader className="border-b p-4">
         <Link href={isAdmin ? '/admin' : '/'}>
           <div
-            className="font-bold text-2xl font-headline flex items-center group-data-[collapsible=icon]:hidden"
+            className="flex items-center gap-2 group-data-[collapsible=icon]:hidden"
           >
-            Transwise
-            <span className="bg-accent text-white px-1 rounded-sm">.in</span>
+            <Mountain />
+            <span className="font-semibold text-lg">AtlasFlow</span>
           </div>
-           <p className="text-xs text-primary-foreground/80 group-data-[collapsible=icon]:hidden">
-              Simplifying Logistics Businesses
-            </p>
           <div className="hidden group-data-[collapsible=icon]:block">
-            <div className="font-bold text-lg font-headline flex items-center">
-                T<span className="bg-accent text-white px-0.5 rounded-sm text-lg">.in</span>
-            </div>
+            <Mountain />
           </div>
         </Link>
       </SidebarHeader>
