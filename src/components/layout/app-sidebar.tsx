@@ -79,15 +79,15 @@ export function AppSidebar() {
         </SidebarMenuItem>
         
         <Collapsible open={openUserMenu} onOpenChange={setOpenUserMenu}>
-            <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-start gap-2 px-2">
+            <CollapsibleTrigger className="w-full">
+                <SidebarMenuButton asChild variant="ghost" className="w-full justify-start gap-2 px-2">
+                    <div>
                         <Users />
                         <span className={cn(state === 'collapsed' && 'hidden')}>Users</span>
                         <ChevronDown className={cn("size-4 transition-transform ml-auto", openUserMenu && "rotate-180", state === 'collapsed' && 'hidden')} />
-                    </Button>
-                </CollapsibleTrigger>
-            </SidebarMenuItem>
+                    </div>
+                </SidebarMenuButton>
+            </CollapsibleTrigger>
 
             <CollapsibleContent>
                 <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
