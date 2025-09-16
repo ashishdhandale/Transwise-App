@@ -163,7 +163,7 @@ export function AppSidebar() {
       <>
         <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
           <CollapsibleTrigger asChild>
-             <SidebarMenuButton href="/company" variant="ghost" className="w-full justify-start" isActive={pathname === '/company' && !pathname.includes('tracking')}>
+             <SidebarMenuButton href="/company" variant="ghost" className="w-full justify-start" isActive={pathname === '/company' && !pathname.includes('tracking') && !pathname.includes('history')}>
               <Home />
               <span>Dashboard</span>
               <ChevronDown
@@ -183,7 +183,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="/company/challan-tracking" size="sm" isActive={pathname === '/company/challan-tracking'}><ClipboardList />Challan Tracking</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><History />History</SidebarMenuButton>
+                <SidebarMenuButton href="/company/history" size="sm" isActive={pathname === '/company/history'}><History />History</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
