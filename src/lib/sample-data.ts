@@ -23,78 +23,83 @@ type ExistingUser = {
     validTill: string;
 };
 
-const randomFrom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
-const generateRandomGst = (): string => {
-    const num = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-    const letters1 = 'ABCDEFGHJKLMNOPQRSTUVWXYZ';
-    const letters2 = 'ABCFGHLJPT';
-    const randomLetters = Array.from({ length: 4 }, () => letters1[Math.floor(Math.random() * letters1.length)]).join('');
-    const randomPan = `${letters1[Math.floor(Math.random() * letters1.length)]}${letters2[Math.floor(Math.random() * letters2.length)]}${randomLetters}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}${letters1[Math.floor(Math.random() * letters1.length)]}`;
-    const rest = `${Math.floor(Math.random() * 10)}${randomFrom(['Z', 'A', 'B', 'C'])}${Math.floor(Math.random() * 10)}`;
-    return `${num}${panLetters(pan(10))}${rest}`;
-};
-
-const panLetters = (str: string) => str.slice(0, 10);
-const pan = (length: number) => {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
-
-
 const companySuffixes = ["Logistics", "Movers", "Transports", "Shippers", "Carriers", "Freight", "Express", "Haulers", "Group", "Solutions"];
 const firstNames = ["Amit", "Rohan", "Suresh", "Vikram", "Deepak", "Priya", "Sunita", "Anjali", "Kavita", "Meera"];
 const lastNames = ["Sharma", "Verma", "Singh", "Gupta", "Kumar", "Patel", "Shah", "Mehta", "Jain", "Reddy"];
 const cities = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Hyderabad", "Pune", "Ahmedabad", "Jaipur", "Lucknow"];
-const states = ["MH", "DL", "KA", "TN", "WB", "TS", "MH", "GJ", "RJ", "UP"];
 const licenceTypes: ("Trial" | "Bronze" | "Gold" | "Platinum")[] = ["Trial", "Bronze", "Gold", "Platinum"];
 
+// A simple pseudo-random number generator to ensure consistent data
+class SimpleSeededRandom {
+    private seed: number;
+    constructor(seed: number) {
+        this.seed = seed;
+    }
+    next() {
+        this.seed = (this.seed * 9301 + 49297) % 233280;
+        return this.seed / 233280;
+    }
+}
+
+const randomFrom = <T>(arr: T[], rng: SimpleSeededRandom): T => arr[Math.floor(rng.next() * arr.length)];
+
+const generateRandomGst = (rng: SimpleSeededRandom): string => {
+    const num = Math.floor(rng.next() * 100).toString().padStart(2, '0');
+    const letters1 = 'ABCDEFGHJKLMNOPQRSTUVWXYZ';
+    const letters2 = 'ABCFGHLJPT';
+    const randomPan = Array.from({ length: 10 }, () => characters[Math.floor(rng.next() * characters.length)]).join('');
+    const rest = `${Math.floor(rng.next() * 10)}${randomFrom(['Z', 'A', 'B', 'C'], rng)}${Math.floor(rng.next() * 10)}`;
+    return `${num}${randomPan.slice(0, 10)}${rest}`;
+};
+
+const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
 const generateNewRequests = (count: number): NewRequest[] => {
+    const rng = new SimpleSeededRandom(12345); // Fixed seed for "new requests"
     const requests: NewRequest[] = [];
     for (let i = 1; i <= count; i++) {
-        const companyName = `${randomFrom(firstNames)} ${randomFrom(companySuffixes)}`;
-        const city = randomFrom(cities);
+        const companyName = `${randomFrom(firstNames, rng)} ${randomFrom(companySuffixes, rng)}`;
+        const city = randomFrom(cities, rng);
         requests.push({
             id: i,
             companyName: companyName,
-            gstNo: generateRandomGst(),
-            transporterId: `TID-${Math.floor(1000 + Math.random() * 9000)}`,
-            address: `${Math.floor(10 + Math.random() * 989)} Main St, ${city}`,
-            contactNo: `9${Math.floor(100000000 + Math.random() * 900000000)}`,
-            licenceType: randomFrom(licenceTypes),
+            gstNo: generateRandomGst(rng),
+            transporterId: `TID-${Math.floor(1000 + rng.next() * 9000)}`,
+            address: `${Math.floor(10 + rng.next() * 989)} Main St, ${city}`,
+            contactNo: `9${Math.floor(100000000 + rng.next() * 900000000)}`,
+            licenceType: randomFrom(licenceTypes, rng),
         });
     }
     return requests;
 };
 
 const generateExistingUsers = (count: number): ExistingUser[] => {
+    const rng = new SimpleSeededRandom(54321); // Different fixed seed for "existing users"
     const users: ExistingUser[] = [];
     for (let i = 1; i <= count; i++) {
-        const city = randomFrom(cities);
-        const validTillYear = new Date().getFullYear() + Math.floor(Math.random() * 3);
-        const validTillMonth = Math.floor(Math.random() * 12) + 1;
-        const validTillDay = Math.floor(Math.random() * 28) + 1;
+        const city = randomFrom(cities, rng);
+        const currentYear = new Date().getFullYear();
+        const validTillYear = currentYear + Math.floor(rng.next() * 3);
+        const validTillMonth = Math.floor(rng.next() * 12) + 1;
+        const validTillDay = Math.floor(rng.next() * 28) + 1;
 
         users.push({
             id: i,
             userId: `USR-${String(i).padStart(3, '0')}`,
-            subIds: Math.floor(Math.random() * 10),
-            companyName: `${randomFrom(lastNames)} ${randomFrom(companySuffixes)}`,
-            gstNo: generateRandomGst(),
-            transporterId: `TID-${Math.floor(1000 + Math.random() * 9000)}`,
-            address: `${Math.floor(10 + Math.random() * 989)} Industrial Area, ${city}`,
-            contactNo: `9${Math.floor(100000000 + Math.random() * 900000000)}`,
-            totalIssuedIds: Math.floor(5 + Math.random() * 45),
-            licenceType: randomFrom(licenceTypes),
+            subIds: Math.floor(rng.next() * 10),
+            companyName: `${randomFrom(lastNames, rng)} ${randomFrom(companySuffixes, rng)}`,
+            gstNo: generateRandomGst(rng),
+            transporterId: `TID-${Math.floor(1000 + rng.next() * 9000)}`,
+            address: `${Math.floor(10 + rng.next() * 989)} Industrial Area, ${city}`,
+            contactNo: `9${Math.floor(100000000 + rng.next() * 900000000)}`,
+            totalIssuedIds: Math.floor(5 + rng.next() * 45),
+            licenceType: randomFrom(licenceTypes, rng),
             validTill: `${validTillYear}-${String(validTillMonth).padStart(2, '0')}-${String(validTillDay).padStart(2, '0')}`,
         });
     }
     return users;
 };
 
+// Generate the data once and export it
 export const newRequests: NewRequest[] = generateNewRequests(50);
 export const existingUsers: ExistingUser[] = generateExistingUsers(50);

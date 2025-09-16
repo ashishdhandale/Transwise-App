@@ -34,6 +34,11 @@ export function UserManagementTables() {
   const [newRequestsRowsPerPage, setNewRequestsRowsPerPage] = useState(10);
   const [existingUsersPage, setExistingUsersPage] = useState(1);
   const [existingUsersRowsPerPage, setExistingUsersRowsPerPage] = useState(10);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredNewRequests = useMemo(() => {
     const lowercasedQuery = newRequestSearch.toLowerCase();
@@ -78,6 +83,15 @@ export function UserManagementTables() {
     setExistingUsersPage(1);
   }, [existingUserSearch, existingUsersRowsPerPage]);
 
+  if (!isClient) {
+    // Render a skeleton or loading state on the server to avoid hydration errors
+    return (
+        <div className="space-y-8">
+            <Card><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>
+            <Card><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
