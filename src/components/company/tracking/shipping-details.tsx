@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 const DetailRow = ({ label, value }: { label: string; value?: string }) => (
   <div className="grid grid-cols-[150px_1fr] text-sm border-b last:border-b-0">
-    <div className="bg-primary/10 text-primary-foreground font-semibold p-2 border-r">{label}</div>
+    <div className="bg-primary/10 text-primary font-semibold p-2 border-r">{label}</div>
     <div className="p-2 break-words">{value || '-'}</div>
   </div>
 );
