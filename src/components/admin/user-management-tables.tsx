@@ -148,10 +148,20 @@ export function UserManagementTables() {
                     <TableCell>{req.contactNo}</TableCell>
                     <TableCell><Badge variant="secondary">{req.licenceType}</Badge></TableCell>
                     <TableCell className="text-center">
-                        <div className="flex gap-2 justify-center">
-                           <Button variant="outline" size="sm" className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white">Approve</Button>
-                           <Button variant="outline" size="sm" className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white">Reject</Button>
-                        </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem className="text-green-600">Approve</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">Reject</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
