@@ -162,7 +162,7 @@ export function AppSidebar() {
       <>
         <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+             <SidebarMenuButton href="/company" variant="ghost" className="w-full justify-start" isActive={pathname === '/company'}>
               <Home />
               <span>Dashboard</span>
               <ChevronDown
@@ -343,7 +343,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b p-4">
-        <Link href={isAdmin ? '/admin' : '/'}>
+        <Link href={isAdmin ? '/admin' : isCompany ? '/company' : '/'}>
           <div
             className="flex items-center gap-2 group-data-[collapsible=icon]:hidden"
           >

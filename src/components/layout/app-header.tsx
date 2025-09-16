@@ -9,9 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +26,7 @@ export function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const isAdmin = pathname.startsWith('/admin');
+  const isCompany = pathname.startsWith('/company');
 
   const handleLogout = () => {
     router.push('/login');
@@ -35,12 +35,13 @@ export function AppHeader() {
   const userRole = isAdmin ? 'Sup.Admin' : 'My Account';
   const avatarSeed = isAdmin ? 'admin-avatar' : 'avatar';
   const avatarFallback = isAdmin ? 'SA' : 'U';
+  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : '/';
 
   return (
     <header className="flex h-20 items-center gap-4 border-b bg-primary text-primary-foreground px-4 lg:px-6 sticky top-0 z-30">
       <SidebarTrigger className="md:hidden text-primary-foreground" />
       <div className="flex-1 flex items-center gap-4">
-        <Link href={isAdmin ? '/admin' : '/'}>
+        <Link href={homeHref}>
           <div>
             <div className="font-bold text-2xl font-headline flex items-center">
               Transwise<span className="bg-red-600 text-white px-1 rounded-sm">.in</span>
