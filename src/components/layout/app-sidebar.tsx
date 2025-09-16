@@ -17,6 +17,7 @@ import {
   BookCopy,
   Building,
   ChevronDown,
+  ClipboardList,
   Database,
   FileSignature,
   FileText,
@@ -162,7 +163,7 @@ export function AppSidebar() {
       <>
         <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
           <CollapsibleTrigger asChild>
-             <SidebarMenuButton href="/company" variant="ghost" className="w-full justify-start" isActive={pathname === '/company'}>
+             <SidebarMenuButton href="/company" variant="ghost" className="w-full justify-start" isActive={pathname === '/company' && !pathname.includes('tracking')}>
               <Home />
               <span>Dashboard</span>
               <ChevronDown
@@ -179,7 +180,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="/company/package-tracking" size="sm" isActive={pathname === '/company/package-tracking'}><PackageSearch />Package Tracking</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><FileText />Challan Tracking</SidebarMenuButton>
+                <SidebarMenuButton href="/company/challan-tracking" size="sm" isActive={pathname === '/company/challan-tracking'}><ClipboardList />Challan Tracking</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm"><History />History</SidebarMenuButton>
