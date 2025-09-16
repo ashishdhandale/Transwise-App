@@ -15,7 +15,6 @@ import { Search, Bell } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 const notifications = [
@@ -42,12 +41,14 @@ export function AppHeader() {
       <SidebarTrigger className="md:hidden" />
       <div className="flex-1 flex items-center gap-4">
         <Link href={isAdmin ? '/admin' : '/'}>
-          <div className="font-bold text-2xl font-headline flex items-center">
-            Transwise<span className="bg-red-600 text-white px-1 rounded-sm">.in</span>
+          <div>
+            <div className="font-bold text-2xl font-headline flex items-center">
+              Transwise<span className="bg-red-600 text-white px-1 rounded-sm">.in</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Simplifying Logistics Businesses
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Simplifying Logistics Businesses
-          </p>
         </Link>
       </div>
       <div className="flex items-center gap-4">
