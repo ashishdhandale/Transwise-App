@@ -12,15 +12,25 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import {
+  Archive,
   BarChart3,
+  BookCopy,
   Building,
+  ChevronDown,
+  Database,
+  FileSignature,
+  FileText,
+  History,
   Home,
-  Mountain,
+  List,
+  MapPin,
   MoreHorizontal,
+  Mountain,
+  Package,
+  PackageSearch,
   Settings,
   Truck,
   Users,
-  ChevronDown,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -36,7 +46,15 @@ import React from 'react';
 export function AppSidebar() {
   const { state } = useSidebar();
   const pathname = usePathname();
+  
+  // Admin states
   const [openUserMenu, setOpenUserMenu] = React.useState(false);
+
+  // Branch states
+  const [openDashboardMenu, setOpenDashboardMenu] = React.useState(false);
+  const [openBranchMenu, setOpenBranchMenu] = React.useState(false);
+  const [openConsignmentMenu, setOpenConsignmentMenu] = React.useState(false);
+  const [openMasterMenu, setOpenMasterMenu] = React.useState(false);
 
   const isAdmin = pathname.startsWith('/admin');
   const isCompany = pathname.startsWith('/company');
@@ -55,6 +73,10 @@ export function AppSidebar() {
   React.useEffect(() => {
     if (state === 'collapsed') {
       setOpenUserMenu(false);
+      setOpenDashboardMenu(false);
+      setOpenBranchMenu(false);
+      setOpenConsignmentMenu(false);
+      setOpenMasterMenu(false);
     }
   }, [state]);
 
@@ -161,7 +183,7 @@ export function AppSidebar() {
     );
   } else if (isEmployee) {
     user = 'Driver';
-    email = 'driver@atlasflow.com';
+    email = 'driver@transwise.in';
     avatarSeed = 'employee-avatar';
     menu = (
       <>
@@ -180,28 +202,133 @@ export function AppSidebar() {
   } else {
     // Branch User
     user = 'Branch Manager';
-    email = 'branch@atlasflow.com';
+    email = 'branch@transwise.in';
     avatarSeed = 'branch-avatar';
     menu = (
       <>
+        <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+              <Home />
+              <span>Dashboard</span>
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform ml-auto',
+                  openDashboardMenu && 'rotate-180'
+                )}
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><PackageSearch />Package Tracking</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><FileText />Challan Tracking</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><History />History</SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        
+        <Collapsible open={openBranchMenu} onOpenChange={setOpenBranchMenu}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+              <Building />
+              <span>Branch</span>
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform ml-auto',
+                  openBranchMenu && 'rotate-180'
+                )}
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><Users />Employees</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><Users />User Management</SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <Collapsible open={openConsignmentMenu} onOpenChange={setOpenConsignmentMenu}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+              <BookCopy />
+              <span>Consignment</span>
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform ml-auto',
+                  openConsignmentMenu && 'rotate-180'
+                )}
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><BookCopy />Bookings</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><FileText />Challan</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><Truck />Deliveries</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><FileText />Bills</SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><Archive />Stock</SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <Collapsible open={openMasterMenu} onOpenChange={setOpenMasterMenu}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+              <Database />
+              <span>Master</span>
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform ml-auto',
+                  openMasterMenu && 'rotate-180'
+                )}
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><MapPin />City</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><Users />Customer</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><Package />Items</SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><FileSignature />Quotation</SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="#" size="sm"><List />Rate list</SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        
         <SidebarMenuItem>
-          <SidebarMenuButton
-            href="/"
-            tooltip="Dashboard"
-            isActive={pathname === '/'}
-          >
-            <Home />
-            <span>Dashboard</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Deliveries">
-            <Truck />
-            <span>Deliveries</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Reports">
+          <SidebarMenuButton href="#" tooltip="Reports">
             <BarChart3 />
             <span>Reports</span>
           </SidebarMenuButton>
