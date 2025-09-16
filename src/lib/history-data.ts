@@ -89,4 +89,45 @@ export const historyData: BookingHistory[] = [
       },
     ],
   },
+    {
+    id: 'TRK999',
+    logs: [
+      {
+        timestamp: '2024-08-02 09:00 AM',
+        action: 'Booking Created',
+        details: 'Booking created for 2 crates of medical supplies from Pune to Mumbai.',
+        user: 'CompanyUser02',
+      },
+      {
+        timestamp: '2024-08-02 12:30 PM',
+        action: 'Dispatched from Warehouse',
+        details: 'Package picked up and dispatched from Pune warehouse. Vehicle: MH-12-DE-7890.',
+        user: 'PuneWarehouse',
+      },
+      {
+        timestamp: '2024-08-02 03:45 PM',
+        action: 'In Transit',
+        details: 'Vehicle passing Lonavala.',
+        user: 'System',
+      },
+      {
+        timestamp: '2024-08-02 07:00 PM',
+        action: 'Arrived at Hub',
+        details: 'Package arrived at Mumbai central hub.',
+        user: 'MumbaiHubStaff',
+      },
+      {
+        timestamp: '2024-08-03 09:30 AM',
+        action: 'Out for Delivery',
+        details: 'Out for delivery with agent Priya Singh.',
+        user: 'MumbaiDispatch',
+      },
+      {
+        timestamp: '2024-08-03 11:15 AM',
+        action: 'Delivered',
+        details: 'Delivered to Global Hospital. Signed by reception.',
+        user: 'Priya Singh (Driver)',
+      },
+    ],
+  },
 ];
