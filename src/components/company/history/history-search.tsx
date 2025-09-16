@@ -13,7 +13,7 @@ interface HistorySearchProps {
 }
 
 export function HistorySearch({ onSearch, isLoading }: HistorySearchProps) {
-  const [searchId, setSearchId] = useState('');
+  const [searchId, setSearchId] = useState('TRK999');
 
   const handleSearchClick = () => {
     onSearch(searchId);
