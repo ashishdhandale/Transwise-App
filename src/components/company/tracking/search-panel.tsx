@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,15 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
 export function SearchPanel() {
-  const [date, setDate] = useState<Date | undefined>(new Date('2014-10-03'));
+  const [date, setDate] = useState<Date | undefined>();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    // This ensures the date is only set on the client, avoiding hydration mismatch.
+    setDate(new Date('2014-10-03'));
+    setIsClient(true);
+  }, []);
+
 
   return (
     <Card className="border-gray-300">
@@ -55,23 +63,25 @@ export function SearchPanel() {
                 <h3 className="font-semibold text-center">Advanced Search</h3>
                 <div className="space-y-2">
                     <Label>Dispatch Date</Label>
-                    <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                        variant={'outline'}
-                        className={cn(
-                            'w-full justify-between text-left font-normal border-gray-300',
-                            !date && 'text-muted-foreground'
-                        )}
-                        >
-                        {date ? format(date, 'dd / MM / yyyy') : <span>Pick a date</span>}
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                    </PopoverContent>
-                    </Popover>
+                    {isClient && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={'outline'}
+                            className={cn(
+                                'w-full justify-between text-left font-normal border-gray-300',
+                                !date && 'text-muted-foreground'
+                            )}
+                            >
+                            {date ? format(date, 'dd / MM / yyyy') : <span>Pick a date</span>}
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                        </PopoverContent>
+                      </Popover>
+                    )}
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="sender-name">Sender Name</Label>
