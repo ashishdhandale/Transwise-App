@@ -50,7 +50,7 @@ export function AppSidebar() {
   // Admin states
   const [openUserMenu, setOpenUserMenu] = React.useState(false);
 
-  // Branch states
+  // Company states
   const [openDashboardMenu, setOpenDashboardMenu] = React.useState(false);
   const [openBranchMenu, setOpenBranchMenu] = React.useState(false);
   const [openConsignmentMenu, setOpenConsignmentMenu] = React.useState(false);
@@ -157,55 +157,6 @@ export function AppSidebar() {
     avatarSeed = 'company-avatar';
     menu = (
       <>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            href="/company"
-            tooltip="Overview"
-            isActive={pathname === '/company'}
-          >
-            <BarChart3 />
-            <span>Overview</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Branches">
-            <Building />
-            <span>Branches</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Company Users">
-            <Users />
-            <span>Users</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </>
-    );
-  } else if (isEmployee) {
-    user = 'Driver';
-    email = 'driver@transwise.in';
-    avatarSeed = 'employee-avatar';
-    menu = (
-      <>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            href="/employee"
-            tooltip="My Deliveries"
-            isActive={pathname === '/employee'}
-          >
-            <Truck />
-            <span>My Deliveries</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </>
-    );
-  } else {
-    // Branch User
-    user = 'Branch Manager';
-    email = 'branch@transwise.in';
-    avatarSeed = 'branch-avatar';
-    menu = (
-      <>
         <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton variant="ghost" className="w-full justify-start">
@@ -222,7 +173,7 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><PackageSearch />Package Tracking</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm"><PackageSearch />Package TRacking</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm"><FileText />Challan Tracking</SidebarMenuButton>
@@ -329,6 +280,55 @@ export function AppSidebar() {
         
         <SidebarMenuItem>
           <SidebarMenuButton href="#" tooltip="Reports">
+            <BarChart3 />
+            <span>Reports</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </>
+    );
+  } else if (isEmployee) {
+    user = 'Driver';
+    email = 'driver@transwise.in';
+    avatarSeed = 'employee-avatar';
+    menu = (
+      <>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            href="/employee"
+            tooltip="My Deliveries"
+            isActive={pathname === '/employee'}
+          >
+            <Truck />
+            <span>My Deliveries</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </>
+    );
+  } else {
+    // Branch User
+    user = 'Branch Manager';
+    email = 'branch@transwise.in';
+    avatarSeed = 'branch-avatar';
+    menu = (
+      <>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            href="/"
+            tooltip="Dashboard"
+            isActive={pathname === '/'}
+          >
+            <Home />
+            <span>Dashboard</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton tooltip="Deliveries">
+            <Truck />
+            <span>Deliveries</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton tooltip="Reports">
             <BarChart3 />
             <span>Reports</span>
           </SidebarMenuButton>
