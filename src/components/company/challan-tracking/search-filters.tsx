@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -34,10 +34,17 @@ const searchCriteria: { value: SearchCriterion; label: string }[] = [
 
 export function SearchFilters() {
   const [searchBy, setSearchBy] = useState<SearchCriterion>('challanNo');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 7),
-  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    // This ensures client-side specific logic runs after hydration
+    setIsClient(true);
+    setDateRange({
+        from: new Date(),
+        to: addDays(new Date(), 7),
+    });
+  }, []);
 
   const getPlaceholder = () => {
     if (searchBy === 'date') return 'Select a date range';
@@ -91,6 +98,7 @@ export function SearchFilters() {
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="search-input" className="text-sm font-semibold">Value</Label>
                         {searchBy === 'date' ? (
+                            isClient && (
                             <Popover>
                                 <PopoverTrigger asChild>
                                 <Button
@@ -127,6 +135,7 @@ export function SearchFilters() {
                                 />
                                 </PopoverContent>
                             </Popover>
+                            )
                         ) : (
                             <Input id="search-input" placeholder={getPlaceholder()} />
                         )}
