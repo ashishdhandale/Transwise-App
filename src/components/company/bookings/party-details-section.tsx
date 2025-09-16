@@ -11,7 +11,7 @@ import { bookingOptions } from '@/lib/booking-data';
 
 export function PartyDetailsSection() {
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
             {/* Consignor Side */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-start">
                 <div className="space-y-4">
@@ -37,7 +37,7 @@ export function PartyDetailsSection() {
                         <Label>Consignor Name*</Label>
                         <Select>
                             <SelectTrigger>
-                                <SelectValue placeholder="Party Name [GST NO]" />
+                                <SelectValue placeholder="Party Name[GST NO]" />
                             </SelectTrigger>
                              <SelectContent>
                                 {bookingOptions.parties.map(p => <SelectItem key={p.gst} value={p.name}>{`${p.name} [${p.gst}]`}</SelectItem>)}
@@ -47,8 +47,7 @@ export function PartyDetailsSection() {
                 </div>
                 
                 <div className="flex md:flex-col items-center justify-center h-full gap-2 text-muted-foreground pt-6">
-                    <div className="w-px h-full bg-border hidden md:block"></div>
-                    <div className="h-px w-full bg-border md:hidden"></div>
+                     <div className="hidden md:block w-px h-24 bg-border"></div>
                 </div>
 
                 {/* Address & Mobile */}
@@ -72,7 +71,7 @@ export function PartyDetailsSection() {
                         <Label>Consignee GST</Label>
                          <Select>
                             <SelectTrigger>
-                                <SelectValue placeholder="GST NO [Party Name]" />
+                                <SelectValue placeholder="GST NO [PARTY NAME]" />
                             </SelectTrigger>
                             <SelectContent>
                                 {bookingOptions.parties.map(p => <SelectItem key={p.gst} value={p.gst}>{`${p.gst} [${p.name}]`}</SelectItem>)}
@@ -84,7 +83,7 @@ export function PartyDetailsSection() {
                         <Label>Consignee Name*</Label>
                         <Select>
                             <SelectTrigger>
-                                <SelectValue placeholder="Party Name [GST NO]" />
+                                <SelectValue placeholder="PARTY NAME1 [GST NO]" />
                             </SelectTrigger>
                              <SelectContent>
                                 {bookingOptions.parties.map(p => <SelectItem key={p.gst} value={p.name}>{`${p.name} [${p.gst}]`}</SelectItem>)}
@@ -93,9 +92,8 @@ export function PartyDetailsSection() {
                     </div>
                 </div>
                 
-                <div className="flex md:flex-col items-center justify-center h-full gap-2 text-muted-foreground pt-6">
-                    <div className="w-px h-full bg-border hidden md:block"></div>
-                    <div className="h-px w-full bg-border md:hidden"></div>
+                 <div className="flex md:flex-col items-center justify-center h-full gap-2 text-muted-foreground pt-6">
+                     <div className="hidden md:block w-px h-24 bg-border"></div>
                 </div>
 
                 {/* Address & Mobile */}

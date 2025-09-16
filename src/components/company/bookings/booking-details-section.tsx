@@ -40,16 +40,14 @@ export function BookingDetailsSection() {
             </div>
             <div className="space-y-1">
                 <Label htmlFor="fromStation">From Station</Label>
-                <div className="flex gap-1">
-                     <Select defaultValue="AHMDABAD">
-                        <SelectTrigger id="fromStation">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                           {bookingOptions.stations.map(station => <SelectItem key={station} value={station}>{station}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
+                <Select defaultValue="AHMDABAD">
+                    <SelectTrigger id="fromStation">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {bookingOptions.stations.map(station => <SelectItem key={station} value={station}>{station}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
             <div className="space-y-1">
                 <Label htmlFor="toStation">To Station</Label>
@@ -66,6 +64,17 @@ export function BookingDetailsSection() {
                         <Plus className="h-5 w-5"/>
                     </Button>
                 </div>
+            </div>
+             <div className="space-y-1">
+                <Label htmlFor="bookingType">Booking Type</Label>
+                <Select defaultValue="FOC">
+                    <SelectTrigger id="bookingType">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {bookingOptions.bookingTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
         </div>
     );

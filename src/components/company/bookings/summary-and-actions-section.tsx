@@ -2,7 +2,6 @@
 'use client';
 
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -23,26 +22,26 @@ export function SummaryAndActionsSection() {
                     <Checkbox id="updateRates" />
                     <Label htmlFor="updateRates">Update Rates</Label>
                 </div>
-                <Textarea placeholder="Remark / Note: maximum 80 characherts" rows={4} />
+                <Textarea placeholder="Remark / Note: maximum 80 characherts" rows={4} maxLength={80} />
              </div>
-             <div className="border rounded-md p-4 space-y-2 bg-gray-50">
-                 <h4 className="font-bold text-primary border-b pb-1">General Instruction :</h4>
+             <div className="border rounded-md p-3 space-y-2 bg-gray-50">
+                 <h4 className="font-bold text-blue-600 border-b pb-1">General Instruction :</h4>
                  <div>
-                     <p className="font-semibold">Print Copy :</p>
+                     <p className="font-semibold text-sm">Print Copy :</p>
                      <div className="flex flex-wrap gap-x-4 gap-y-1 pl-2">
-                        <div className="flex items-center gap-1"><Checkbox defaultChecked id="printAll" /><Label htmlFor="printAll" className="font-normal">ALL</Label></div>
-                        <div className="flex items-center gap-1"><Checkbox id="printCgnor" /><Label htmlFor="printCgnor" className="font-normal">C'gnor</Label></div>
-                        <div className="flex items-center gap-1"><Checkbox id="printCgnee" /><Label htmlFor="printCgnee" className="font-normal">C'gnee</Label></div>
-                        <div className="flex items-center gap-1"><Checkbox id="printDriver" /><Label htmlFor="printDriver" className="font-normal">Driver</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox defaultChecked id="printAll" /><Label htmlFor="printAll" className="font-normal text-sm">ALL</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox id="printCgnor" /><Label htmlFor="printCgnor" className="font-normal text-sm">C'gnor</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox id="printCgnee" /><Label htmlFor="printCgnee" className="font-normal text-sm">C'gnee</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox id="printDriver" /><Label htmlFor="printDriver" className="font-normal text-sm">Driver</Label></div>
                      </div>
                  </div>
                   <div>
-                     <p className="font-semibold">Send Notification :</p>
+                     <p className="font-semibold text-sm">Send Notification :</p>
                      <div className="flex flex-wrap gap-x-4 gap-y-1 pl-2">
-                        <div className="flex items-center gap-1"><Checkbox defaultChecked id="notifSms" /><Label htmlFor="notifSms" className="font-normal">SMS</Label></div>
-                        <div className="flex items-center gap-1"><Checkbox id="notifWhatsapp" /><Label htmlFor="notifWhatsapp" className="font-normal">Whats App</Label></div>
-                        <div className="flex items-center gap-1"><Checkbox id="notifEmail" /><Label htmlFor="notifEmail" className="font-normal">Email</Label></div>
-                        <div className="flex items-center gap-1"><Checkbox id="notifPayment" /><Label htmlFor="notifPayment" className="font-normal">Payment link</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox defaultChecked id="notifSms" /><Label htmlFor="notifSms" className="font-normal text-sm">SMS</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox defaultChecked id="notifWhatsapp" /><Label htmlFor="notifWhatsapp" className="font-normal text-sm">Whats App</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox id="notifEmail" /><Label htmlFor="notifEmail" className="font-normal text-sm">Email</Label></div>
+                        <div className="flex items-center gap-1"><Checkbox id="notifPayment" /><Label htmlFor="notifPayment" className="font-normal text-sm">Payment link</Label></div>
                      </div>
                  </div>
              </div>

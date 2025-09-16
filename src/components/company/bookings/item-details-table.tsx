@@ -18,37 +18,11 @@ import { bookingOptions } from '@/lib/booking-data';
 
 interface ItemRow {
   id: number;
-  ewbNo: string;
-  itemName: string;
-  description: string;
-  qty: number;
-  actWt: number;
-  chgWt: number;
-  rate: number;
-  freightOn: 'Act.wt' | 'Chg.wt';
-  lumpsum: number;
-  pvtMark: string;
-  invoiceNo: string;
-  dValue: number;
 }
 
-const initialRows: ItemRow[] = Array.from({ length: 6 }, (_, i) => ({
-  id: i + 1,
-  ewbNo: '',
-  itemName: '',
-  description: '',
-  qty: 0,
-  actWt: 0,
-  chgWt: 0,
-  rate: 0,
-  freightOn: 'Act.wt',
-  lumpsum: 0,
-  pvtMark: '',
-  invoiceNo: '',
-  dValue: 0,
-}));
+const initialRows: ItemRow[] = Array.from({ length: 6 }, (_, i) => ({ id: i + 1 }));
 
-const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs";
+const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
 const tdClass = "p-1";
 const inputClass = "h-8 text-xs";
 
@@ -56,11 +30,13 @@ export function ItemDetailsTable() {
   const [rows, setRows] = useState<ItemRow[]>(initialRows);
 
   const addRow = () => {
-    setRows([...rows, { ...initialRows[0], id: rows.length + 1 }]);
+    setRows([...rows, { id: rows.length + 1 }]);
   };
   
   const removeRow = (id: number) => {
-      setRows(rows.filter(row => row.id !== id));
+      if (rows.length > 1) { // Prevent removing the last row
+        setRows(rows.filter(row => row.id !== id));
+      }
   }
 
   return (
@@ -88,11 +64,11 @@ export function ItemDetailsTable() {
                 <TableBody>
                     {rows.map((row, index) => (
                         <TableRow key={row.id}>
-                            <TableCell className={`${tdClass} text-center`}>{index + 1}*</TableCell>
+                            <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
                             <TableCell className={tdClass}><Input type="text" className={inputClass} /></TableCell>
                             <TableCell className={tdClass}>
-                                <Select>
-                                    <SelectTrigger className={inputClass}><SelectValue placeholder="Frm MAS" /></SelectTrigger>
+                                <Select defaultValue="Frm MAS">
+                                    <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         {bookingOptions.items.map(item => <SelectItem key={item} value={item}>{item}</SelectItem>)}
                                     </SelectContent>
@@ -115,9 +91,9 @@ export function ItemDetailsTable() {
                             <TableCell className={tdClass}><Input type="number" className={inputClass} /></TableCell>
                             <TableCell className={tdClass}><Input type="text" className={inputClass} /></TableCell>
                             <TableCell className={tdClass}><Input type="text" className={inputClass} /></TableCell>
-                            <TableCell className={tdClass}><Input type="number" className={inputClass} /></TableCell>
+                            <TableCell className={tdClass}><Input type="number" className={inputClass} defaultValue={index === 0 ? "12345" : ""} /></TableCell>
                             <TableCell className={`${tdClass} text-center`}>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeRow(row.id)}>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeRow(row.id)} disabled={rows.length <= 1}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </TableCell>
@@ -127,7 +103,7 @@ export function ItemDetailsTable() {
             </Table>
         </div>
         <div className="flex justify-end">
-             <Button variant="link" size="sm" onClick={addRow} className="text-sm">
+             <Button variant="link" size="sm" onClick={addRow} className="text-sm text-blue-600 hover:text-blue-800">
                 <Plus className="h-4 w-4 mr-1" />
                 Ctrl+I to Add more
             </Button>
