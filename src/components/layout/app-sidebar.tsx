@@ -68,6 +68,9 @@ export function AppSidebar() {
     ) {
       setOpenUserMenu(true);
     }
+     if (pathname.startsWith('/company')) {
+      setOpenDashboardMenu(true);
+    }
   }, [pathname]);
 
   React.useEffect(() => {
@@ -173,7 +176,7 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><PackageSearch />Package TRacking</SidebarMenuButton>
+                <SidebarMenuButton href="/company/package-tracking" size="sm" isActive={pathname === '/company/package-tracking'}><PackageSearch />Package Tracking</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm"><FileText />Challan Tracking</SidebarMenuButton>
