@@ -52,16 +52,6 @@ export function AppHeader() {
         </Link>
       </div>
       <div className="flex items-center gap-4">
-        <form>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-primary-foreground/80" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full appearance-none bg-transparent pl-8 shadow-none md:w-auto placeholder:text-primary-foreground/80 focus:bg-primary-foreground/10 focus:text-primary-foreground"
-            />
-          </div>
-        </form>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative hover:bg-primary-foreground/10">
