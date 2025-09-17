@@ -1,3 +1,4 @@
+
 export type DeliveryStatus =
   | 'Pending'
   | 'In Transit'
@@ -70,3 +71,10 @@ export interface EmployeeUser extends BaseUser {
 }
 
 export type User = AdminUser | CompanyUser | BranchUser | EmployeeUser;
+
+export interface City {
+  id: number;
+  name: string;
+  aliasCode: string;
+  pinCode: string;
+}

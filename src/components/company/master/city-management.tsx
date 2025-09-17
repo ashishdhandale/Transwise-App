@@ -13,40 +13,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
 import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { bookingOptions } from '@/lib/booking-data';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-
-interface City {
-  id: number;
-  name: string;
-  aliasCode: string;
-  pinCode: string;
-}
+import { AddCityDialog } from './add-city-dialog';
+import type { City } from '@/lib/types';
 
 type CityListSource = 'default' | 'custom';
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 
-const initialCities: City[] = bookingOptions.stations.slice(0, 10).map((name, index) => ({ 
-    id: index + 1, 
-    name,
-    aliasCode: name.substring(0, 3).toUpperCase(),
-    pinCode: `${440000 + index}`
-}));
+const initialCities: City[] = [
+    { id: 1, name: 'Nagpur', aliasCode: 'NGP', pinCode: '440001' },
+    { id: 2, name: 'Pune', aliasCode: 'PUN', pinCode: '411001' },
+    { id: 3, name: 'Mumbai', aliasCode: 'BOM', pinCode: '400001' },
+    { id: 4, name: 'Delhi', aliasCode: 'DEL', pinCode: '110001' },
+    { id: 5, name: 'Bangalore', aliasCode: 'BLR', pinCode: '560001' },
+];
 
 export function CityManagement() {
   const [cities, setCities] = useState<City[]>([]);
@@ -54,9 +41,6 @@ export function CityManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentCity, setCurrentCity] = useState<City | null>(null);
-  const [cityName, setCityName] = useState('');
-  const [aliasCode, setAliasCode] = useState('');
-  const [pinCode, setPinCode] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -108,17 +92,11 @@ export function CityManagement() {
 
   const handleAddNew = () => {
     setCurrentCity(null);
-    setCityName('');
-    setAliasCode('');
-    setPinCode('');
     setIsDialogOpen(true);
   };
 
   const handleEdit = (city: City) => {
     setCurrentCity(city);
-    setCityName(city.name);
-    setAliasCode(city.aliasCode);
-    setPinCode(city.pinCode);
     setIsDialogOpen(true);
   };
   
@@ -141,35 +119,23 @@ export function CityManagement() {
     });
   };
 
-  const handleSave = () => {
-    if (!cityName.trim() || !aliasCode.trim() || !pinCode.trim()) {
-      toast({ title: 'Error', description: 'All fields are required.', variant: 'destructive' });
-      return;
-    }
-
+  const handleSave = (cityData: Omit<City, 'id'>) => {
     let updatedCities;
     if (currentCity) {
       // Editing existing city
-      updatedCities = cities.map(city => (city.id === currentCity.id ? { ...city, name: cityName, aliasCode, pinCode } : city));
-      toast({ title: 'City Updated', description: `"${cityName}" has been updated successfully.` });
+      updatedCities = cities.map(city => (city.id === currentCity.id ? { ...city, ...cityData } : city));
+      toast({ title: 'City Updated', description: `"${cityData.name}" has been updated successfully.` });
     } else {
       // Adding new city
       const newCity: City = {
         id: cities.length > 0 ? Math.max(...cities.map(c => c.id)) + 1 : 1,
-        name: cityName,
-        aliasCode: aliasCode,
-        pinCode: pinCode,
+        ...cityData
       };
       updatedCities = [newCity, ...cities];
-      toast({ title: 'City Added', description: `"${cityName}" has been added to your custom list.` });
+      toast({ title: 'City Added', description: `"${cityData.name}" has been added to your custom list.` });
     }
     saveCities(updatedCities);
-
-    setIsDialogOpen(false);
-    setCurrentCity(null);
-    setCityName('');
-    setAliasCode('');
-    setPinCode('');
+    return true; // Indicate success
   };
 
   const isCustom = cityListSource === 'custom';
@@ -210,55 +176,9 @@ export function CityManagement() {
                 />
             </div>
             {isCustom && (
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                    <Button onClick={handleAddNew}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add New City
-                    </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{currentCity ? 'Edit City' : 'Add New City'}</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4 space-y-4">
-                        <div>
-                            <Label htmlFor="city-name">City Name</Label>
-                            <Input
-                                id="city-name"
-                                placeholder="Enter city name"
-                                value={cityName}
-                                onChange={(e) => setCityName(e.target.value)}
-                                autoFocus
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="alias-code">Alias Code</Label>
-                            <Input
-                                id="alias-code"
-                                placeholder="Enter alias code (e.g., NGP)"
-                                value={aliasCode}
-                                onChange={(e) => setAliasCode(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="pin-code">Pin Code</Label>
-                            <Input
-                                id="pin-code"
-                                placeholder="Enter 6-digit pin code"
-                                value={pinCode}
-                                onChange={(e) => setPinCode(e.target.value)}
-                                maxLength={6}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button onClick={handleSave}>Save</Button>
-                    </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <Button onClick={handleAddNew}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New City
+                </Button>
             )}
             </div>
         </div>
@@ -301,6 +221,12 @@ export function CityManagement() {
           </div>
         )}
       </CardContent>
+       <AddCityDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          onSave={handleSave}
+          city={currentCity}
+        />
     </Card>
   );
 }
