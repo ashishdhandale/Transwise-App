@@ -17,7 +17,7 @@ export function useIsMobile() {
     window.addEventListener("resize", checkSize);
 
     // Cleanup event listener on component unmount
-    return () => window.removeEventListener("resize", check.size);
+    return () => window.removeEventListener("resize", checkSize);
   }, []);
 
   return isMobile;
