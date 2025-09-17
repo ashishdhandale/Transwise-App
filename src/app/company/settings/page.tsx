@@ -9,6 +9,7 @@ import { AdditionalChargesSettings } from '@/components/company/settings/additio
 import { ItemDetailsSettings } from '@/components/company/settings/item-details-settings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { GeneralInstructionsSettings } from '@/components/company/settings/general-instructions-settings';
 
 function CompanySettingsPage() {
   return (
@@ -24,6 +25,7 @@ function CompanySettingsPage() {
             </TabsList>
             <TabsContent value="booking-form">
                 <div className="space-y-6">
+                    <GeneralInstructionsSettings />
                     <Card>
                         <CardContent className="p-4">
                              <Tabs defaultValue="item-table" className="space-y-4">
