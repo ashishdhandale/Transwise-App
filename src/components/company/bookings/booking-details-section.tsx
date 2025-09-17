@@ -1,20 +1,20 @@
 
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
 import { bookingOptions } from '@/lib/booking-data';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 export function BookingDetailsSection() {
-    const [bookingDate, setBookingDate] = React.useState('');
+    const [bookingDate, setBookingDate] = useState('');
 
-    React.useEffect(() => {
+    useEffect(() => {
+        // This will only run on the client, after the initial render,
+        // preventing a hydration mismatch.
         setBookingDate(format(new Date(), 'dd/MM/yyyy'));
     }, []);
     
