@@ -7,6 +7,7 @@ import { BookingSettings } from '@/components/company/settings/booking-settings'
 import { Settings } from 'lucide-react';
 import { AdditionalChargesSettings } from '@/components/company/settings/additional-charges-settings';
 import { ItemDetailsSettings } from '@/components/company/settings/item-details-settings';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function CompanySettingsPage() {
   return (
@@ -16,11 +17,19 @@ function CompanySettingsPage() {
             <Settings className="h-8 w-8" />
             Company Settings
         </h1>
-        <div className="space-y-6">
-            <BookingSettings />
-            <AdditionalChargesSettings />
-            <ItemDetailsSettings />
-        </div>
+        <Tabs defaultValue="booking-form" className="space-y-4">
+            <TabsList>
+                <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
+                <TabsTrigger value="charges">Charges</TabsTrigger>
+            </TabsList>
+            <TabsContent value="booking-form" className="space-y-6">
+                 <BookingSettings />
+                 <ItemDetailsSettings />
+            </TabsContent>
+             <TabsContent value="charges">
+                <AdditionalChargesSettings />
+            </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
