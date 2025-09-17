@@ -69,18 +69,18 @@ export function ItemDetailsTable() {
                 <TableHeader>
                     <TableRow>
                         <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
-                        <TableHead className={`${thClass} w-[150px]`}>EWB no.</TableHead>
-                        <TableHead className={`${thClass} w-[150px]`}>Item Name*</TableHead>
-                        <TableHead className={`${thClass} w-[200px]`}>Description*</TableHead>
-                        <TableHead className={`${thClass} w-[90px]`}>Qty*</TableHead>
-                        <TableHead className={`${thClass} w-[90px]`}>Act.wt*</TableHead>
-                        <TableHead className={`${thClass} w-[90px]`}>Chg.wt*</TableHead>
-                        <TableHead className={`${thClass} w-[90px]`}>Rate</TableHead>
-                        <TableHead className={`${thClass} w-[120px]`}>Freight ON</TableHead>
-                        <TableHead className={`${thClass} w-[110px]`}>Lumpsum</TableHead>
-                        <TableHead className={`${thClass} w-[130px]`}>Pvt.Mark</TableHead>
-                        <TableHead className={`${thClass} w-[130px]`}>Invoice No</TableHead>
-                        <TableHead className={`${thClass} w-[130px]`}>D.Value</TableHead>
+                        <TableHead className={`${thClass} w-[160px]`}>EWB no.</TableHead>
+                        <TableHead className={`${thClass} w-[160px]`}>Item Name*</TableHead>
+                        <TableHead className={`${thClass} w-[220px]`}>Description*</TableHead>
+                        <TableHead className={`${thClass} w-[100px]`}>Qty*</TableHead>
+                        <TableHead className={`${thClass} w-[100px]`}>Act.wt*</TableHead>
+                        <TableHead className={`${thClass} w-[100px]`}>Chg.wt*</TableHead>
+                        <TableHead className={`${thClass} w-[100px]`}>Rate</TableHead>
+                        <TableHead className={`${thClass} w-[130px]`}>Freight ON</TableHead>
+                        <TableHead className={`${thClass} w-[120px]`}>Lumpsum</TableHead>
+                        <TableHead className={`${thClass} w-[140px]`}>Pvt.Mark</TableHead>
+                        <TableHead className={`${thClass} w-[140px]`}>Invoice No</TableHead>
+                        <TableHead className={`${thClass} w-[140px]`}>D.Value</TableHead>
                         <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
                     </TableRow>
                 </TableHeader>
