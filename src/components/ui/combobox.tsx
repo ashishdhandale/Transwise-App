@@ -11,8 +11,8 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
+  CommandItem,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -63,7 +63,7 @@ export function Combobox({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput placeholder={searchPlaceholder} autoFocus />
           <CommandList>
             <CommandEmpty>
                 <div className="py-4 text-center text-sm">
