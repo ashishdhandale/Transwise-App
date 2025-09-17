@@ -7,7 +7,7 @@ import { SearchPanel } from './search-panel';
 import { SearchResults } from './search-results';
 import { ShippingDetails } from './shipping-details';
 import type { Booking } from '@/lib/bookings-dashboard-data';
-import { historyData, type BookingHistory } from '@/lib/history-data';
+import { getHistoryLogs, type BookingHistory } from '@/lib/history-data';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -48,18 +48,8 @@ export function PackageTracking() {
 
   const handleSelectBooking = (booking: Booking) => {
     setSelectedBooking(booking);
-    // Find corresponding history. For now, we create a mock history.
-    const history: BookingHistory = {
-      id: booking.lrNo,
-      logs: [
-        {
-          action: 'Booking Created',
-          details: `Booking created at ${booking.fromCity}`,
-          timestamp: new Date(booking.bookingDate).toLocaleString(),
-          user: 'Branch User'
-        }
-      ]
-    };
+    const allHistory = getHistoryLogs();
+    const history = allHistory.find(h => h.id === booking.lrNo) || null;
     setSelectedBookingHistory(history);
   };
 

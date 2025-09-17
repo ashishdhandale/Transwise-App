@@ -69,6 +69,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
                     setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
                     setSender({ id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
                     setReceiver({ id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
+                    setItemRows(bookingToEdit.itemRows || Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
                 } else {
                      toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                 }
@@ -119,6 +120,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
             chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
             totalAmount: basicFreight, // Simplified for now
             status: 'In Stock',
+            itemRows: itemRows,
         };
 
         try {

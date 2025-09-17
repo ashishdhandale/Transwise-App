@@ -1,4 +1,6 @@
 
+import type { ItemRow } from "@/components/company/bookings/item-details-table";
+
 export interface Booking {
   id: string;
   lrNo: string;
@@ -13,6 +15,7 @@ export interface Booking {
   chgWt: number;
   totalAmount: number;
   status: 'In Stock' | 'In Transit' | 'Cancelled' | 'In HOLD';
+  itemRows: ItemRow[];
 }
 
 export const sampleBookings: Booking[] = [];
