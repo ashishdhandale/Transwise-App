@@ -51,26 +51,12 @@ const BOOKING_SETTINGS_KEY = 'transwise_booking_settings';
 const ITEM_DETAILS_SETTINGS_KEY = 'transwise_item_details_settings';
 const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 const DEFAULT_ROWS = 2;
-
-const defaultColumns: ColumnSetting[] = [
-    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
-    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[160px]' },
-    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
-    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[130px]' },
-    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[120px]' },
-    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-];
+const DEFAULT_ITEM_NAME = 'Frm MAS';
 
 const createEmptyRow = (id: number): ItemRow => ({
     id,
     ewbNo: '',
-    itemName: 'Frm MAS',
+    itemName: DEFAULT_ITEM_NAME,
     description: '',
     qty: '',
     actWt: '',
@@ -162,6 +148,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'Chg.wt':
             return chgWt * rate;
         case 'Fixed':
+            // For 'Fixed', the lumpsum is manually entered, so we don't calculate it here.
+            // We just return what's already there.
             return parseFloat(row.lumpsum) || 0;
         default:
             return 0;
@@ -171,19 +159,18 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   useEffect(() => {
     const updatedRows = rows.map(row => {
         const newRow = { ...row };
-        if (row.freightOn === 'Fixed') {
-            if (row.rate !== '0') {
-              newRow.rate = '0';
-            }
-        } else {
+        // We only recalculate lumpsum if freightOn is NOT 'Fixed'
+        if (row.freightOn !== 'Fixed') {
             const newLumpsum = calculateLumpsum(row);
+            // Check if the new value is different before updating to prevent infinite loops
             if (Math.abs(newLumpsum - (parseFloat(row.lumpsum) || 0)) > 0.001) {
                 newRow.lumpsum = newLumpsum > 0 ? newLumpsum.toString() : '';
             }
         }
         return newRow;
     });
-
+    
+    // Only call onRowsChange if there's an actual difference in the rows data
     if (JSON.stringify(rows) !== JSON.stringify(updatedRows)) {
         onRowsChange(updatedRows);
     }
@@ -194,9 +181,15 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     const newRows = [...rows];
     const newRow = { ...newRows[rowIndex], [columnId]: value };
 
-    if (columnId === 'freightOn' && value === 'Fixed') {
-        newRow.rate = '0'; 
-        newRow.lumpsum = ''; 
+    if (columnId === 'freightOn') {
+        if (value === 'Fixed') {
+            newRow.rate = '0'; // Set rate to 0 when 'Fixed' is chosen
+            newRow.lumpsum = ''; // Clear lumpsum for manual entry
+        } else {
+             // If switching away from fixed, recalculate lumpsum based on current values
+            const recalulatedLumpsum = calculateLumpsum(newRow);
+            newRow.lumpsum = recalulatedLumpsum > 0 ? recalulatedLumpsum.toString() : '';
+        }
     }
     
     if (columnId === 'itemName') {
@@ -293,7 +286,9 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   }
   
   const totals = useMemo(() => {
+      const filledRows = rows.filter(row => row.itemName !== DEFAULT_ITEM_NAME || parseFloat(row.qty) > 0 || parseFloat(row.actWt) > 0);
       return {
+          itemCount: filledRows.length,
           qty: rows.reduce((sum, row) => sum + (parseFloat(row.qty) || 0), 0),
           actWt: rows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0),
           chgWt: rows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0),
@@ -385,19 +380,21 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 </TableBody>
                  <TableFooter>
                     <TableRow>
-                        <TableCell className={`${tfClass} text-right`} colSpan={visibleColumns.findIndex(c => c.id === 'qty') + 1 || 2}>TOTAL ITEM: {rows.length}</TableCell>
+                        <TableCell className={`${tfClass} text-right`} colSpan={getColSpan('qty')}>TOTAL ITEM: {totals.itemCount}</TableCell>
                         
-                        {visibleColumns.slice(visibleColumns.findIndex(c => c.id === 'qty') || 0).map((col) => {
-                           if (!visibleColIds.includes(col.id)) return null;
-
-                            switch(col.id) {
-                                case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
-                                case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
-                                case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
-                                default: return <TableCell key={`total-empty-${col.id}`} className={tfClass}></TableCell>;
+                        {['qty', 'actWt', 'chgWt'].map(id => {
+                            if (visibleColIds.includes(id)) {
+                                switch(id) {
+                                    case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
+                                    case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
+                                    case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
+                                }
                             }
+                            return null;
                         })}
-                        <TableCell className={tfClass}></TableCell>
+
+                        <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 2} className={tfClass}></TableCell>
+
                     </TableRow>
                 </TableFooter>
             </Table>
