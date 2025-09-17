@@ -31,12 +31,14 @@ interface City {
   id: number;
   name: string;
   aliasCode: string;
+  pinCode: string;
 }
 
 const initialCities: City[] = bookingOptions.stations.map((name, index) => ({ 
     id: index + 1, 
     name,
-    aliasCode: name.substring(0, 3).toUpperCase()
+    aliasCode: name.substring(0, 3).toUpperCase(),
+    pinCode: `${440000 + index}`
 }));
 
 export function CityManagement() {
@@ -46,12 +48,14 @@ export function CityManagement() {
   const [currentCity, setCurrentCity] = useState<City | null>(null);
   const [cityName, setCityName] = useState('');
   const [aliasCode, setAliasCode] = useState('');
+  const [pinCode, setPinCode] = useState('');
   const { toast } = useToast();
 
   const filteredCities = useMemo(() => {
     return cities.filter(city => 
         city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        city.aliasCode.toLowerCase().includes(searchTerm.toLowerCase())
+        city.aliasCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        city.pinCode.includes(searchTerm)
     );
   }, [cities, searchTerm]);
 
@@ -59,6 +63,7 @@ export function CityManagement() {
     setCurrentCity(null);
     setCityName('');
     setAliasCode('');
+    setPinCode('');
     setIsDialogOpen(true);
   };
 
@@ -66,6 +71,7 @@ export function CityManagement() {
     setCurrentCity(city);
     setCityName(city.name);
     setAliasCode(city.aliasCode);
+    setPinCode(city.pinCode);
     setIsDialogOpen(true);
   };
 
@@ -79,14 +85,14 @@ export function CityManagement() {
   };
 
   const handleSave = () => {
-    if (!cityName.trim() || !aliasCode.trim()) {
-      toast({ title: 'Error', description: 'City name and alias code cannot be empty.', variant: 'destructive' });
+    if (!cityName.trim() || !aliasCode.trim() || !pinCode.trim()) {
+      toast({ title: 'Error', description: 'All fields are required.', variant: 'destructive' });
       return;
     }
 
     if (currentCity) {
       // Editing existing city
-      setCities(cities.map(city => (city.id === currentCity.id ? { ...city, name: cityName, aliasCode: aliasCode } : city)));
+      setCities(cities.map(city => (city.id === currentCity.id ? { ...city, name: cityName, aliasCode, pinCode } : city)));
       toast({ title: 'City Updated', description: `"${cityName}" has been updated successfully.` });
     } else {
       // Adding new city
@@ -94,6 +100,7 @@ export function CityManagement() {
         id: cities.length > 0 ? Math.max(...cities.map(c => c.id)) + 1 : 1,
         name: cityName,
         aliasCode: aliasCode,
+        pinCode: pinCode,
       };
       setCities([newCity, ...cities]);
       toast({ title: 'City Added', description: `"${cityName}" has been added to the list.` });
@@ -103,6 +110,7 @@ export function CityManagement() {
     setCurrentCity(null);
     setCityName('');
     setAliasCode('');
+    setPinCode('');
   };
 
   return (
@@ -113,7 +121,7 @@ export function CityManagement() {
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search cities or alias..."
+              placeholder="Search cities, alias, or pin code..."
               className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -149,6 +157,16 @@ export function CityManagement() {
                         onChange={(e) => setAliasCode(e.target.value)}
                     />
                 </div>
+                 <div>
+                    <Label htmlFor="pin-code">Pin Code</Label>
+                    <Input
+                        id="pin-code"
+                        placeholder="Enter 6-digit pin code"
+                        value={pinCode}
+                        onChange={(e) => setPinCode(e.target.value)}
+                        maxLength={6}
+                    />
+                </div>
               </div>
               <DialogFooter>
                 <DialogClose asChild>
@@ -168,6 +186,7 @@ export function CityManagement() {
                 <TableHead className="w-[80px]">#</TableHead>
                 <TableHead>City Name</TableHead>
                 <TableHead>Alias Code</TableHead>
+                <TableHead>Pin Code</TableHead>
                 <TableHead className="w-[120px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -177,6 +196,7 @@ export function CityManagement() {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell className="font-medium">{city.name}</TableCell>
                   <TableCell>{city.aliasCode}</TableCell>
+                  <TableCell>{city.pinCode}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(city)}>
                       <Pencil className="h-4 w-4" />
