@@ -20,11 +20,14 @@ function CompanySettingsPage() {
         <Tabs defaultValue="booking-form" className="space-y-4">
             <TabsList>
                 <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
+                <TabsTrigger value="item-table">Item Table</TabsTrigger>
                 <TabsTrigger value="charges">Charges</TabsTrigger>
             </TabsList>
-            <TabsContent value="booking-form" className="space-y-6">
+            <TabsContent value="booking-form">
                  <BookingSettings />
-                 <ItemDetailsSettings />
+            </TabsContent>
+             <TabsContent value="item-table">
+                <ItemDetailsSettings />
             </TabsContent>
              <TabsContent value="charges">
                 <AdditionalChargesSettings />
