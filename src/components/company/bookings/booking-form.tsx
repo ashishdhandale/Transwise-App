@@ -7,7 +7,7 @@ import { ItemDetailsTable, type ItemRow } from '@/components/company/bookings/it
 import { ChargesSection } from '@/components/company/bookings/charges-section';
 import { DeliveryInstructionsSection } from '@/components/company/bookings/delivery-instructions-section';
 import { Card, CardContent } from '@/components/ui/card';
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking } from '@/lib/bookings-dashboard-data';
@@ -16,6 +16,18 @@ import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { format } from 'date-fns';
+import { BookingReceipt } from './booking-receipt';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Download, Loader2 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const GRN_PREFIX_KEY = 'transwise_company_profile';
 
@@ -44,7 +56,7 @@ interface BookingFormProps {
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string => {
     const changes: string[] = [];
 
-    if (format(new Date(oldBooking.bookingDate), 'yyyy-MM-dd') !== format(new Date(newBooking.bookingDate), 'yyyy-MM-dd')) {
+    if (oldBooking.bookingDate && newBooking.bookingDate && format(new Date(oldBooking.bookingDate), 'yyyy-MM-dd') !== format(new Date(newBooking.bookingDate), 'yyyy-MM-dd')) {
         changes.push(`- Booking Date changed from '${format(new Date(oldBooking.bookingDate), 'dd-MMM-yyyy')}' to '${format(new Date(newBooking.bookingDate), 'dd-MMM-yyyy')}'`);
     }
 
@@ -84,7 +96,7 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string
         } else if (oldItem && newItem) {
             const itemFields: (keyof ItemRow)[] = ['ewbNo', 'itemName', 'description', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue'];
             itemFields.forEach(field => {
-                if (oldItem[field] !== newItem[field]) {
+                if (String(oldItem[field] || '') !== String(newItem[field] || '')) {
                     itemChanges.push(`'${String(field)}' from '${oldItem[field] || ""}' to '${newItem[field] || ""}'`);
                 }
             });
@@ -114,6 +126,31 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const [currentGrNumber, setCurrentGrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [showReceipt, setShowReceipt] = useState(false);
+    const [receiptData, setReceiptData] = useState<Booking | null>(null);
+    const receiptRef = useRef<HTMLDivElement>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const generateGrNumber = (bookings: Booking[], prefix: string) => {
+        const relevantGrNumbers = bookings
+            .map(b => b.lrNo)
+            .filter(lrNo => lrNo.startsWith(prefix));
+
+        if (relevantGrNumbers.length === 0) {
+            return `${prefix}01`;
+        }
+
+        const lastSequence = relevantGrNumbers
+            .map(lrNo => parseInt(lrNo.substring(prefix.length), 10))
+            .filter(num => !isNaN(num))
+            .reduce((max, current) => Math.max(max, current), 0);
+            
+        const newSequence = lastSequence + 1;
+        
+        return `${prefix}${String(newSequence).padStart(2, '0')}`;
+    };
 
     useEffect(() => {
         try {
@@ -138,33 +175,17 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
             } else {
                 let grnPrefix = 'CONAG'; // Default prefix
-                const profileSettings = localStorage.getItem(GRN_PREFIX_KEY);
-                if (profileSettings) {
-                    const profile = JSON.parse(profileSettings);
-                    // Only use the company code if it's set and not the default 'CO'
-                    if(profile.companyCode && profile.companyCode !== 'CO') {
-                        grnPrefix = profile.companyCode;
+                try {
+                    const profileSettings = localStorage.getItem(GRN_PREFIX_KEY);
+                    if (profileSettings) {
+                        const profile = JSON.parse(profileSettings);
+                        if(profile.companyCode && profile.companyCode.trim() !== '' && profile.companyCode !== 'CO') {
+                            grnPrefix = profile.companyCode.trim();
+                        }
                     }
+                } catch (e) {
+                    console.error('Could not parse company profile for GRN Prefix, using default.', e);
                 }
-
-                const generateGrNumber = (bookings: Booking[], prefix: string) => {
-                    const relevantGrNumbers = bookings
-                        .map(b => b.lrNo)
-                        .filter(lrNo => lrNo.startsWith(prefix));
-
-                    if (relevantGrNumbers.length === 0) {
-                        return `${prefix}01`;
-                    }
-
-                    const lastSequence = relevantGrNumbers
-                        .map(lrNo => parseInt(lrNo.substring(prefix.length), 10))
-                        .filter(num => !isNaN(num))
-                        .reduce((max, current) => Math.max(max, current), 0);
-                        
-                    const newSequence = lastSequence + 1;
-                    
-                    return `${prefix}${String(newSequence).padStart(2, '0')}`;
-                };
 
                 setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
                 setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
@@ -181,11 +202,14 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     }, [itemRows]);
 
 
-    const handleSaveOrUpdate = () => {
+    const handleSaveOrUpdate = async () => {
         if (!fromStation || !toStation || !sender || !receiver || !bookingDate) {
             toast({ title: 'Missing Information', description: 'Please fill all required fields.', variant: 'destructive' });
             return;
         }
+
+        setIsSubmitting(true);
+        await new Promise(resolve => setTimeout(resolve, 100)); // allow UI to update
 
         const newBookingData: Omit<Booking, 'id'> = {
             lrNo: currentGrNumber,
@@ -208,6 +232,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 const oldBooking = allBookings.find(b => b.id === bookingId);
                 if (!oldBooking) {
                     toast({ title: 'Error', description: 'Original booking not found for update.', variant: 'destructive' });
+                    setIsSubmitting(false);
                     return;
                 }
 
@@ -229,13 +254,59 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 saveBookings(updatedBookings);
                 addHistoryLog(currentGrNumber, 'Booking Created', 'Admin');
                 toast({ title: 'Booking Saved', description: `Successfully saved GR Number: ${currentGrNumber}` });
-                window.location.reload(); // Reset form for next entry
+                
+                setReceiptData(newBooking);
+                setShowReceipt(true);
             }
         } catch (error) {
              toast({ title: 'Error Saving Data', description: `Could not save to local storage.`, variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
         }
     };
     
+    const handleDownloadPdf = async () => {
+        const input = receiptRef.current;
+        if (!input) return;
+
+        setIsDownloading(true);
+        
+        await html2canvas(input, {
+            scale: 2,
+            useCORS: true,
+            logging: true,
+            scrollY: -window.scrollY
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            // A4 size in mm: 210 x 297. We use this ratio for Legal size (216 x 356 mm)
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'legal',
+            });
+    
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const ratio = canvasWidth / canvasHeight;
+            let imgWidth = pdfWidth;
+            let imgHeight = imgWidth / ratio;
+             if (imgHeight > pdfHeight) {
+                imgHeight = pdfHeight;
+                imgWidth = imgHeight * ratio;
+            }
+
+            const x = (pdfWidth - imgWidth) / 2;
+            const y = 0;
+
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+            pdf.save(`receipt-${receiptData?.lrNo || 'download'}.pdf`);
+        });
+
+        setIsDownloading(false);
+    };
+
   return (
     <div className="space-y-4 max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-primary">{isEditMode ? `Edit Booking: ${currentGrNumber}` : 'Create New Booking'}</h1>
@@ -277,6 +348,39 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 </div>
             </CardContent>
         </Card>
+        
+        {receiptData && (
+            <Dialog open={showReceipt} onOpenChange={(isOpen) => {
+                 if (!isOpen) {
+                    window.location.reload(); // Reset form when closing dialog
+                 }
+                 setShowReceipt(isOpen);
+            }}>
+                <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Receipt Preview</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-grow overflow-auto p-4 bg-gray-200">
+                       <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '216mm', minHeight: '356mm', padding: '10mm'}}>
+                            <BookingReceipt booking={receiptData} copyType="Receiver" />
+                            <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
+                            <BookingReceipt booking={receiptData} copyType="Sender" />
+                            <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
+                            <BookingReceipt booking={receiptData} copyType="Driver" />
+                            <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
+                            <BookingReceipt booking={receiptData} copyType="Office" />
+                       </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => window.location.reload()}>Close & New Booking</Button>
+                        <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                            Download PDF
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        )}
     </div>
   );
 }
