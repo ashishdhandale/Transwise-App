@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -109,7 +108,7 @@ export function AppSidebar() {
 
         <Collapsible open={openUserMenu} onOpenChange={setOpenUserMenu}>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Users">
               <Users />
               <span>Users</span>
               <ChevronDown
@@ -167,7 +166,7 @@ export function AppSidebar() {
       <>
         <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
           <CollapsibleTrigger asChild>
-             <SidebarMenuButton href="/company" variant="ghost" className="w-full justify-start" isActive={pathname === '/company' && !pathname.includes('tracking') && !pathname.includes('history')}>
+             <SidebarMenuButton href="/company" variant="ghost" className="w-full justify-start" isActive={pathname === '/company' && !pathname.includes('tracking') && !pathname.includes('history')} tooltip="Dashboard">
               <Home />
               <span>Dashboard</span>
               <ChevronDown
@@ -181,13 +180,13 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/package-tracking" size="sm" isActive={pathname === '/company/package-tracking'}><PackageSearch />Package Tracking</SidebarMenuButton>
+                <SidebarMenuButton href="/company/package-tracking" size="sm" isActive={pathname === '/company/package-tracking'} tooltip="Package Tracking"><PackageSearch />Package Tracking</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/challan-tracking" size="sm" isActive={pathname === '/company/challan-tracking'}><ClipboardList />Challan Tracking</SidebarMenuButton>
+                <SidebarMenuButton href="/company/challan-tracking" size="sm" isActive={pathname === '/company/challan-tracking'} tooltip="Challan Tracking"><ClipboardList />Challan Tracking</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/history" size="sm" isActive={pathname === '/company/history'}><History />History</SidebarMenuButton>
+                <SidebarMenuButton href="/company/history" size="sm" isActive={pathname === '/company/history'} tooltip="History"><History />History</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
@@ -195,7 +194,7 @@ export function AppSidebar() {
         
         <Collapsible open={openBranchMenu} onOpenChange={setOpenBranchMenu}>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Branch">
               <Building />
               <span>Branch</span>
               <ChevronDown
@@ -209,10 +208,10 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><Users />Employees</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Employees"><Users />Employees</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><Users />User Management</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="User Management"><Users />User Management</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
@@ -220,7 +219,7 @@ export function AppSidebar() {
 
         <Collapsible open={openConsignmentMenu} onOpenChange={setOpenConsignmentMenu}>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Consignment">
               <BookCopy />
               <span>Consignment</span>
               <ChevronDown
@@ -234,19 +233,19 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/bookings" size="sm" isActive={pathname.startsWith('/company/bookings')}><BookCopy />Bookings</SidebarMenuButton>
+                <SidebarMenuButton href="/company/bookings" size="sm" isActive={pathname.startsWith('/company/bookings')} tooltip="Bookings"><BookCopy />Bookings</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><FileText />Challan</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Challan"><FileText />Challan</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><Truck />Deliveries</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><FileText />Bills</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Bills"><FileText />Bills</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><Archive />Stock</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Stock"><Archive />Stock</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
@@ -254,7 +253,7 @@ export function AppSidebar() {
 
         <Collapsible open={openMasterMenu} onOpenChange={setOpenMasterMenu}>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton variant="ghost" className="w-full justify-start">
+            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Master">
               <Database />
               <span>Master</span>
               <ChevronDown
@@ -268,19 +267,19 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><MapPin />City</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="City"><MapPin />City</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><Users />Customer</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Customer"><Users />Customer</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><Package />Items</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Items"><Package />Items</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><FileSignature />Quotation</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm"><List />Rate list</SidebarMenuButton>
+                <SidebarMenuButton href="#" size="sm" tooltip="Rate list"><List />Rate list</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>

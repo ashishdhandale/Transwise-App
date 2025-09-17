@@ -187,14 +187,8 @@ const Sidebar = React.forwardRef<
     }, [defaultOpen, setOpen]);
     
     const handleClick = () => {
-      if (!isMobile && collapsible === 'icon') {
+      if (!isMobile && collapsible === 'icon' && !open) {
         setOpen(true);
-      }
-    }
-
-    const handleMouseLeave = () => {
-      if (!isMobile && collapsible === 'icon') {
-        setOpen(false);
       }
     }
 
@@ -245,7 +239,6 @@ const Sidebar = React.forwardRef<
         data-variant={variant}
         data-side={side}
         onClick={handleClick}
-        onMouseLeave={handleMouseLeave}
       >
         {/* This is what handles the sidebar gap on desktop */}
         <div
