@@ -20,7 +20,7 @@ interface ItemRow {
   id: number;
 }
 
-const initialRows: ItemRow[] = Array.from({ length: 6 }, (_, i) => ({ id: i + 1 }));
+const initialRows: ItemRow[] = Array.from({ length: 2 }, (_, i) => ({ id: i + 1 }));
 
 const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
 const tdClass = "p-1";
