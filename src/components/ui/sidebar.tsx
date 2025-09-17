@@ -178,15 +178,13 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, setOpen: setOpenContext, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, open, setOpen, openMobile, setOpenMobile } = useSidebar()
     
-    const [open, setOpen] = React.useState(defaultOpen);
-
     React.useEffect(() => {
-      if (!isMobile) {
+      if (typeof defaultOpen !== 'undefined') {
         setOpen(defaultOpen);
       }
-    }, [isMobile, defaultOpen, setOpen]);
+    }, [defaultOpen, setOpen]);
     
     const handleClick = () => {
       if (!isMobile && collapsible === 'icon') {
