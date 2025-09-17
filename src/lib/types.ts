@@ -78,3 +78,13 @@ export interface City {
   aliasCode: string;
   pinCode: string;
 }
+
+export interface Customer {
+  id: number;
+  name: string;
+  gstin: string;
+  address: string;
+  mobile: string;
+  email: string;
+  type: 'Company' | 'Individual';
+}

@@ -1,0 +1,175 @@
+
+'use client';
+
+import { useState, useMemo, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { AddCustomerDialog } from './add-customer-dialog';
+import type { Customer } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+
+const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
+
+const initialCustomers: Customer[] = [
+    { id: 1, name: 'NOVA INDUSTERIES', gstin: '27AAFCN0123A1Z5', address: '123, Industrial Area, Ahmedabad', mobile: '9876543210', email: 'contact@nova.com', type: 'Company'},
+    { id: 2, name: 'MONIKA SALES', gstin: '22AAAAA0000A1Z5', address: '456, Trade Center, Mumbai', mobile: '9876543211', email: 'sales@monika.com', type: 'Individual' },
+    { id: 3, name: 'PARTY NAME1', gstin: '24ABCDE1234F1Z5', address: '789, Business Park, Pune', mobile: '9876543212', email: 'party1@example.com', type: 'Company' },
+];
+
+export function CustomerManagement() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    try {
+      const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
+      if (savedCustomers) {
+        setCustomers(JSON.parse(savedCustomers));
+      } else {
+        setCustomers(initialCustomers);
+      }
+    } catch (error) {
+      console.error("Failed to load customer data from local storage", error);
+      setCustomers(initialCustomers);
+    }
+  }, []);
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(customer => 
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.mobile.includes(searchTerm) ||
+        customer.email.toLowerCase().includes(searchTerm)
+    );
+  }, [customers, searchTerm]);
+
+  const handleAddNew = () => {
+    setCurrentCustomer(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (customer: Customer) => {
+    setCurrentCustomer(customer);
+    setIsDialogOpen(true);
+  };
+  
+  const saveCustomers = (updatedCustomers: Customer[]) => {
+      try {
+          localStorage.setItem(LOCAL_STORAGE_KEY_CUSTOMERS, JSON.stringify(updatedCustomers));
+          setCustomers(updatedCustomers);
+      } catch (error) {
+           toast({ title: 'Error', description: 'Could not save customers.', variant: 'destructive'});
+      }
+  }
+
+  const handleDelete = (id: number) => {
+    const updatedCustomers = customers.filter(customer => customer.id !== id);
+    saveCustomers(updatedCustomers);
+    toast({
+      title: 'Customer Deleted',
+      description: 'The customer has been removed from your list.',
+      variant: 'destructive',
+    });
+  };
+
+  const handleSave = (customerData: Omit<Customer, 'id'>) => {
+    let updatedCustomers;
+    if (currentCustomer) {
+      updatedCustomers = customers.map(customer => (customer.id === currentCustomer.id ? { ...customer, ...customerData } : customer));
+      toast({ title: 'Customer Updated', description: `"${customerData.name}" has been updated successfully.` });
+    } else {
+      const newCustomer: Customer = {
+        id: customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1,
+        ...customerData
+      };
+      updatedCustomers = [newCustomer, ...customers];
+      toast({ title: 'Customer Added', description: `"${customerData.name}" has been added.` });
+    }
+    saveCustomers(updatedCustomers);
+    return true; // Indicate success
+  };
+
+  return (
+    <Card>
+       <CardHeader>
+            <CardTitle className="font-headline">Manage Customers</CardTitle>
+            <div className="flex flex-row items-center justify-between pt-4">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                    placeholder="Search by name, GST, mobile..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <Button onClick={handleAddNew}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Customer
+                </Button>
+            </div>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto border rounded-md max-h-[70vh]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Customer Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>GSTIN</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead className="w-[120px] text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCustomers.map((customer) => (
+                <TableRow key={customer.id}>
+                  <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell><Badge variant="secondary">{customer.type}</Badge></TableCell>
+                  <TableCell>{customer.gstin}</TableCell>
+                  <TableCell>{customer.address}</TableCell>
+                  <TableCell>{customer.mobile}</TableCell>
+                  <TableCell>{customer.email}</TableCell>
+                  <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(customer)}>
+                      <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(customer.id)}>
+                      <Trash2 className="h-4 w-4" />
+                      </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        {filteredCustomers.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground">
+            No customers found.
+          </div>
+        )}
+      </CardContent>
+       <AddCustomerDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          onSave={handleSave}
+          customer={currentCustomer}
+        />
+    </Card>
+  );
+}

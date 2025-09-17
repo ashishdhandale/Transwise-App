@@ -273,7 +273,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="/company/master/city" size="sm" isActive={pathname === '/company/master/city'} tooltip="City"><MapPin />City</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Customer"><Users />Customer</SidebarMenuButton>
+                <SidebarMenuButton href="/company/master/customer" size="sm" isActive={pathname === '/company/master/customer'} tooltip="Customer"><Users />Customer</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Items"><Package />Items</SidebarMenuButton>
