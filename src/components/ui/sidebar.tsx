@@ -581,6 +581,7 @@ const SidebarMenuButton = React.forwardRef<
     };
 
     const button = (
+      // @ts-ignore - Issues with Ref and Link component
       <Comp
         ref={ref}
         href={href!}
