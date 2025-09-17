@@ -26,7 +26,7 @@ const LOCAL_STORAGE_KEY_PROFILE = 'transwise_company_profile';
 type CityListSource = 'default' | 'custom';
 
 export function BookingDetailsSection() {
-    const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
+    const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const { toast } = useToast();
@@ -37,6 +37,11 @@ export function BookingDetailsSection() {
     
     // Memoize bookings to prevent re-filtering on every render
     const allBookings = useMemo(() => sampleBookings, []);
+
+    useEffect(() => {
+        // Set initial date only on the client
+        setBookingDate(new Date());
+    }, []);
 
     useEffect(() => {
         try {
