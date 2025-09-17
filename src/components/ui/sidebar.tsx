@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -58,7 +59,7 @@ const SidebarProvider = React.forwardRef<
 >(
   (
     {
-      defaultOpen = true,
+      defaultOpen = false,
       open: openProp,
       onOpenChange: setOpenProp,
       className,
@@ -174,11 +175,13 @@ const Sidebar = React.forwardRef<
       defaultOpen = false,
       className,
       children,
+      onMouseEnter,
+      onMouseLeave,
       ...props
     },
     ref
   ) => {
-    const { isMobile, open, setOpen, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, open, setOpen, openMobile, setOpenMobile, state: sidebarState } = useSidebar()
     
     React.useEffect(() => {
       if (typeof defaultOpen !== 'undefined') {
@@ -187,6 +190,21 @@ const Sidebar = React.forwardRef<
     }, [defaultOpen, setOpen]);
     
     const state = open ? "expanded" : "collapsed"
+
+    const handleMouseEnter = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        if (sidebarState === 'collapsed') {
+            setOpen(true);
+        }
+        onMouseEnter?.(event);
+    }, [sidebarState, setOpen, onMouseEnter]);
+
+    const handleMouseLeave = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        if (sidebarState === 'expanded') {
+            setOpen(false);
+        }
+        onMouseLeave?.(event);
+    }, [sidebarState, setOpen, onMouseLeave]);
+
 
     if (collapsible === "none") {
       return (
@@ -232,6 +250,8 @@ const Sidebar = React.forwardRef<
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* This is what handles the sidebar gap on desktop */}
         <div

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -345,7 +346,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar defaultOpen={true}>
+    <Sidebar defaultOpen={false}>
       <SidebarHeader className="border-b p-4">
         <Link href={isAdmin ? '/admin' : isCompany ? '/company' : '/'}>
           <div
