@@ -20,6 +20,7 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
@@ -123,7 +124,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         console.error("Failed to load item options", error);
     }
   }, []);
-
+  
   useEffect(() => {
     setIsClient(true);
     loadItems();
@@ -156,7 +157,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
       console.error("Could not load settings, using defaults.", error);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient, onRowsChange]);
+  }, [isClient]);
 
   const calculateLumpsum = useCallback((row: ItemRow) => {
     const qty = parseFloat(row.qty) || 0;
