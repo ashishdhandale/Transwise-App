@@ -116,6 +116,7 @@ export function PartyDetailsSection() {
     }, []);
 
     useEffect(() => {
+        // Load customers only on the client side to prevent hydration errors
         loadCustomers();
     }, [loadCustomers]);
 
