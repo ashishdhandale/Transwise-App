@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,9 +20,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const printOptions = [
     { id: 'printAll', label: 'ALL' },
-    { id: 'printCgnor', label: "C'gnor" },
-    { id: 'printCgnee', label: "C'gnee" },
+    { id: 'printSender', label: "Sender" },
+    { id: 'printReceiver', label: "Receiver" },
     { id: 'printDriver', label: "Driver" },
+    { id: 'printOffice', label: "Office Copy" },
 ];
 
 const notificationOptions = [
@@ -52,9 +53,14 @@ export function GeneralInstructionsSettings() {
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      printCopy: ['printAll'],
+      printCopy: ['printAll', 'printSender', 'printReceiver', 'printDriver', 'printOffice'],
       sendNotification: ['notifSms', 'notifWhatsapp'],
     },
+  });
+  
+  const watchedPrintCopy = useWatch({
+      control: form.control,
+      name: 'printCopy'
   });
 
   useEffect(() => {
@@ -68,6 +74,27 @@ export function GeneralInstructionsSettings() {
       console.error("Failed to load general instructions settings", error);
     }
   }, [form]);
+
+  useEffect(() => {
+    const allPrintIds = printOptions.filter(o => o.id !== 'printAll').map(o => o.id);
+    const allSelected = allPrintIds.every(id => watchedPrintCopy.includes(id));
+
+    if (allSelected && !watchedPrintCopy.includes('printAll')) {
+        form.setValue('printCopy', ['printAll', ...allPrintIds], { shouldDirty: true });
+    } else if (!allSelected && watchedPrintCopy.includes('printAll')) {
+        form.setValue('printCopy', watchedPrintCopy.filter(id => id !== 'printAll'), { shouldDirty: true });
+    }
+  }, [watchedPrintCopy, form]);
+
+  const handleAllChange = (checked: boolean) => {
+      const allPrintIds = printOptions.map(o => o.id);
+      if (checked) {
+          form.setValue('printCopy', allPrintIds, { shouldDirty: true });
+      } else {
+          form.setValue('printCopy', [], { shouldDirty: true });
+      }
+  };
+
 
   const onSubmit = async (data: SettingsFormValues) => {
     setIsSubmitting(true);
@@ -124,13 +151,17 @@ export function GeneralInstructionsSettings() {
                                                 <Checkbox
                                                     checked={field.value?.includes(item.id)}
                                                     onCheckedChange={(checked) => {
-                                                        return checked
-                                                        ? field.onChange([...field.value, item.id])
-                                                        : field.onChange(
-                                                            field.value?.filter(
-                                                                (value) => value !== item.id
-                                                            )
-                                                            )
+                                                        if (item.id === 'printAll') {
+                                                            handleAllChange(!!checked);
+                                                        } else {
+                                                            return checked
+                                                            ? field.onChange([...field.value, item.id])
+                                                            : field.onChange(
+                                                                field.value?.filter(
+                                                                    (value) => value !== item.id
+                                                                )
+                                                                )
+                                                        }
                                                     }}
                                                 />
                                             </FormControl>
