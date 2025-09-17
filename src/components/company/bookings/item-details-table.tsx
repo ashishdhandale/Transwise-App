@@ -460,3 +460,4 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </div>
   );
 }
+
