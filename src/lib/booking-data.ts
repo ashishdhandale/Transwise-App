@@ -19,9 +19,9 @@ export const bookingOptions = {
         { value: 'TBB', label: 'TBB' },
     ],
     parties: [
-        { name: 'NOVA INDUSTERIES', gst: '27AAFCN0123A1Z5' },
-        { name: 'MONIKA SALES', gst: '22AAAAA0000A1Z5' },
-        { name: 'PARTY NAME1', gst: '24ABCDE1234F1Z5' },
+        { name: 'NOVA INDUSTERIES', gst: '27AAFCN0123A1Z5', address: '123, Industrial Area, Ahmedabad', mobile: '9876543210' },
+        { name: 'MONIKA SALES', gst: '22AAAAA0000A1Z5', address: '456, Trade Center, Mumbai', mobile: '9876543211' },
+        { name: 'PARTY NAME1', gst: '24ABCDE1234F1Z5', address: '789, Business Park, Pune', mobile: '9876543212' },
     ],
     items: [
         'Frm MAS',

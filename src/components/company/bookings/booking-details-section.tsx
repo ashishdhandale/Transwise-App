@@ -7,17 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { bookingOptions } from '@/lib/booking-data';
-import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
+import { Combobox } from '@/components/ui/combobox';
+import React from 'react';
 
 export function BookingDetailsSection() {
-    const [bookingDate, setBookingDate] = useState('');
-
-    useEffect(() => {
-        // Defer setting the date until after the initial client render to avoid mismatch
-        setBookingDate(format(new Date(), 'dd/MM/yyyy'));
-    }, []);
+    const bookingDate = format(new Date(), 'dd/MM/yyyy');
     
+    const [stationValue, setStationValue] = React.useState('');
+    const stationOptions = bookingOptions.stations.map(station => ({ label: station, value: station }));
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
             <div className="space-y-1">
@@ -53,14 +52,16 @@ export function BookingDetailsSection() {
             <div className="space-y-1">
                 <Label htmlFor="toStation">To Station</Label>
                 <div className="flex gap-1">
-                    <Select defaultValue="AHMDABAD">
-                        <SelectTrigger id="toStation">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                             {bookingOptions.stations.map(station => <SelectItem key={station} value={station}>{station}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
+                    <Combobox
+                        options={stationOptions}
+                        value={stationValue}
+                        onChange={setStationValue}
+                        placeholder="Select station..."
+                        searchPlaceholder="Search stations..."
+                        notFoundMessage="No station found."
+                        addMessage="Add New City"
+                        onAdd={() => alert(`Adding new city: ${stationValue}`)}
+                    />
                     <Button size="icon" variant="outline" className="border-green-500 text-green-500 hover:bg-green-50 hover:text-green-600">
                         <Plus className="h-5 w-5"/>
                     </Button>
