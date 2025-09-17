@@ -25,9 +25,6 @@ const LOCAL_STORAGE_KEY_PROFILE = 'transwise_company_profile';
 
 type CityListSource = 'default' | 'custom';
 
-// This will serve as a fallback if no existing bookings are found
-let grSequence = 0;
-
 export function BookingDetailsSection() {
     const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
     const [stationOptions, setStationOptions] = useState<City[]>([]);
@@ -96,14 +93,13 @@ export function BookingDetailsSection() {
         const alias = fromStation ? fromStation.aliasCode : stationName.substring(0, 3).toUpperCase();
         const prefix = `${companyCode}${alias}`;
 
-        // Find the last sequence number for this prefix from existing bookings
-        const lastBookingForPrefix = sampleBookings
+        // Find the highest sequence number for this prefix from existing bookings
+        const lastSequence = sampleBookings
             .filter(b => b.lrNo.startsWith(prefix))
             .map(b => parseInt(b.lrNo.replace(prefix, ''), 10))
-            .sort((a, b) => b - a)[0];
+            .filter(num => !isNaN(num)) // Filter out any parsing errors
+            .reduce((max, current) => Math.max(max, current), 0);
 
-        const lastSequence = isNaN(lastBookingForPrefix) ? 0 : lastBookingForPrefix;
-        
         const newSequence = lastSequence + 1;
         
         setGrNumber(`${prefix}${String(newSequence).padStart(2, '0')}`);
@@ -116,11 +112,10 @@ export function BookingDetailsSection() {
     }, [loadStationOptions]);
     
      useEffect(() => {
-        if (fromStationValue && stationOptions.length > 0 && !hasRunInitialEffect.current) {
+        if (fromStationValue && stationOptions.length > 0 && !grNumber) {
             generateGrNumber(fromStationValue);
-            hasRunInitialEffect.current = true;
         }
-     }, [stationOptions, fromStationValue, generateGrNumber]);
+     }, [stationOptions, fromStationValue, generateGrNumber, grNumber]);
 
     const handleFromStationChange = (newValue: string) => {
         setFromStationValue(newValue);
