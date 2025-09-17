@@ -10,6 +10,7 @@ import { ItemDetailsSettings } from '@/components/company/settings/item-details-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { GeneralInstructionsSettings } from '@/components/company/settings/general-instructions-settings';
+import { CompanyProfileSettings } from '@/components/company/settings/company-profile-settings';
 
 function CompanySettingsPage() {
   return (
@@ -19,10 +20,14 @@ function CompanySettingsPage() {
             <Settings className="h-8 w-8" />
             Company Settings
         </h1>
-        <Tabs defaultValue="booking-form" className="space-y-4">
+        <Tabs defaultValue="profile" className="space-y-4">
             <TabsList>
+                <TabsTrigger value="profile">Company Profile</TabsTrigger>
                 <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
             </TabsList>
+            <TabsContent value="profile">
+                <CompanyProfileSettings />
+            </TabsContent>
             <TabsContent value="booking-form">
                 <div className="space-y-6">
                     <GeneralInstructionsSettings />

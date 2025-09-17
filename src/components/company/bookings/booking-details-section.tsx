@@ -20,6 +20,7 @@ import { Calendar } from '@/components/ui/calendar';
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
+const LOCAL_STORAGE_KEY_PROFILE = 'transwise_company_profile';
 
 type CityListSource = 'default' | 'custom';
 
@@ -34,8 +35,22 @@ export function BookingDetailsSection() {
     const [fromStationValue, setFromStationValue] = React.useState('Ahmedabad');
     const [toStationValue, setToStationValue] = React.useState('');
     const [grNumber, setGrNumber] = useState('');
+    const [companyCode, setCompanyCode] = useState('CO');
     const hasRunInitialEffect = useRef(false);
 
+    useEffect(() => {
+        try {
+            const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
+            if (savedProfile) {
+                const profile = JSON.parse(savedProfile);
+                if (profile.companyCode) {
+                    setCompanyCode(profile.companyCode.toUpperCase());
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load company profile', error);
+        }
+    }, []);
 
     const loadStationOptions = useCallback(() => {
          try {
@@ -70,26 +85,27 @@ export function BookingDetailsSection() {
         }
     }, []);
 
+    const generateGrNumber = useCallback((stationName: string) => {
+        const fromStation = stationOptions.find(s => s.name === stationName);
+        const alias = fromStation ? fromStation.aliasCode : 'XXX';
+        const sequence = String(++grSequence).padStart(2, '0');
+        setGrNumber(`${companyCode}${alias}${sequence}`);
+    }, [stationOptions, companyCode]);
+
     useEffect(() => {
         loadStationOptions();
     }, [loadStationOptions]);
     
      useEffect(() => {
         if (stationOptions.length > 0 && !hasRunInitialEffect.current) {
-            const fromStation = stationOptions.find(s => s.name === fromStationValue);
-            const alias = fromStation ? fromStation.aliasCode : 'XXX';
-            const sequence = String(++grSequence).padStart(2, '0');
-            setGrNumber(`CO${alias}${sequence}`);
+            generateGrNumber(fromStationValue);
             hasRunInitialEffect.current = true;
         }
-     }, [stationOptions, fromStationValue]);
+     }, [stationOptions, fromStationValue, generateGrNumber]);
 
     const handleFromStationChange = (newValue: string) => {
         setFromStationValue(newValue);
-        const fromStation = stationOptions.find(s => s.name === newValue);
-        const alias = fromStation ? fromStation.aliasCode : 'XXX';
-        const sequence = String(++grSequence).padStart(2, '0');
-        setGrNumber(`CO${alias}${sequence}`);
+        generateGrNumber(newValue);
     }
 
 
