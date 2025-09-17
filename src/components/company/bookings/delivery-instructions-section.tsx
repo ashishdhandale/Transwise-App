@@ -23,7 +23,7 @@ const InstructionSelect = ({ label, options, defaultValue }: { label: string, op
 export function DeliveryInstructionsSection() {
   const instructions = [
     { key: 'insurance', label: 'Insurance', options: bookingOptions.yesNo, defaultValue: 'No' },
-    { key: 'deliveryAt', label: 'Delivery At', options: bookingOptions.deliveryAt, defaultValue: 'Godown Deli' },
+    { key: 'deliveryAt', label: 'Delivery At', options: bookingOptions.deliveryAt, defaultValue: 'Godown Deliv' },
     { key: 'dpoint', label: 'D.Point', options: bookingOptions.deliveryPoints, defaultValue: 'DWARKA COI' },
     { key: 'pod', label: 'POD?', options: bookingOptions.yesNo, defaultValue: 'No' },
     { key: 'attachCc', label: 'Attach CC', options: bookingOptions.yesNo, defaultValue: 'Yes' },
