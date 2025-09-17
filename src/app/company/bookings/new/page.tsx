@@ -33,12 +33,12 @@ function NewBookingForm() {
                     <BookingDetailsSection />
                     <PartyDetailsSection />
                     <ItemDetailsTable />
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 items-start">
-                        <SummaryAndActionsSection />
+                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                         <div className="space-y-4">
                             <ChargesSection />
                             <DeliveryInstructionsSection />
                         </div>
+                        <SummaryAndActionsSection />
                     </div>
                 </CardContent>
             </Card>
