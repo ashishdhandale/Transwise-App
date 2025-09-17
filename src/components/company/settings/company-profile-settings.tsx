@@ -19,8 +19,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Server } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getCompanyProfile, saveCompanyProfile } from '@/app/company/settings/actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
@@ -36,17 +38,17 @@ const profileSchema = z.object({
 
 export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
 
-const LOCAL_STORAGE_KEY = 'transwise_company_profile';
 
 export function CompanyProfileSettings() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const form = useForm<CompanyProfileFormValues>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
             companyName: '',
-            grnPrefix: 'CONAG',
+            grnPrefix: '',
             headOfficeAddress: '',
             officeAddress2: '',
             city: '',
@@ -58,36 +60,60 @@ export function CompanyProfileSettings() {
     });
 
     useEffect(() => {
-        try {
-            const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (savedProfile) {
-                const profileData = JSON.parse(savedProfile);
+        async function loadProfile() {
+            try {
+                setIsLoading(true);
+                const profileData = await getCompanyProfile();
                 const result = profileSchema.safeParse(profileData);
                 if (result.success) {
                     form.reset(result.data);
                 }
+            } catch (error) {
+                console.error("Failed to load company profile", error);
+                 toast({
+                    title: "Error Loading Profile",
+                    description: "Could not fetch company profile from the server.",
+                    variant: "destructive"
+                });
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error("Failed to load company profile", error);
         }
-    }, [form]);
+        loadProfile();
+    }, [form, toast]);
 
     async function onSubmit(values: CompanyProfileFormValues) {
         setIsSubmitting(true);
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+        const result = await saveCompanyProfile(values);
+        if (result.success) {
             toast({
                 title: "Profile Updated",
                 description: "Your company profile has been saved successfully.",
             });
-        } catch (error) {
-            toast({
+        } else {
+             toast({
                 title: "Error",
-                description: "Could not save your profile. Please try again.",
+                description: result.message,
                 variant: "destructive"
             });
         }
         setIsSubmitting(false);
+    }
+    
+    if (isLoading) {
+        return (
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-4 w-3/4" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+            </Card>
+        )
     }
 
   return (
@@ -239,9 +265,9 @@ export function CompanyProfileSettings() {
                     />
                 </div>
 
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Profile
+                <Button type="submit" disabled={isSubmitting || isLoading}>
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Server className="mr-2 h-4 w-4" />}
+                    Save Profile to Database
                 </Button>
             </form>
             </Form>

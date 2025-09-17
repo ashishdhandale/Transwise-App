@@ -16,11 +16,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
-const LOCAL_STORAGE_KEY_PROFILE = 'transwise_company_profile';
 
 type CityListSource = 'default' | 'custom';
 
@@ -35,6 +35,7 @@ interface BookingDetailsSectionProps {
     bookingDate?: Date;
     onBookingDateChange: (date?: Date) => void;
     isEditMode: boolean;
+    companyProfile: CompanyProfileFormValues | null;
 }
 
 
@@ -48,7 +49,8 @@ export function BookingDetailsSection({
     grNumber,
     bookingDate,
     onBookingDateChange,
-    isEditMode
+    isEditMode,
+    companyProfile,
 }: BookingDetailsSectionProps) {
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
@@ -102,20 +104,13 @@ export function BookingDetailsSection({
     }, [stationOptions, onToStationChange]);
 
     useEffect(() => {
-        if (isEditMode) return;
-        try {
-            const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
-            if (savedProfile) {
-                const profile = JSON.parse(savedProfile);
-                if (profile.city && !fromStation) {
-                   handleFromStationChange(profile.city);
-                }
-            }
-        } catch (error) {
-            console.error('Failed to load company profile', error);
+        if (isEditMode || !companyProfile) return;
+        
+        if (companyProfile.city && !fromStation) {
+            handleFromStationChange(companyProfile.city);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fromStation, stationOptions, isEditMode]); // Re-evaluate when options load or fromStation is reset
+    }, [fromStation, stationOptions, isEditMode, companyProfile]); 
 
 
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {

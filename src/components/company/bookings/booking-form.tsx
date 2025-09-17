@@ -28,8 +28,9 @@ import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 
-const GRN_PREFIX_KEY = 'transwise_company_profile';
 const CUSTOMERS_KEY = 'transwise_customers';
 
 
@@ -129,6 +130,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState<Booking | null>(null);
@@ -155,52 +157,50 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     };
 
     useEffect(() => {
-        try {
-            const parsedBookings = getBookings();
-            setAllBookings(parsedBookings);
+        async function loadInitialData() {
+            try {
+                const profile = await getCompanyProfile();
+                setCompanyProfile(profile);
 
-            if (isEditMode) {
-                const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
-                if (bookingToEdit) {
-                    const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
-                    const senderProfile = savedCustomers.find(c => c.name === bookingToEdit.sender) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
-                    const receiverProfile = savedCustomers.find(c => c.name === bookingToEdit.receiver) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
+                const parsedBookings = getBookings();
+                setAllBookings(parsedBookings);
 
-                    setCurrentGrNumber(bookingToEdit.lrNo);
-                    setBookingDate(new Date(bookingToEdit.bookingDate));
-                    setBookingType(bookingToEdit.lrType);
-                    setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
-                    setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
-                    setSender(senderProfile);
-                    setReceiver(receiverProfile);
-                    setItemRows(bookingToEdit.itemRows || Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
-                    setGrandTotal(bookingToEdit.totalAmount);
-                } else {
-                     toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
-                }
+                if (isEditMode) {
+                    const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
+                    if (bookingToEdit) {
+                        const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+                        const senderProfile = savedCustomers.find(c => c.name === bookingToEdit.sender) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
+                        const receiverProfile = savedCustomers.find(c => c.name === bookingToEdit.receiver) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
 
-            } else {
-                let grnPrefix = 'CONAG'; // Default prefix
-                try {
-                    const profileSettings = localStorage.getItem(GRN_PREFIX_KEY);
-                    if (profileSettings) {
-                        const profile = JSON.parse(profileSettings);
-                        if(profile.grnPrefix && profile.grnPrefix.trim() !== '') {
-                            grnPrefix = profile.grnPrefix.trim();
-                        }
+                        setCurrentGrNumber(bookingToEdit.lrNo);
+                        setBookingDate(new Date(bookingToEdit.bookingDate));
+                        setBookingType(bookingToEdit.lrType);
+                        setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
+                        setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
+                        setSender(senderProfile);
+                        setReceiver(receiverProfile);
+                        setItemRows(bookingToEdit.itemRows || Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
+                        setGrandTotal(bookingToEdit.totalAmount);
+                    } else {
+                         toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                     }
-                } catch (e) {
-                    console.error('Could not parse company profile for GRN Prefix, using default.', e);
+
+                } else {
+                    let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
+                    setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
+                    setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
                 }
 
-                setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
-                setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
+            } catch (error) {
+                console.error("Failed to process bookings from localStorage or fetch profile", error);
+                toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
             }
-
-        } catch (error) {
-            console.error("Failed to process bookings from localStorage", error);
         }
-    }, [isEditMode, bookingId, toast]);
+        
+        loadInitialData();
+    // We only want this to run once on mount, so we pass an empty dependency array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bookingId, isEditMode, toast]);
 
 
     const basicFreight = useMemo(() => {
@@ -329,6 +329,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     bookingDate={bookingDate}
                     onBookingDateChange={setBookingDate}
                     isEditMode={isEditMode}
+                    companyProfile={companyProfile}
                 />
                 <PartyDetailsSection 
                     onSenderChange={setSender}
@@ -355,7 +356,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             </CardContent>
         </Card>
         
-        {receiptData && (
+        {receiptData && companyProfile && (
             <Dialog open={showReceipt} onOpenChange={(isOpen) => {
                  if (!isOpen) {
                     window.location.reload(); // Reset form when closing dialog
@@ -368,13 +369,13 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     </DialogHeader>
                     <div className="flex-grow overflow-auto p-4 bg-gray-200">
                        <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '216mm', minHeight: '356mm', padding: '10mm'}}>
-                            <BookingReceipt booking={receiptData} copyType="Receiver" />
+                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Receiver" />
                             <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                            <BookingReceipt booking={receiptData} copyType="Sender" />
+                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Sender" />
                             <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                            <BookingReceipt booking={receiptData} copyType="Driver" />
+                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Driver" />
                             <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                            <BookingReceipt booking={receiptData} copyType="Office" />
+                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Office" />
                        </div>
                     </div>
                     <DialogFooter>

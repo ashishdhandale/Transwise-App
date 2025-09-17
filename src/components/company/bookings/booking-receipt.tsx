@@ -3,9 +3,11 @@
 
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { format, parseISO } from 'date-fns';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 interface BookingReceiptProps {
     booking: Booking;
+    companyProfile: CompanyProfileFormValues;
     copyType: 'Receiver' | 'Sender' | 'Driver' | 'Office';
 }
 
@@ -16,10 +18,8 @@ const DetailItem = ({ label, value }: { label: string; value: string | number | 
     </div>
 );
 
-export function BookingReceipt({ booking, copyType }: BookingReceiptProps) {
+export function BookingReceipt({ booking, companyProfile, copyType }: BookingReceiptProps) {
 
-    const companyProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('transwise_company_profile') || '{}') : {};
-    
     return (
         <div className="p-4 font-mono text-xs text-black">
             <header className="grid grid-cols-3 gap-4 border-b-2 border-black pb-2">
