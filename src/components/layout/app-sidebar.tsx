@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -292,6 +291,16 @@ export function AppSidebar() {
             <span>Reports</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
+         <SidebarMenuItem>
+            <SidebarMenuButton
+              href="/company/settings"
+              tooltip="Settings"
+              isActive={pathname.startsWith('/company/settings')}
+            >
+              <Settings />
+              <span>Settings</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
       </>
     );
   } else if (isEmployee) {
@@ -350,12 +359,12 @@ export function AppSidebar() {
       <SidebarHeader className="border-b p-4">
         <Link href={isAdmin ? '/admin' : isCompany ? '/company' : '/'}>
           <div
-            className="flex items-center gap-2 group-data-[collapsible=icon]:hidden"
+            className={cn("flex items-center gap-2", state === 'collapsed' && "group-hover/sidebar-wrapper:flex",  state === 'expanded' && 'flex')}
           >
             <Mountain />
             <span className="font-semibold text-lg">Transwise</span>
           </div>
-          <div className="hidden group-data-[collapsible=icon]:block">
+           <div className={cn("hidden", state === 'collapsed' && "group-hover/sidebar-wrapper:hidden")}>
             <Mountain />
           </div>
         </Link>
@@ -385,11 +394,11 @@ export function AppSidebar() {
             />
             <AvatarFallback>{user.substring(0, 2)}</AvatarFallback>
           </Avatar>
-          <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+           <div className={cn("flex-1 overflow-hidden", state === 'collapsed' && 'group-hover/sidebar-wrapper:block hidden', state === 'expanded' && 'block')}>
             <p className="text-sm font-medium truncate">{user}</p>
             <p className="text-xs text-muted-foreground truncate">{email}</p>
           </div>
-          <MoreHorizontal className="size-5 group-data-[collapsible=icon]:hidden" />
+          <MoreHorizontal className={cn("size-5", state === 'collapsed' && 'group-hover/sidebar-wrapper:block hidden', state === 'expanded' && 'block')} />
         </div>
       </SidebarFooter>
     </Sidebar>

@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -20,23 +19,47 @@ interface ItemRow {
   id: number;
 }
 
-const initialRows: ItemRow[] = Array.from({ length: 2 }, (_, i) => ({ id: i + 1 }));
-
 const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
 const tdClass = "p-1";
 const inputClass = "h-8 text-xs";
+const LOCAL_STORAGE_KEY = 'transwise_booking_settings';
+const DEFAULT_ROWS = 2;
 
 export function ItemDetailsTable() {
-  const [rows, setRows] = useState<ItemRow[]>(initialRows);
+  const [rows, setRows] = useState<ItemRow[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    let initialRowCount = DEFAULT_ROWS;
+    try {
+      const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        if (parsedSettings.defaultItemRows && typeof parsedSettings.defaultItemRows === 'number') {
+          initialRowCount = parsedSettings.defaultItemRows;
+        }
+      }
+    } catch (error) {
+      console.error("Could not load booking settings, using default.", error);
+    }
+    
+    setRows(Array.from({ length: initialRowCount }, (_, i) => ({ id: Date.now() + i })));
+  }, []);
 
   const addRow = () => {
-    setRows([...rows, { id: rows.length + 1 }]);
+    setRows([...rows, { id: Date.now() }]);
   };
   
   const removeRow = (id: number) => {
-      if (rows.length > 1) { // Prevent removing the last row
+      if (rows.length > 1) { 
         setRows(rows.filter(row => row.id !== id));
       }
+  }
+
+  if (!isClient) {
+    // Render a placeholder or skeleton on the server
+    return <div>Loading table...</div>;
   }
 
   return (
