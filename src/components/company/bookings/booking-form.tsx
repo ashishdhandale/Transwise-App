@@ -71,6 +71,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
                     setSender({ id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
                     setReceiver({ id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
                     setItemRows(bookingToEdit.itemRows || Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
+                    setGrandTotal(bookingToEdit.totalAmount);
                 } else {
                      toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                 }
@@ -102,7 +103,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
     }, [itemRows]);
 
 
-    const handleSaveOrUpdate = () => {
+    const handleSaveOrUpdate = (finalGrandTotal: number) => {
         if (!fromStation || !toStation || !sender || !receiver || !bookingDate) {
             toast({ title: 'Missing Information', description: 'Please fill all required fields.', variant: 'destructive' });
             return;
@@ -119,7 +120,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
             itemDescription: itemRows.map(r => r.itemName).join(', '),
             qty: itemRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
-            totalAmount: grandTotal,
+            totalAmount: finalGrandTotal,
             status: 'In Stock',
             itemRows: itemRows,
         };
@@ -171,10 +172,10 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
                 <Separator className="my-6 border-dashed" />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div className="lg:col-span-2">
-                         <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} />
+                         <MainActionsSection onSave={() => handleSaveOrUpdate(grandTotal)} isEditMode={isEditMode} />
                     </div>
                     <div className="space-y-4">
-                        <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} />
+                        <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
                         <DeliveryInstructionsSection />
                     </div>
                 </div>

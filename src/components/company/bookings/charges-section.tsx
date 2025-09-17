@@ -20,9 +20,10 @@ const ChargeInput = ({ label, value, readOnly = false, type = 'number' }: { labe
 interface ChargesSectionProps {
     basicFreight: number;
     onGrandTotalChange: (total: number) => void;
+    initialGrandTotal?: number;
 }
 
-export function ChargesSection({ basicFreight, onGrandTotalChange }: ChargesSectionProps) {
+export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal }: ChargesSectionProps) {
     const [charges, setCharges] = useState<ChargeSetting[]>([]);
     const [gstValue, setGstValue] = useState(0);
     const [gstAmount, setGstAmount] = useState(0);
@@ -63,6 +64,24 @@ export function ChargesSection({ basicFreight, onGrandTotalChange }: ChargesSect
     useEffect(() => {
         onGrandTotalChange(grandTotal);
     }, [grandTotal, onGrandTotalChange]);
+
+    useEffect(() => {
+        if (initialGrandTotal !== undefined) {
+            // This is complex logic. For now, let's assume GST was 0 if not saved.
+            const subtotal = initialGrandTotal;
+            const chargesTotal = charges.filter(c => c.isVisible).reduce((sum, charge) => sum + (Number(charge.value) || 0), 0);
+            
+            // This is an approximation. A more robust solution would need to store the GST percentage at the time of booking.
+            if (subtotal > 0 && subtotal > basicFreight + chargesTotal) {
+                 const inferredGstAmount = subtotal - (basicFreight + chargesTotal);
+                 const inferredGstRate = (inferredGstAmount / (basicFreight + chargesTotal)) * 100;
+                 if (inferredGstRate > 0 && inferredGstRate < 100) {
+                     setGstValue(Math.round(inferredGstRate));
+                 }
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialGrandTotal, basicFreight, charges]);
 
 
   return (
