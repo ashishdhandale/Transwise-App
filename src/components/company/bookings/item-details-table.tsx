@@ -434,9 +434,9 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 return null;
               })}
 
-              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 2} className={tfClass}></TableCell>
+              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 1} className={tfClass}></TableCell>
 
-              <TableCell className={`${tfClass} text-right`}>
+              <TableCell className={`${tfClass} text-center`}>
                 <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
                   <PlusCircle className="h-5 w-5" />
                 </Button>
@@ -454,3 +454,4 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </>
   );
 }
+
