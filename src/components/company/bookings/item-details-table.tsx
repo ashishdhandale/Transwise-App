@@ -280,15 +280,16 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 </Select>
             );
         case 'rate':
-            return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
+            return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
         case 'lumpsum':
              return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={!isFixedFreight} />;
         case 'dValue':
-            return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+            return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'qty':
+             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'actWt':
         case 'chgWt':
-             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+             return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
