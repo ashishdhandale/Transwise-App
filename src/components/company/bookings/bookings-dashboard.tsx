@@ -28,8 +28,9 @@ import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Tras
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
-import { sampleBookings } from '@/lib/bookings-dashboard-data';
 import { Badge } from '@/components/ui/badge';
+
+const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
 const statusColors: { [key: string]: string } = {
   'In Stock': 'text-green-600',
@@ -49,7 +50,14 @@ export function BookingsDashboard() {
 
   useEffect(() => {
     setIsClient(true);
-    setBookings(sampleBookings);
+    try {
+        const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
+        if (savedBookings) {
+            setBookings(JSON.parse(savedBookings));
+        }
+    } catch (error) {
+        console.error("Failed to load bookings from localStorage", error);
+    }
   }, []);
 
   const filteredBookings = useMemo(() => {
