@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 const ChargeInput = ({ label, defaultValue = '5.00' }: { label: string, defaultValue?: string }) => (
-    <div className="grid grid-cols-[1fr_60px] items-center gap-1">
-        <Label className="text-xs text-right">{label}</Label>
-        <Input type="number" defaultValue={defaultValue} className="h-7 text-xs" />
+    <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+        <Label className="text-xs text-left">{label}</Label>
+        <Input type="number" defaultValue={defaultValue} className="h-7 text-xs w-[70px]" />
     </div>
 )
 
@@ -26,19 +26,19 @@ export function ChargesSection() {
             <ChargeInput label="P.F. Charge" />
             <ChargeInput label="Others Charge" />
             <Separator />
-             <div className="grid grid-cols-[1fr_60px] items-center gap-1">
-                <Label className="text-xs text-right font-bold">Total</Label>
-                <Input type="number" defaultValue="35" className="h-7 text-xs font-bold bg-muted" readOnly />
+             <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                <Label className="text-xs text-left font-bold">Total</Label>
+                <Input type="number" defaultValue="35" className="h-7 text-xs font-bold bg-muted w-[70px]" readOnly />
             </div>
-            <div className="grid grid-cols-[1fr_40px_60px] items-center gap-1">
-                <Label className="text-xs text-right col-start-1">GST</Label>
+            <div className="grid grid-cols-[auto_40px_auto] items-center gap-1">
+                <Label className="text-xs text-left col-start-1">GST</Label>
                 <Input type="number" defaultValue="0" className="h-7 text-xs" />
-                <Input type="number" defaultValue="0" className="h-7 text-xs bg-muted" readOnly />
+                <Input type="number" defaultValue="0" className="h-7 text-xs bg-muted w-[70px]" readOnly />
             </div>
             <Separator />
-            <div className="grid grid-cols-[1fr_80px] items-center gap-2">
-                <Label className="text-sm text-right font-bold">Grand Total:</Label>
-                <Input defaultValue="Rs.35" className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center" readOnly />
+            <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                <Label className="text-sm text-left font-bold">Grand Total:</Label>
+                <Input defaultValue="Rs.35" className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-[80px]" readOnly />
             </div>
         </div>
     </Card>
