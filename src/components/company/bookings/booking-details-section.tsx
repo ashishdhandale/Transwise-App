@@ -32,7 +32,7 @@ export function BookingDetailsSection() {
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const { toast } = useToast();
-    const [fromStationValue, setFromStationValue] = React.useState('Ahmedabad');
+    const [fromStationValue, setFromStationValue] = React.useState('');
     const [toStationValue, setToStationValue] = React.useState('');
     const [grNumber, setGrNumber] = useState('');
     const [companyCode, setCompanyCode] = useState('CO');
@@ -46,11 +46,14 @@ export function BookingDetailsSection() {
                 if (profile.companyCode) {
                     setCompanyCode(profile.companyCode.toUpperCase());
                 }
+                if (profile.city && !fromStationValue) {
+                    setFromStationValue(profile.city);
+                }
             }
         } catch (error) {
             console.error('Failed to load company profile', error);
         }
-    }, []);
+    }, [fromStationValue]);
 
     const loadStationOptions = useCallback(() => {
          try {
@@ -87,7 +90,7 @@ export function BookingDetailsSection() {
 
     const generateGrNumber = useCallback((stationName: string) => {
         const fromStation = stationOptions.find(s => s.name === stationName);
-        const alias = fromStation ? fromStation.aliasCode : 'XXX';
+        const alias = fromStation ? fromStation.aliasCode : stationName.substring(0,3).toUpperCase();
         const sequence = String(++grSequence).padStart(2, '0');
         setGrNumber(`${companyCode}${alias}${sequence}`);
     }, [stationOptions, companyCode]);
@@ -97,7 +100,7 @@ export function BookingDetailsSection() {
     }, [loadStationOptions]);
     
      useEffect(() => {
-        if (stationOptions.length > 0 && !hasRunInitialEffect.current) {
+        if (fromStationValue && stationOptions.length > 0 && !hasRunInitialEffect.current) {
             generateGrNumber(fromStationValue);
             hasRunInitialEffect.current = true;
         }

@@ -20,12 +20,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
   companyCode: z.string().min(2, 'Code must be 2-4 chars.').max(4, 'Code must be 2-4 chars.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
+  city: z.string().min(1, { message: 'City is required.'}),
   pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }).optional().or(z.literal('')),
   gstNo: z.string().length(15, { message: 'GST Number must be 15 characters.' }).optional().or(z.literal('')),
   companyContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
@@ -47,6 +49,7 @@ export function CompanyProfileSettings() {
             companyCode: 'CO',
             headOfficeAddress: '',
             officeAddress2: '',
+            city: '',
             pan: '',
             gstNo: '',
             companyContactNo: '',
@@ -149,6 +152,30 @@ export function CompanyProfileSettings() {
                                 <Textarea placeholder="Branch or secondary address" {...field} />
                             </FormControl>
                             <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Head Office City (for Default Station)</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select your head office city" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Nagpur">Nagpur</SelectItem>
+                                    <SelectItem value="Mumbai">Mumbai</SelectItem>
+                                    <SelectItem value="Pune">Pune</SelectItem>
+                                    <SelectItem value="Delhi">Delhi</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        <FormDescription>This city will be the default "From Station" on new bookings.</FormDescription>
+                        <FormMessage />
                         </FormItem>
                     )}
                 />
