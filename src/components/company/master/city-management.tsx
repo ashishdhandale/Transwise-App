@@ -36,7 +36,7 @@ interface City {
 const initialCities: City[] = bookingOptions.stations.map((name, index) => ({ 
     id: index + 1, 
     name,
-    aliasCode: name.substring(0, 3).toUpperCase() + (index + 1)
+    aliasCode: name.substring(0, 3).toUpperCase()
 }));
 
 export function CityManagement() {
