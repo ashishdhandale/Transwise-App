@@ -19,9 +19,10 @@ const ChargeInput = ({ label, value, readOnly = false, type = 'number' }: { labe
 
 interface ChargesSectionProps {
     basicFreight: number;
+    onGrandTotalChange: (total: number) => void;
 }
 
-export function ChargesSection({ basicFreight }: ChargesSectionProps) {
+export function ChargesSection({ basicFreight, onGrandTotalChange }: ChargesSectionProps) {
     const [charges, setCharges] = useState<ChargeSetting[]>([]);
     const [gstValue, setGstValue] = useState(0);
     const [gstAmount, setGstAmount] = useState(0);
@@ -58,6 +59,10 @@ export function ChargesSection({ basicFreight }: ChargesSectionProps) {
     const grandTotal = useMemo(() => {
         return total + gstAmount;
     }, [total, gstAmount]);
+
+    useEffect(() => {
+        onGrandTotalChange(grandTotal);
+    }, [grandTotal, onGrandTotalChange]);
 
 
   return (

@@ -51,6 +51,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
     const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [currentGrNumber, setCurrentGrNumber] = useState('');
+    const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -118,7 +119,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
             itemDescription: itemRows.map(r => r.itemName).join(', '),
             qty: itemRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
-            totalAmount: basicFreight, // Simplified for now
+            totalAmount: grandTotal,
             status: 'In Stock',
             itemRows: itemRows,
         };
@@ -173,7 +174,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
                          <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} />
                     </div>
                     <div className="space-y-4">
-                        <ChargesSection basicFreight={basicFreight} />
+                        <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} />
                         <DeliveryInstructionsSection />
                     </div>
                 </div>
