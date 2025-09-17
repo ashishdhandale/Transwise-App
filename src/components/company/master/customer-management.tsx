@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AddCustomerDialog } from './add-customer-dialog';
 import type { Customer } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 
@@ -26,6 +27,8 @@ const initialCustomers: Customer[] = [
     { id: 2, name: 'MONIKA SALES', gstin: '22AAAAA0000A1Z5', address: '456, Trade Center, Mumbai', mobile: '9876543211', email: 'sales@monika.com', type: 'Individual' },
     { id: 3, name: 'PARTY NAME1', gstin: '24ABCDE1234F1Z5', address: '789, Business Park, Pune', mobile: '9876543212', email: 'party1@example.com', type: 'Company' },
 ];
+
+const tdClass = "whitespace-nowrap";
 
 export function CustomerManagement() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -139,13 +142,13 @@ export function CustomerManagement() {
             <TableBody>
               {filteredCustomers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell><Badge variant="secondary">{customer.type}</Badge></TableCell>
-                  <TableCell>{customer.gstin}</TableCell>
-                  <TableCell>{customer.address}</TableCell>
-                  <TableCell>{customer.mobile}</TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className={cn(tdClass, "font-medium")}>{customer.name}</TableCell>
+                  <TableCell className={cn(tdClass)}><Badge variant="secondary">{customer.type}</Badge></TableCell>
+                  <TableCell className={cn(tdClass)}>{customer.gstin}</TableCell>
+                  <TableCell className={cn(tdClass)}>{customer.address}</TableCell>
+                  <TableCell className={cn(tdClass)}>{customer.mobile}</TableCell>
+                  <TableCell className={cn(tdClass)}>{customer.email}</TableCell>
+                  <TableCell className={cn(tdClass, "text-right")}>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(customer)}>
                       <Pencil className="h-4 w-4" />
                       </Button>

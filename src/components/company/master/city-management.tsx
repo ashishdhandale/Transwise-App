@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { AddCityDialog } from './add-city-dialog';
 import type { City } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 type CityListSource = 'default' | 'custom';
 
@@ -34,6 +35,8 @@ const initialCities: City[] = [
     { id: 4, name: 'Delhi', aliasCode: 'DEL', pinCode: '110001' },
     { id: 5, name: 'Bangalore', aliasCode: 'BLR', pinCode: '560001' },
 ];
+
+const tdClass = "whitespace-nowrap";
 
 export function CityManagement() {
   const [cities, setCities] = useState<City[]>([]);
@@ -196,12 +199,12 @@ export function CityManagement() {
             <TableBody>
               {filteredCities.map((city, index) => (
                 <TableRow key={city.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell className="font-medium">{city.name}</TableCell>
-                  <TableCell>{city.aliasCode}</TableCell>
-                  <TableCell>{city.pinCode}</TableCell>
+                  <TableCell className={cn(tdClass)}>{index + 1}</TableCell>
+                  <TableCell className={cn(tdClass, "font-medium")}>{city.name}</TableCell>
+                  <TableCell className={cn(tdClass)}>{city.aliasCode}</TableCell>
+                  <TableCell className={cn(tdClass)}>{city.pinCode}</TableCell>
                   {isCustom && (
-                    <TableCell className="text-right">
+                    <TableCell className={cn(tdClass, "text-right")}>
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(city)}>
                         <Pencil className="h-4 w-4" />
                         </Button>

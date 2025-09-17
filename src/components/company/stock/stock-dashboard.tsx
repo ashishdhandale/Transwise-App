@@ -28,6 +28,7 @@ import {
 
 const thClass = "bg-primary/10 text-primary font-bold";
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
+const tdClass = "whitespace-nowrap";
 
 const statusColors: { [key: string]: string } = {
   'In Stock': 'text-green-600 border-green-600/40',
@@ -134,16 +135,16 @@ export function StockDashboard() {
                     {filteredStock.length > 0 ? (
                       filteredStock.map((item) => (
                         <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.lrNo}</TableCell>
-                        <TableCell>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
-                        <TableCell>{item.fromCity}</TableCell>
-                        <TableCell>{item.toCity}</TableCell>
-                        <TableCell>{item.sender}</TableCell>
-                        <TableCell>{item.receiver}</TableCell>
-                        <TableCell>{item.itemDescription}</TableCell>
-                        <TableCell className="text-right">{item.qty}</TableCell>
-                        <TableCell className="text-right">{item.chgWt} kg</TableCell>
-                        <TableCell>
+                        <TableCell className={cn(tdClass, "font-medium")}>{item.lrNo}</TableCell>
+                        <TableCell className={cn(tdClass)}>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
+                        <TableCell className={cn(tdClass)}>{item.fromCity}</TableCell>
+                        <TableCell className={cn(tdClass)}>{item.toCity}</TableCell>
+                        <TableCell className={cn(tdClass)}>{item.sender}</TableCell>
+                        <TableCell className={cn(tdClass)}>{item.receiver}</TableCell>
+                        <TableCell className={cn(tdClass)}>{item.itemDescription}</TableCell>
+                        <TableCell className={cn(tdClass, "text-right")}>{item.qty}</TableCell>
+                        <TableCell className={cn(tdClass, "text-right")}>{item.chgWt} kg</TableCell>
+                        <TableCell className={cn(tdClass)}>
                             <Badge variant="outline" className={cn('font-semibold', statusColors[item.status])}>
                                 {item.status}
                             </Badge>

@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 
 
 const thClass = 'bg-primary/10 text-primary font-bold border-r';
+const tdClass = "whitespace-nowrap border-r";
 
 interface SearchResultsTableProps {
     challans: Challan[];
@@ -58,17 +59,17 @@ export function SearchResultsTable({ challans, onSelectChallan, selectedChallanI
                       className={cn('cursor-pointer', selectedChallanId === row.challanId && 'bg-primary/20 hover:bg-primary/20')}
                       onClick={() => onSelectChallan(row)}
                     >
-                        <TableCell className="border-r">{row.challanId}</TableCell>
-                        <TableCell className="border-r">{row.dispatchDate}</TableCell>
-                        <TableCell className="border-r">{row.dispatchToParty}</TableCell>
-                        <TableCell className="border-r">{row.vehicleNo}</TableCell>
-                        <TableCell className="border-r">{row.driverName}</TableCell>
-                        <TableCell className="border-r">{row.fromStation}</TableCell>
-                        <TableCell className="border-r">{row.toStation}</TableCell>
-                        <TableCell className="border-r">{row.senderId}</TableCell>
-                        <TableCell className="border-r">{row.inwardId}</TableCell>
-                        <TableCell className="border-r">{row.inwardDate}</TableCell>
-                        <TableCell>{row.receivedFromParty}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.challanId}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.dispatchDate}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.dispatchToParty}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.vehicleNo}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.driverName}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.fromStation}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.toStation}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.senderId}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.inwardId}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.inwardDate}</TableCell>
+                        <TableCell className="whitespace-nowrap">{row.receivedFromParty}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

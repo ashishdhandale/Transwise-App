@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 
 const thClass = 'bg-primary text-primary-foreground font-bold';
-
+const tdClass = "whitespace-nowrap";
 
 interface SearchResultsProps {
   results: Booking[];
@@ -69,13 +70,13 @@ export function SearchResults({ results, onSelectResult, selectedLrNo }: SearchR
                         className={cn("cursor-pointer hover:bg-muted/50", row.lrNo === selectedLrNo && 'bg-primary/20 hover:bg-primary/20')}
                         onClick={() => onSelectResult(row)}
                     >
-                        <TableCell>{row.lrNo}</TableCell>
-                        <TableCell>{format(new Date(), 'yyyy-MM-dd')}</TableCell>
-                        <TableCell>{row.sender}</TableCell>
-                        <TableCell>{row.receiver}</TableCell>
-                        <TableCell>{row.fromCity}</TableCell>
-                        <TableCell>{row.toCity}</TableCell>
-                        <TableCell>{/* Track Link/Button can go here */}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.lrNo}</TableCell>
+                        <TableCell className={cn(tdClass)}>{format(new Date(), 'yyyy-MM-dd')}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.sender}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.receiver}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.fromCity}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.toCity}</TableCell>
+                        <TableCell className={cn(tdClass)}>{/* Track Link/Button can go here */}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

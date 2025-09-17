@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,8 +24,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { newRequests as sampleNewRequests, existingUsers as sampleExistingUsers } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 const thClass = "bg-primary text-primary-foreground";
+const tdClass = "whitespace-nowrap";
 
 export function UserManagementTables() {
   const [newRequestSearch, setNewRequestSearch] = useState('');
@@ -127,14 +130,14 @@ export function UserManagementTables() {
               <TableBody>
                 {paginatedNewRequests.map((req, index) => (
                   <TableRow key={req.id}>
-                    <TableCell>{(newRequestsPage - 1) * newRequestsRowsPerPage + index + 1}</TableCell>
-                    <TableCell>{req.companyName}</TableCell>
-                    <TableCell>{req.gstNo}</TableCell>
-                    <TableCell>{req.transporterId}</TableCell>
-                    <TableCell>{req.address}</TableCell>
-                    <TableCell>{req.contactNo}</TableCell>
-                    <TableCell><Badge variant="secondary">{req.licenceType}</Badge></TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className={cn(tdClass)}>{(newRequestsPage - 1) * newRequestsRowsPerPage + index + 1}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.companyName}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.gstNo}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.transporterId}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.address}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.contactNo}</TableCell>
+                    <TableCell className={cn(tdClass)}><Badge variant="secondary">{req.licenceType}</Badge></TableCell>
+                    <TableCell className={cn(tdClass, "text-center")}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -227,18 +230,18 @@ export function UserManagementTables() {
               <TableBody>
                 {paginatedExistingUsers.map((user, index) => (
                   <TableRow key={user.id}>
-                    <TableCell>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
-                    <TableCell>{user.userId}</TableCell>
-                    <TableCell>{user.subIds}</TableCell>
-                    <TableCell>{user.companyName}</TableCell>
-                    <TableCell>{user.gstNo}</TableCell>
-                    <TableCell>{user.transporterId}</TableCell>
-                    <TableCell>{user.address}</TableCell>
-                    <TableCell>{user.contactNo}</TableCell>
-                    <TableCell>{user.totalIssuedIds}</TableCell>
-                    <TableCell><Badge variant="default">{user.licenceType}</Badge></TableCell>
-                    <TableCell>{user.validTill}</TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className={cn(tdClass)}>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.subIds}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.gstNo}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.transporterId}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.address}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.contactNo}</TableCell>
+                    <TableCell className={cn(tdClass)}>{user.totalIssuedIds}</TableCell>
+                    <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>
+                    <TableCell className={cn(tdClass)}>{user.validTill}</TableCell>
+                    <TableCell className={cn(tdClass, "text-center")}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button aria-haspopup="true" size="icon" variant="ghost">

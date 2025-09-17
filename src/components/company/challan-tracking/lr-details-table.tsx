@@ -11,8 +11,10 @@ import {
 } from '@/components/ui/table';
 import type { LrDetail } from '@/lib/challan-data';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 const thClass = 'bg-primary/10 text-primary font-bold border-r';
+const tdClass = "whitespace-nowrap border-r";
 
 interface LrDetailsTableProps {
     lrDetails: LrDetail[];
@@ -43,19 +45,19 @@ export function LrDetailsTable({ lrDetails }: LrDetailsTableProps) {
                 <TableBody>
                 {lrDetails.map((row, index) => (
                     <TableRow key={row.lrNo}>
-                        <TableCell className="border-r">{index + 1}</TableCell>
-                        <TableCell className="border-r">{row.lrNo}</TableCell>
-                        <TableCell className="border-r">{row.lrType}</TableCell>
-                        <TableCell className="border-r">{row.sender}</TableCell>
-                        <TableCell className="border-r">{row.receiver}</TableCell>
-                        <TableCell className="border-r">{row.from}</TableCell>
-                        <TableCell className="border-r">{row.to}</TableCell>
-                        <TableCell className="border-r">{row.bookingDate}</TableCell>
-                        <TableCell className="border-r">{row.itemDescription}</TableCell>
-                        <TableCell className="border-r">{row.quantity}</TableCell>
-                        <TableCell className="border-r">{row.actualWeight}</TableCell>
-                        <TableCell className="border-r">{row.chargeWeight}</TableCell>
-                        <TableCell>{row.grandTotal.toLocaleString()}</TableCell>
+                        <TableCell className={cn(tdClass)}>{index + 1}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.lrNo}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.lrType}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.sender}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.receiver}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.from}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.to}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.bookingDate}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.itemDescription}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.quantity}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.actualWeight}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.chargeWeight}</TableCell>
+                        <TableCell className="whitespace-nowrap">{row.grandTotal.toLocaleString()}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

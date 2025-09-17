@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 const statusColors: Record<DeliveryStatus, string> = {
   Pending: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400',
@@ -35,6 +37,8 @@ const statusColors: Record<DeliveryStatus, string> = {
   Delayed: 'bg-destructive/20 text-destructive border-destructive/30',
   Cancelled: 'bg-muted-foreground/20 text-muted-foreground border-muted-foreground/30',
 };
+
+const tdClass = "whitespace-nowrap";
 
 function FormattedDate({ dateString }: { dateString: string }) {
   const [isClient, setIsClient] = useState(false);
@@ -57,54 +61,56 @@ export function DeliveriesList() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>ETA</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {deliveries.map((delivery) => (
-              <TableRow key={delivery.id}>
-                <TableCell className="font-medium">{delivery.id}</TableCell>
-                <TableCell>{delivery.customer}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={statusColors[delivery.status]}
-                  >
-                    {delivery.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <FormattedDate dateString={delivery.eta} />
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Update Status</DropdownMenuItem>
-                      <DropdownMenuItem>Contact Customer</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>ETA</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {deliveries.map((delivery) => (
+                <TableRow key={delivery.id}>
+                  <TableCell className={cn(tdClass, "font-medium")}>{delivery.id}</TableCell>
+                  <TableCell className={cn(tdClass)}>{delivery.customer}</TableCell>
+                  <TableCell className={cn(tdClass)}>
+                    <Badge
+                      variant="outline"
+                      className={statusColors[delivery.status]}
+                    >
+                      {delivery.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className={cn(tdClass)}>
+                    <FormattedDate dateString={delivery.eta} />
+                  </TableCell>
+                  <TableCell className={cn(tdClass)}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem>Update Status</DropdownMenuItem>
+                        <DropdownMenuItem>Contact Customer</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

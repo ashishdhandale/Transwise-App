@@ -17,6 +17,7 @@ import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddItemDialog } from './add-item-dialog';
 import type { Item } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 
@@ -26,6 +27,8 @@ const initialItems: Item[] = [
     { id: 3, name: 'Textiles', hsnCode: '520800', description: 'Woven Fabrics of Cotton' },
     { id: 4, name: 'Machine Parts', hsnCode: '848790', description: 'Machinery Parts' },
 ];
+
+const tdClass = "whitespace-nowrap";
 
 export function ItemManagement() {
   const [items, setItems] = useState<Item[]>([]);
@@ -135,10 +138,10 @@ export function ItemManagement() {
             <TableBody>
               {filteredItems.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>{item.hsnCode}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className={cn(tdClass, "font-medium")}>{item.name}</TableCell>
+                  <TableCell className={cn(tdClass)}>{item.hsnCode}</TableCell>
+                  <TableCell className={cn(tdClass)}>{item.description}</TableCell>
+                  <TableCell className={cn(tdClass, "text-right")}>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                       <Pencil className="h-4 w-4" />
                       </Button>
