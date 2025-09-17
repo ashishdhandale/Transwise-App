@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
+import { sampleBookings } from '@/lib/bookings-dashboard-data';
 
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
@@ -24,7 +25,7 @@ const LOCAL_STORAGE_KEY_PROFILE = 'transwise_company_profile';
 
 type CityListSource = 'default' | 'custom';
 
-// A simple in-memory counter for the GR sequence
+// This will serve as a fallback if no existing bookings are found
 let grSequence = 0;
 
 export function BookingDetailsSection() {
@@ -89,11 +90,26 @@ export function BookingDetailsSection() {
     }, []);
 
     const generateGrNumber = useCallback((stationName: string) => {
+        if (!stationName || stationOptions.length === 0) return;
+
         const fromStation = stationOptions.find(s => s.name === stationName);
-        const alias = fromStation ? fromStation.aliasCode : stationName.substring(0,3).toUpperCase();
-        const sequence = String(++grSequence).padStart(2, '0');
-        setGrNumber(`${companyCode}${alias}${sequence}`);
+        const alias = fromStation ? fromStation.aliasCode : stationName.substring(0, 3).toUpperCase();
+        const prefix = `${companyCode}${alias}`;
+
+        // Find the last sequence number for this prefix from existing bookings
+        const lastBookingForPrefix = sampleBookings
+            .filter(b => b.lrNo.startsWith(prefix))
+            .map(b => parseInt(b.lrNo.replace(prefix, ''), 10))
+            .sort((a, b) => b - a)[0];
+
+        const lastSequence = isNaN(lastBookingForPrefix) ? 0 : lastBookingForPrefix;
+        
+        const newSequence = lastSequence + 1;
+        
+        setGrNumber(`${prefix}${String(newSequence).padStart(2, '0')}`);
+
     }, [stationOptions, companyCode]);
+
 
     useEffect(() => {
         loadStationOptions();
