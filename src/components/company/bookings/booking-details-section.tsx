@@ -18,8 +18,11 @@ export function BookingDetailsSection() {
         setBookingDate(format(new Date(), 'dd/MM/yyyy'));
     }, []);
     
-    const [stationValue, setStationValue] = React.useState('');
     const stationOptions = bookingOptions.stations.map(station => ({ label: station, value: station }));
+    
+    const [fromStationValue, setFromStationValue] = React.useState('Ahmedabad');
+    const [toStationValue, setToStationValue] = React.useState('');
+
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
@@ -44,26 +47,28 @@ export function BookingDetailsSection() {
             </div>
             <div className="space-y-1">
                 <Label htmlFor="fromStation">From Station</Label>
-                <Select defaultValue="AHMDABAD">
-                    <SelectTrigger id="fromStation">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {bookingOptions.stations.map(station => <SelectItem key={station} value={station}>{station}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+                <Combobox
+                    options={stationOptions}
+                    value={fromStationValue}
+                    onChange={setFromStationValue}
+                    placeholder="Select station..."
+                    searchPlaceholder="Search stations..."
+                    notFoundMessage="No station found."
+                    addMessage="Add New City"
+                    onAdd={() => alert(`Adding new city: ${fromStationValue}`)}
+                />
             </div>
             <div className="space-y-1">
                 <Label htmlFor="toStation">To Station</Label>
                 <Combobox
                     options={stationOptions}
-                    value={stationValue}
-                    onChange={setStationValue}
+                    value={toStationValue}
+                    onChange={setToStationValue}
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
                     notFoundMessage="No station found."
                     addMessage="Add New City"
-                    onAdd={() => alert(`Adding new city: ${stationValue}`)}
+                    onAdd={() => alert(`Adding new city: ${toStationValue}`)}
                 />
             </div>
              <div className="space-y-1">
