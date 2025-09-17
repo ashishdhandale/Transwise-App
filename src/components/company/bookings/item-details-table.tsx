@@ -135,38 +135,49 @@ export function ItemDetailsTable() {
     }
   }, []);
 
-  // Effect to auto-calculate lumpsum
   useEffect(() => {
-    const hasChanges = rows.some(row => {
-        if (row.freightOn === 'Fixed') return false;
-        const newLumpsum = calculateLumpsum(row);
-        const currentLumpsum = parseFloat(row.lumpsum) || 0;
-        // Using a small epsilon for float comparison
-        return Math.abs(newLumpsum - currentLumpsum) > 0.001;
+    const updatedRows = rows.map(row => {
+        let newRow = { ...row };
+        if (row.freightOn === 'Fixed') {
+            if (row.rate !== '0') {
+              newRow.rate = '0';
+            }
+        } else {
+            const newLumpsum = calculateLumpsum(row);
+            if (Math.abs(newLumpsum - (parseFloat(row.lumpsum) || 0)) > 0.001) {
+                newRow.lumpsum = newLumpsum > 0 ? newLumpsum.toString() : '';
+            }
+        }
+        return newRow;
     });
 
-    if (hasChanges) {
-        setRows(currentRows => 
-            currentRows.map(row => {
-                if (row.freightOn === 'Fixed') return row;
-                
-                const newLumpsum = calculateLumpsum(row);
-                return { ...row, lumpsum: newLumpsum > 0 ? newLumpsum.toString() : '' };
-            })
-        );
+    if (JSON.stringify(rows) !== JSON.stringify(updatedRows)) {
+        setRows(updatedRows);
     }
 }, [rows, calculateLumpsum]);
 
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
-    const newRows = [...rows];
-    newRows[rowIndex] = { ...newRows[rowIndex], [columnId]: value };
-    setRows(newRows);
+    setRows(currentRows => {
+        const newRows = [...currentRows];
+        const newRow = { ...newRows[rowIndex], [columnId]: value };
+
+        if (columnId === 'freightOn' && value === 'Fixed') {
+            newRow.rate = '0'; // Set rate to 0
+            newRow.lumpsum = ''; // Clear lumpsum for manual input
+        }
+        
+        newRows[rowIndex] = newRow;
+        return newRows;
+    });
   };
   
   const getInputForColumn = (columnId: string, index: number) => {
-    const value = rows[index]?.[columnId] ?? '';
-    const isLumpsumCalculated = rows[index]?.freightOn !== 'Fixed';
+    const row = rows[index];
+    if (!row) return null;
+    
+    const value = row[columnId] ?? '';
+    const isFixedFreight = row.freightOn === 'Fixed';
 
     switch(columnId) {
         case 'ewbNo':
@@ -194,14 +205,15 @@ export function ItemDetailsTable() {
                     </SelectContent>
                 </Select>
             );
+        case 'rate':
+            return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
         case 'lumpsum':
-             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isLumpsumCalculated} />;
+             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={!isFixedFreight} />;
         case 'dValue':
             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'qty':
         case 'actWt':
         case 'chgWt':
-        case 'rate':
              return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'pvtMark':
         case 'invoiceNo':
@@ -260,7 +272,7 @@ export function ItemDetailsTable() {
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex justify-end h-8"></div>
+            <div className="flex justify-start h-8"></div>
         </div>
     );
   }
@@ -277,10 +289,8 @@ export function ItemDetailsTable() {
     chgWt: chgWtColIndex,
   };
   
-  // Create an array of all visible column IDs to help with rendering empty cells
   const visibleColIds = visibleColumns.map(c => c.id);
 
-  // Find the index of the first total column that is visible
   const firstTotalColIndex = Math.min(
       ...[visibleIndices.qty, visibleIndices.actWt, visibleIndices.chgWt].filter(i => i > -1)
   );
@@ -317,19 +327,23 @@ export function ItemDetailsTable() {
                 </TableBody>
                  <TableFooter>
                     <TableRow>
-                        <TableCell colSpan={firstTotalColIndex !== Infinity ? firstTotalColIndex + 1 : 2} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
+                        <TableCell colSpan={firstTotalColIndex > -1 ? firstTotalColIndex + 1 : 2} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
                         
-                        {visibleColIds.slice(firstTotalColIndex !== Infinity ? firstTotalColIndex : -1).map((colId, index, arr) => {
-                            if (colId === 'qty') return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
-                            if (colId === 'actWt') return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
-                            if (colId === 'chgWt') return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
+                        {firstTotalColIndex > -1 && visibleColIds.slice(firstTotalColIndex).map((colId, index) => {
+                            const isLastVisibleCol = (firstTotalColIndex + index) === (visibleColIds.length - 1);
                             
-                            // To correctly render empty cells for the rest of the footer
-                            if (index === arr.length - 1) {
-                                return <TableCell key={`total-empty-${colId}`} className={tfClass} colSpan={2}></TableCell>;
+                            switch(colId) {
+                                case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
+                                case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
+                                case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
+                                default: return <TableCell key={`total-empty-${colId}`} className={tfClass} colSpan={isLastVisibleCol ? 2 : 1}></TableCell>;
                             }
-                            return <TableCell key={`total-empty-${colId}`} className={tfClass}></TableCell>;
                         })}
+
+                         {firstTotalColIndex === -1 && (
+                            <TableCell className={tfClass} colSpan={visibleColIds.length - 1 + 2 /* for # and del */}>
+                            </TableCell>
+                        )}
                     </TableRow>
                 </TableFooter>
             </Table>
@@ -347,5 +361,3 @@ export function ItemDetailsTable() {
     </div>
   );
 }
-
-    
