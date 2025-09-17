@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { BookingForm } from './booking-form';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface EditBookingDialogProps {
   isOpen: boolean;
@@ -22,13 +23,15 @@ export function EditBookingDialog({
 }: EditBookingDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl">
+      <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Booking</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
-          <BookingForm bookingId={bookingId} onSaveSuccess={() => onOpenChange(false)} />
-        </div>
+        <ScrollArea className="flex-grow">
+            <div className="pr-6">
+                 <BookingForm bookingId={bookingId} onSaveSuccess={() => onOpenChange(false)} />
+            </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
