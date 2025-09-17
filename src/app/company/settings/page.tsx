@@ -8,6 +8,7 @@ import { Settings } from 'lucide-react';
 import { AdditionalChargesSettings } from '@/components/company/settings/additional-charges-settings';
 import { ItemDetailsSettings } from '@/components/company/settings/item-details-settings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 
 function CompanySettingsPage() {
   return (
@@ -20,17 +21,27 @@ function CompanySettingsPage() {
         <Tabs defaultValue="booking-form" className="space-y-4">
             <TabsList>
                 <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
-                <TabsTrigger value="item-table">Item Table</TabsTrigger>
-                <TabsTrigger value="charges">Charges</TabsTrigger>
             </TabsList>
             <TabsContent value="booking-form">
-                 <BookingSettings />
-            </TabsContent>
-             <TabsContent value="item-table">
-                <ItemDetailsSettings />
-            </TabsContent>
-             <TabsContent value="charges">
-                <AdditionalChargesSettings />
+                <div className="space-y-6">
+                    <BookingSettings />
+                    <Card>
+                        <CardContent className="p-4">
+                             <Tabs defaultValue="item-table" className="space-y-4">
+                                <TabsList>
+                                    <TabsTrigger value="item-table">Item Table</TabsTrigger>
+                                    <TabsTrigger value="charges">Charges</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="item-table">
+                                    <ItemDetailsSettings />
+                                </TabsContent>
+                                <TabsContent value="charges">
+                                    <AdditionalChargesSettings />
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+                </div>
             </TabsContent>
         </Tabs>
       </div>
