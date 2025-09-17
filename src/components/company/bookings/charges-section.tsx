@@ -10,14 +10,18 @@ import type { ChargeSetting } from '@/components/company/settings/additional-cha
 
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
-const ChargeInput = ({ label, defaultValue = '0', type = 'number' }: { label: string, defaultValue?: string, type?: string }) => (
+const ChargeInput = ({ label, value, readOnly = false, type = 'number' }: { label: string, value: string | number, readOnly?: boolean, type?: string }) => (
     <div className="grid grid-cols-[1fr_100px] items-center gap-2">
         <Label className="text-xs text-left whitespace-nowrap overflow-hidden text-ellipsis">{label}</Label>
-        <Input type={type} defaultValue={defaultValue} className="h-7 text-xs w-full" />
+        <Input type={type} value={value} readOnly={readOnly} className="h-7 text-xs w-full" />
     </div>
 )
 
-export function ChargesSection() {
+interface ChargesSectionProps {
+    basicFreight: number;
+}
+
+export function ChargesSection({ basicFreight }: ChargesSectionProps) {
     const [charges, setCharges] = useState<ChargeSetting[]>([]);
 
     useEffect(() => {
@@ -39,9 +43,9 @@ export function ChargesSection() {
     <Card className="p-2 border-cyan-200">
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Additional Charges</h3>
         <div className="space-y-1.5">
-             <ChargeInput label="Basic Freight" />
+             <ChargeInput label="Basic Freight" value={basicFreight.toFixed(2)} readOnly={true} />
             {charges.filter(c => c.isVisible).map((charge) => (
-                <ChargeInput key={charge.id} label={charge.name} defaultValue={charge.value.toString()} />
+                <ChargeInput key={charge.id} label={charge.name} value={charge.value.toString()} />
             ))}
             <Separator />
              <div className="grid grid-cols-[1fr_100px] items-center gap-2">

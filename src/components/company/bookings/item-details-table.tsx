@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
-interface ItemRow {
+export interface ItemRow {
   id: number;
   ewbNo: string;
   itemName: string;
@@ -78,8 +78,12 @@ const createEmptyRow = (id: number): ItemRow => ({
     dValue: '',
 });
 
-export function ItemDetailsTable() {
-  const [rows, setRows] = useState<ItemRow[]>([]);
+interface ItemDetailsTableProps {
+    rows: ItemRow[];
+    onRowsChange: (rows: ItemRow[]) => void;
+}
+
+export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) {
   const [columns, setColumns] = useState<ColumnSetting[]>(defaultColumns);
   const [isClient, setIsClient] = useState(false);
 
@@ -90,13 +94,15 @@ export function ItemDetailsTable() {
   useEffect(() => {
     if (!isClient) return;
 
-    let initialRowCount = DEFAULT_ROWS;
     try {
       const savedBookingSettings = localStorage.getItem(BOOKING_SETTINGS_KEY);
       if (savedBookingSettings) {
         const parsed = JSON.parse(savedBookingSettings);
         if (parsed.defaultItemRows && typeof parsed.defaultItemRows === 'number') {
-          initialRowCount = parsed.defaultItemRows;
+            if (rows.length < parsed.defaultItemRows) {
+                const newRows = Array.from({ length: parsed.defaultItemRows - rows.length }, (_, i) => createEmptyRow(Date.now() + i));
+                onRowsChange([...rows, ...newRows]);
+            }
         }
       }
 
@@ -111,9 +117,7 @@ export function ItemDetailsTable() {
     } catch (error) {
       console.error("Could not load settings, using defaults.", error);
     }
-    
-    setRows(Array.from({ length: initialRowCount }, (_, i) => createEmptyRow(Date.now() + i)));
-  }, [isClient]);
+  }, [isClient, onRowsChange]);
 
   const calculateLumpsum = useCallback((row: ItemRow) => {
     const qty = parseFloat(row.qty) || 0;
@@ -137,7 +141,7 @@ export function ItemDetailsTable() {
 
   useEffect(() => {
     const updatedRows = rows.map(row => {
-        let newRow = { ...row };
+        const newRow = { ...row };
         if (row.freightOn === 'Fixed') {
             if (row.rate !== '0') {
               newRow.rate = '0';
@@ -151,25 +155,24 @@ export function ItemDetailsTable() {
         return newRow;
     });
 
+    // Only update state if there's an actual change to prevent infinite loops
     if (JSON.stringify(rows) !== JSON.stringify(updatedRows)) {
-        setRows(updatedRows);
+        onRowsChange(updatedRows);
     }
-}, [rows, calculateLumpsum]);
+}, [rows, calculateLumpsum, onRowsChange]);
 
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
-    setRows(currentRows => {
-        const newRows = [...currentRows];
-        const newRow = { ...newRows[rowIndex], [columnId]: value };
+    const newRows = [...rows];
+    const newRow = { ...newRows[rowIndex], [columnId]: value };
 
-        if (columnId === 'freightOn' && value === 'Fixed') {
-            newRow.rate = '0'; // Set rate to 0
-            newRow.lumpsum = ''; // Clear lumpsum for manual input
-        }
-        
-        newRows[rowIndex] = newRow;
-        return newRows;
-    });
+    if (columnId === 'freightOn' && value === 'Fixed') {
+        newRow.rate = '0'; // Set rate to 0
+        newRow.lumpsum = ''; // Clear lumpsum for manual input
+    }
+    
+    newRows[rowIndex] = newRow;
+    onRowsChange(newRows);
   };
   
   const getInputForColumn = (columnId: string, index: number) => {
@@ -225,12 +228,12 @@ export function ItemDetailsTable() {
 
 
   const addRow = () => {
-    setRows([...rows, createEmptyRow(Date.now())]);
+    onRowsChange([...rows, createEmptyRow(Date.now())]);
   };
   
   const removeRow = (id: number) => {
       if (rows.length > 1) { 
-        setRows(rows.filter(row => row.id !== id));
+        onRowsChange(rows.filter(row => row.id !== id));
       }
   }
   
@@ -329,16 +332,17 @@ export function ItemDetailsTable() {
                     <TableRow>
                         <TableCell colSpan={firstTotalColIndex > -1 ? firstTotalColIndex + 1 : 2} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
                         
-                        {firstTotalColIndex > -1 && visibleColIds.slice(firstTotalColIndex).map((colId, index) => {
-                            const isLastVisibleCol = (firstTotalColIndex + index) === (visibleColIds.length - 1);
-                            
+                        {firstTotalColIndex > -1 && visibleColIds.slice(firstTotalColIndex).map((colId) => {
                             switch(colId) {
                                 case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
                                 case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
                                 case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
-                                default: return <TableCell key={`total-empty-${colId}`} className={tfClass} colSpan={isLastVisibleCol ? 2 : 1}></TableCell>;
+                                default: return <TableCell key={`total-empty-${colId}`} className={tfClass}></TableCell>;
                             }
                         })}
+                         
+                         {firstTotalColIndex > -1 && <TableCell className={tfClass}></TableCell> /* For delete button column */}
+
 
                          {firstTotalColIndex === -1 && (
                             <TableCell className={tfClass} colSpan={visibleColIds.length - 1 + 2 /* for # and del */}>
