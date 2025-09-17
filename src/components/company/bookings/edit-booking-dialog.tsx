@@ -29,7 +29,11 @@ export function EditBookingDialog({
         </DialogHeader>
         <ScrollArea className="flex-grow">
             <div className="pr-6">
-                 <BookingForm bookingId={bookingId} onSaveSuccess={() => onOpenChange(false)} />
+                 <BookingForm 
+                    bookingId={bookingId} 
+                    onSaveSuccess={() => onOpenChange(false)} 
+                    onClose={() => onOpenChange(false)}
+                 />
             </div>
         </ScrollArea>
       </DialogContent>

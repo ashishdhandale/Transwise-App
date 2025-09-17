@@ -37,9 +37,10 @@ const createEmptyRow = (id: number): ItemRow => ({
 interface BookingFormProps {
     bookingId?: string;
     onSaveSuccess?: () => void;
+    onClose?: () => void;
 }
 
-export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
+export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormProps) {
     const isEditMode = !!bookingId;
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
@@ -172,7 +173,7 @@ export function BookingForm({ bookingId, onSaveSuccess }: BookingFormProps) {
                 <Separator className="my-6 border-dashed" />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div className="lg:col-span-2">
-                         <MainActionsSection onSave={() => handleSaveOrUpdate(grandTotal)} isEditMode={isEditMode} />
+                         <MainActionsSection onSave={() => handleSaveOrUpdate(grandTotal)} isEditMode={isEditMode} onClose={onClose} />
                     </div>
                     <div className="space-y-4">
                         <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
