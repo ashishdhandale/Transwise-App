@@ -24,7 +24,6 @@ function CompanySettingsPage() {
             </TabsList>
             <TabsContent value="booking-form">
                 <div className="space-y-6">
-                    <BookingSettings />
                     <Card>
                         <CardContent className="p-4">
                              <Tabs defaultValue="item-table" className="space-y-4">
@@ -33,7 +32,10 @@ function CompanySettingsPage() {
                                     <TabsTrigger value="charges">Charges</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="item-table">
-                                    <ItemDetailsSettings />
+                                    <div className="space-y-6">
+                                        <BookingSettings />
+                                        <ItemDetailsSettings />
+                                    </div>
                                 </TabsContent>
                                 <TabsContent value="charges">
                                     <AdditionalChargesSettings />
