@@ -89,7 +89,7 @@ export function ItemDetailsTable() {
                     {rows.map((row, index) => (
                         <TableRow key={row.id}>
                             <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
-                            <TableCell className={tdClass}><Input type="text" className={inputClass} maxLength={12} /></TableCell>
+                            <TableCell className={tdClass}><Input type="text" className="h-8 text-xs px-1" maxLength={12} /></TableCell>
                             <TableCell className={tdClass}>
                                 <Select defaultValue="Frm MAS">
                                     <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
