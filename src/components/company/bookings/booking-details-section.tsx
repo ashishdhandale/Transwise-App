@@ -9,16 +9,47 @@ import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import React, { useEffect, useState } from 'react';
 
+const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
+const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
+
+type CityListSource = 'default' | 'custom';
+
+interface City {
+  id: number;
+  name: string;
+  aliasCode: string;
+  pinCode: string;
+}
+
 export function BookingDetailsSection() {
     const [bookingDate, setBookingDate] = useState('');
-
+    const [stationOptions, setStationOptions] = useState<{label: string, value: string}[]>([]);
+    
     useEffect(() => {
         // This will only run on the client, after the initial render,
         // preventing a hydration mismatch.
         setBookingDate(format(new Date(), 'dd/MM/yyyy'));
+
+        try {
+            const source = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
+            if (source === 'custom') {
+                const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
+                if (savedCities) {
+                    const customCities: City[] = JSON.parse(savedCities);
+                    setStationOptions(customCities.map(city => ({ label: city.name, value: city.name })));
+                } else {
+                     setStationOptions(bookingOptions.stations.map(station => ({ label: station, value: station })));
+                }
+            } else {
+                // Default case
+                setStationOptions(bookingOptions.stations.map(station => ({ label: station, value: station })));
+            }
+        } catch (error) {
+            console.error("Failed to load station options from local storage", error);
+            setStationOptions(bookingOptions.stations.map(station => ({ label: station, value: station })));
+        }
+
     }, []);
-    
-    const stationOptions = bookingOptions.stations.map(station => ({ label: station, value: station }));
     
     const [fromStationValue, setFromStationValue] = React.useState('Ahmedabad');
     const [toStationValue, setToStationValue] = React.useState('');
