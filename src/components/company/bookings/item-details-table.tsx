@@ -17,6 +17,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import type { ColumnSetting } from '@/components/company/settings/item-details-settings';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ItemRow {
   id: number;
@@ -89,7 +92,7 @@ const getInputForColumn = (columnId: string, index: number) => {
 }
 
 export function ItemDetailsTable() {
-  const [rows, setRows] = useState<ItemRow[]>(Array.from({ length: DEFAULT_ROWS }, (_, i) => ({ id: i })));
+  const [rows, setRows] = useState<ItemRow[]>([]);
   const [columns, setColumns] = useState<ColumnSetting[]>(defaultColumns);
   const [isClient, setIsClient] = useState(false);
 
@@ -199,7 +202,14 @@ export function ItemDetailsTable() {
                 </TableBody>
             </Table>
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="updateRates" />
+                    <Label htmlFor="updateRates">Update Rates</Label>
+                </div>
+                <Textarea placeholder="Remark / Note: maximum 80 characherts" rows={1} maxLength={80} className="w-96" />
+            </div>
              <Button variant="link" size="sm" onClick={addRow} className="text-sm text-blue-600 hover:text-blue-800">
                 <Plus className="h-4 w-4 mr-1" />
                 Ctrl+I to Add more

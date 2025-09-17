@@ -1,9 +1,6 @@
 
 'use client';
 
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
 const SummaryItem = ({ label, value }: { label: string; value: string | number }) => (
@@ -16,16 +13,6 @@ const SummaryItem = ({ label, value }: { label: string; value: string | number }
 export function SummaryAndActionsSection() {
   return (
     <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                    <Checkbox id="updateRates" />
-                    <Label htmlFor="updateRates">Update Rates</Label>
-                </div>
-                <Textarea placeholder="Remark / Note: maximum 80 characherts" rows={4} maxLength={80} />
-             </div>
-             
-        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
             <div className="space-y-2">
                 <SummaryItem label="TOTAL ITEM" value={6} />
