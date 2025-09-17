@@ -28,8 +28,6 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ColumnSetting } from '@/components/company/settings/item-details-settings';
 import { cn } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import type { Item } from '@/lib/types';
 import { AddItemDialog } from '../master/add-item-dialog';
@@ -447,10 +445,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 <Plus className="h-4 w-4 mr-1" />
                 Ctrl+I to Add more
             </Button>
-            <div className="flex items-center space-x-2">
-                <Checkbox id="updateRates" />
-                <Label htmlFor="updateRates">Update Rates</Label>
-            </div>
         </div>
          <AddItemDialog
             isOpen={isAddItemOpen}
@@ -461,4 +455,3 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </div>
   );
 }
-

@@ -10,6 +10,7 @@ import { SummaryAndActionsSection } from '@/components/company/bookings/summary-
 import { Card, CardContent } from '@/components/ui/card';
 import DashboardLayout from '@/app/(dashboard)/layout';
 import { Suspense, useMemo, useState } from 'react';
+import { Separator } from '@/components/ui/separator';
 
 const createEmptyRow = (id: number): ItemRow => ({
   id,
@@ -45,12 +46,15 @@ function NewBookingForm() {
                     <BookingDetailsSection />
                     <PartyDetailsSection />
                     <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 items-start">
-                        <SummaryAndActionsSection />
-                        <div className="space-y-4">
+                    <Separator className="my-6 border-dashed" />
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                         <div className="lg:col-span-2 space-y-4">
+                            <SummaryAndActionsSection />
+                         </div>
+                         <div className="space-y-4">
                             <ChargesSection basicFreight={basicFreight} />
                             <DeliveryInstructionsSection />
-                        </div>
+                         </div>
                     </div>
                 </CardContent>
             </Card>
