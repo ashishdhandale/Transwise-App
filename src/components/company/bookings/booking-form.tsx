@@ -185,8 +185,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     const profileSettings = localStorage.getItem(GRN_PREFIX_KEY);
                     if (profileSettings) {
                         const profile = JSON.parse(profileSettings);
-                        if(profile.companyCode && profile.companyCode.trim() !== '') {
-                            grnPrefix = profile.companyCode.trim();
+                        if(profile.grnPrefix && profile.grnPrefix.trim() !== '') {
+                            grnPrefix = profile.grnPrefix.trim();
                         }
                     }
                 } catch (e) {
@@ -390,7 +390,3 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
-
-    
-
-    

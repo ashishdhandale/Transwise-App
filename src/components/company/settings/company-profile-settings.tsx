@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -23,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
-  companyCode: z.string().min(2, 'Code must be 2-4 chars.').max(4, 'Code must be 2-4 chars.'),
+  grnPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   city: z.string().min(1, { message: 'City is required.'}),
@@ -45,7 +46,7 @@ export function CompanyProfileSettings() {
         resolver: zodResolver(profileSchema),
         defaultValues: {
             companyName: '',
-            companyCode: 'CO',
+            grnPrefix: 'CONAG',
             headOfficeAddress: '',
             officeAddress2: '',
             city: '',
@@ -114,14 +115,14 @@ export function CompanyProfileSettings() {
                     />
                     <FormField
                         control={form.control}
-                        name="companyCode"
+                        name="grnPrefix"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Company Code for GRN</FormLabel>
+                                <FormLabel>GRN Prefix</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., TRNS" {...field} />
+                                    <Input placeholder="e.g., CONAG" {...field} />
                                 </FormControl>
-                                 <FormDescription>A 2-4 letter code for GR numbers.</FormDescription>
+                                 <FormDescription>The prefix for all new GR numbers.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
