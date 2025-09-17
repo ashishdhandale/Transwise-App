@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { sampleBookings } from '@/lib/bookings-dashboard-data';
 
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
@@ -28,22 +27,19 @@ type CityListSource = 'default' | 'custom';
 interface BookingDetailsSectionProps {
     bookingType: string;
     onBookingTypeChange: (type: string) => void;
+    onStationChange: (station: City | null) => void;
+    grNumber: string;
 }
 
 
-export function BookingDetailsSection({ bookingType, onBookingTypeChange }: BookingDetailsSectionProps) {
+export function BookingDetailsSection({ bookingType, onBookingTypeChange, onStationChange, grNumber }: BookingDetailsSectionProps) {
     const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const { toast } = useToast();
     const [fromStationValue, setFromStationValue] = React.useState('');
     const [toStationValue, setToStationValue] = React.useState('');
-    const [grNumber, setGrNumber] = useState('');
-    const [companyCode, setCompanyCode] = useState('CO');
     
-    // Memoize bookings to prevent re-filtering on every render
-    const allBookings = useMemo(() => sampleBookings, []);
-
     useEffect(() => {
         // Set initial date only on the client
         setBookingDate(new Date());
@@ -54,9 +50,6 @@ export function BookingDetailsSection({ bookingType, onBookingTypeChange }: Book
             const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
             if (savedProfile) {
                 const profile = JSON.parse(savedProfile);
-                if (profile.companyCode) {
-                    setCompanyCode(profile.companyCode.toUpperCase());
-                }
                 if (profile.city && !fromStationValue) {
                     setFromStationValue(profile.city);
                 }
@@ -102,31 +95,19 @@ export function BookingDetailsSection({ bookingType, onBookingTypeChange }: Book
         loadStationOptions();
     }, [loadStationOptions]);
 
-    const generateGrNumber = useCallback((stationName: string) => {
-        if (!stationName || stationOptions.length === 0) return;
 
-        const fromStation = stationOptions.find(s => s.name === stationName);
-        const alias = fromStation ? fromStation.aliasCode : stationName.substring(0, 3).toUpperCase();
-        const prefix = `${companyCode}${alias}`;
-        
-        const lastSequence = allBookings
-            .filter(b => b.lrNo.startsWith(prefix))
-            .map(b => parseInt(b.lrNo.replace(prefix, ''), 10))
-            .filter(num => !isNaN(num)) 
-            .reduce((max, current) => Math.max(max, current), 0);
-            
-        const newSequence = lastSequence + 1;
-        
-        setGrNumber(`${prefix}${String(newSequence).padStart(2, '0')}`);
-
-    }, [stationOptions, companyCode, allBookings]);
-
+    const handleFromStationChange = useCallback((stationName: string) => {
+        setFromStationValue(stationName);
+        const selectedStation = stationOptions.find(s => s.name === stationName) || null;
+        onStationChange(selectedStation);
+    }, [stationOptions, onStationChange]);
 
     useEffect(() => {
-        if (fromStationValue && stationOptions.length > 0) {
-             generateGrNumber(fromStationValue);
+        if (fromStationValue) {
+            handleFromStationChange(fromStationValue);
         }
-     }, [fromStationValue, stationOptions, generateGrNumber]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fromStationValue, stationOptions]); // Re-evaluate when options load
 
 
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {
@@ -216,7 +197,7 @@ export function BookingDetailsSection({ bookingType, onBookingTypeChange }: Book
                 <Combobox
                     options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
                     value={fromStationValue}
-                    onChange={setFromStationValue}
+                    onChange={handleFromStationChange}
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
                     notFoundMessage="No station found."

@@ -17,7 +17,11 @@ import {
 import { useState } from 'react';
 import { CalculatorDialog } from './calculator-dialog';
 
-export function MainActionsSection() {
+interface MainActionsSectionProps {
+    onSave: () => void;
+}
+
+export function MainActionsSection({ onSave }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
     const handleReset = () => {
@@ -26,7 +30,7 @@ export function MainActionsSection() {
 
     return (
         <div className="flex flex-wrap items-center justify-center gap-2">
-            <Button className="bg-green-600 hover:bg-green-700"><Save className="mr-2 h-4 w-4" /> Save Booking</Button>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={onSave}><Save className="mr-2 h-4 w-4" /> Save Booking</Button>
             <Button variant="destructive"><Ban className="mr-2 h-4 w-4" />Cancel Booking</Button>
             <AlertDialog>
                 <AlertDialogTrigger asChild>
