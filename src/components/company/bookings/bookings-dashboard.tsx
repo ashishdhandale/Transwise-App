@@ -16,7 +16,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Calendar as CalendarIcon, Pencil, Printer, Search, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
@@ -124,12 +132,27 @@ export function BookingsDashboard() {
                 <TableBody>
                   {bookings.map((booking, index) => (
                     <TableRow key={booking.id} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
-                      <TableCell className="p-1">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600"><Pencil /></Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-600"><Printer /></Button>
-                          {booking.status === 'Cancelled' && <Button variant="ghost" size="icon" className="h-6 w-6 text-red-600"><Trash2 /></Button>}
-                        </div>
+                      <TableCell className="p-1 text-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">More actions</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                                <DropdownMenuItem><Printer className="mr-2 h-4 w-4" /> Print</DropdownMenuItem>
+                                {booking.status !== 'Cancelled' && (
+                                    <DropdownMenuItem className="text-red-500"><XCircle className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>
+                                )}
+                                {booking.status === 'Cancelled' && (
+                                    <DropdownMenuItem className="text-red-500"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                       <TableCell className="p-1 text-center">{index + 1}</TableCell>
                       <TableCell className="p-1">{booking.lrNo}</TableCell>
@@ -141,7 +164,7 @@ export function BookingsDashboard() {
                       <TableCell className="p-1">{booking.itemDescription}</TableCell>
                       <TableCell className="p-1 text-right">{booking.qty}</TableCell>
                       <TableCell className="p-1 text-right">{booking.chgWt}</TableCell>
-                      <TableCell className="p-1 text-right">{booking.totalAmount}</TableCell>
+                      <TableCell className="p-1 text-right">{booking.totalAmount.toLocaleString()}</TableCell>
                       <TableCell className="p-1">
                          <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
                              {booking.status}
