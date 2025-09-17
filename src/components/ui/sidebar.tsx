@@ -178,17 +178,15 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, setOpen: setOpenContext, openMobile, setOpenMobile, open } = useSidebar()
+    const { isMobile, setOpen: setOpenContext, openMobile, setOpenMobile } = useSidebar()
     
-    const setOpen = (val: boolean) => {
-      setOpenContext(val);
-    }
-    
+    const [open, setOpen] = React.useState(defaultOpen);
+
     React.useEffect(() => {
-        if (!isMobile) {
-            setOpen(defaultOpen);
-        }
-    }, [isMobile, defaultOpen]);
+      if (!isMobile) {
+        setOpen(defaultOpen);
+      }
+    }, [isMobile, defaultOpen, setOpen]);
     
     const handleClick = () => {
       if (!isMobile && collapsible === 'icon') {
@@ -202,7 +200,7 @@ const Sidebar = React.forwardRef<
       }
     }
 
-    const { state } = useSidebar();
+    const state = open ? "expanded" : "collapsed"
 
     if (collapsible === "none") {
       return (
