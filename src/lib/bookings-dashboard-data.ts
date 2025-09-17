@@ -3,7 +3,7 @@ export interface Booking {
   id: number;
   lrNo: string;
   fromCity: string;
-  toCity: string;
+  toCity: 'PAID' | 'TOPAY' | 'TBB';
   lrType: 'TO BE BILLED' | 'PAID' | 'FOC';
   sender: string;
   receiver: string;
@@ -17,10 +17,10 @@ export interface Booking {
 export const sampleBookings: Booking[] = [
   {
     id: 1,
-    lrNo: 'NGP240001',
-    fromCity: 'NAGPUR',
-    toCity: 'PUNE',
-    lrType: 'TO BE BILLED',
+    lrNo: 'COPNQ01',
+    fromCity: 'PUNE',
+    toCity: 'PAID',
+    lrType: 'PAID',
     sender: 'ABC Electronics',
     receiver: 'Pune Retail',
     itemDescription: 'LED TV',
@@ -31,9 +31,9 @@ export const sampleBookings: Booking[] = [
   },
   {
     id: 2,
-    lrNo: 'MUM240002',
+    lrNo: 'COBOM02',
     fromCity: 'MUMBAI',
-    toCity: 'DELHI',
+    toCity: 'PAID',
     lrType: 'PAID',
     sender: 'Fashion Hub',
     receiver: 'Delhi Textiles',
@@ -45,10 +45,10 @@ export const sampleBookings: Booking[] = [
   },
   {
     id: 3,
-    lrNo: 'CHN240003',
+    lrNo: 'COMAA03',
     fromCity: 'CHENNAI',
-    toCity: 'BANGALORE',
-    lrType: 'FOC',
+    toCity: 'TBB',
+    lrType: 'TO BE BILLED',
     sender: 'Pharma Co',
     receiver: 'BLR Hospital',
     itemDescription: 'Medicines',
@@ -59,10 +59,10 @@ export const sampleBookings: Booking[] = [
   },
   {
     id: 4,
-    lrNo: 'HYD240004',
+    lrNo: 'COHYD04',
     fromCity: 'HYDERABAD',
-    toCity: 'KOLKATA',
-    lrType: 'TO BE BILLED',
+    toCity: 'TOPAY',
+    lrType: 'FOC',
     sender: 'Auto Parts Inc',
     receiver: 'Kolkata Motors',
     itemDescription: 'Spare Parts',
@@ -73,9 +73,9 @@ export const sampleBookings: Booking[] = [
   },
    {
     id: 5,
-    lrNo: 'BLR240005',
+    lrNo: 'COBLR05',
     fromCity: 'BANGALORE',
-    toCity: 'MUMBAI',
+    toCity: 'PAID',
     lrType: 'PAID',
     sender: 'IT Solutions',
     receiver: 'Mumbai Corp',
@@ -87,9 +87,9 @@ export const sampleBookings: Booking[] = [
   },
   {
     id: 6,
-    lrNo: 'PUN240006',
+    lrNo: 'COPNQ06',
     fromCity: 'PUNE',
-    toCity: 'NAGPUR',
+    toCity: 'TBB',
     lrType: 'TO BE BILLED',
     sender: 'Book Distrib.',
     receiver: 'Nagpur Uni',
