@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { City } from '@/lib/types';
 import { AddCityDialog } from '../master/add-city-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +24,7 @@ const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 type CityListSource = 'default' | 'custom';
 
 // A simple in-memory counter for the GR sequence
-let grSequence = 1;
+let grSequence = 0;
 
 export function BookingDetailsSection() {
     const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
@@ -33,7 +33,8 @@ export function BookingDetailsSection() {
     const { toast } = useToast();
     const [fromStationValue, setFromStationValue] = React.useState('Ahmedabad');
     const [toStationValue, setToStationValue] = React.useState('');
-    const [grNumber, setGrNumber] = useState('COAHM01');
+    const [grNumber, setGrNumber] = useState('');
+    const hasRunInitialEffect = useRef(false);
 
 
     const loadStationOptions = useCallback(() => {
@@ -73,12 +74,24 @@ export function BookingDetailsSection() {
         loadStationOptions();
     }, [loadStationOptions]);
     
-    useEffect(() => {
-        const fromStation = stationOptions.find(s => s.name === fromStationValue);
+     useEffect(() => {
+        if (stationOptions.length > 0 && !hasRunInitialEffect.current) {
+            const fromStation = stationOptions.find(s => s.name === fromStationValue);
+            const alias = fromStation ? fromStation.aliasCode : 'XXX';
+            const sequence = String(++grSequence).padStart(2, '0');
+            setGrNumber(`CO${alias}${sequence}`);
+            hasRunInitialEffect.current = true;
+        }
+     }, [stationOptions, fromStationValue]);
+
+    const handleFromStationChange = (newValue: string) => {
+        setFromStationValue(newValue);
+        const fromStation = stationOptions.find(s => s.name === newValue);
         const alias = fromStation ? fromStation.aliasCode : 'XXX';
-        const sequence = String(grSequence++).padStart(2, '0');
+        const sequence = String(++grSequence).padStart(2, '0');
         setGrNumber(`CO${alias}${sequence}`);
-    }, [fromStationValue, stationOptions]);
+    }
+
 
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {
         try {
@@ -168,7 +181,7 @@ export function BookingDetailsSection() {
                 <Combobox
                     options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
                     value={fromStationValue}
-                    onChange={setFromStationValue}
+                    onChange={handleFromStationChange}
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
                     notFoundMessage="No station found."
