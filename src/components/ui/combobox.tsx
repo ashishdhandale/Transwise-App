@@ -9,10 +9,9 @@ import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
-  CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
+  CommandItem,
 } from "@/components/ui/command"
 import {
   Popover,
