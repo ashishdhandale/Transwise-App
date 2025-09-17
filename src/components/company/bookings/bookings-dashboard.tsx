@@ -184,7 +184,7 @@ export function BookingsDashboard() {
                     {filteredBookings.length > 0 ? (
                       filteredBookings.map((booking, index) => (
                       <TableRow key={booking.id} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
-                        <TableCell className="p-1 text-center">
+                        <TableCell className="p-1 text-center whitespace-nowrap">
                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-7 w-7">

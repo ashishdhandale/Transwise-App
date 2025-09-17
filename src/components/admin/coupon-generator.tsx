@@ -158,14 +158,14 @@ export function CouponGenerator() {
                     <TableBody>
                         {coupons.map((coupon) => (
                         <TableRow key={coupon.id}>
-                            <TableCell className="font-medium">{coupon.code}</TableCell>
-                            <TableCell>{coupon.discount}%</TableCell>
-                            <TableCell>
+                            <TableCell className="font-medium whitespace-nowrap">{coupon.code}</TableCell>
+                            <TableCell className="whitespace-nowrap">{coupon.discount}%</TableCell>
+                            <TableCell className="whitespace-nowrap">
                                 <Button variant="ghost" size="sm" onClick={() => copyToClipboard(coupon.link)}>
                                     <Copy className="h-4 w-4" />
                                 </Button>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right whitespace-nowrap">
                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteCoupon(coupon.id)}>
                                     <Trash2 className="h-4 w-4" />
                                </Button>

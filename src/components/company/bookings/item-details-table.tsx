@@ -388,7 +388,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 <TableBody>
                     {rows.map((row, index) => (
                         <TableRow key={row.id}>
-                            <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
+                            <TableCell className={`${tdClass} text-center font-semibold text-red-500 whitespace-nowrap`}>{index + 1}*</TableCell>
                             {visibleColumns.map(col => (
                                 <TableCell key={`${row.id}-${col.id}`} className={tdClass}>
                                     {getInputForColumn(col.id, index)}
