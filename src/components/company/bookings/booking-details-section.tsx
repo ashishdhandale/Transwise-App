@@ -14,6 +14,7 @@ export function BookingDetailsSection() {
     const [bookingDate, setBookingDate] = useState('');
 
     useEffect(() => {
+        // Defer setting the date until after the initial client render to avoid mismatch
         setBookingDate(format(new Date(), 'dd/MM/yyyy'));
     }, []);
     
