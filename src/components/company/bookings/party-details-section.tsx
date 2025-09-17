@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,17 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const PartyInput = ({ side }: { side: 'Sender' | 'Receiver'}) => (
     <div className="space-y-2">
+        <div className="space-y-1">
+            <Label>{side} Name*</Label>
+            <Select>
+                <SelectTrigger>
+                    <SelectValue placeholder={`${side} Name [GST NO]`} />
+                </SelectTrigger>
+                 <SelectContent>
+                    {bookingOptions.parties.map(p => <SelectItem key={p.gst} value={p.name}>{`${p.name} [${p.gst}]`}</SelectItem>)}
+                </SelectContent>
+            </Select>
+        </div>
         <div className="space-y-1">
             <Label>{side} GST</Label>
             <div className="flex gap-1">
@@ -27,17 +37,6 @@ const PartyInput = ({ side }: { side: 'Sender' | 'Receiver'}) => (
                     <Plus className="h-5 w-5" />
                 </Button>
             </div>
-        </div>
-        <div className="space-y-1">
-            <Label>{side} Name*</Label>
-            <Select>
-                <SelectTrigger>
-                    <SelectValue placeholder={`${side} Name [GST NO]`} />
-                </SelectTrigger>
-                 <SelectContent>
-                    {bookingOptions.parties.map(p => <SelectItem key={p.gst} value={p.name}>{`${p.name} [${p.gst}]`}</SelectItem>)}
-                </SelectContent>
-            </Select>
         </div>
         <div className="space-y-1">
             <Label>{side} Address</Label>
