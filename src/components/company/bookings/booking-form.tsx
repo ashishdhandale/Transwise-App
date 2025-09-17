@@ -163,8 +163,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
                 if (bookingToEdit) {
                     const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
-                    const senderProfile = savedCustomers.find(c => c.name === bookingToEdit.sender) || null;
-                    const receiverProfile = savedCustomers.find(c => c.name === bookingToEdit.receiver) || null;
+                    const senderProfile = savedCustomers.find(c => c.name === bookingToEdit.sender) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
+                    const receiverProfile = savedCustomers.find(c => c.name === bookingToEdit.receiver) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
 
                     setCurrentGrNumber(bookingToEdit.lrNo);
                     setBookingDate(new Date(bookingToEdit.bookingDate));
@@ -225,7 +225,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             lrType: bookingType as Booking['lrType'],
             sender: sender.name,
             receiver: receiver.name,
-            itemDescription: itemRows.map(r => r.itemName).join(', '),
+            itemDescription: itemRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
             qty: itemRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
             totalAmount: grandTotal,
@@ -390,5 +390,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
+
+    
 
     
