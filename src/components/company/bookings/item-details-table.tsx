@@ -115,6 +115,48 @@ export function ItemDetailsTable() {
     setRows(Array.from({ length: initialRowCount }, (_, i) => createEmptyRow(Date.now() + i)));
   }, [isClient]);
 
+  // Effect to auto-calculate lumpsum
+  useEffect(() => {
+    setRows(currentRows => 
+        currentRows.map(row => {
+            const qty = parseFloat(row.qty) || 0;
+            const rate = parseFloat(row.rate) || 0;
+            const actWt = parseFloat(row.actWt) || 0;
+            const chgWt = parseFloat(row.chgWt) || 0;
+            let newLumpsum = parseFloat(row.lumpsum) || 0;
+
+            let calculated = false;
+            switch(row.freightOn) {
+                case 'Quantity':
+                    newLumpsum = qty * rate;
+                    calculated = true;
+                    break;
+                case 'Act.wt':
+                    newLumpsum = actWt * rate;
+                    calculated = true;
+                    break;
+                case 'Chg.wt':
+                    newLumpsum = chgWt * rate;
+                    calculated = true;
+                    break;
+                case 'Fixed':
+                    // Do not auto-calculate, allow manual input
+                    break;
+                default:
+                    break;
+            }
+            
+            // Only update if the value has changed
+            if (calculated && newLumpsum.toString() !== row.lumpsum) {
+                return { ...row, lumpsum: newLumpsum > 0 ? newLumpsum.toString() : '' };
+            }
+            
+            return row;
+        })
+    );
+}, [rows]);
+
+
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
     const newRows = [...rows];
     newRows[rowIndex] = { ...newRows[rowIndex], [columnId]: value };
@@ -123,6 +165,7 @@ export function ItemDetailsTable() {
   
   const getInputForColumn = (columnId: string, index: number) => {
     const value = rows[index]?.[columnId] ?? '';
+    const isLumpsumCalculated = rows[index]?.freightOn !== 'Fixed';
 
     switch(columnId) {
         case 'ewbNo':
@@ -150,13 +193,14 @@ export function ItemDetailsTable() {
                     </SelectContent>
                 </Select>
             );
+        case 'lumpsum':
+             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isLumpsumCalculated} />;
         case 'dValue':
             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'qty':
         case 'actWt':
         case 'chgWt':
         case 'rate':
-        case 'lumpsum':
              return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'pvtMark':
         case 'invoiceNo':
