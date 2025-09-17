@@ -5,8 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect } from 'react';
+import type { AdditionalChargesSettingsValues } from '@/components/company/settings/additional-charges-settings';
 
-const ChargeInput = ({ label, defaultValue = '5.00' }: { label: string, defaultValue?: string }) => (
+const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
+
+const ChargeInput = ({ label, defaultValue = '0.00' }: { label: string, defaultValue?: string }) => (
     <div className="grid grid-cols-[1fr_auto] items-center gap-2">
         <Label className="text-xs text-left">{label}</Label>
         <Input type="number" defaultValue={defaultValue} className="h-7 text-xs w-[70px]" />
@@ -14,17 +18,34 @@ const ChargeInput = ({ label, defaultValue = '5.00' }: { label: string, defaultV
 )
 
 export function ChargesSection() {
+    const [settings, setSettings] = useState<AdditionalChargesSettingsValues | null>(null);
+
+    useEffect(() => {
+        try {
+            const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedSettings) {
+                setSettings(JSON.parse(savedSettings));
+            }
+        } catch (error) {
+            console.error("Failed to load additional charges settings", error);
+        }
+    }, []);
+
+
   return (
     <Card className="p-2 border-cyan-200">
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Additional Charges</h3>
         <div className="space-y-1.5">
             <ChargeInput label="Basic Freight" />
-            <ChargeInput label="Builty Charge" />
+            <ChargeInput label="Builty Charge" defaultValue={settings?.builtyCharge?.toString() ?? '5.00'} />
             <ChargeInput label="Door Delivery" />
             <ChargeInput label="Collection Charge" />
-            <ChargeInput label="Loading Labour" />
+            <ChargeInput label="Loading Labour" defaultValue={settings?.loadingLabourCharge?.toString() ?? '5.00'} />
             <ChargeInput label="P.F. Charge" />
             <ChargeInput label="Others Charge" />
+             {settings?.customCharges?.map((charge, index) => (
+                <ChargeInput key={index} label={charge.name} defaultValue={charge.value.toString()} />
+            ))}
             <Separator />
              <div className="grid grid-cols-[1fr_auto] items-center gap-2">
                 <Label className="text-xs text-left font-bold">Total</Label>

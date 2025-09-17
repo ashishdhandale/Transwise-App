@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import DashboardLayout from '../../(dashboard)/layout';
 import { BookingSettings } from '@/components/company/settings/booking-settings';
 import { Settings } from 'lucide-react';
+import { AdditionalChargesSettings } from '@/components/company/settings/additional-charges-settings';
 
 function CompanySettingsPage() {
   return (
@@ -15,6 +16,7 @@ function CompanySettingsPage() {
         </h1>
         <div className="space-y-6">
             <BookingSettings />
+            <AdditionalChargesSettings />
         </div>
       </div>
     </main>
