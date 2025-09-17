@@ -79,6 +79,16 @@ export interface City {
   pinCode: string;
 }
 
+export type CustomerType = 
+  | 'Company' 
+  | 'Individual' 
+  | 'Commission Agent' 
+  | 'Booking Agent' 
+  | 'Delivery Agent' 
+  | 'Freight Forwarder'
+  | 'Consignor'
+  | 'Consignee';
+
 export interface Customer {
   id: number;
   name: string;
@@ -86,5 +96,5 @@ export interface Customer {
   address: string;
   mobile: string;
   email: string;
-  type: 'Company' | 'Individual';
+  type: CustomerType;
 }

@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { Customer } from '@/lib/types';
+import type { Customer, CustomerType } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -25,13 +25,24 @@ interface AddCustomerDialogProps {
     customer?: Customer | null;
 }
 
+const customerTypes: CustomerType[] = [
+    'Company', 
+    'Individual', 
+    'Commission Agent', 
+    'Booking Agent', 
+    'Delivery Agent', 
+    'Freight Forwarder',
+    'Consignor',
+    'Consignee'
+];
+
 export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: AddCustomerDialogProps) {
     const [name, setName] = useState('');
     const [gstin, setGstin] = useState('');
     const [address, setAddress] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
-    const [type, setType] = useState<Customer['type']>('Company');
+    const [type, setType] = useState<CustomerType>('Company');
 
     const { toast } = useToast();
 
@@ -87,13 +98,14 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                     </div>
                      <div>
                         <Label htmlFor="customer-type">Customer Type</Label>
-                        <Select value={type} onValueChange={(v) => setType(v as Customer['type'])}>
+                        <Select value={type} onValueChange={(v) => setType(v as CustomerType)}>
                             <SelectTrigger id="customer-type">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Company">Company</SelectItem>
-                                <SelectItem value="Individual">Individual</SelectItem>
+                                {customerTypes.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
