@@ -588,30 +588,15 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-        onClick={!href ? handleClick : undefined}
+        onClick={handleClick}
         {...props}
       >
         {children}
       </Comp>
     );
-    
-    const linkWithClickHandler = href ? (
-        <a href={href} onClick={(e) => {
-            if(state === 'collapsed') {
-                e.preventDefault();
-                setOpen(true);
-            }
-        }}
-        className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-        {...(props as React.HTMLAttributes<HTMLAnchorElement>)}
-        >
-            {children}
-        </a>
-    ) : button;
-
 
     if (!tooltip) {
-      return href ? linkWithClickHandler : button;
+      return button;
     }
 
     if (typeof tooltip === "string") {
@@ -622,7 +607,7 @@ const SidebarMenuButton = React.forwardRef<
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{href ? linkWithClickHandler : button}</TooltipTrigger>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
