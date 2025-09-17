@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -9,6 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,19 @@ import { Label } from '@/components/ui/label';
 
 interface ItemRow {
   id: number;
+  ewbNo: string;
+  itemName: string;
+  description: string;
+  qty: string;
+  actWt: string;
+  chgWt: string;
+  rate: string;
+  freightOn: string;
+  lumpsum: string;
+  pvtMark: string;
+  invoiceNo: string;
+  dValue: string;
+  [key: string]: any;
 }
 
 const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
@@ -47,48 +61,21 @@ const defaultColumns: ColumnSetting[] = [
     { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
 ];
 
-const getInputForColumn = (columnId: string, index: number) => {
-    switch(columnId) {
-        case 'ewbNo':
-            return <Input type="text" className={inputClass} maxLength={12} />;
-        case 'itemName':
-            return (
-                 <Select defaultValue="Frm MAS">
-                    <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        {bookingOptions.items.map(item => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            );
-        case 'description':
-            return <Input type="text" placeholder="type description" className={inputClass} />;
-        case 'freightOn':
-            return (
-                <Select defaultValue="Act.wt">
-                    <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Act.wt">Act.wt</SelectItem>
-                        <SelectItem value="Chg.wt">Chg.wt</SelectItem>
-                        <SelectItem value="Fixed">Fixed</SelectItem>
-                        <SelectItem value="Quantity">Quantity</SelectItem>
-                    </SelectContent>
-                </Select>
-            );
-        case 'dValue':
-            return <Input type="number" className={inputClass} defaultValue={index === 0 ? "12345" : ""} />;
-        case 'qty':
-        case 'actWt':
-        case 'chgWt':
-        case 'rate':
-        case 'lumpsum':
-             return <Input type="number" className={inputClass} />;
-        case 'pvtMark':
-        case 'invoiceNo':
-            return <Input type="text" className={inputClass} />;
-        default: // For custom columns
-            return <Input type="text" className={inputClass} />;
-    }
-}
+const createEmptyRow = (id: number): ItemRow => ({
+    id,
+    ewbNo: '',
+    itemName: 'Frm MAS',
+    description: '',
+    qty: '',
+    actWt: '',
+    chgWt: '',
+    rate: '',
+    freightOn: 'Act.wt',
+    lumpsum: '',
+    pvtMark: '',
+    invoiceNo: '',
+    dValue: '',
+});
 
 export function ItemDetailsTable() {
   const [rows, setRows] = useState<ItemRow[]>([]);
@@ -124,11 +111,63 @@ export function ItemDetailsTable() {
       console.error("Could not load settings, using defaults.", error);
     }
     
-    setRows(Array.from({ length: initialRowCount }, (_, i) => ({ id: Date.now() + i })));
+    setRows(Array.from({ length: initialRowCount }, (_, i) => createEmptyRow(Date.now() + i)));
   }, [isClient]);
 
+  const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
+    const newRows = [...rows];
+    newRows[rowIndex] = { ...newRows[rowIndex], [columnId]: value };
+    setRows(newRows);
+  };
+  
+  const getInputForColumn = (columnId: string, index: number) => {
+    const value = rows[index]?.[columnId] ?? '';
+
+    switch(columnId) {
+        case 'ewbNo':
+            return <Input type="text" className={inputClass} maxLength={12} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+        case 'itemName':
+            return (
+                 <Select value={value} onValueChange={(val) => handleInputChange(index, columnId, val)}>
+                    <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {bookingOptions.items.map(item => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            );
+        case 'description':
+            return <Input type="text" placeholder="type description" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+        case 'freightOn':
+            return (
+                <Select value={value} onValueChange={(val) => handleInputChange(index, columnId, val)}>
+                    <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Act.wt">Act.wt</SelectItem>
+                        <SelectItem value="Chg.wt">Chg.wt</SelectItem>
+                        <SelectItem value="Fixed">Fixed</SelectItem>
+                        <SelectItem value="Quantity">Quantity</SelectItem>
+                    </SelectContent>
+                </Select>
+            );
+        case 'dValue':
+            return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+        case 'qty':
+        case 'actWt':
+        case 'chgWt':
+        case 'rate':
+        case 'lumpsum':
+             return <Input type="number" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+        case 'pvtMark':
+        case 'invoiceNo':
+            return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+        default: // For custom columns
+            return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+    }
+  }
+
+
   const addRow = () => {
-    setRows([...rows, { id: Date.now() }]);
+    setRows([...rows, createEmptyRow(Date.now())]);
   };
   
   const removeRow = (id: number) => {
@@ -136,6 +175,15 @@ export function ItemDetailsTable() {
         setRows(rows.filter(row => row.id !== id));
       }
   }
+
+  const totals = useMemo(() => {
+    return {
+        qty: rows.reduce((sum, row) => sum + (parseFloat(row.qty) || 0), 0),
+        actWt: rows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0),
+        chgWt: rows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0),
+    };
+  }, [rows]);
+
 
   if (!isClient) {
     // Render a placeholder or the default state on the server to avoid hydration mismatch
@@ -204,6 +252,15 @@ export function ItemDetailsTable() {
                         </TableRow>
                     ))}
                 </TableBody>
+                <TableFooter>
+                    <TableRow className="bg-primary/5">
+                        <TableCell colSpan={3} className="font-bold text-right text-primary">TOTALS</TableCell>
+                        <TableCell className="font-bold text-center text-primary">{totals.qty}</TableCell>
+                        <TableCell className="font-bold text-center text-primary">{totals.actWt}</TableCell>
+                        <TableCell className="font-bold text-center text-primary">{totals.chgWt}</TableCell>
+                        <TableCell colSpan={visibleColumns.length - 5}></TableCell>
+                    </TableRow>
+                </TableFooter>
             </Table>
         </div>
         <div className="flex justify-end items-center gap-4">
