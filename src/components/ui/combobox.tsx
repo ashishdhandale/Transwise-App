@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
+  CommandGroup,
   CommandInput,
   CommandList,
   CommandItem,
