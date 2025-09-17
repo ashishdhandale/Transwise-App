@@ -141,7 +141,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 const profileSettings = localStorage.getItem(GRN_PREFIX_KEY);
                 if (profileSettings) {
                     const profile = JSON.parse(profileSettings);
-                    if(profile.companyCode) {
+                    // Only use the company code if it's set and not the default 'CO'
+                    if(profile.companyCode && profile.companyCode !== 'CO') {
                         grnPrefix = profile.companyCode;
                     }
                 }
