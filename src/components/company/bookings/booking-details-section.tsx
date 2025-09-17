@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import type { City } from '@/lib/types';
 import { AddCityDialog } from '../master/add-city-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +34,9 @@ export function BookingDetailsSection() {
     const [toStationValue, setToStationValue] = React.useState('');
     const [grNumber, setGrNumber] = useState('');
     const [companyCode, setCompanyCode] = useState('CO');
-    const hasRunInitialEffect = useRef(false);
+    
+    // Memoize bookings to prevent re-filtering on every render
+    const allBookings = useMemo(() => sampleBookings, []);
 
     useEffect(() => {
         try {
@@ -62,10 +64,9 @@ export function BookingDetailsSection() {
                     const customCities: City[] = JSON.parse(savedCities);
                     setStationOptions(customCities);
                 } else {
-                     setStationOptions([]); // No custom cities saved yet
+                     setStationOptions([]);
                 }
             } else {
-                // Default case
                 const defaultCities: City[] = bookingOptions.stations.map((station, index) => ({
                     id: index,
                     name: station,
@@ -86,41 +87,35 @@ export function BookingDetailsSection() {
         }
     }, []);
 
+    useEffect(() => {
+        loadStationOptions();
+    }, [loadStationOptions]);
+
     const generateGrNumber = useCallback((stationName: string) => {
         if (!stationName || stationOptions.length === 0) return;
 
         const fromStation = stationOptions.find(s => s.name === stationName);
         const alias = fromStation ? fromStation.aliasCode : stationName.substring(0, 3).toUpperCase();
         const prefix = `${companyCode}${alias}`;
-
-        // Find the highest sequence number for this prefix from existing bookings
-        const lastSequence = sampleBookings
+        
+        const lastSequence = allBookings
             .filter(b => b.lrNo.startsWith(prefix))
             .map(b => parseInt(b.lrNo.replace(prefix, ''), 10))
-            .filter(num => !isNaN(num)) // Filter out any parsing errors
+            .filter(num => !isNaN(num)) 
             .reduce((max, current) => Math.max(max, current), 0);
-
+            
         const newSequence = lastSequence + 1;
         
         setGrNumber(`${prefix}${String(newSequence).padStart(2, '0')}`);
 
-    }, [stationOptions, companyCode]);
+    }, [stationOptions, companyCode, allBookings]);
 
 
     useEffect(() => {
-        loadStationOptions();
-    }, [loadStationOptions]);
-    
-     useEffect(() => {
-        if (fromStationValue && stationOptions.length > 0 && !grNumber) {
-            generateGrNumber(fromStationValue);
+        if (fromStationValue && stationOptions.length > 0) {
+             generateGrNumber(fromStationValue);
         }
-     }, [stationOptions, fromStationValue, generateGrNumber, grNumber]);
-
-    const handleFromStationChange = (newValue: string) => {
-        setFromStationValue(newValue);
-        generateGrNumber(newValue);
-    }
+     }, [fromStationValue, stationOptions, generateGrNumber]);
 
 
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {
@@ -134,21 +129,20 @@ export function BookingDetailsSection() {
             const updatedCities = [newCity, ...cities];
             localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
             
-            // Immediately update station options
             loadStationOptions();
             
             toast({ title: 'City Added', description: `"${cityData.name}" has been added to your custom list.` });
-            return true; // Success
+            return true;
         } catch (error) {
             console.error("Failed to save new city", error);
             toast({ title: 'Error', description: 'Could not save the new city.', variant: 'destructive'});
-            return false; // Failure
+            return false;
         }
     };
 
     const handleAddCity = () => {
         const source = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
-        if (source === 'custom' || source === null) { // Default to custom if not set
+        if (source === 'custom' || source === null) {
              if (source === null) {
                 localStorage.setItem(LOCAL_STORAGE_KEY_SOURCE, 'custom');
              }
@@ -211,7 +205,7 @@ export function BookingDetailsSection() {
                 <Combobox
                     options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
                     value={fromStationValue}
-                    onChange={handleFromStationChange}
+                    onChange={setFromStationValue}
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
                     notFoundMessage="No station found."
