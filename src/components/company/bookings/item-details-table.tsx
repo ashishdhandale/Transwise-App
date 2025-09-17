@@ -420,12 +420,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
           <TableFooter>
             <TableRow>
               <TableCell className={`${tfClass} text-right`} colSpan={getColSpan('qty')}>
-                <div className="flex items-center justify-end gap-2">
-                    <span>TOTAL ITEM: {totals.itemCount}</span>
-                     <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
-                        <PlusCircle className="h-5 w-5" />
-                    </Button>
-                </div>
+                <span>TOTAL ITEM: {totals.itemCount}</span>
               </TableCell>
               
               {['qty', 'actWt', 'chgWt'].map(id => {
@@ -439,8 +434,13 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 return null;
               })}
 
-              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 3} className={tfClass}></TableCell>
+              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 2} className={tfClass}></TableCell>
 
+              <TableCell className={`${tfClass} text-right`}>
+                <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
+                  <PlusCircle className="h-5 w-5" />
+                </Button>
+              </TableCell>
             </TableRow>
           </TableFooter>
         </Table>
