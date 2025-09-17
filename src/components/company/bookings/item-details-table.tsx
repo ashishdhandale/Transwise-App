@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, PlusCircle, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -416,6 +416,14 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 </TableCell>
               </TableRow>
             ))}
+            <TableRow>
+                <TableCell className={cn(tdClass, "text-center")} colSpan={visibleColumns.length + 1}></TableCell>
+                <TableCell className={cn(tdClass, "text-center")}>
+                    <Button variant="ghost" size="icon" onClick={addRow} className="h-7 w-7 text-blue-600">
+                        <PlusCircle className="h-5 w-5" />
+                    </Button>
+                </TableCell>
+            </TableRow>
           </TableBody>
           <TableFooter>
             <TableRow>
@@ -432,14 +440,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 return null;
               })}
 
-              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 1} className={tfClass}></TableCell>
+              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 2} className={tfClass}></TableCell>
 
-              <TableCell className={tfClass}>
-                  <Button variant="link" size="sm" onClick={addRow} className="text-sm text-blue-600 hover:text-blue-800 p-0 h-auto">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Ctrl+I to Add more
-                  </Button>
-              </TableCell>
             </TableRow>
           </TableFooter>
         </Table>
