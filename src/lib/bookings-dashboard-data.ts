@@ -1,11 +1,11 @@
 
 export interface Booking {
-  id: number;
+  id: string;
   lrNo: string;
   bookingDate: string;
   fromCity: string;
   toCity: string;
-  lrType: 'TO BE BILLED' | 'PAID' | 'FOC' | 'TOPAY' | 'TBB';
+  lrType: 'FOC' | 'PAID' | 'TOPAY' | 'TBB';
   sender: string;
   receiver: string;
   itemDescription: string;

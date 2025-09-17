@@ -32,6 +32,9 @@ interface BookingDetailsSectionProps {
     fromStation: City | null;
     toStation: City | null;
     grNumber: string;
+    bookingDate?: Date;
+    onBookingDateChange: (date?: Date) => void;
+    isEditMode: boolean;
 }
 
 
@@ -42,16 +45,14 @@ export function BookingDetailsSection({
     onToStationChange,
     fromStation,
     toStation,
-    grNumber 
+    grNumber,
+    bookingDate,
+    onBookingDateChange,
+    isEditMode
 }: BookingDetailsSectionProps) {
-    const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const { toast } = useToast();
-    
-    useEffect(() => {
-        setBookingDate(new Date());
-    }, []);
 
     const loadStationOptions = useCallback(() => {
          try {
@@ -101,6 +102,7 @@ export function BookingDetailsSection({
     }, [stationOptions, onToStationChange]);
 
     useEffect(() => {
+        if (isEditMode) return;
         try {
             const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
             if (savedProfile) {
@@ -113,7 +115,7 @@ export function BookingDetailsSection({
             console.error('Failed to load company profile', error);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fromStation, stationOptions]); // Re-evaluate when options load or fromStation is reset
+    }, [fromStation, stationOptions, isEditMode]); // Re-evaluate when options load or fromStation is reset
 
 
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {
@@ -181,7 +183,7 @@ export function BookingDetailsSection({
                         <Calendar
                             mode="single"
                             selected={bookingDate}
-                            onSelect={setBookingDate}
+                            onSelect={onBookingDateChange}
                             initialFocus
                         />
                     </PopoverContent>

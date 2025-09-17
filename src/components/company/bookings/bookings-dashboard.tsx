@@ -29,6 +29,7 @@ import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -47,6 +48,7 @@ export function BookingsDashboard() {
   const [isClient, setIsClient] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
@@ -171,7 +173,9 @@ export function BookingsDashboard() {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push(`/company/bookings/${booking.id}/edit`)}>
+                                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
                                 <DropdownMenuItem><Printer className="mr-2 h-4 w-4" /> Print</DropdownMenuItem>
                                 {booking.status !== 'Cancelled' && (
                                     <DropdownMenuItem className="text-red-500"><XCircle className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>

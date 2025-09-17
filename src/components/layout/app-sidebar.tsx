@@ -57,6 +57,7 @@ export function AppSidebar() {
   const [openBranchMenu, setOpenBranchMenu] = React.useState(false);
   const [openConsignmentMenu, setOpenConsignmentMenu] = React.useState(false);
   const [openMasterMenu, setOpenMasterMenu] = React.useState(false);
+  const [openReportsMenu, setOpenReportsMenu] = React.useState(false);
 
   const isAdmin = pathname.startsWith('/admin');
   const isCompany = pathname.startsWith('/company');
@@ -79,6 +80,9 @@ export function AppSidebar() {
      if (pathname.startsWith('/company/master')) {
       setOpenMasterMenu(true);
      }
+      if (pathname.startsWith('/company/reports')) {
+      setOpenReportsMenu(true);
+     }
   }, [pathname]);
 
   React.useEffect(() => {
@@ -88,6 +92,7 @@ export function AppSidebar() {
       setOpenBranchMenu(false);
       setOpenConsignmentMenu(false);
       setOpenMasterMenu(false);
+      setOpenReportsMenu(false);
     }
   }, [state]);
 
@@ -289,12 +294,30 @@ export function AppSidebar() {
           </CollapsibleContent>
         </Collapsible>
         
-        <SidebarMenuItem>
-          <SidebarMenuButton href="#" tooltip="Reports">
-            <BarChart3 />
-            <span>Reports</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        <Collapsible open={openReportsMenu} onOpenChange={setOpenReportsMenu}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Reports">
+              <BarChart3 />
+              <span>Reports</span>
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform ml-auto',
+                  openReportsMenu && 'rotate-180'
+                )}
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/reports/history" size="sm" isActive={pathname === '/company/reports/history'} tooltip="History">
+                  <History /> History
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
          <SidebarMenuItem>
             <SidebarMenuButton
               href="/company/settings"
