@@ -14,6 +14,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ColumnSetting } from '@/components/company/settings/item-details-settings';
 import { cn } from '@/lib/utils';
@@ -171,21 +181,21 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   }, []);
 
   useEffect(() => {
+    let hasChanged = false;
     const updatedRows = rows.map(row => {
         const newRow = { ...row };
-        // We only recalculate lumpsum if freightOn is NOT 'Fixed'
         if (row.freightOn !== 'Fixed') {
             const newLumpsum = calculateLumpsum(row);
-            // Check if the new value is different before updating to prevent infinite loops
-            if (Math.abs(newLumpsum - (parseFloat(row.lumpsum) || 0)) > 0.001) {
-                newRow.lumpsum = newLumpsum > 0 ? newLumpsum.toString() : '';
+            const currentLumpsum = parseFloat(row.lumpsum) || 0;
+            if (Math.abs(newLumpsum - currentLumpsum) > 0.001) {
+                newRow.lumpsum = newLumpsum > 0 ? newLumpsum.toFixed(2) : '';
+                hasChanged = true;
             }
         }
         return newRow;
     });
-    
-    // Only call onRowsChange if there's an actual difference in the rows data
-    if (JSON.stringify(rows) !== JSON.stringify(updatedRows)) {
+
+    if (hasChanged) {
         onRowsChange(updatedRows);
     }
   }, [rows, calculateLumpsum, onRowsChange]);
@@ -385,9 +395,27 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                                 </TableCell>
                             ))}
                             <TableCell className={`${tdClass} text-center`}>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeRow(row.id)} disabled={rows.length <= 1}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete the item row from the booking.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => removeRow(row.id)}>
+                                                Delete
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </TableCell>
                         </TableRow>
                     ))}
