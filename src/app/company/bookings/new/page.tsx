@@ -23,14 +23,14 @@ function NewBookingForm() {
                             <BookingDetailsSection />
                             <PartyDetailsSection />
                         </div>
-                        <div className="lg:w-[320px]">
+                        <div className="lg:w-[280px]">
                            <ChargesSection />
                         </div>
                     </div>
                     <ItemDetailsTable />
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
                         <SummaryAndActionsSection />
-                        <div className="lg:w-[320px]">
+                        <div className="lg:w-[280px]">
                             <DeliveryInstructionsSection />
                         </div>
                     </div>
