@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { sampleBookings } from '@/lib/bookings-dashboard-data';
@@ -44,14 +44,15 @@ export function BookingsDashboard() {
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
   const [isClient, setIsClient] = useState(false);
-  const [bookings] = useState<Booking[]>(sampleBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setIsClient(true);
-    const initialDate = new Date('2014-10-03');
+    const initialDate = new Date('2024-08-01');
     setFromDate(initialDate);
-    setToDate(initialDate);
+    setToDate(new Date('2024-08-05'));
+    setBookings(sampleBookings);
   }, []);
 
   const filteredBookings = useMemo(() => {
@@ -137,6 +138,7 @@ export function BookingsDashboard() {
                     <TableHead className={`${thClass} w-[80px]`}>ACTION</TableHead>
                     <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                     <TableHead className={thClass}>LR No</TableHead>
+                    <TableHead className={thClass}>DATE</TableHead>
                     <TableHead className={thClass}>From CITY</TableHead>
                     <TableHead className={thClass}>To City</TableHead>
                     <TableHead className={thClass}>LR type</TableHead>
@@ -176,6 +178,7 @@ export function BookingsDashboard() {
                       </TableCell>
                       <TableCell className="p-1 text-center">{index + 1}</TableCell>
                       <TableCell className="p-1">{booking.lrNo}</TableCell>
+                      <TableCell className="p-1">{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                       <TableCell className="p-1">{booking.fromCity}</TableCell>
                       <TableCell className="p-1">{booking.toCity}</TableCell>
                       <TableCell className="p-1">{booking.lrType}</TableCell>

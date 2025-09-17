@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -72,7 +73,7 @@ export function AppSidebar() {
      if (pathname.startsWith('/company')) {
       setOpenDashboardMenu(true);
     }
-     if (pathname.startsWith('/company/bookings')) {
+     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock')) {
       setOpenConsignmentMenu(true);
      }
      if (pathname.startsWith('/company/master')) {
@@ -248,7 +249,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="#" size="sm" tooltip="Bills"><FileText />Bills</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Stock"><Archive />Stock</SidebarMenuButton>
+                <SidebarMenuButton href="/company/stock" size="sm" isActive={pathname.startsWith('/company/stock')} tooltip="Stock"><Archive />Stock</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
