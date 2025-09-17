@@ -40,7 +40,7 @@ interface ItemRow {
 
 const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
 const tdClass = "p-1";
-const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs text-right";
+const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs";
 const inputClass = "h-8 text-xs px-1";
 
 const BOOKING_SETTINGS_KEY = 'transwise_booking_settings';
@@ -221,6 +221,17 @@ export function ItemDetailsTable() {
   }
 
   const visibleColumns = columns.filter(c => c.isVisible);
+  
+  const qtyColIndex = visibleColumns.findIndex(c => c.id === 'qty');
+  const actWtColIndex = visibleColumns.findIndex(c => c.id === 'actWt');
+  const chgWtColIndex = visibleColumns.findIndex(c => c.id === 'chgWt');
+
+  // Find the first column index among the total columns
+  const firstTotalColIndex = Math.min(
+    qtyColIndex > -1 ? qtyColIndex : Infinity,
+    actWtColIndex > -1 ? actWtColIndex : Infinity,
+    chgWtColIndex > -1 ? chgWtColIndex : Infinity
+  );
 
   return (
     <div className="space-y-2">
@@ -254,11 +265,18 @@ export function ItemDetailsTable() {
                 </TableBody>
                  <TableFooter>
                     <TableRow>
-                        <TableCell colSpan={3} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
-                        <TableCell className={tfClass}>{totals.qty}</TableCell>
-                        <TableCell className={tfClass}>{totals.actWt}</TableCell>
-                        <TableCell className={tfClass}>{totals.chgWt}</TableCell>
-                        <TableCell colSpan={visibleColumns.length - 5} className={tfClass}></TableCell>
+                        <TableCell colSpan={firstTotalColIndex > -1 ? firstTotalColIndex + 1 : 4} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
+                        
+                        {/* Render cells dynamically to align totals */}
+                        {visibleColumns.slice(firstTotalColIndex > -1 ? firstTotalColIndex : 3).map(col => {
+                            if (col.id === 'qty') return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
+                            if (col.id === 'actWt') return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
+                            if (col.id === 'chgWt') return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
+                            return <TableCell key={`total-empty-${col.id}`} className={tfClass}></TableCell>;
+                        })}
+                        
+                        {/* Account for columns after the totals */}
+                        <TableCell colSpan={visibleColumns.length - Math.max(qtyColIndex, actWtColIndex, chgWtColIndex) -1 + 1} className={tfClass}></TableCell>
                     </TableRow>
                 </TableFooter>
             </Table>
@@ -268,7 +286,7 @@ export function ItemDetailsTable() {
                 <Plus className="h-4 w-4 mr-1" />
                 Ctrl+I to Add more
             </Button>
-             <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
                 <Checkbox id="updateRates" />
                 <Label htmlFor="updateRates">Update Rates</Label>
             </div>
