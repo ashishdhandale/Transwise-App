@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -115,46 +115,47 @@ export function ItemDetailsTable() {
     setRows(Array.from({ length: initialRowCount }, (_, i) => createEmptyRow(Date.now() + i)));
   }, [isClient]);
 
+  const calculateLumpsum = useCallback((row: ItemRow) => {
+    const qty = parseFloat(row.qty) || 0;
+    const rate = parseFloat(row.rate) || 0;
+    const actWt = parseFloat(row.actWt) || 0;
+    const chgWt = parseFloat(row.chgWt) || 0;
+
+    switch(row.freightOn) {
+        case 'Quantity':
+            return qty * rate;
+        case 'Act.wt':
+            return actWt * rate;
+        case 'Chg.wt':
+            return chgWt * rate;
+        case 'Fixed':
+            return parseFloat(row.lumpsum) || 0;
+        default:
+            return 0;
+    }
+  }, []);
+
   // Effect to auto-calculate lumpsum
   useEffect(() => {
-    setRows(currentRows => 
-        currentRows.map(row => {
-            const qty = parseFloat(row.qty) || 0;
-            const rate = parseFloat(row.rate) || 0;
-            const actWt = parseFloat(row.actWt) || 0;
-            const chgWt = parseFloat(row.chgWt) || 0;
-            let newLumpsum = parseFloat(row.lumpsum) || 0;
+    const hasChanges = rows.some(row => {
+        if (row.freightOn === 'Fixed') return false;
+        const newLumpsum = calculateLumpsum(row);
+        const currentLumpsum = parseFloat(row.lumpsum) || 0;
+        // Using a small epsilon for float comparison
+        return Math.abs(newLumpsum - currentLumpsum) > 0.001;
+    });
 
-            let calculated = false;
-            switch(row.freightOn) {
-                case 'Quantity':
-                    newLumpsum = qty * rate;
-                    calculated = true;
-                    break;
-                case 'Act.wt':
-                    newLumpsum = actWt * rate;
-                    calculated = true;
-                    break;
-                case 'Chg.wt':
-                    newLumpsum = chgWt * rate;
-                    calculated = true;
-                    break;
-                case 'Fixed':
-                    // Do not auto-calculate, allow manual input
-                    break;
-                default:
-                    break;
-            }
-            
-            // Only update if the value has changed
-            if (calculated && newLumpsum.toString() !== row.lumpsum) {
+    if (hasChanges) {
+        setRows(currentRows => 
+            currentRows.map(row => {
+                if (row.freightOn === 'Fixed') return row;
+                
+                const newLumpsum = calculateLumpsum(row);
                 return { ...row, lumpsum: newLumpsum > 0 ? newLumpsum.toString() : '' };
-            }
-            
-            return row;
-        })
-    );
-}, [rows]);
+            })
+        );
+    }
+}, [rows, calculateLumpsum]);
 
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
@@ -318,14 +319,17 @@ export function ItemDetailsTable() {
                     <TableRow>
                         <TableCell colSpan={firstTotalColIndex !== Infinity ? firstTotalColIndex + 1 : 2} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
                         
-                        {visibleColIds.slice(firstTotalColIndex !== Infinity ? firstTotalColIndex : -1).map((colId) => {
+                        {visibleColIds.slice(firstTotalColIndex !== Infinity ? firstTotalColIndex : -1).map((colId, index, arr) => {
                             if (colId === 'qty') return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
                             if (colId === 'actWt') return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
                             if (colId === 'chgWt') return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
+                            
+                            // To correctly render empty cells for the rest of the footer
+                            if (index === arr.length - 1) {
+                                return <TableCell key={`total-empty-${colId}`} className={tfClass} colSpan={2}></TableCell>;
+                            }
                             return <TableCell key={`total-empty-${colId}`} className={tfClass}></TableCell>;
                         })}
-                        
-                        <TableCell className={tfClass}></TableCell>
                     </TableRow>
                 </TableFooter>
             </Table>
@@ -343,3 +347,5 @@ export function ItemDetailsTable() {
     </div>
   );
 }
+
+    
