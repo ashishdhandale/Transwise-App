@@ -1,6 +1,8 @@
 
 'use client';
 
+import { Button } from '@/components/ui/button';
+
 const SummaryItem = ({ label, value }: { label: string; value: string | number }) => (
     <div className="flex justify-between items-center">
         <span className="font-semibold">{label} :</span>
@@ -13,13 +15,10 @@ export function SummaryAndActionsSection() {
     <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
             <div className="space-y-2">
-                <SummaryItem label="TOTAL ITEM" value={6} />
-                <SummaryItem label="TOTAL QTY" value={400} />
-                <SummaryItem label="TOTAL Act Wt" value={450} />
-                <SummaryItem label="TOTAL Chg Wt" value={500} />
-                <div className="border-t-2 border-dashed pt-2 mt-2">
-                     <SummaryItem label="TOTAL Amount" value="Rs.1,234,56,789.00" />
-                </div>
+                {/* Summary items can be dynamically added here if needed */}
+            </div>
+            <div className="flex gap-2 justify-end">
+                 {/* Buttons can go here if needed in the future */}
             </div>
         </div>
     </div>

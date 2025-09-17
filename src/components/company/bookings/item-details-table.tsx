@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -9,6 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ interface ItemRow {
 
 const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
 const tdClass = "p-1";
+const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs text-right";
 const inputClass = "h-8 text-xs px-1";
 
 const BOOKING_SETTINGS_KEY = 'transwise_booking_settings';
@@ -174,6 +176,14 @@ export function ItemDetailsTable() {
         setRows(rows.filter(row => row.id !== id));
       }
   }
+  
+  const totals = useMemo(() => {
+      return {
+          qty: rows.reduce((sum, row) => sum + (parseFloat(row.qty) || 0), 0),
+          actWt: rows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0),
+          chgWt: rows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0),
+      }
+  }, [rows]);
 
   if (!isClient) {
     // Render a placeholder or the default state on the server to avoid hydration mismatch
@@ -242,6 +252,15 @@ export function ItemDetailsTable() {
                         </TableRow>
                     ))}
                 </TableBody>
+                 <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={3} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
+                        <TableCell className={tfClass}>{totals.qty}</TableCell>
+                        <TableCell className={tfClass}>{totals.actWt}</TableCell>
+                        <TableCell className={tfClass}>{totals.chgWt}</TableCell>
+                        <TableCell colSpan={visibleColumns.length - 5} className={tfClass}></TableCell>
+                    </TableRow>
+                </TableFooter>
             </Table>
         </div>
         <div className="flex justify-end items-center gap-4">
@@ -249,7 +268,7 @@ export function ItemDetailsTable() {
                 <Plus className="h-4 w-4 mr-1" />
                 Ctrl+I to Add more
             </Button>
-            <div className="flex items-center space-x-2">
+             <div className="flex items-center space-x-2">
                 <Checkbox id="updateRates" />
                 <Label htmlFor="updateRates">Update Rates</Label>
             </div>
