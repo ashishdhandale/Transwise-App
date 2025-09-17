@@ -12,6 +12,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -67,6 +68,11 @@ export function Combobox({
           aria-expanded={open}
           className="w-full justify-between"
           onFocus={() => setOpen(true)}
+          onBlur={(e) => {
+            if (!popoverRef.current?.contains(e.relatedTarget as Node)) {
+              setOpen(false);
+            }
+          }}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
