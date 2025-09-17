@@ -75,6 +75,9 @@ export function AppSidebar() {
      if (pathname.startsWith('/company/bookings')) {
       setOpenConsignmentMenu(true);
      }
+     if (pathname.startsWith('/company/master')) {
+      setOpenMasterMenu(true);
+     }
   }, [pathname]);
 
   React.useEffect(() => {
@@ -267,7 +270,7 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="City"><MapPin />City</SidebarMenuButton>
+                <SidebarMenuButton href="/company/master/city" size="sm" isActive={pathname === '/company/master/city'} tooltip="City"><MapPin />City</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Customer"><Users />Customer</SidebarMenuButton>
