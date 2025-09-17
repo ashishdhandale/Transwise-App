@@ -18,15 +18,21 @@ function NewBookingForm() {
         <div className="space-y-4 max-w-7xl mx-auto">
             <Card className="border-2 border-green-200">
                 <CardContent className="p-4 space-y-4">
-                    <BookingDetailsSection />
-                    <PartyDetailsSection />
-                    <ItemDetailsTable />
-                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
                         <div className="space-y-4">
-                            <ChargesSection />
+                            <BookingDetailsSection />
+                            <PartyDetailsSection />
+                        </div>
+                        <div className="lg:w-[320px]">
+                           <ChargesSection />
+                        </div>
+                    </div>
+                    <ItemDetailsTable />
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
+                        <SummaryAndActionsSection />
+                        <div className="lg:w-[320px]">
                             <DeliveryInstructionsSection />
                         </div>
-                        <SummaryAndActionsSection />
                     </div>
                 </CardContent>
             </Card>
