@@ -89,7 +89,7 @@ const getInputForColumn = (columnId: string, index: number) => {
 }
 
 export function ItemDetailsTable() {
-  const [rows, setRows] = useState<ItemRow[]>([]);
+  const [rows, setRows] = useState<ItemRow[]>(Array.from({ length: DEFAULT_ROWS }, (_, i) => ({ id: i })));
   const [columns, setColumns] = useState<ColumnSetting[]>(defaultColumns);
   const [isClient, setIsClient] = useState(false);
 
@@ -131,7 +131,38 @@ export function ItemDetailsTable() {
   }
 
   if (!isClient) {
-    return <div>Loading table...</div>;
+    // Render a placeholder or the default state on the server to avoid hydration mismatch
+    return (
+        <div className="space-y-2">
+            <div className="overflow-x-auto border rounded-md">
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
+                            {defaultColumns.filter(c => c.isVisible).map(col => (
+                                <TableHead key={col.id} className={cn(thClass, col.width)}>{col.label}</TableHead>
+                            ))}
+                            <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: DEFAULT_ROWS }, (_, index) => (
+                             <TableRow key={`skeleton-${index}`}>
+                                <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
+                                {defaultColumns.filter(c => c.isVisible).map(col => (
+                                    <TableCell key={`skeleton-${index}-${col.id}`} className={tdClass}>
+                                        <div className="h-8 bg-muted rounded-md animate-pulse"></div>
+                                    </TableCell>
+                                ))}
+                                <TableCell className={`${tdClass} text-center`}></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+            <div className="flex justify-end h-8"></div>
+        </div>
+    );
   }
 
   const visibleColumns = columns.filter(c => c.isVisible);
