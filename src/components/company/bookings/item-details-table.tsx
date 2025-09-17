@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,7 +70,7 @@ export function ItemDetailsTable() {
                 <TableHeader>
                     <TableRow>
                         <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
-                        <TableHead className={`${thClass} w-[200px]`}>EWB no.</TableHead>
+                        <TableHead className={`${thClass} w-[220px]`}>EWB no.</TableHead>
                         <TableHead className={`${thClass} w-[160px]`}>Item Name*</TableHead>
                         <TableHead className={`${thClass} w-[220px]`}>Description*</TableHead>
                         <TableHead className={`${thClass} w-[100px]`}>Qty*</TableHead>
