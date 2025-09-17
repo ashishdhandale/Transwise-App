@@ -1,7 +1,6 @@
 
 'use client';
 
-import { PreviousBookingHeader } from '@/components/company/bookings/previous-booking-header';
 import { BookingDetailsSection } from '@/components/company/bookings/booking-details-section';
 import { PartyDetailsSection } from '@/components/company/bookings/party-details-section';
 import { ItemDetailsTable } from '@/components/company/bookings/item-details-table';
@@ -14,20 +13,9 @@ import { Suspense } from 'react';
 
 function NewBookingForm() {
     
-    // In a real app, this would come from an API call based on the previous booking ID
-    const previousBooking = {
-        lrNo: '002',
-        type: 'TBB',
-        sender: 'NOVA INDUSTERIES',
-        receiver: 'MONIKA SALES',
-        qty: 250,
-        toCity: 'BALAGHAT'
-    };
-    
   return (
     <main className="flex-1 p-4 md:p-6 bg-cyan-50/50">
         <div className="space-y-4 max-w-7xl mx-auto">
-            <PreviousBookingHeader {...previousBooking} />
             <Card className="border-2 border-green-200">
                 <CardContent className="p-4 space-y-4">
                     <BookingDetailsSection />

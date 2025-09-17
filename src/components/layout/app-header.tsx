@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell } from 'lucide-react';
+import { Bell, BookCopy } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ export function AppHeader() {
   const pathname = usePathname();
   const isAdmin = pathname.startsWith('/admin');
   const isCompany = pathname.startsWith('/company');
+  const isNewBookingPage = pathname === '/company/bookings/new';
 
   const handleLogout = () => {
     router.push('/login');
@@ -53,6 +55,12 @@ export function AppHeader() {
         </Link>
       </div>
       <div className="flex items-center gap-4">
+        {isNewBookingPage && (
+          <Button variant="ghost" className="hover:bg-primary-foreground/10">
+            <BookCopy className="mr-2 h-4 w-4" />
+            View Previous Booking
+          </Button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative hover:bg-primary-foreground/10">
