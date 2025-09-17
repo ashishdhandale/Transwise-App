@@ -200,10 +200,7 @@ const Sidebar = React.forwardRef<
 
     const handleMouseLeave = () => {
       if (!isMobile && collapsible === 'icon') {
-        // Only collapse if it wasn't the default state
-        if (!defaultOpen) {
-          setOpen(false);
-        }
+        setOpen(false);
       }
     }
 
