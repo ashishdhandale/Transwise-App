@@ -18,8 +18,8 @@ function NewBookingForm() {
     const previousBooking = {
         lrNo: '002',
         type: 'TBB',
-        consignor: 'NOVA INDUSTERIES',
-        consignee: 'MONIKA SALES',
+        sender: 'NOVA INDUSTERIES',
+        receiver: 'MONIKA SALES',
         qty: 250,
         toCity: 'BALAGHAT'
     };

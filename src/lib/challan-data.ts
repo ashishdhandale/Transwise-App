@@ -35,8 +35,8 @@ export interface Challan {
 export interface LrDetail {
   lrNo: string;
   lrType: 'TBB' | 'Topay' | 'PAID';
-  consignor: string;
-  consignee: string;
+  sender: string;
+  receiver: string;
   from: string;
   to: string;
   bookingDate: string;
@@ -116,9 +116,9 @@ export const challanData: Challan[] = [
 ];
 
 export const lrDetailsData: LrDetail[] = [
-    { lrNo: '32432', lrType: 'TBB', consignor: 'Consignor A', consignee: 'Consignee A', from: 'Mumbai', to: 'Pune', bookingDate: '20/07/2020', itemDescription: 'Electronics', quantity: 10, actualWeight: 100, chargeWeight: 110, grandTotal: 5000 },
-    { lrNo: '23422', lrType: 'Topay', consignor: 'Consignor B', consignee: 'Consignee B', from: 'Mumbai', to: 'Pune', bookingDate: '20/07/2020', itemDescription: 'Textiles', quantity: 20, actualWeight: 150, chargeWeight: 150, grandTotal: 6000 },
-    { lrNo: '56446', lrType: 'Topay', consignor: 'Consignor C', consignee: 'Consignee C', from: 'Mumbai', to: 'Pune', bookingDate: '21/07/2020', itemDescription: 'Machine Parts', quantity: 5, actualWeight: 80, chargeWeight: 80, grandTotal: 4000 },
-    { lrNo: '8987707', lrType: 'PAID', consignor: 'Consignor D', consignee: 'Consignee D', from: 'Mumbai', to: 'Pune', bookingDate: '21/07/2020', itemDescription: 'Furniture', quantity: 10, actualWeight: 120, chargeWeight: 150, grandTotal: 7000 },
-    { lrNo: '576575', lrType: 'Topay', consignor: 'Consignor E', consignee: 'Consignee E', from: 'Mumbai', to: 'Pune', bookingDate: '21/07/2020', itemDescription: 'Groceries', quantity: 5, actualWeight: 50, chargeWeight: 60, grandTotal: 3000 },
+    { lrNo: '32432', lrType: 'TBB', sender: 'Sender A', receiver: 'Receiver A', from: 'Mumbai', to: 'Pune', bookingDate: '20/07/2020', itemDescription: 'Electronics', quantity: 10, actualWeight: 100, chargeWeight: 110, grandTotal: 5000 },
+    { lrNo: '23422', lrType: 'Topay', sender: 'Sender B', receiver: 'Receiver B', from: 'Mumbai', to: 'Pune', bookingDate: '20/07/2020', itemDescription: 'Textiles', quantity: 20, actualWeight: 150, chargeWeight: 150, grandTotal: 6000 },
+    { lrNo: '56446', lrType: 'Topay', sender: 'Sender C', receiver: 'Receiver C', from: 'Mumbai', to: 'Pune', bookingDate: '21/07/2020', itemDescription: 'Machine Parts', quantity: 5, actualWeight: 80, chargeWeight: 80, grandTotal: 4000 },
+    { lrNo: '8987707', lrType: 'PAID', sender: 'Sender D', receiver: 'Receiver D', from: 'Mumbai', to: 'Pune', bookingDate: '21/07/2020', itemDescription: 'Furniture', quantity: 10, actualWeight: 120, chargeWeight: 150, grandTotal: 7000 },
+    { lrNo: '576575', lrType: 'Topay', sender: 'Sender E', receiver: 'Receiver E', from: 'Mumbai', to: 'Pune', bookingDate: '21/07/2020', itemDescription: 'Groceries', quantity: 5, actualWeight: 50, chargeWeight: 60, grandTotal: 3000 },
 ];

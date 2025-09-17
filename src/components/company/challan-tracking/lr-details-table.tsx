@@ -28,8 +28,8 @@ export function LrDetailsTable({ lrDetails }: LrDetailsTableProps) {
                     <TableHead className={thClass}>#</TableHead>
                     <TableHead className={thClass}>LR No.</TableHead>
                     <TableHead className={thClass}>LR Type</TableHead>
-                    <TableHead className={thClass}>Consignor</TableHead>
-                    <TableHead className={thClass}>Consignee</TableHead>
+                    <TableHead className={thClass}>Sender</TableHead>
+                    <TableHead className={thClass}>Receiver</TableHead>
                     <TableHead className={thClass}>From</TableHead>
                     <TableHead className={thClass}>To</TableHead>
                     <TableHead className={thClass}>Bkg. Date</TableHead>
@@ -46,8 +46,8 @@ export function LrDetailsTable({ lrDetails }: LrDetailsTableProps) {
                         <TableCell className="border-r">{index + 1}</TableCell>
                         <TableCell className="border-r">{row.lrNo}</TableCell>
                         <TableCell className="border-r">{row.lrType}</TableCell>
-                        <TableCell className="border-r">{row.consignor}</TableCell>
-                        <TableCell className="border-r">{row.consignee}</TableCell>
+                        <TableCell className="border-r">{row.sender}</TableCell>
+                        <TableCell className="border-r">{row.receiver}</TableCell>
                         <TableCell className="border-r">{row.from}</TableCell>
                         <TableCell className="border-r">{row.to}</TableCell>
                         <TableCell className="border-r">{row.bookingDate}</TableCell>
