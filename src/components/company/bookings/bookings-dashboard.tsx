@@ -64,7 +64,6 @@ export function BookingsDashboard() {
             </Button>
             <Button className="bg-cyan-500 hover:bg-cyan-600">Add Offline Booking (Alt+O)</Button>
             <Button variant="outline" className="border-gray-400">Hold LR</Button>
-            <Button variant="destructive">Cancel Booking</Button>
           </div>
 
           {/* Booking Information and Search */}
