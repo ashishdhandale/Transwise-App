@@ -98,6 +98,11 @@ export function ItemDetailsTable() {
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     let initialRowCount = DEFAULT_ROWS;
     try {
       const savedBookingSettings = localStorage.getItem(BOOKING_SETTINGS_KEY);
@@ -121,7 +126,7 @@ export function ItemDetailsTable() {
     }
     
     setRows(Array.from({ length: initialRowCount }, (_, i) => ({ id: Date.now() + i })));
-  }, []);
+  }, [isClient]);
 
   const addRow = () => {
     setRows([...rows, { id: Date.now() }]);
@@ -203,17 +208,17 @@ export function ItemDetailsTable() {
             </Table>
         </div>
         <div className="flex justify-between items-center">
+            <Textarea placeholder="Remark / Note: maximum 80 characherts" rows={1} maxLength={80} className="w-96" />
             <div className="flex items-center gap-4">
+                 <Button variant="link" size="sm" onClick={addRow} className="text-sm text-blue-600 hover:text-blue-800">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Ctrl+I to Add more
+                </Button>
                 <div className="flex items-center space-x-2">
                     <Checkbox id="updateRates" />
                     <Label htmlFor="updateRates">Update Rates</Label>
                 </div>
-                <Textarea placeholder="Remark / Note: maximum 80 characherts" rows={1} maxLength={80} className="w-96" />
             </div>
-             <Button variant="link" size="sm" onClick={addRow} className="text-sm text-blue-600 hover:text-blue-800">
-                <Plus className="h-4 w-4 mr-1" />
-                Ctrl+I to Add more
-            </Button>
         </div>
     </div>
   );
