@@ -44,8 +44,6 @@ interface BookingFormProps {
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string => {
     const changes: string[] = [];
 
-    const simpleFields: (keyof Booking)[] = ['lrType', 'fromCity', 'toCity', 'sender', 'receiver', 'status'];
-
     if (format(new Date(oldBooking.bookingDate), 'yyyy-MM-dd') !== format(new Date(newBooking.bookingDate), 'yyyy-MM-dd')) {
         changes.push(`- Booking Date changed from '${format(new Date(oldBooking.bookingDate), 'dd-MMM-yyyy')}' to '${format(new Date(newBooking.bookingDate), 'dd-MMM-yyyy')}'`);
     }
@@ -87,7 +85,7 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string
             const itemFields: (keyof ItemRow)[] = ['ewbNo', 'itemName', 'description', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue'];
             itemFields.forEach(field => {
                 if (oldItem[field] !== newItem[field]) {
-                    itemChanges.push(`'${field}' from '${oldItem[field] || ""}' to '${newItem[field] || ""}'`);
+                    itemChanges.push(`'${String(field)}' from '${oldItem[field] || ""}' to '${newItem[field] || ""}'`);
                 }
             });
         }
@@ -148,18 +146,26 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     }
                 }
 
-                const generateGrNumber = (bookings: Booking[]) => {
-                    const lastSequence = bookings
-                        .filter(b => b.lrNo.startsWith(grnPrefix))
-                        .map(b => parseInt(b.lrNo.replace(grnPrefix, ''), 10))
-                        .filter(num => !isNaN(num)) 
+                const generateGrNumber = (bookings: Booking[], prefix: string) => {
+                    const relevantGrNumbers = bookings
+                        .map(b => b.lrNo)
+                        .filter(lrNo => lrNo.startsWith(prefix));
+
+                    if (relevantGrNumbers.length === 0) {
+                        return `${prefix}01`;
+                    }
+
+                    const lastSequence = relevantGrNumbers
+                        .map(lrNo => parseInt(lrNo.substring(prefix.length), 10))
+                        .filter(num => !isNaN(num))
                         .reduce((max, current) => Math.max(max, current), 0);
                         
                     const newSequence = lastSequence + 1;
                     
-                    return `${grnPrefix}${String(newSequence).padStart(2, '0')}`;
+                    return `${prefix}${String(newSequence).padStart(2, '0')}`;
                 };
-                setCurrentGrNumber(generateGrNumber(parsedBookings));
+
+                setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
                 setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
             }
 
