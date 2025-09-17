@@ -186,12 +186,6 @@ const Sidebar = React.forwardRef<
       }
     }, [defaultOpen, setOpen]);
     
-    const handleClick = () => {
-      if (!isMobile && collapsible === 'icon' && !open) {
-        setOpen(true);
-      }
-    }
-
     const state = open ? "expanded" : "collapsed"
 
     if (collapsible === "none") {
@@ -238,7 +232,6 @@ const Sidebar = React.forwardRef<
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
-        onClick={handleClick}
       >
         {/* This is what handles the sidebar gap on desktop */}
         <div
@@ -538,6 +531,7 @@ const sidebarMenuButtonVariants = cva(
         default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+        ghost: "",
       },
       size: {
         default: "h-8 text-sm",
@@ -569,12 +563,22 @@ const SidebarMenuButton = React.forwardRef<
       tooltip,
       className,
       children,
+      onClick,
       ...props
     },
     ref
   ) => {
-    const { isMobile, state } = useSidebar()
+    const { isMobile, state, setOpen } = useSidebar()
     const Comp = href ? Link : "button"
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (state === 'collapsed') {
+        setOpen(true);
+      }
+      if (onClick) {
+        onClick(event);
+      }
+    };
 
     const button = (
       <Comp
@@ -584,14 +588,30 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
+        onClick={!href ? handleClick : undefined}
         {...props}
       >
         {children}
       </Comp>
     );
+    
+    const linkWithClickHandler = href ? (
+        <a href={href} onClick={(e) => {
+            if(state === 'collapsed') {
+                e.preventDefault();
+                setOpen(true);
+            }
+        }}
+        className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
+        {...(props as React.HTMLAttributes<HTMLAnchorElement>)}
+        >
+            {children}
+        </a>
+    ) : button;
+
 
     if (!tooltip) {
-      return button
+      return href ? linkWithClickHandler : button;
     }
 
     if (typeof tooltip === "string") {
@@ -602,7 +622,7 @@ const SidebarMenuButton = React.forwardRef<
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger asChild>{href ? linkWithClickHandler : button}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
