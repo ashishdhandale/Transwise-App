@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { handleOptimizeRoute, type OptimizerState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +36,7 @@ const initialState: OptimizerState = {
 };
 
 export function OptimizerForm() {
-  const [state, formAction] = useFormState(handleOptimizeRoute, initialState);
+  const [state, formAction] = useActionState(handleOptimizeRoute, initialState);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
