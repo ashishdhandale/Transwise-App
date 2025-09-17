@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { ChargeSetting } from '@/components/company/settings/additional-charges-settings';
 
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
@@ -23,6 +23,8 @@ interface ChargesSectionProps {
 
 export function ChargesSection({ basicFreight }: ChargesSectionProps) {
     const [charges, setCharges] = useState<ChargeSetting[]>([]);
+    const [gstValue, setGstValue] = useState(0);
+    const [gstAmount, setGstAmount] = useState(0);
 
     useEffect(() => {
         try {
@@ -37,6 +39,25 @@ export function ChargesSection({ basicFreight }: ChargesSectionProps) {
             console.error("Failed to load additional charges settings", error);
         }
     }, []);
+    
+    const additionalChargesTotal = useMemo(() => {
+        return charges
+            .filter(c => c.isVisible)
+            .reduce((sum, charge) => sum + (Number(charge.value) || 0), 0);
+    }, [charges]);
+
+    const total = useMemo(() => {
+        return basicFreight + additionalChargesTotal;
+    }, [basicFreight, additionalChargesTotal]);
+    
+    useEffect(() => {
+        const newGstAmount = total * (gstValue / 100);
+        setGstAmount(newGstAmount);
+    }, [total, gstValue]);
+
+    const grandTotal = useMemo(() => {
+        return total + gstAmount;
+    }, [total, gstAmount]);
 
 
   return (
@@ -45,22 +66,22 @@ export function ChargesSection({ basicFreight }: ChargesSectionProps) {
         <div className="space-y-1.5">
              <ChargeInput label="Basic Freight" value={basicFreight.toFixed(2)} readOnly={true} />
             {charges.filter(c => c.isVisible).map((charge) => (
-                <ChargeInput key={charge.id} label={charge.name} value={charge.value.toString()} />
+                <ChargeInput key={charge.id} label={charge.name} value={charge.value.toString()} readOnly />
             ))}
             <Separator />
              <div className="grid grid-cols-[1fr_100px] items-center gap-2">
                 <Label className="text-xs text-left font-bold">Total</Label>
-                <Input type="number" defaultValue="35" className="h-7 text-xs font-bold bg-muted w-full" readOnly />
+                <Input type="number" value={total.toFixed(2)} className="h-7 text-xs font-bold bg-muted w-full" readOnly />
             </div>
             <div className="grid grid-cols-[auto_1fr_100px] items-center gap-2">
                 <Label className="text-xs text-left col-start-1">GST</Label>
-                <Input type="number" defaultValue="0" className="h-7 text-xs" />
-                <Input type="number" defaultValue="0" className="h-7 text-xs bg-muted" readOnly />
+                <Input type="number" value={gstValue} onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} className="h-7 text-xs" />
+                <Input type="number" value={gstAmount.toFixed(2)} className="h-7 text-xs bg-muted" readOnly />
             </div>
             <Separator />
             <div className="grid grid-cols-[1fr_100px] items-center gap-2">
                 <Label className="text-sm text-left font-bold">Grand Total:</Label>
-                <Input defaultValue="Rs.35" className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
+                <Input value={`Rs.${grandTotal.toFixed(2)}`} className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
             </div>
         </div>
     </Card>
