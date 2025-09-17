@@ -11,19 +11,31 @@ import React, { useEffect, useState, useCallback } from 'react';
 import type { City } from '@/lib/types';
 import { AddCityDialog } from '../master/add-city-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 
 type CityListSource = 'default' | 'custom';
 
+// A simple in-memory counter for the GR sequence
+let grSequence = 1;
 
 export function BookingDetailsSection() {
-    const [bookingDate, setBookingDate] = useState('');
-    const [stationOptions, setStationOptions] = useState<{label: string, value: string}[]>([]);
+    const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
+    const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const { toast } = useToast();
-    
+    const [fromStationValue, setFromStationValue] = React.useState('Ahmedabad');
+    const [toStationValue, setToStationValue] = React.useState('');
+    const [grNumber, setGrNumber] = useState('COAHM01');
+
+
     const loadStationOptions = useCallback(() => {
          try {
             const source = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
@@ -31,25 +43,43 @@ export function BookingDetailsSection() {
                 const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
                 if (savedCities) {
                     const customCities: City[] = JSON.parse(savedCities);
-                    setStationOptions(customCities.map(city => ({ label: city.name, value: city.name })));
+                    setStationOptions(customCities);
                 } else {
                      setStationOptions([]); // No custom cities saved yet
                 }
             } else {
                 // Default case
-                setStationOptions(bookingOptions.stations.map(station => ({ label: station, value: station })));
+                const defaultCities: City[] = bookingOptions.stations.map((station, index) => ({
+                    id: index,
+                    name: station,
+                    aliasCode: station.substring(0,3).toUpperCase(),
+                    pinCode: '000000'
+                }));
+                setStationOptions(defaultCities);
             }
         } catch (error) {
             console.error("Failed to load station options from local storage", error);
-            setStationOptions(bookingOptions.stations.map(station => ({ label: station, value: station })));
+             const defaultCities: City[] = bookingOptions.stations.map((station, index) => ({
+                id: index,
+                name: station,
+                aliasCode: station.substring(0,3).toUpperCase(),
+                pinCode: '000000'
+            }));
+            setStationOptions(defaultCities);
         }
     }, []);
 
     useEffect(() => {
-        setBookingDate(format(new Date(), 'dd/MM/yyyy'));
         loadStationOptions();
     }, [loadStationOptions]);
     
+    useEffect(() => {
+        const fromStation = stationOptions.find(s => s.name === fromStationValue);
+        const alias = fromStation ? fromStation.aliasCode : 'XXX';
+        const sequence = String(grSequence++).padStart(2, '0');
+        setGrNumber(`CO${alias}${sequence}`);
+    }, [fromStationValue, stationOptions]);
+
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {
         try {
             const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
@@ -90,20 +120,37 @@ export function BookingDetailsSection() {
     };
 
 
-    const [fromStationValue, setFromStationValue] = React.useState('Ahmedabad');
-    const [toStationValue, setToStationValue] = React.useState('');
-
-
     return (
         <>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
             <div className="space-y-1">
                 <Label htmlFor="lrNo">GR Number</Label>
-                <Input id="lrNo" value="WD123456" className="font-bold text-red-600 border-red-300" readOnly />
+                <Input id="lrNo" value={grNumber} className="font-bold text-red-600 border-red-300" readOnly />
             </div>
             <div className="space-y-1">
                 <Label htmlFor="bookingDate">Booking Date</Label>
-                <Input id="bookingDate" value={bookingDate} readOnly />
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={'outline'}
+                            className={cn(
+                                'w-full justify-between text-left font-normal',
+                                !bookingDate && 'text-muted-foreground'
+                            )}
+                        >
+                            {bookingDate ? format(bookingDate, 'dd/MM/yyyy') : <span>Pick a date</span>}
+                            <CalendarIcon className="h-4 w-4" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={bookingDate}
+                            onSelect={setBookingDate}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
             </div>
             <div className="space-y-1">
                 <Label htmlFor="loadType">Load Type</Label>
@@ -119,7 +166,7 @@ export function BookingDetailsSection() {
             <div className="space-y-1">
                 <Label htmlFor="fromStation">From Station</Label>
                 <Combobox
-                    options={stationOptions}
+                    options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
                     value={fromStationValue}
                     onChange={setFromStationValue}
                     placeholder="Select station..."
@@ -132,7 +179,7 @@ export function BookingDetailsSection() {
             <div className="space-y-1">
                 <Label htmlFor="toStation">To Station</Label>
                 <Combobox
-                    options={stationOptions}
+                    options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
                     value={toStationValue}
                     onChange={setToStationValue}
                     placeholder="Select station..."
