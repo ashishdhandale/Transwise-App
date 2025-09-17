@@ -95,6 +95,8 @@ export function BookingsDashboard() {
     );
   }, [bookings, searchQuery]);
 
+  const tdClass = "p-1 whitespace-nowrap";
+
   return (
     <>
       <main className="flex-1 p-4 md:p-6 bg-white">
@@ -206,19 +208,19 @@ export function BookingsDashboard() {
                               </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
-                        <TableCell className="p-1 text-center">{index + 1}</TableCell>
-                        <TableCell className="p-1">{booking.lrNo}</TableCell>
-                        <TableCell className="p-1">{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
-                        <TableCell className="p-1">{booking.fromCity}</TableCell>
-                        <TableCell className="p-1">{booking.toCity}</TableCell>
-                        <TableCell className="p-1">{booking.lrType}</TableCell>
-                        <TableCell className="p-1">{booking.sender}</TableCell>
-                        <TableCell className="p-1">{booking.receiver}</TableCell>
-                        <TableCell className="p-1">{booking.itemDescription}</TableCell>
-                        <TableCell className="p-1 text-right">{booking.qty}</TableCell>
-                        <TableCell className="p-1 text-right">{booking.chgWt}</TableCell>
-                        <TableCell className="p-1 text-right">{booking.totalAmount.toLocaleString()}</TableCell>
-                        <TableCell className="p-1">
+                        <TableCell className={`${tdClass} text-center`}>{index + 1}</TableCell>
+                        <TableCell className={tdClass}>{booking.lrNo}</TableCell>
+                        <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
+                        <TableCell className={tdClass}>{booking.fromCity}</TableCell>
+                        <TableCell className={tdClass}>{booking.toCity}</TableCell>
+                        <TableCell className={tdClass}>{booking.lrType}</TableCell>
+                        <TableCell className={tdClass}>{booking.sender}</TableCell>
+                        <TableCell className={tdClass}>{booking.receiver}</TableCell>
+                        <TableCell className={tdClass}>{booking.itemDescription}</TableCell>
+                        <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
+                        <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
+                        <TableCell className={`${tdClass} text-right`}>{booking.totalAmount.toLocaleString()}</TableCell>
+                        <TableCell className={tdClass}>
                            <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
                                {booking.status}
                           </Badge>
