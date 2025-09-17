@@ -21,17 +21,28 @@ const InstructionSelect = ({ label, options, defaultValue }: { label: string, op
 )
 
 export function DeliveryInstructionsSection() {
+  const instructions = [
+    { key: 'insurance', label: 'Insurance', options: bookingOptions.yesNo, defaultValue: 'No' },
+    { key: 'deliveryAt', label: 'Delivery At', options: bookingOptions.deliveryAt, defaultValue: 'Godown Deli' },
+    { key: 'dpoint', label: 'D.Point', options: bookingOptions.deliveryPoints, defaultValue: 'DWARKA COI' },
+    { key: 'pod', label: 'POD?', options: bookingOptions.yesNo, defaultValue: 'No' },
+    { key: 'attachCc', label: 'Attach CC', options: bookingOptions.yesNo, defaultValue: 'Yes' },
+    { key: 'priority', label: 'Priority', options: bookingOptions.priorities, defaultValue: 'Express' },
+    { key: 'print', label: 'Print', options: bookingOptions.printFormats, defaultValue: 'Custom Copy' },
+  ];
+
   return (
     <Card className="p-2 border-cyan-200">
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Delivery Instructions</h3>
         <div className="space-y-1.5">
-            <InstructionSelect label="Insurance" options={bookingOptions.yesNo} defaultValue="No" />
-            <InstructionSelect label="Delivery At" options={bookingOptions.deliveryAt} defaultValue="Godown Deli" />
-            <InstructionSelect label="D.Point" options={bookingOptions.deliveryPoints} defaultValue="DWARKA COI" />
-            <InstructionSelect label="POD?" options={bookingOptions.yesNo} defaultValue="No" />
-            <InstructionSelect label="Attach CC" options={bookingOptions.yesNo} defaultValue="Yes" />
-            <InstructionSelect label="Priority" options={bookingOptions.priorities} defaultValue="Express" />
-            <InstructionSelect label="Print" options={bookingOptions.printFormats} defaultValue="Custom Copy" />
+            {instructions.map(inst => (
+                <InstructionSelect 
+                    key={inst.key} 
+                    label={inst.label} 
+                    options={inst.options} 
+                    defaultValue={inst.defaultValue} 
+                />
+            ))}
         </div>
     </Card>
   );
