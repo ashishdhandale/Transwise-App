@@ -9,10 +9,10 @@ import type { ChargeSetting } from '@/components/company/settings/additional-cha
 
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
-const ChargeInput = ({ label, defaultValue = '0' }: { label: string, defaultValue?: string }) => (
-    <div className="grid grid-cols-[1fr_80px] items-center gap-2">
-        <Label className="text-xs text-left">{label}</Label>
-        <Input type="number" defaultValue={defaultValue} className="h-7 text-xs w-full" />
+const ChargeInput = ({ label, defaultValue = '0', type = 'number' }: { label: string, defaultValue?: string, type?: string }) => (
+    <div className="grid grid-cols-2 items-center gap-2">
+        <Label className="text-xs text-left whitespace-nowrap overflow-hidden text-ellipsis">{label}</Label>
+        <Input type={type} defaultValue={defaultValue} className="h-7 text-xs w-full" />
     </div>
 )
 
@@ -43,7 +43,7 @@ export function ChargesSection() {
                 <ChargeInput key={charge.id} label={charge.name} defaultValue={charge.value.toString()} />
             ))}
             <Separator />
-             <div className="grid grid-cols-[1fr_80px] items-center gap-2">
+             <div className="grid grid-cols-2 items-center gap-2">
                 <Label className="text-xs text-left font-bold">Total</Label>
                 <Input type="number" defaultValue="35" className="h-7 text-xs font-bold bg-muted w-full" readOnly />
             </div>
@@ -53,7 +53,7 @@ export function ChargesSection() {
                 <Input type="number" defaultValue="0" className="h-7 text-xs bg-muted" readOnly />
             </div>
             <Separator />
-            <div className="grid grid-cols-[1fr_80px] items-center gap-2">
+            <div className="grid grid-cols-2 items-center gap-2">
                 <Label className="text-sm text-left font-bold">Grand Total:</Label>
                 <Input defaultValue="Rs.35" className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
             </div>

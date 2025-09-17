@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, GripVertical, Eye, EyeOff } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, GripVertical } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -19,10 +19,19 @@ import {
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const calculationTypes = [
+    { value: 'fixed', label: 'Fixed Amount' },
+    { value: 'per_kg_actual', label: 'Per Kg (Actual Wt.)' },
+    { value: 'per_kg_charge', label: 'Per Kg (Charge Wt.)' },
+    { value: 'per_quantity', label: 'Per Quantity' },
+];
 
 const chargeSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Charge name is required.'),
+  calculationType: z.enum(['fixed', 'per_kg_actual', 'per_kg_charge', 'per_quantity']),
   value: z.coerce.number().min(0, 'Value must be a positive number.'),
   isVisible: z.boolean(),
   isCustom: z.boolean(),
@@ -38,12 +47,12 @@ export type ChargeSetting = z.infer<typeof chargeSchema>;
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
 const defaultCharges: ChargeSetting[] = [
-    { id: 'builtyCharge', name: 'Builty Charge', value: 0, isVisible: true, isCustom: false },
-    { id: 'doorDelivery', name: 'Door Delivery', value: 0, isVisible: true, isCustom: false },
-    { id: 'collectionCharge', name: 'Collection Charge', value: 0, isVisible: true, isCustom: false },
-    { id: 'loadingLabourCharge', name: 'Loading Labour Charge', value: 0, isVisible: true, isCustom: false },
-    { id: 'pfCharge', name: 'P.F. Charge', value: 0, isVisible: true, isCustom: false },
-    { id: 'othersCharge', name: 'Others Charge', value: 0, isVisible: true, isCustom: false },
+    { id: 'builtyCharge', name: 'Builty Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
+    { id: 'doorDelivery', name: 'Door Delivery', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
+    { id: 'collectionCharge', name: 'Collection Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
+    { id: 'loadingLabourCharge', name: 'Loading Labour Charge', calculationType: 'per_kg_actual', value: 0, isVisible: true, isCustom: false },
+    { id: 'pfCharge', name: 'P.F. Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
+    { id: 'othersCharge', name: 'Others Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
 ];
 
 
@@ -63,7 +72,6 @@ export function AdditionalChargesSettings() {
     name: 'charges',
   });
   
-  // Drag and drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -126,7 +134,7 @@ export function AdditionalChargesSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Additional Charges Preferences</CardTitle>
-        <CardDescription>Drag to reorder, toggle visibility, and set default values for charges on the booking form.</CardDescription>
+        <CardDescription>Drag to reorder, toggle visibility, and set default values and calculation types for charges on the booking form.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -144,7 +152,7 @@ export function AdditionalChargesSettings() {
                    <Button type="button" variant="ghost" size="icon" className="cursor-grab p-1">
                       <GripVertical className="h-5 w-5 text-muted-foreground" />
                   </Button>
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                       <FormField
                           control={form.control}
                           name={`charges.${index}.name`}
@@ -158,12 +166,36 @@ export function AdditionalChargesSettings() {
                               </FormItem>
                           )}
                       />
+                       <FormField
+                            control={form.control}
+                            name={`charges.${index}.calculationType`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Calculation Type</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a type" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {calculationTypes.map(type => (
+                                                <SelectItem key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                       <FormField
                           control={form.control}
                           name={`charges.${index}.value`}
                           render={({ field }) => (
                               <FormItem>
-                              <FormLabel>Default Value</FormLabel>
+                              <FormLabel>Default Value/Rate</FormLabel>
                               <FormControl>
                                   <Input type="number" {...field} />
                               </FormControl>
@@ -202,7 +234,7 @@ export function AdditionalChargesSettings() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ id: `custom-${Date.now()}`, name: '', value: 0, isVisible: true, isCustom: true })}
+                  onClick={() => append({ id: `custom-${Date.now()}`, name: '', value: 0, calculationType: 'fixed', isVisible: true, isCustom: true })}
                   >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Custom Charge
