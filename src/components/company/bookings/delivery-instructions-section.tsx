@@ -14,7 +14,7 @@ const InstructionSelect = ({ label, options, defaultValue }: { label: string, op
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
-                {options.map(opt => <SelectItem value={opt.value}>{opt.label}</SelectItem>)}
+                {options.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
             </SelectContent>
         </Select>
     </div>
@@ -37,6 +37,7 @@ export function DeliveryInstructionsSection() {
         <div className="space-y-1.5">
             {instructions.map(inst => (
                 <InstructionSelect 
+                    key={inst.key}
                     label={inst.label} 
                     options={inst.options} 
                     defaultValue={inst.defaultValue} 
