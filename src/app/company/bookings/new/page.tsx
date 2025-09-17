@@ -30,7 +30,6 @@ const createEmptyRow = (id: number): ItemRow => ({
 function NewBookingForm() {
     const [itemRows, setItemRows] = useState<ItemRow[]>(() => {
         // This function will only run on the client, avoiding SSR issues.
-        // We can check for localStorage here if needed.
         return Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i));
     });
 
