@@ -226,13 +226,20 @@ export function ItemDetailsTable() {
   const actWtColIndex = visibleColumns.findIndex(c => c.id === 'actWt');
   const chgWtColIndex = visibleColumns.findIndex(c => c.id === 'chgWt');
 
-  // Find the first column index among the total columns
-  const firstTotalColIndex = Math.min(
-    qtyColIndex > -1 ? qtyColIndex : Infinity,
-    actWtColIndex > -1 ? actWtColIndex : Infinity,
-    chgWtColIndex > -1 ? chgWtColIndex : Infinity
-  );
+  const visibleIndices = {
+    qty: qtyColIndex,
+    actWt: actWtColIndex,
+    chgWt: chgWtColIndex,
+  };
+  
+  // Create an array of all visible column IDs to help with rendering empty cells
+  const visibleColIds = visibleColumns.map(c => c.id);
 
+  // Find the index of the first total column that is visible
+  const firstTotalColIndex = Math.min(
+      ...[visibleIndices.qty, visibleIndices.actWt, visibleIndices.chgWt].filter(i => i > -1)
+  );
+  
   return (
     <div className="space-y-2">
         <div className="overflow-x-auto border rounded-md">
@@ -265,23 +272,21 @@ export function ItemDetailsTable() {
                 </TableBody>
                  <TableFooter>
                     <TableRow>
-                        <TableCell colSpan={firstTotalColIndex > -1 ? firstTotalColIndex + 1 : 4} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
+                        <TableCell colSpan={firstTotalColIndex !== Infinity ? firstTotalColIndex + 1 : 2} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
                         
-                        {/* Render cells dynamically to align totals */}
-                        {visibleColumns.slice(firstTotalColIndex > -1 ? firstTotalColIndex : 3).map(col => {
-                            if (col.id === 'qty') return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
-                            if (col.id === 'actWt') return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
-                            if (col.id === 'chgWt') return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
-                            return <TableCell key={`total-empty-${col.id}`} className={tfClass}></TableCell>;
+                        {visibleColIds.slice(firstTotalColIndex !== Infinity ? firstTotalColIndex : -1).map((colId) => {
+                            if (colId === 'qty') return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
+                            if (colId === 'actWt') return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
+                            if (colId === 'chgWt') return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
+                            return <TableCell key={`total-empty-${colId}`} className={tfClass}></TableCell>;
                         })}
                         
-                        {/* Account for columns after the totals */}
-                        <TableCell colSpan={visibleColumns.length - Math.max(qtyColIndex, actWtColIndex, chgWtColIndex) -1 + 1} className={tfClass}></TableCell>
+                        <TableCell className={tfClass}></TableCell>
                     </TableRow>
                 </TableFooter>
             </Table>
         </div>
-        <div className="flex justify-end items-center gap-4">
+        <div className="flex justify-start items-center gap-4">
             <Button variant="link" size="sm" onClick={addRow} className="text-sm text-blue-600 hover:text-blue-800">
                 <Plus className="h-4 w-4 mr-1" />
                 Ctrl+I to Add more
