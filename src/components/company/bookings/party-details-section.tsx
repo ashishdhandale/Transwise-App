@@ -19,36 +19,22 @@ const initialCustomers: Customer[] = [
 
 interface PartyRowProps {
     side: 'Sender' | 'Receiver';
-    partyOptions: { label: string; value: string; }[];
+    customers: Customer[];
     onPartyAdded: () => void;
 }
 
-const PartyRow = ({ side, partyOptions, onPartyAdded }: PartyRowProps) => {
+const PartyRow = ({ side, customers, onPartyAdded }: PartyRowProps) => {
     const { toast } = useToast();
-    const [partyValue, setPartyValue] = React.useState('');
     const [selectedParty, setSelectedParty] = React.useState<Partial<Customer> | null>(null);
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     
-    const [customers, setCustomers] = useState<Customer[]>([]);
-
-    useEffect(() => {
-        try {
-            const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
-            setCustomers(savedCustomers ? JSON.parse(savedCustomers) : initialCustomers);
-        } catch (error) {
-            console.error("Failed to load customers", error);
-            setCustomers(initialCustomers);
-        }
-    }, []);
+    const partyOptions = customers.map(c => ({ label: c.name, value: c.name }));
 
     const handleSelectParty = (value: string) => {
-        setPartyValue(value);
-        // The value from combobox is the customer's name, which we treat as the value.
-        const party = customers.find(p => p.name.toLowerCase() === value.toLowerCase());
+        const party = customers.find(p => p.name === value);
         if (party) {
             setSelectedParty(party);
         } else {
-            // Handle case where a new name is typed that doesn't match any customer
             setSelectedParty({ name: value });
         }
     };
@@ -56,25 +42,24 @@ const PartyRow = ({ side, partyOptions, onPartyAdded }: PartyRowProps) => {
     const handleSaveCustomer = (customerData: Omit<Customer, 'id'>) => {
         try {
             const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
-            const customers: Customer[] = savedCustomers ? JSON.parse(savedCustomers) : [];
+            const currentCustomers: Customer[] = savedCustomers ? JSON.parse(savedCustomers) : [];
             const newCustomer: Customer = {
-                id: customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1,
+                id: currentCustomers.length > 0 ? Math.max(...currentCustomers.map(c => c.id)) + 1 : 1,
                 ...customerData
             };
-            const updatedCustomers = [newCustomer, ...customers];
+            const updatedCustomers = [newCustomer, ...currentCustomers];
             localStorage.setItem(LOCAL_STORAGE_KEY_CUSTOMERS, JSON.stringify(updatedCustomers));
             
             toast({ title: 'Customer Added', description: `"${customerData.name}" has been added to your master list.` });
-            onPartyAdded(); // Callback to refresh options in parent
+            onPartyAdded();
             
-            // Automatically select the newly added customer
             handleSelectParty(newCustomer.name);
 
-            return true; // Success
+            return true;
         } catch (error) {
             console.error("Failed to save new customer", error);
             toast({ title: 'Error', description: 'Could not save the new customer.', variant: 'destructive'});
-            return false; // Failure
+            return false;
         }
     };
 
@@ -118,27 +103,26 @@ const PartyRow = ({ side, partyOptions, onPartyAdded }: PartyRowProps) => {
 };
 
 export function PartyDetailsSection() {
-    const [partyOptions, setPartyOptions] = useState<{ label: string; value: string; }[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
 
-    const loadPartyOptions = useCallback(() => {
+    const loadCustomers = useCallback(() => {
         try {
             const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
-            const customers: Customer[] = savedCustomers ? JSON.parse(savedCustomers) : initialCustomers;
-            setPartyOptions(customers.map(c => ({ label: c.name, value: c.name })));
+            setCustomers(savedCustomers ? JSON.parse(savedCustomers) : initialCustomers);
         } catch (error) {
             console.error("Failed to load party options", error);
-            setPartyOptions([]);
+            setCustomers(initialCustomers);
         }
     }, []);
 
     useEffect(() => {
-        loadPartyOptions();
-    }, [loadPartyOptions]);
+        loadCustomers();
+    }, [loadCustomers]);
 
     return (
         <div className="border rounded-md">
-            <PartyRow side="Sender" partyOptions={partyOptions} onPartyAdded={loadPartyOptions} />
-            <PartyRow side="Receiver" partyOptions={partyOptions} onPartyAdded={loadPartyOptions} />
+            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} />
+            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} />
         </div>
     );
 }
