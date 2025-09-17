@@ -12,7 +12,11 @@ import { Combobox } from '@/components/ui/combobox';
 import React from 'react';
 
 export function BookingDetailsSection() {
-    const bookingDate = format(new Date(), 'dd/MM/yyyy');
+    const [bookingDate, setBookingDate] = React.useState('');
+
+    React.useEffect(() => {
+        setBookingDate(format(new Date(), 'dd/MM/yyyy'));
+    }, []);
     
     const [stationValue, setStationValue] = React.useState('');
     const stationOptions = bookingOptions.stations.map(station => ({ label: station, value: station }));
@@ -51,21 +55,16 @@ export function BookingDetailsSection() {
             </div>
             <div className="space-y-1">
                 <Label htmlFor="toStation">To Station</Label>
-                <div className="flex gap-1">
-                    <Combobox
-                        options={stationOptions}
-                        value={stationValue}
-                        onChange={setStationValue}
-                        placeholder="Select station..."
-                        searchPlaceholder="Search stations..."
-                        notFoundMessage="No station found."
-                        addMessage="Add New City"
-                        onAdd={() => alert(`Adding new city: ${stationValue}`)}
-                    />
-                    <Button size="icon" variant="outline" className="border-green-500 text-green-500 hover:bg-green-50 hover:text-green-600">
-                        <Plus className="h-5 w-5"/>
-                    </Button>
-                </div>
+                <Combobox
+                    options={stationOptions}
+                    value={stationValue}
+                    onChange={setStationValue}
+                    placeholder="Select station..."
+                    searchPlaceholder="Search stations..."
+                    notFoundMessage="No station found."
+                    addMessage="Add New City"
+                    onAdd={() => alert(`Adding new city: ${stationValue}`)}
+                />
             </div>
              <div className="space-y-1">
                 <Label htmlFor="bookingType">Booking Type</Label>
