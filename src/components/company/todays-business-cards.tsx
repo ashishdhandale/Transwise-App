@@ -1,20 +1,29 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const summaryData = [
-  {
-    title: 'Bookings',
-    value: '250',
-    details: '(To Be Billed:<>,ToPay:<>,PAID:<>)',
-  },
-  { title: 'Deliveries', value: 'Count', details: '(To Be Billed:<>,ToPay:<>,PAID:<>)' },
-  { title: 'Cancelled Bookings', value: 'Count', details: '(To Be Billed:<>,ToPay:<>,PAID:<>)' },
-  { title: 'Vehicle Dispatch', value: 'Count', details: '' },
-  { title: 'Vehicle Inward', value: 'Count', details: '' },
-  { title: 'Deliveries', value: 'Count', details: '(ONBILL<>,CASH:<>,Other<>)' },
-  { title: 'Revenue', value: 'Rs.<amount>', details: 'Bookings: Rs.<>+Deliveries:Rs<>+Bills: Rs<>' },
+interface SummaryItem {
+    title: string;
+    value: string;
+    details?: string;
+}
+
+interface TodaysBusinessCardsProps {
+    data: SummaryItem[];
+}
+
+const defaultData = [
+  { title: 'Bookings', value: '0' },
+  { title: 'Deliveries', value: '0' },
+  { title: 'Cancelled Bookings', value: '0' },
+  { title: 'Vehicle Dispatch', value: '0' },
+  { title: 'Vehicle Inward', value: '0' },
+  { title: 'Revenue', value: 'Rs. 0' },
 ];
 
-export function TodaysBusinessCards() {
+
+export function TodaysBusinessCards({ data }: TodaysBusinessCardsProps) {
+  const displayData = data && data.length > 0 ? data : defaultData;
+
   return (
     <Card className="bg-white border border-[#b2dfdb]">
       <CardHeader>
@@ -23,7 +32,7 @@ export function TodaysBusinessCards() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {summaryData.map((item, index) => (
+        {displayData.map((item, index) => (
           <Card
             key={index}
             className="bg-accent text-accent-foreground border-2 border-[#4db6ac] rounded-lg"

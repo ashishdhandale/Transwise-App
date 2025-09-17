@@ -1,3 +1,4 @@
+
 'use client';
 
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
@@ -10,122 +11,96 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart';
 import type { ChartConfig } from '@/components/ui/chart';
+import { useMemo } from 'react';
 
-const stationData = [
-  { station: 'Raipur', stock: 400, fill: 'var(--color-raipur)' },
-  { station: 'Jabalpur', stock: 300, fill: 'var(--color-jabalpur)' },
-  { station: 'Bhandara', stock: 300, fill: 'var(--color-bhandara)' },
-  { station: 'Akola', stock: 200, fill: 'var(--color-akola)' },
-];
+// Function to generate a color from a string
+const generateColor = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+  return "#" + "00000".substring(0, 6 - c.length) + c;
+};
 
-const undeliveredData = [
-  { station: 'Nagpur', stock: 250, fill: 'var(--color-nagpur)' },
-  { station: 'Pune', stock: 150, fill: 'var(--color-pune)' },
-  { station: 'Mumbai', stock: 100, fill: 'var(--color-mumbai)' },
-];
+interface PieChartData {
+    station: string;
+    stock: number;
+}
 
-const destinationData = [
-    { station: 'Kolkata', stock: 500, fill: 'var(--color-kolkata)' },
-    { station: 'Delhi', stock: 350, fill: 'var(--color-delhi)' },
-    { station: 'Chennai', stock: 250, fill: 'var(--color-chennai)' },
-];
+const PieChartCard = ({ title, data, chartConfig }: { title: string, data: PieChartData[], chartConfig: ChartConfig }) => {
+    if (!data || data.length === 0) {
+        return (
+            <Card className="flex flex-col border-0 shadow-none">
+                <CardHeader className="items-center pb-0">
+                    <CardTitle>{title}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 pb-0 flex items-center justify-center">
+                    <p className="text-sm text-muted-foreground">No data available.</p>
+                </CardContent>
+            </Card>
+        );
+    }
+    
+    return (
+        <Card className="flex flex-col border-0 shadow-none">
+            <CardHeader className="items-center pb-0">
+            <CardTitle>{title}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 pb-0">
+            <ChartContainer
+                config={chartConfig}
+                className="mx-auto aspect-square max-h-[250px]"
+            >
+                <PieChart>
+                <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                    data={data}
+                    dataKey="stock"
+                    nameKey="station"
+                    innerRadius={60}
+                    strokeWidth={5}
+                >
+                    {data.map((entry) => (
+                        <Cell key={entry.station} fill={generateColor(entry.station)} stroke={generateColor(entry.station)} />
+                    ))}
+                </Pie>
+                <ChartLegend
+                    content={<ChartLegendContent nameKey="station" />}
+                    className="-translate-y-[2px] flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                />
+                </PieChart>
+            </ChartContainer>
+            </CardContent>
+        </Card>
+    );
+};
 
-const stationChartConfig = {
-  stock: {
-    label: 'Stock',
-  },
-  raipur: {
-    label: 'Raipur',
-    color: 'hsl(var(--chart-1))',
-  },
-  jabalpur: {
-    label: 'Jabalpur',
-    color: 'hsl(var(--chart-2))',
-  },
-  bhandara: {
-    label: 'Bhandara',
-    color: 'hsl(var(--chart-3))',
-  },
-  akola: {
-    label: 'Akola',
-    color: 'hsl(var(--chart-4))',
-  },
-} satisfies ChartConfig;
+interface StockPieChartsProps {
+    stationData: PieChartData[];
+    undeliveredData: PieChartData[];
+    destinationData: PieChartData[];
+}
 
-const undeliveredChartConfig = {
-    stock: {
-        label: 'Stock',
-    },
-    nagpur: {
-        label: 'Nagpur',
-        color: 'hsl(var(--chart-1))',
-    },
-    pune: {
-        label: 'Pune',
-        color: 'hsl(var(--chart-2))',
-    },
-    mumbai: {
-        label: 'Mumbai',
-        color: 'hsl(var(--chart-3))',
-    },
-} satisfies ChartConfig;
+export function StockPieCharts({ stationData, undeliveredData, destinationData }: StockPieChartsProps) {
+  const buildChartConfig = (data: PieChartData[]): ChartConfig => {
+    const config: ChartConfig = { stock: { label: 'Stock' } };
+    data.forEach(item => {
+      config[item.station] = {
+        label: item.station,
+        color: generateColor(item.station),
+      };
+    });
+    return config;
+  };
 
-const destinationChartConfig = {
-    stock: {
-        label: 'Deliveries',
-    },
-    kolkata: {
-        label: 'Kolkata',
-        color: 'hsl(var(--chart-1))',
-    },
-    delhi: {
-        label: 'Delhi',
-        color: 'hsl(var(--chart-2))',
-    },
-    chennai: {
-        label: 'Chennai',
-        color: 'hsl(var(--chart-3))',
-    },
-} satisfies ChartConfig;
+  const stationChartConfig = useMemo(() => buildChartConfig(stationData), [stationData]);
+  const undeliveredChartConfig = useMemo(() => buildChartConfig(undeliveredData), [undeliveredData]);
+  const destinationChartConfig = useMemo(() => buildChartConfig(destinationData), [destinationData]);
 
-
-const PieChartCard = ({ title, data, chartConfig }: { title: string, data: any[], chartConfig: ChartConfig }) => (
-  <Card className="flex flex-col border-0 shadow-none">
-    <CardHeader className="items-center pb-0">
-      <CardTitle>{title}</CardTitle>
-    </CardHeader>
-    <CardContent className="flex-1 pb-0">
-      <ChartContainer
-        config={chartConfig}
-        className="mx-auto aspect-square max-h-[250px]"
-      >
-        <PieChart>
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent hideLabel />}
-          />
-          <Pie
-            data={data}
-            dataKey="stock"
-            nameKey="station"
-            innerRadius={60}
-            strokeWidth={5}
-          >
-            {data.map((entry) => (
-                <Cell key={entry.station} fill={entry.fill} stroke={entry.fill} />
-            ))}
-          </Pie>
-          <ChartLegend
-            content={<ChartLegendContent nameKey="station" />}
-            className="-translate-y-[2px] flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-          />
-        </PieChart>
-      </ChartContainer>
-    </CardContent>
-  </Card>
-);
-
-export function StockPieCharts() {
   return (
     <Card className="border border-[#b2dfdb]">
       <CardHeader>

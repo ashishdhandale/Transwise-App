@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -12,28 +13,19 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const data = [
-  { name: '01', count: 20 },
-  { name: '02', count: 30 },
-  { name: '03', count: 40 },
-  { name: '04', count: 60 },
-  { name: '05', count: 90 },
-  { name: '06', count: 50 },
-  { name: '07', count: 80 },
-  { name: '08', count: 100 },
-  { name: '09', count: 40 },
-  { name: '10', count: 50 },
-  { name: '11', count: 100 },
-  { name: '12', count: 50 },
-  { name: '13', count: 60 },
-];
+interface BookingsChartProps {
+    data: { name: string; count: number }[];
+}
 
-export function BookingsChart() {
+export function BookingsChart({ data }: BookingsChartProps) {
+  const maxCount = Math.max(...data.map(d => d.count), 0);
+  const yAxisDomain = [0, maxCount > 0 ? Math.ceil(maxCount / 10) * 10 : 10];
+  
   return (
     <Card className="border border-[#b2dfdb]">
       <CardHeader>
         <CardTitle className="text-center text-red-700 font-bold">
-          Bookings
+          Daily Bookings
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -46,8 +38,7 @@ export function BookingsChart() {
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(value) => `${value}`}
-                domain={[0, 100]}
-                ticks={[20, 40, 60, 80, 100]}
+                domain={yAxisDomain}
               />
               <Tooltip
                 contentStyle={{
