@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,8 @@ export function BookingsDashboard() {
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
   const [isClient, setIsClient] = useState(false);
-  const [bookings, setBookings] = useState<Booking[]>(sampleBookings);
+  const [bookings] = useState<Booking[]>(sampleBookings);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -52,6 +53,20 @@ export function BookingsDashboard() {
     setFromDate(initialDate);
     setToDate(initialDate);
   }, []);
+
+  const filteredBookings = useMemo(() => {
+    if (!searchQuery) {
+      return bookings;
+    }
+    const lowercasedQuery = searchQuery.toLowerCase();
+    return bookings.filter((booking) => 
+        booking.lrNo.toLowerCase().includes(lowercasedQuery) ||
+        booking.sender.toLowerCase().includes(lowercasedQuery) ||
+        booking.receiver.toLowerCase().includes(lowercasedQuery) ||
+        booking.fromCity.toLowerCase().includes(lowercasedQuery) ||
+        booking.toCity.toLowerCase().includes(lowercasedQuery)
+    );
+  }, [bookings, searchQuery]);
 
   return (
     <main className="flex-1 p-4 md:p-6 bg-white">
@@ -104,7 +119,13 @@ export function BookingsDashboard() {
               </div>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Search Within list" className="pl-8 w-full sm:w-[250px]" />
+                <Input 
+                  type="search" 
+                  placeholder="Search Within list" 
+                  className="pl-8 w-full sm:w-[250px]"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
             </div>
 
@@ -129,7 +150,7 @@ export function BookingsDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bookings.map((booking, index) => (
+                  {filteredBookings.map((booking, index) => (
                     <TableRow key={booking.id} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
                       <TableCell className="p-1 text-center">
                         <DropdownMenu>
