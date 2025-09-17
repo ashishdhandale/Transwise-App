@@ -20,6 +20,10 @@ import type { ColumnSetting } from '@/components/company/settings/item-details-s
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Combobox } from '@/components/ui/combobox';
+import type { Item } from '@/lib/types';
+import { AddItemDialog } from '../master/add-item-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export interface ItemRow {
   id: number;
@@ -45,6 +49,7 @@ const inputClass = "h-8 text-xs px-1";
 
 const BOOKING_SETTINGS_KEY = 'transwise_booking_settings';
 const ITEM_DETAILS_SETTINGS_KEY = 'transwise_item_details_settings';
+const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 const DEFAULT_ROWS = 2;
 
 const defaultColumns: ColumnSetting[] = [
@@ -86,10 +91,33 @@ interface ItemDetailsTableProps {
 export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) {
   const [columns, setColumns] = useState<ColumnSetting[]>(defaultColumns);
   const [isClient, setIsClient] = useState(false);
+  const [itemOptions, setItemOptions] = useState<Item[]>([]);
+  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const { toast } = useToast();
+
+  const loadItems = useCallback(() => {
+    try {
+        const savedItems = localStorage.getItem(LOCAL_STORAGE_KEY_ITEMS);
+        if (savedItems) {
+            setItemOptions(JSON.parse(savedItems));
+        } else {
+            // If nothing in storage, you might want to set some defaults
+            const defaultItems: Item[] = [
+                { id: 1, name: 'Frm MAS', hsnCode: '', description: '' },
+                { id: 2, name: 'Electronics', hsnCode: '', description: '' },
+            ];
+            setItemOptions(defaultItems);
+            localStorage.setItem(LOCAL_STORAGE_KEY_ITEMS, JSON.stringify(defaultItems));
+        }
+    } catch (error) {
+        console.error("Failed to load item options", error);
+    }
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    loadItems();
+  }, [loadItems]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -117,6 +145,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     } catch (error) {
       console.error("Could not load settings, using defaults.", error);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient, onRowsChange]);
 
   const calculateLumpsum = useCallback((row: ItemRow) => {
@@ -155,11 +184,10 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         return newRow;
     });
 
-    // Only update state if there's an actual change to prevent infinite loops
     if (JSON.stringify(rows) !== JSON.stringify(updatedRows)) {
         onRowsChange(updatedRows);
     }
-}, [rows, calculateLumpsum, onRowsChange]);
+  }, [rows, calculateLumpsum, onRowsChange]);
 
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
@@ -167,14 +195,37 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     const newRow = { ...newRows[rowIndex], [columnId]: value };
 
     if (columnId === 'freightOn' && value === 'Fixed') {
-        newRow.rate = '0'; // Set rate to 0
-        newRow.lumpsum = ''; // Clear lumpsum for manual input
+        newRow.rate = '0'; 
+        newRow.lumpsum = ''; 
+    }
+    
+    if (columnId === 'itemName') {
+        const selectedItem = itemOptions.find(item => item.name === value);
+        if (selectedItem && selectedItem.description) {
+            newRow.description = selectedItem.description;
+        }
     }
     
     newRows[rowIndex] = newRow;
     onRowsChange(newRows);
   };
   
+   const handleSaveItem = (itemData: Omit<Item, 'id'>) => {
+        try {
+            const newId = itemOptions.length > 0 ? Math.max(...itemOptions.map(i => i.id)) + 1 : 1;
+            const newItem: Item = { id: newId, ...itemData };
+            const updatedItems = [newItem, ...itemOptions];
+            localStorage.setItem(LOCAL_STORAGE_KEY_ITEMS, JSON.stringify(updatedItems));
+            setItemOptions(updatedItems);
+            toast({ title: 'Item Added', description: `"${itemData.name}" has been added to your master list.` });
+            return true;
+        } catch (error) {
+            console.error("Failed to save new item", error);
+            toast({ title: 'Error', description: 'Could not save new item.', variant: 'destructive' });
+            return false;
+        }
+    };
+
   const getInputForColumn = (columnId: string, index: number) => {
     const row = rows[index];
     if (!row) return null;
@@ -187,12 +238,16 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
             return <Input type="text" className={inputClass} maxLength={12} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'itemName':
             return (
-                 <Select value={value} onValueChange={(val) => handleInputChange(index, columnId, val)}>
-                    <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        {bookingOptions.items.map(item => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                </Select>
+                 <Combobox
+                    options={itemOptions.map(i => ({ label: i.name, value: i.name }))}
+                    value={value}
+                    onChange={(val) => handleInputChange(index, columnId, val)}
+                    placeholder="Select item..."
+                    searchPlaceholder="Search items..."
+                    notFoundMessage="No item found."
+                    addMessage="Add New Item"
+                    onAdd={() => setIsAddItemOpen(true)}
+                />
             );
         case 'description':
             return <Input type="text" placeholder="type description" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
@@ -246,7 +301,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   }, [rows]);
 
   if (!isClient) {
-    // Render a placeholder or the default state on the server to avoid hydration mismatch
     return (
         <div className="space-y-2">
             <div className="overflow-x-auto border rounded-md">
@@ -282,21 +336,22 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
   const visibleColumns = columns.filter(c => c.isVisible);
   
-  const qtyColIndex = visibleColumns.findIndex(c => c.id === 'qty');
-  const actWtColIndex = visibleColumns.findIndex(c => c.id === 'actWt');
-  const chgWtColIndex = visibleColumns.findIndex(c => c.id === 'chgWt');
-
-  const visibleIndices = {
-    qty: qtyColIndex,
-    actWt: actWtColIndex,
-    chgWt: chgWtColIndex,
-  };
-  
   const visibleColIds = visibleColumns.map(c => c.id);
 
-  const firstTotalColIndex = Math.min(
-      ...[visibleIndices.qty, visibleIndices.actWt, visibleIndices.chgWt].filter(i => i > -1)
-  );
+  const getColSpan = (targetColId: string) => {
+    const targetIndex = visibleColIds.indexOf(targetColId);
+    if (targetIndex === -1) return 1;
+
+    let span = 1;
+    for (let i = targetIndex - 1; i >= 0; i--) {
+        const currentColId = visibleColIds[i];
+        if (['qty', 'actWt', 'chgWt'].includes(currentColId)) {
+            break;
+        }
+        span++;
+    }
+    return span;
+  }
   
   return (
     <div className="space-y-2">
@@ -330,24 +385,19 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 </TableBody>
                  <TableFooter>
                     <TableRow>
-                        <TableCell colSpan={firstTotalColIndex > -1 ? firstTotalColIndex + 1 : 2} className={`${tfClass} text-right`}>TOTAL ITEM: {rows.length}</TableCell>
+                        <TableCell className={`${tfClass} text-right`} colSpan={visibleColumns.findIndex(c => c.id === 'qty') + 1 || 2}>TOTAL ITEM: {rows.length}</TableCell>
                         
-                        {firstTotalColIndex > -1 && visibleColIds.slice(firstTotalColIndex).map((colId) => {
-                            switch(colId) {
+                        {visibleColumns.slice(visibleColumns.findIndex(c => c.id === 'qty') || 0).map((col) => {
+                           if (!visibleColIds.includes(col.id)) return null;
+
+                            switch(col.id) {
                                 case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
                                 case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
                                 case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
-                                default: return <TableCell key={`total-empty-${colId}`} className={tfClass}></TableCell>;
+                                default: return <TableCell key={`total-empty-${col.id}`} className={tfClass}></TableCell>;
                             }
                         })}
-                         
-                         {firstTotalColIndex > -1 && <TableCell className={tfClass}></TableCell> /* For delete button column */}
-
-
-                         {firstTotalColIndex === -1 && (
-                            <TableCell className={tfClass} colSpan={visibleColIds.length - 1 + 2 /* for # and del */}>
-                            </TableCell>
-                        )}
+                        <TableCell className={tfClass}></TableCell>
                     </TableRow>
                 </TableFooter>
             </Table>
@@ -362,6 +412,12 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 <Label htmlFor="updateRates">Update Rates</Label>
             </div>
         </div>
+         <AddItemDialog
+            isOpen={isAddItemOpen}
+            onOpenChange={setIsAddItemOpen}
+            onSave={handleSaveItem}
+            item={null}
+        />
     </div>
   );
 }

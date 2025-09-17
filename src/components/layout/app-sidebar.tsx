@@ -277,7 +277,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="/company/master/customer" size="sm" isActive={pathname === '/company/master/customer'} tooltip="Customer"><Users />Customer</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Items"><Package />Items</SidebarMenuButton>
+                <SidebarMenuButton href="/company/master/item" size="sm" isActive={pathname === '/company/master/item'} tooltip="Items"><Package />Items</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>

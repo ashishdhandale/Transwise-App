@@ -98,3 +98,10 @@ export interface Customer {
   email: string;
   type: CustomerType;
 }
+
+export interface Item {
+  id: number;
+  name: string;
+  hsnCode: string;
+  description: string;
+}
