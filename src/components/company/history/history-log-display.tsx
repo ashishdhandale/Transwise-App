@@ -17,7 +17,7 @@ interface HistoryLogDisplayProps {
 const getIconForAction = (action: LogEntry['action']) => {
     switch (action) {
         case 'Booking Created': return <BookOpenCheck className="size-5 text-primary" />;
-        case 'Booking Update': return <Pencil className="size-5 text-yellow-600" />;
+        case 'Booking Updated': return <Pencil className="size-5 text-yellow-600" />;
         case 'Dispatched from Warehouse': return <Warehouse className="size-5 text-blue-600" />;
         case 'In Transit': return <Truck className="size-5 text-gray-600" />;
         case 'Arrived at Hub': return <Plane className="size-5 text-indigo-600" />;
@@ -86,7 +86,7 @@ export function HistoryLogDisplay({ logs, isLoading, searchedId }: HistoryLogDis
                             <p className="font-semibold text-base">{log.action}</p>
                             <p className="text-xs text-muted-foreground">{log.timestamp}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">{log.details}</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{log.details}</p>
                         <p className="text-xs text-muted-foreground mt-1">User: {log.user}</p>
                     </div>
                 </div>

@@ -14,9 +14,10 @@ import type { Booking } from '@/lib/bookings-dashboard-data';
 import type { City, Customer } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
+import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
+import { format } from 'date-fns';
 
-const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
-const GRN_PREFIX = 'CONAG';
+const GRN_PREFIX_KEY = 'transwise_company_profile';
 
 const createEmptyRow = (id: number): ItemRow => ({
   id,
@@ -40,6 +41,67 @@ interface BookingFormProps {
     onClose?: () => void;
 }
 
+const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string => {
+    const changes: string[] = [];
+
+    const simpleFields: (keyof Booking)[] = ['lrType', 'fromCity', 'toCity', 'sender', 'receiver', 'status'];
+
+    if (format(new Date(oldBooking.bookingDate), 'yyyy-MM-dd') !== format(new Date(newBooking.bookingDate), 'yyyy-MM-dd')) {
+        changes.push(`- Booking Date changed from '${format(new Date(oldBooking.bookingDate), 'dd-MMM-yyyy')}' to '${format(new Date(newBooking.bookingDate), 'dd-MMM-yyyy')}'`);
+    }
+
+    if (oldBooking.lrType !== newBooking.lrType) {
+        changes.push(`- Booking Type changed from '${oldBooking.lrType}' to '${newBooking.lrType}'`);
+    }
+    if (oldBooking.fromCity !== newBooking.fromCity) {
+        changes.push(`- From Station changed from '${oldBooking.fromCity}' to '${newBooking.fromCity}'`);
+    }
+    if (oldBooking.toCity !== newBooking.toCity) {
+        changes.push(`- To Station changed from '${oldBooking.toCity}' to '${newBooking.toCity}'`);
+    }
+    if (oldBooking.sender !== newBooking.sender) {
+        changes.push(`- Sender changed from '${oldBooking.sender}' to '${newBooking.sender}'`);
+    }
+    if (oldBooking.receiver !== newBooking.receiver) {
+        changes.push(`- Receiver changed from '${oldBooking.receiver}' to '${newBooking.receiver}'`);
+    }
+     if (oldBooking.totalAmount !== newBooking.totalAmount) {
+        changes.push(`- Grand Total changed from '${oldBooking.totalAmount.toFixed(2)}' to '${newBooking.totalAmount.toFixed(2)}'`);
+    }
+    
+    // Deep compare item rows
+    const oldItems = oldBooking.itemRows || [];
+    const newItems = newBooking.itemRows || [];
+    const maxItems = Math.max(oldItems.length, newItems.length);
+
+    for (let i = 0; i < maxItems; i++) {
+        const oldItem = oldItems[i];
+        const newItem = newItems[i];
+        const itemChanges: string[] = [];
+
+        if (!oldItem && newItem) {
+            itemChanges.push(`Added new item: ${newItem.itemName || 'N/A'}`);
+        } else if (oldItem && !newItem) {
+            itemChanges.push(`Removed item: ${oldItem.itemName || 'N/A'}`);
+        } else if (oldItem && newItem) {
+            const itemFields: (keyof ItemRow)[] = ['ewbNo', 'itemName', 'description', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue'];
+            itemFields.forEach(field => {
+                if (oldItem[field] !== newItem[field]) {
+                    itemChanges.push(`'${field}' from '${oldItem[field] || ""}' to '${newItem[field] || ""}'`);
+                }
+            });
+        }
+
+        if (itemChanges.length > 0) {
+            changes.push(`- Item #${i + 1} updated: ${itemChanges.join(', ')}`);
+        }
+    }
+
+
+    return changes.length > 0 ? changes.join('\n') : 'No changes detected.';
+}
+
+
 export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormProps) {
     const isEditMode = !!bookingId;
     
@@ -57,8 +119,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
     useEffect(() => {
         try {
-            const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
-            const parsedBookings: Booking[] = savedBookings ? JSON.parse(savedBookings) : [];
+            const parsedBookings = getBookings();
             setAllBookings(parsedBookings);
 
             if (isEditMode) {
@@ -78,16 +139,25 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 }
 
             } else {
+                let grnPrefix = 'CONAG'; // Default prefix
+                const profileSettings = localStorage.getItem(GRN_PREFIX_KEY);
+                if (profileSettings) {
+                    const profile = JSON.parse(profileSettings);
+                    if(profile.companyCode) {
+                        grnPrefix = profile.companyCode;
+                    }
+                }
+
                 const generateGrNumber = (bookings: Booking[]) => {
                     const lastSequence = bookings
-                        .filter(b => b.lrNo.startsWith(GRN_PREFIX))
-                        .map(b => parseInt(b.lrNo.replace(GRN_PREFIX, ''), 10))
+                        .filter(b => b.lrNo.startsWith(grnPrefix))
+                        .map(b => parseInt(b.lrNo.replace(grnPrefix, ''), 10))
                         .filter(num => !isNaN(num)) 
                         .reduce((max, current) => Math.max(max, current), 0);
                         
                     const newSequence = lastSequence + 1;
                     
-                    return `${GRN_PREFIX}${String(newSequence).padStart(2, '0')}`;
+                    return `${grnPrefix}${String(newSequence).padStart(2, '0')}`;
                 };
                 setCurrentGrNumber(generateGrNumber(parsedBookings));
                 setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
@@ -104,13 +174,13 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     }, [itemRows]);
 
 
-    const handleSaveOrUpdate = (finalGrandTotal: number) => {
+    const handleSaveOrUpdate = () => {
         if (!fromStation || !toStation || !sender || !receiver || !bookingDate) {
             toast({ title: 'Missing Information', description: 'Please fill all required fields.', variant: 'destructive' });
             return;
         }
 
-        const bookingData: Omit<Booking, 'id'> = {
+        const newBookingData: Omit<Booking, 'id'> = {
             lrNo: currentGrNumber,
             bookingDate: bookingDate.toISOString(),
             fromCity: fromStation.name,
@@ -121,22 +191,35 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             itemDescription: itemRows.map(r => r.itemName).join(', '),
             qty: itemRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
-            totalAmount: finalGrandTotal,
+            totalAmount: grandTotal,
             status: 'In Stock',
             itemRows: itemRows,
         };
 
         try {
             if (isEditMode) {
-                const updatedBookings = allBookings.map(b => b.id === bookingId ? { ...(b as Booking), ...bookingData, id: b.id } : b);
-                localStorage.setItem(LOCAL_STORAGE_KEY_BOOKINGS, JSON.stringify(updatedBookings));
-                addHistoryLog(currentGrNumber, 'Booking Updated', 'Admin');
+                const oldBooking = allBookings.find(b => b.id === bookingId);
+                if (!oldBooking) {
+                    toast({ title: 'Error', description: 'Original booking not found for update.', variant: 'destructive' });
+                    return;
+                }
+
+                const updatedBooking = { ...oldBooking, ...newBookingData };
+                const changeDetails = generateChangeDetails(oldBooking, updatedBooking);
+                
+                const updatedBookings = allBookings.map(b => b.id === bookingId ? updatedBooking : b);
+                saveBookings(updatedBookings);
+                
+                if (changeDetails !== 'No changes detected.') {
+                    addHistoryLog(currentGrNumber, 'Booking Updated', 'Admin', changeDetails);
+                }
+
                 toast({ title: 'Booking Updated', description: `Successfully updated GR Number: ${currentGrNumber}` });
                 if (onSaveSuccess) onSaveSuccess();
             } else {
-                const newBooking: Booking = { id: `booking_${Date.now()}`, ...bookingData };
+                const newBooking: Booking = { id: `booking_${Date.now()}`, ...newBookingData };
                 const updatedBookings = [...allBookings, newBooking];
-                localStorage.setItem(LOCAL_STORAGE_KEY_BOOKINGS, JSON.stringify(updatedBookings));
+                saveBookings(updatedBookings);
                 addHistoryLog(currentGrNumber, 'Booking Created', 'Admin');
                 toast({ title: 'Booking Saved', description: `Successfully saved GR Number: ${currentGrNumber}` });
                 window.location.reload(); // Reset form for next entry
@@ -173,7 +256,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 <Separator className="my-6 border-dashed" />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div className="lg:col-span-2">
-                         <MainActionsSection onSave={() => handleSaveOrUpdate(grandTotal)} isEditMode={isEditMode} onClose={onClose} />
+                         <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} onClose={onClose} />
                     </div>
                     <div className="space-y-4">
                         <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />

@@ -18,4 +18,28 @@ export interface Booking {
   itemRows: ItemRow[];
 }
 
-export const sampleBookings: Booking[] = [];
+const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
+
+export const getBookings = (): Booking[] => {
+    if (typeof window === 'undefined') {
+        return [];
+    }
+    try {
+        const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
+        return savedBookings ? JSON.parse(savedBookings) : [];
+    } catch (error) {
+        console.error("Failed to load bookings from localStorage", error);
+        return [];
+    }
+};
+
+export const saveBookings = (bookings: Booking[]) => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_BOOKINGS, JSON.stringify(bookings));
+    } catch (error) {
+        console.error("Failed to save bookings to localStorage", error);
+    }
+};

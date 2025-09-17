@@ -35,7 +35,7 @@ export const getHistoryLogs = (): BookingHistory[] => {
 };
 
 // Function to add a new log entry
-export const addHistoryLog = (grNumber: string, action: LogEntry['action'], user: string) => {
+export const addHistoryLog = (grNumber: string, action: LogEntry['action'], user: string, details?: string) => {
   if (typeof window === 'undefined') return;
   
   const allHistory = getHistoryLogs();
@@ -44,12 +44,13 @@ export const addHistoryLog = (grNumber: string, action: LogEntry['action'], user
   const newLog: LogEntry = {
     timestamp: new Date().toLocaleString(),
     action,
-    details: `${action} for GR: ${grNumber}`,
+    details: details || `${action} for GR: ${grNumber}`,
     user,
   };
 
   if (existingHistory) {
-    existingHistory.logs.push(newLog);
+    // Add new log to the top of the list
+    existingHistory.logs.unshift(newLog);
   } else {
     allHistory.push({
       id: grNumber,
