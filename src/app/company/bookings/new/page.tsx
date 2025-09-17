@@ -12,10 +12,12 @@ import { Suspense, useMemo, useState, useCallback, useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking } from '@/lib/bookings-dashboard-data';
-import type { City } from '@/lib/types';
+import type { City, Customer } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
-const LOCAL_STORAGE_KEY_PROFILE = 'transwise_company_profile';
+const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
+const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
+const GRN_PREFIX = 'CONAG';
 
 const createEmptyRow = (id: number): ItemRow => ({
   id,
@@ -36,50 +38,50 @@ const createEmptyRow = (id: number): ItemRow => ({
 function NewBookingForm() {
     const [itemRows, setItemRows] = useState<ItemRow[]>(() => []);
     
-    useEffect(() => {
-        setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)))
-    }, []);
-
     const [bookingType, setBookingType] = useState('FOC');
     const [fromStation, setFromStation] = useState<City | null>(null);
+    const [toStation, setToStation] = useState<City | null>(null);
+    const [sender, setSender] = useState<Customer | null>(null);
+    const [receiver, setReceiver] = useState<Customer | null>(null);
+
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [currentGrNumber, setCurrentGrNumber] = useState('');
     const { toast } = useToast();
 
-    const generateGrNumber = useCallback((station: City | null, bookings: Booking[]) => {
-        if (!station) return '';
-
-        let companyCode = 'CO';
+     // Load bookings from localStorage on initial client render
+    useEffect(() => {
         try {
-            const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
-            if (savedProfile) {
-                const profile = JSON.parse(savedProfile);
-                if (profile.companyCode) {
-                    companyCode = profile.companyCode.toUpperCase();
-                }
+            const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
+            if (savedBookings) {
+                setAllBookings(JSON.parse(savedBookings));
             }
         } catch (error) {
-            console.error("Failed to load company profile for GRN generation", error);
+            console.error("Failed to load bookings from localStorage", error);
         }
-        
-        const alias = station.aliasCode;
-        const prefix = `${companyCode}${alias}`;
-        
-        const lastSequence = bookings
-            .filter(b => b.lrNo.startsWith(prefix))
-            .map(b => parseInt(b.lrNo.replace(prefix, ''), 10))
-            .filter(num => !isNaN(num)) 
-            .reduce((max, current) => Math.max(max, current), 0);
-            
-        const newSequence = lastSequence + 1;
-        
-        return `${prefix}${String(newSequence).padStart(2, '0')}`;
     }, []);
 
+    // Generate GR number whenever bookings change
     useEffect(() => {
-        const newGr = generateGrNumber(fromStation, allBookings);
+        const generateGrNumber = (bookings: Booking[]) => {
+            const lastSequence = bookings
+                .filter(b => b.lrNo.startsWith(GRN_PREFIX))
+                .map(b => parseInt(b.lrNo.replace(GRN_PREFIX, ''), 10))
+                .filter(num => !isNaN(num)) 
+                .reduce((max, current) => Math.max(max, current), 0);
+                
+            const newSequence = lastSequence + 1;
+            
+            return `${GRN_PREFIX}${String(newSequence).padStart(2, '0')}`;
+        };
+
+        const newGr = generateGrNumber(allBookings);
         setCurrentGrNumber(newGr);
-    }, [fromStation, allBookings, generateGrNumber]);
+    }, [allBookings]);
+
+     // Initialize item rows
+    useEffect(() => {
+        setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)))
+    }, [allBookings]);
 
 
     const basicFreight = useMemo(() => {
@@ -87,16 +89,24 @@ function NewBookingForm() {
     }, [itemRows]);
 
     const handleSaveBooking = () => {
-        // 1. Create a new booking object from the form state
+        if (!fromStation || !toStation || !sender || !receiver) {
+            toast({
+                title: 'Missing Information',
+                description: 'Please select sender, receiver, and stations.',
+                variant: 'destructive'
+            });
+            return;
+        }
+
         const newBooking: Booking = {
-            id: allBookings.length + 1,
+            id: Date.now(),
             lrNo: currentGrNumber,
             bookingDate: new Date().toISOString(),
-            fromCity: fromStation?.name || 'Unknown',
-            toCity: 'Unknown', // This would come from form state
-            lrType: 'TBB', // This would come from form state
-            sender: 'Unknown', // This would come from form state
-            receiver: 'Unknown', // This would come from form state
+            fromCity: fromStation.name,
+            toCity: toStation.name,
+            lrType: 'TBB', 
+            sender: sender.name,
+            receiver: receiver.name,
             itemDescription: itemRows.map(r => r.itemName).join(', '),
             qty: itemRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
@@ -104,19 +114,30 @@ function NewBookingForm() {
             status: 'In Stock',
         };
 
-        // 2. Add the new booking to our state
         const updatedBookings = [...allBookings, newBooking];
-        setAllBookings(updatedBookings);
+        
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY_BOOKINGS, JSON.stringify(updatedBookings));
+            setAllBookings(updatedBookings);
 
-        toast({
-            title: 'Booking Saved',
-            description: `Successfully saved GR Number: ${currentGrNumber}`,
-        });
+            toast({
+                title: 'Booking Saved',
+                description: `Successfully saved GR Number: ${currentGrNumber}`,
+            });
 
-        // 3. Reset the form for the next entry
-        // The GR Number will automatically regenerate due to the useEffect hook
-        setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
-        // Note: In a real app, you'd reset other form fields here as well.
+            // Reset form fields for the next entry
+            setFromStation(null);
+            setToStation(null);
+            setSender(null);
+            setReceiver(null);
+            setItemRows([]); // It will be repopulated by the useEffect
+        } catch (error) {
+             toast({
+                title: 'Error Saving Booking',
+                description: `Could not save booking to local storage.`,
+                variant: 'destructive'
+            });
+        }
     };
     
   return (
@@ -127,10 +148,18 @@ function NewBookingForm() {
                     <BookingDetailsSection 
                         bookingType={bookingType} 
                         onBookingTypeChange={setBookingType}
-                        onStationChange={setFromStation}
+                        onFromStationChange={setFromStation}
+                        onToStationChange={setToStation}
+                        fromStation={fromStation}
+                        toStation={toStation}
                         grNumber={currentGrNumber}
                     />
-                    <PartyDetailsSection />
+                    <PartyDetailsSection 
+                        onSenderChange={setSender}
+                        onReceiverChange={setReceiver}
+                        sender={sender}
+                        receiver={receiver}
+                    />
                     <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                     <Separator className="my-6 border-dashed" />
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Archive, Download } from 'lucide-react';
-import { sampleBookings } from '@/lib/bookings-dashboard-data';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
@@ -28,6 +27,7 @@ import {
 } from '@/components/ui/select';
 
 const thClass = "bg-primary/10 text-primary font-bold";
+const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
 const statusColors: { [key: string]: string } = {
   'In Stock': 'text-green-600 border-green-600/40',
@@ -42,11 +42,18 @@ export function StockDashboard() {
   const [stock, setStock] = useState<Booking[]>([]);
 
   useEffect(() => {
-    // Filter for items that are considered "in stock"
-    const inStockBookings = sampleBookings.filter(
-      (booking) => booking.status === 'In Stock'
-    );
-    setStock(inStockBookings);
+    try {
+        const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
+        if (savedBookings) {
+            const allBookings: Booking[] = JSON.parse(savedBookings);
+            const inStockBookings = allBookings.filter(
+                (booking) => booking.status === 'In Stock'
+            );
+            setStock(inStockBookings);
+        }
+    } catch (error) {
+        console.error("Failed to load stock from localStorage", error);
+    }
   }, []);
   
   const filteredStock = useMemo(() => {

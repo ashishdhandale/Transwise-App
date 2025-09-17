@@ -1,18 +1,32 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PawPrint } from 'lucide-react';
 import { SearchPanel } from './search-panel';
 import { SearchResults } from './search-results';
 import { ShippingDetails } from './shipping-details';
 import type { Booking } from '@/lib/bookings-dashboard-data';
-import { sampleBookings } from '@/lib/bookings-dashboard-data';
 import { historyData, type BookingHistory } from '@/lib/history-data';
 
+const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
+
 export function PackageTracking() {
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [searchResults, setSearchResults] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedBookingHistory, setSelectedBookingHistory] = useState<BookingHistory | null>(null);
+
+  useEffect(() => {
+    try {
+        const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
+        if (savedBookings) {
+            setAllBookings(JSON.parse(savedBookings));
+        }
+    } catch (error) {
+        console.error("Failed to load bookings from localStorage", error);
+    }
+  }, []);
 
   const handleSearch = (grNumber: string) => {
     if (!grNumber) {
@@ -21,9 +35,9 @@ export function PackageTracking() {
       setSelectedBookingHistory(null);
       return;
     }
-    const results = sampleBookings.filter(b => b.lrNo.toLowerCase().includes(grNumber.toLowerCase()));
+    const results = allBookings.filter(b => b.lrNo.toLowerCase().includes(grNumber.toLowerCase()));
     setSearchResults(results);
-    // If there's only one result, select it automatically
+
     if (results.length === 1) {
       handleSelectBooking(results[0]);
     } else {
@@ -34,9 +48,19 @@ export function PackageTracking() {
 
   const handleSelectBooking = (booking: Booking) => {
     setSelectedBooking(booking);
-    // Find corresponding history
-    const history = historyData.find(h => h.id === booking.lrNo);
-    setSelectedBookingHistory(history || null);
+    // Find corresponding history. For now, we create a mock history.
+    const history: BookingHistory = {
+      id: booking.lrNo,
+      logs: [
+        {
+          action: 'Booking Created',
+          details: `Booking created at ${booking.fromCity}`,
+          timestamp: new Date(booking.bookingDate).toLocaleString(),
+          user: 'Branch User'
+        }
+      ]
+    };
+    setSelectedBookingHistory(history);
   };
 
 

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import type { City } from '@/lib/types';
 import { AddCityDialog } from '../master/add-city-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -27,37 +27,31 @@ type CityListSource = 'default' | 'custom';
 interface BookingDetailsSectionProps {
     bookingType: string;
     onBookingTypeChange: (type: string) => void;
-    onStationChange: (station: City | null) => void;
+    onFromStationChange: (station: City | null) => void;
+    onToStationChange: (station: City | null) => void;
+    fromStation: City | null;
+    toStation: City | null;
     grNumber: string;
 }
 
 
-export function BookingDetailsSection({ bookingType, onBookingTypeChange, onStationChange, grNumber }: BookingDetailsSectionProps) {
+export function BookingDetailsSection({ 
+    bookingType, 
+    onBookingTypeChange, 
+    onFromStationChange,
+    onToStationChange,
+    fromStation,
+    toStation,
+    grNumber 
+}: BookingDetailsSectionProps) {
     const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const { toast } = useToast();
-    const [fromStationValue, setFromStationValue] = React.useState('');
-    const [toStationValue, setToStationValue] = React.useState('');
     
     useEffect(() => {
-        // Set initial date only on the client
         setBookingDate(new Date());
     }, []);
-
-    useEffect(() => {
-        try {
-            const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
-            if (savedProfile) {
-                const profile = JSON.parse(savedProfile);
-                if (profile.city && !fromStationValue) {
-                    setFromStationValue(profile.city);
-                }
-            }
-        } catch (error) {
-            console.error('Failed to load company profile', error);
-        }
-    }, [fromStationValue]);
 
     const loadStationOptions = useCallback(() => {
          try {
@@ -97,17 +91,29 @@ export function BookingDetailsSection({ bookingType, onBookingTypeChange, onStat
 
 
     const handleFromStationChange = useCallback((stationName: string) => {
-        setFromStationValue(stationName);
         const selectedStation = stationOptions.find(s => s.name === stationName) || null;
-        onStationChange(selectedStation);
-    }, [stationOptions, onStationChange]);
+        onFromStationChange(selectedStation);
+    }, [stationOptions, onFromStationChange]);
+
+    const handleToStationChange = useCallback((stationName: string) => {
+        const selectedStation = stationOptions.find(s => s.name === stationName) || null;
+        onToStationChange(selectedStation);
+    }, [stationOptions, onToStationChange]);
 
     useEffect(() => {
-        if (fromStationValue) {
-            handleFromStationChange(fromStationValue);
+        try {
+            const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
+            if (savedProfile) {
+                const profile = JSON.parse(savedProfile);
+                if (profile.city && !fromStation) {
+                   handleFromStationChange(profile.city);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load company profile', error);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fromStationValue, stationOptions]); // Re-evaluate when options load
+    }, [fromStation, stationOptions]); // Re-evaluate when options load or fromStation is reset
 
 
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {
@@ -196,7 +202,7 @@ export function BookingDetailsSection({ bookingType, onBookingTypeChange, onStat
                 <Label htmlFor="fromStation">From Station</Label>
                 <Combobox
                     options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
-                    value={fromStationValue}
+                    value={fromStation?.name || ''}
                     onChange={handleFromStationChange}
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
@@ -209,8 +215,8 @@ export function BookingDetailsSection({ bookingType, onBookingTypeChange, onStat
                 <Label htmlFor="toStation">To Station</Label>
                 <Combobox
                     options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
-                    value={toStationValue}
-                    onChange={setToStationValue}
+                    value={toStation?.name || ''}
+                    onChange={handleToStationChange}
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
                     notFoundMessage="No station found."

@@ -21,22 +21,19 @@ interface PartyRowProps {
     side: 'Sender' | 'Receiver';
     customers: Customer[];
     onPartyAdded: () => void;
+    onPartyChange: (party: Customer | null) => void;
+    selectedParty: Customer | null;
 }
 
-const PartyRow = ({ side, customers, onPartyAdded }: PartyRowProps) => {
+const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, selectedParty }: PartyRowProps) => {
     const { toast } = useToast();
-    const [selectedParty, setSelectedParty] = React.useState<Partial<Customer> | null>(null);
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     
     const partyOptions = customers.map(c => ({ label: c.name, value: c.name }));
 
     const handleSelectParty = (value: string) => {
         const party = customers.find(p => p.name === value);
-        if (party) {
-            setSelectedParty(party);
-        } else {
-            setSelectedParty({ name: value });
-        }
+        onPartyChange(party || { name: value, id: 0, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
     };
 
     const handleSaveCustomer = (customerData: Omit<Customer, 'id'>) => {
@@ -102,7 +99,14 @@ const PartyRow = ({ side, customers, onPartyAdded }: PartyRowProps) => {
     );
 };
 
-export function PartyDetailsSection() {
+interface PartyDetailsSectionProps {
+    onSenderChange: (party: Customer | null) => void;
+    onReceiverChange: (party: Customer | null) => void;
+    sender: Customer | null;
+    receiver: Customer | null;
+}
+
+export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver }: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
 
     const loadCustomers = useCallback(() => {
@@ -116,14 +120,13 @@ export function PartyDetailsSection() {
     }, []);
 
     useEffect(() => {
-        // Load customers only on the client side to prevent hydration errors
         loadCustomers();
     }, [loadCustomers]);
 
     return (
         <div className="border rounded-md">
-            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} />
-            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} />
+            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} selectedParty={sender} />
+            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} selectedParty={receiver} />
         </div>
     );
 }
