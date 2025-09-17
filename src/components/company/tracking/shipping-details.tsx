@@ -4,41 +4,39 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Truck, Package, MapPin, Building, Calendar, Phone } from 'lucide-react';
+import { Truck, Package, MapPin, Building, Calendar, Phone, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Booking } from '@/lib/bookings-dashboard-data';
+import type { BookingHistory } from '@/lib/history-data';
 
-const DetailRow = ({ label, value }: { label: string; value?: string }) => (
+const DetailRow = ({ label, value }: { label: string; value?: string | number }) => (
   <div className="grid grid-cols-[150px_1fr] text-sm border-b last:border-b-0">
     <div className="bg-primary/10 text-primary font-semibold p-2 border-r">{label}</div>
     <div className="p-2 break-words">{value || '-'}</div>
   </div>
 );
 
-const transitEvents = [
-    { 
-        station: "Nagpur",
-        status: "In Transit",
-        vehicle: "MH40-1234",
-        date: "2024-07-29 10:00 AM",
-        type: "Outward"
-    },
-    { 
-        station: "Nagpur",
-        status: "Arrived",
-        vehicle: "CG04-5678",
-        date: "2024-07-29 08:30 AM",
-        type: "Inward"
-    },
-    { 
-        station: "Raipur",
-        status: "In Transit",
-        vehicle: "CG04-5678",
-        date: "2024-07-28 06:00 PM",
-        type: "Outward"
-    },
-];
+interface ShippingDetailsProps {
+    booking: Booking | null;
+    history: BookingHistory | null;
+}
 
-export function ShippingDetails() {
+export function ShippingDetails({ booking, history }: ShippingDetailsProps) {
+    
+    if (!booking) {
+        return (
+             <Card className="border-gray-300 w-full flex items-center justify-center min-h-96">
+                <div className="text-center text-muted-foreground">
+                    <Search className="h-12 w-12 mx-auto" />
+                    <p className="mt-2 font-medium">Search for a GR Number to see details</p>
+                    <p className="text-sm">The shipping and delivery details will appear here.</p>
+                </div>
+            </Card>
+        );
+    }
+    
+    const deliveredEvent = history?.logs.find(log => log.action === 'Delivered');
+
   return (
     <Card className="border-gray-300 w-full">
       <CardHeader className="p-3 border-b-2 border-primary">
@@ -54,15 +52,15 @@ export function ShippingDetails() {
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-2">
-                        <DetailRow label="LR NO" value="123" />
-                        <DetailRow label="Booking Date" value="2024-07-28" />
-                        <DetailRow label="Booked From" value="Raipur" />
-                        <DetailRow label="Booked To" value="Nagpur" />
-                        <DetailRow label="Item Name" value="Electronics" />
-                        <DetailRow label="Total Qty" value="5" />
-                        <DetailRow label="Total Chg Wt" value="50 KG" />
-                        <DetailRow label="Payment Mode" value="ToPay" />
-                        <DetailRow label="Total Freight" value="Rs. 500" />
+                        <DetailRow label="LR NO" value={booking.lrNo} />
+                        <DetailRow label="Booking Date" value={new Date().toISOString().split('T')[0]} />
+                        <DetailRow label="Booked From" value={booking.fromCity} />
+                        <DetailRow label="Booked To" value={booking.toCity} />
+                        <DetailRow label="Item Name" value={booking.itemDescription} />
+                        <DetailRow label="Total Qty" value={booking.qty} />
+                        <DetailRow label="Total Chg Wt" value={`${booking.chgWt} KG`} />
+                        <DetailRow label="Payment Mode" value={booking.lrType} />
+                        <DetailRow label="Total Freight" value={`Rs. ${booking.totalAmount.toLocaleString()}`} />
                         <DetailRow label="Booking Note" value="Handle with care" />
                     </div>
                 </CardContent>
@@ -75,12 +73,12 @@ export function ShippingDetails() {
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-2">
-                        <DetailRow label="Status" value="Delivered" />
+                        <DetailRow label="Status" value={booking.status} />
                         <DetailRow label="Delivery Type" value="Door" />
-                        <DetailRow label="D.M. NO" value="DM-456" />
-                        <DetailRow label="Delivery Date" value="2024-07-30 02:45 PM" />
-                        <DetailRow label="Received BY" value="Mr. Sharma" />
-                        <DetailRow label="Deliverd By" value="Rajesh Kumar" />
+                        <DetailRow label="D.M. NO" value={deliveredEvent ? `DM-${booking.id}`: '-'} />
+                        <DetailRow label="Delivery Date" value={deliveredEvent?.timestamp} />
+                        <DetailRow label="Received BY" value={deliveredEvent ? 'Signature on File' : '-'} />
+                        <DetailRow label="Deliverd By" value={deliveredEvent?.user} />
                     </div>
                 </CardContent>
             </Card>
@@ -96,16 +94,21 @@ export function ShippingDetails() {
                 <CardContent className="p-3">
                     <div className="relative pl-6">
                         <div className="absolute left-3 top-3 bottom-3 w-0.5 bg-border"></div>
-                        {transitEvents.map((event, index) => (
+                        {history?.logs.map((event, index) => (
                              <div key={index} className="relative flex items-start gap-4 mb-4 last:mb-0">
-                                <div className="absolute left-[-1.125rem] top-1.5 size-5 bg-card border-2 border-primary rounded-full z-10"></div>
+                                <div className={cn("absolute left-[-1.125rem] top-1.5 size-5 bg-card border-2 rounded-full z-10", 
+                                    event.action === 'Delivered' ? 'border-green-500' : 'border-primary'
+                                )}></div>
                                 <div className="flex-1">
-                                    <p className="font-semibold text-sm">{event.station} - <span className={cn("font-normal", event.type === 'Inward' ? 'text-green-600' : 'text-blue-600')}>{event.type}</span></p>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Truck className="size-3" />{event.vehicle}</p>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="size-3" />{event.date}</p>
+                                    <p className="font-semibold text-sm">{event.details}</p>
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Truck className="size-3" />{event.action}</p>
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="size-3" />{event.timestamp}</p>
                                 </div>
                             </div>
                         ))}
+                         {(!history || history.logs.length === 0) && (
+                            <p className="text-sm text-muted-foreground">No transit history available.</p>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -117,8 +120,8 @@ export function ShippingDetails() {
                 </CardHeader>
                  <CardContent className="p-3 space-y-2">
                     <div className="text-sm">
-                        <p className="font-semibold">Transwise - Nagpur Office</p>
-                        <p className="text-muted-foreground">MIDC, Hingna Road, Nagpur</p>
+                        <p className="font-semibold">Transwise - {booking.toCity} Office</p>
+                        <p className="text-muted-foreground">MIDC, Main Road, {booking.toCity}</p>
                         <p className="text-muted-foreground flex items-center gap-1.5"><Phone className="size-3" />+91 98765 43210</p>
                     </div>
                     <Separator />

@@ -19,8 +19,14 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
-export function SearchPanel() {
+interface SearchPanelProps {
+    onSearch: (grNumber: string) => void;
+}
+
+
+export function SearchPanel({ onSearch }: SearchPanelProps) {
   const [date, setDate] = useState<Date | undefined>();
+  const [grNumber, setGrNumber] = useState('');
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -28,6 +34,16 @@ export function SearchPanel() {
     setDate(new Date('2014-10-03'));
     setIsClient(true);
   }, []);
+
+  const handleSearchClick = () => {
+    onSearch(grNumber);
+  };
+  
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearchClick();
+    }
+  };
 
 
   return (
@@ -42,7 +58,13 @@ export function SearchPanel() {
              {/* Search By Number */}
             <div>
                 <Label htmlFor="gr-number" className="font-semibold">GR Number</Label>
-                <Input id="gr-number" placeholder="Enter GR Number" />
+                <Input 
+                    id="gr-number" 
+                    placeholder="Enter GR Number"
+                    value={grNumber}
+                    onChange={(e) => setGrNumber(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
             </div>
 
             <div className="flex items-center gap-2">
@@ -109,7 +131,7 @@ export function SearchPanel() {
                 </div>
             </div>
 
-            <Button className="w-full">
+            <Button className="w-full" onClick={handleSearchClick}>
                 <Search className="mr-2 h-4 w-4" />
                 Search
             </Button>

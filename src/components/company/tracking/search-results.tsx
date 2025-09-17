@@ -14,16 +14,35 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import type { Booking } from '@/lib/bookings-dashboard-data';
+import { cn } from '@/lib/utils';
+import { format, parseISO } from 'date-fns';
 
 const thClass = 'bg-primary text-primary-foreground font-bold';
 
-const searchData = [
-  { lrNo: '123', date: '2024-07-28', sender: 'Sender A', receiver: 'Receiver A', from: 'Station X', to: 'Station Y', track: '' },
-  { lrNo: '124', date: '2024-07-29', sender: 'Sender B', receiver: 'Receiver B', from: 'Station P', to: 'Station Q', track: '' },
-];
 
+interface SearchResultsProps {
+  results: Booking[];
+  onSelectResult: (booking: Booking) => void;
+  selectedLrNo?: string;
+}
 
-export function SearchResults() {
+export function SearchResults({ results, onSelectResult, selectedLrNo }: SearchResultsProps) {
+  if (results.length === 0) {
+    return (
+        <Card className="border-gray-300">
+            <CardHeader className="p-3">
+                <CardTitle className="text-base font-bold">Search result</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                    <p>No results found. Please try another search.</p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+  }
+  
   return (
     <Card className="border-gray-300">
         <CardHeader className="p-3">
@@ -44,15 +63,19 @@ export function SearchResults() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                 {searchData.map((row) => (
-                    <TableRow key={row.lrNo} className="cursor-pointer hover:bg-muted/50">
+                 {results.map((row) => (
+                    <TableRow 
+                        key={row.lrNo} 
+                        className={cn("cursor-pointer hover:bg-muted/50", row.lrNo === selectedLrNo && 'bg-primary/20 hover:bg-primary/20')}
+                        onClick={() => onSelectResult(row)}
+                    >
                         <TableCell>{row.lrNo}</TableCell>
-                        <TableCell>{row.date}</TableCell>
+                        <TableCell>{format(new Date(), 'yyyy-MM-dd')}</TableCell>
                         <TableCell>{row.sender}</TableCell>
                         <TableCell>{row.receiver}</TableCell>
-                        <TableCell>{row.from}</TableCell>
-                        <TableCell>{row.to}</TableCell>
-                        <TableCell>{row.track}</TableCell>
+                        <TableCell>{row.fromCity}</TableCell>
+                        <TableCell>{row.toCity}</TableCell>
+                        <TableCell>{/* Track Link/Button can go here */}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>
