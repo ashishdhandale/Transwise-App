@@ -34,6 +34,7 @@ function NewBookingForm() {
         // This function will only run on the client, avoiding SSR issues.
         return Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i));
     });
+    const [bookingType, setBookingType] = useState('FOC');
 
     const basicFreight = useMemo(() => {
         return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
@@ -44,7 +45,7 @@ function NewBookingForm() {
         <div className="space-y-4 max-w-7xl mx-auto">
             <Card className="border-2 border-green-200">
                 <CardContent className="p-4 space-y-4">
-                    <BookingDetailsSection />
+                    <BookingDetailsSection bookingType={bookingType} onBookingTypeChange={setBookingType} />
                     <PartyDetailsSection />
                     <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                     <Separator className="my-6 border-dashed" />
@@ -52,6 +53,11 @@ function NewBookingForm() {
                         <SummaryAndActionsSection />
                         <ChargesSection basicFreight={basicFreight} />
                         <DeliveryInstructionsSection />
+                    </div>
+                     <div className="text-center py-4">
+                        <p className="text-xl font-bold text-green-600">
+                            Booking Type: {bookingType}
+                        </p>
                     </div>
                     <Separator className="my-6" />
                     <MainActionsSection />

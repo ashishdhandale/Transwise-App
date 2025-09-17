@@ -25,7 +25,13 @@ const LOCAL_STORAGE_KEY_PROFILE = 'transwise_company_profile';
 
 type CityListSource = 'default' | 'custom';
 
-export function BookingDetailsSection() {
+interface BookingDetailsSectionProps {
+    bookingType: string;
+    onBookingTypeChange: (type: string) => void;
+}
+
+
+export function BookingDetailsSection({ bookingType, onBookingTypeChange }: BookingDetailsSectionProps) {
     const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
@@ -233,7 +239,7 @@ export function BookingDetailsSection() {
             </div>
              <div className="space-y-1">
                 <Label htmlFor="bookingType">Booking Type</Label>
-                <Select defaultValue="FOC">
+                <Select value={bookingType} onValueChange={onBookingTypeChange}>
                     <SelectTrigger id="bookingType">
                         <SelectValue />
                     </SelectTrigger>
