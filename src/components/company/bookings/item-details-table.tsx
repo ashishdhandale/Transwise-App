@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -9,7 +9,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -176,15 +175,6 @@ export function ItemDetailsTable() {
       }
   }
 
-  const totals = useMemo(() => {
-    return {
-        qty: rows.reduce((sum, row) => sum + (parseFloat(row.qty) || 0), 0),
-        actWt: rows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0),
-        chgWt: rows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0),
-    };
-  }, [rows]);
-
-
   if (!isClient) {
     // Render a placeholder or the default state on the server to avoid hydration mismatch
     return (
@@ -252,15 +242,6 @@ export function ItemDetailsTable() {
                         </TableRow>
                     ))}
                 </TableBody>
-                <TableFooter>
-                    <TableRow className="bg-primary/5">
-                        <TableCell colSpan={3} className="font-bold text-right text-primary">TOTALS</TableCell>
-                        <TableCell className="font-bold text-center text-primary">{totals.qty}</TableCell>
-                        <TableCell className="font-bold text-center text-primary">{totals.actWt}</TableCell>
-                        <TableCell className="font-bold text-center text-primary">{totals.chgWt}</TableCell>
-                        <TableCell colSpan={visibleColumns.length - 5}></TableCell>
-                    </TableRow>
-                </TableFooter>
             </Table>
         </div>
         <div className="flex justify-end items-center gap-4">
