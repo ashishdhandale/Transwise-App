@@ -11,7 +11,7 @@ import { SummarySection } from './summary-section';
 import { challanData, lrDetailsData, type Challan } from '@/lib/challan-data';
 
 export function ChallanTracking() {
-  const [selectedChallan, setSelectedChallan] = useState<Challan | null>(challanData[0]);
+  const [selectedChallan, setSelectedChallan] = useState<Challan | null>(null);
 
   return (
     <main className="flex-1 p-4 md:p-6 bg-[#e0f7fa]">

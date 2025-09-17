@@ -49,9 +49,6 @@ export function BookingsDashboard() {
 
   useEffect(() => {
     setIsClient(true);
-    const initialDate = new Date('2024-08-01');
-    setFromDate(initialDate);
-    setToDate(new Date('2024-08-05'));
     setBookings(sampleBookings);
   }, []);
 
@@ -152,7 +149,8 @@ export function BookingsDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBookings.map((booking, index) => (
+                  {filteredBookings.length > 0 ? (
+                    filteredBookings.map((booking, index) => (
                     <TableRow key={booking.id} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
                       <TableCell className="p-1 text-center">
                         <DropdownMenu>
@@ -194,7 +192,12 @@ export function BookingsDashboard() {
                         </Badge>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={14} className="text-center h-24">No bookings found.</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

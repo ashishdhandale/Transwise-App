@@ -124,7 +124,8 @@ export function StockDashboard() {
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {filteredStock.map((item) => (
+                    {filteredStock.length > 0 ? (
+                      filteredStock.map((item) => (
                         <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.lrNo}</TableCell>
                         <TableCell>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
@@ -141,19 +142,21 @@ export function StockDashboard() {
                             </Badge>
                         </TableCell>
                         </TableRow>
-                    ))}
+                    ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center h-24">No stock items found.</TableCell>
+                      </TableRow>
+                    )}
                     </TableBody>
                 </Table>
                 </div>
-                {filteredStock.length === 0 && (
-                <div className="text-center p-8 text-muted-foreground">
-                    No stock items found.
-                </div>
-                )}
+                {filteredStock.length > 0 && (
                  <div className="flex justify-end gap-6 font-bold text-sm mt-4 pr-4">
                     <span>Total Quantity: <span className="text-primary">{totalQty}</span></span>
                     <span>Total Weight: <span className="text-primary">{totalWeight.toLocaleString()} kg</span></span>
                 </div>
+                )}
             </CardContent>
         </Card>
     </main>

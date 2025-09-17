@@ -6,14 +6,12 @@ import { PartyDetailsSection } from '@/components/company/bookings/party-details
 import { ItemDetailsTable, type ItemRow } from '@/components/company/bookings/item-details-table';
 import { ChargesSection } from '@/components/company/bookings/charges-section';
 import { DeliveryInstructionsSection } from '@/components/company/bookings/delivery-instructions-section';
-import { SummaryAndActionsSection } from '@/components/company/bookings/summary-and-actions-section';
 import { Card, CardContent } from '@/components/ui/card';
 import DashboardLayout from '@/app/(dashboard)/layout';
 import { Suspense, useMemo, useState, useCallback, useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking } from '@/lib/bookings-dashboard-data';
-import { sampleBookings } from '@/lib/bookings-dashboard-data';
 import type { City } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,12 +34,15 @@ const createEmptyRow = (id: number): ItemRow => ({
 });
 
 function NewBookingForm() {
-    const [itemRows, setItemRows] = useState<ItemRow[]>(() => {
-        return Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i));
-    });
+    const [itemRows, setItemRows] = useState<ItemRow[]>(() => []);
+    
+    useEffect(() => {
+        setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)))
+    }, []);
+
     const [bookingType, setBookingType] = useState('FOC');
     const [fromStation, setFromStation] = useState<City | null>(null);
-    const [allBookings, setAllBookings] = useState<Booking[]>(sampleBookings);
+    const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [currentGrNumber, setCurrentGrNumber] = useState('');
     const { toast } = useToast();
 
@@ -133,17 +134,19 @@ function NewBookingForm() {
                     <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                     <Separator className="my-6 border-dashed" />
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                        <SummaryAndActionsSection />
-                        <ChargesSection basicFreight={basicFreight} />
-                        <DeliveryInstructionsSection />
+                        <div className="lg:col-span-2">
+                             <MainActionsSection onSave={handleSaveBooking} />
+                        </div>
+                        <div className="space-y-4">
+                            <ChargesSection basicFreight={basicFreight} />
+                            <DeliveryInstructionsSection />
+                        </div>
                     </div>
                      <div className="text-center py-4">
                         <p className="text-xl font-bold text-green-600">
                             Booking Type: {bookingType}
                         </p>
                     </div>
-                    <Separator className="my-6" />
-                    <MainActionsSection onSave={handleSaveBooking} />
                 </CardContent>
             </Card>
         </div>
