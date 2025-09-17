@@ -24,7 +24,7 @@ function NewBookingForm() {
                             <PartyDetailsSection />
                             <ItemDetailsTable />
                         </div>
-                        <div className="lg:w-[280px]">
+                        <div className="lg:w-[250px]">
                            <ChargesSection />
                         </div>
                     </div>
