@@ -346,7 +346,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar defaultOpen={false}>
+    <Sidebar>
       <SidebarHeader className="border-b p-4">
         <Link href={isAdmin ? '/admin' : isCompany ? '/company' : '/'}>
           <div

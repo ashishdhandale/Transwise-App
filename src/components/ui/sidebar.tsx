@@ -181,7 +181,8 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, open, setOpen, openMobile, setOpenMobile, state: sidebarState } = useSidebar()
+    const { isMobile, open, setOpen, openMobile, setOpenMobile } = useSidebar()
+    const [isHoverExpanded, setIsHoverExpanded] = React.useState(false);
     
     React.useEffect(() => {
       if (typeof defaultOpen !== 'undefined') {
@@ -190,20 +191,21 @@ const Sidebar = React.forwardRef<
     }, [defaultOpen, setOpen]);
     
     const state = open ? "expanded" : "collapsed"
+    const effectiveState = isHoverExpanded ? 'expanded' : state;
 
     const handleMouseEnter = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-        if (sidebarState === 'collapsed') {
-            setOpen(true);
+        if (state === 'collapsed') {
+            setIsHoverExpanded(true);
         }
         onMouseEnter?.(event);
-    }, [sidebarState, setOpen, onMouseEnter]);
+    }, [state, onMouseEnter]);
 
     const handleMouseLeave = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-        if (sidebarState === 'expanded') {
-            setOpen(false);
+        if (isHoverExpanded) {
+            setIsHoverExpanded(false);
         }
         onMouseLeave?.(event);
-    }, [sidebarState, setOpen, onMouseLeave]);
+    }, [isHoverExpanded, onMouseLeave]);
 
 
     if (collapsible === "none") {
@@ -246,8 +248,8 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className="group peer hidden md:block text-sidebar-foreground"
-        data-state={state}
-        data-collapsible={state === "collapsed" ? collapsible : ""}
+        data-state={effectiveState}
+        data-collapsible={effectiveState === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
         onMouseEnter={handleMouseEnter}
@@ -583,22 +585,12 @@ const SidebarMenuButton = React.forwardRef<
       tooltip,
       className,
       children,
-      onClick,
       ...props
     },
     ref
   ) => {
-    const { isMobile, state, setOpen } = useSidebar()
+    const { isMobile, state } = useSidebar()
     const Comp = href ? Link : "button"
-
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      if (state === 'collapsed') {
-        setOpen(true);
-      }
-      if (onClick) {
-        onClick(event);
-      }
-    };
 
     const button = (
       // @ts-ignore - Issues with Ref and Link component
@@ -609,15 +601,14 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-        onClick={handleClick}
         {...props}
       >
         {children}
       </Comp>
-    );
+    )
 
     if (!tooltip) {
-      return button;
+      return button
     }
 
     if (typeof tooltip === "string") {
