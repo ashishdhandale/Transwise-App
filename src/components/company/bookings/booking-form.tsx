@@ -30,6 +30,8 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 const GRN_PREFIX_KEY = 'transwise_company_profile';
+const CUSTOMERS_KEY = 'transwise_customers';
+
 
 const createEmptyRow = (id: number): ItemRow => ({
   id,
@@ -160,13 +162,17 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             if (isEditMode) {
                 const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
                 if (bookingToEdit) {
+                    const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+                    const senderProfile = savedCustomers.find(c => c.name === bookingToEdit.sender) || null;
+                    const receiverProfile = savedCustomers.find(c => c.name === bookingToEdit.receiver) || null;
+
                     setCurrentGrNumber(bookingToEdit.lrNo);
                     setBookingDate(new Date(bookingToEdit.bookingDate));
                     setBookingType(bookingToEdit.lrType);
                     setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
                     setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
-                    setSender({ id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
-                    setReceiver({ id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
+                    setSender(senderProfile);
+                    setReceiver(receiverProfile);
                     setItemRows(bookingToEdit.itemRows || Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
                     setGrandTotal(bookingToEdit.totalAmount);
                 } else {
@@ -179,7 +185,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     const profileSettings = localStorage.getItem(GRN_PREFIX_KEY);
                     if (profileSettings) {
                         const profile = JSON.parse(profileSettings);
-                        if(profile.companyCode && profile.companyCode.trim() !== '' && profile.companyCode !== 'CO') {
+                        if(profile.companyCode && profile.companyCode.trim() !== '') {
                             grnPrefix = profile.companyCode.trim();
                         }
                     }
@@ -384,3 +390,5 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
+
+    
