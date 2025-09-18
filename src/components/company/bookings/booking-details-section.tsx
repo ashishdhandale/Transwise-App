@@ -27,6 +27,8 @@ type CityListSource = 'default' | 'custom';
 interface BookingDetailsSectionProps {
     bookingType: string;
     onBookingTypeChange: (type: string) => void;
+    loadType: string;
+    onLoadTypeChange: (type: string) => void;
     onFromStationChange: (station: City | null) => void;
     onToStationChange: (station: City | null) => void;
     fromStation: City | null;
@@ -42,7 +44,9 @@ interface BookingDetailsSectionProps {
 
 export function BookingDetailsSection({ 
     bookingType, 
-    onBookingTypeChange, 
+    onBookingTypeChange,
+    loadType,
+    onLoadTypeChange,
     onFromStationChange,
     onToStationChange,
     fromStation,
@@ -190,7 +194,7 @@ export function BookingDetailsSection({
             </div>
             <div className="space-y-1">
                 <Label htmlFor="loadType">Load Type</Label>
-                <Select defaultValue="PTL">
+                <Select value={loadType} onValueChange={onLoadTypeChange}>
                     <SelectTrigger id="loadType">
                         <SelectValue />
                     </SelectTrigger>

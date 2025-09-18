@@ -3,6 +3,16 @@
 import type { ItemRow } from "@/components/company/bookings/item-details-table";
 import { initialBookings } from "./sample-data";
 
+export interface FtlDetails {
+  vehicleNo: string;
+  driverName: string;
+  lorrySupplier: string;
+  truckFreight: number;
+  advance: number;
+  commission: number;
+  otherDeductions: number;
+}
+
 export interface Booking {
   id: string;
   lrNo: string;
@@ -10,6 +20,7 @@ export interface Booking {
   fromCity: string;
   toCity: string;
   lrType: 'FOC' | 'PAID' | 'TOPAY' | 'TBB';
+  loadType: 'PTL' | 'FTL';
   sender: string;
   receiver: string;
   itemDescription: string;
@@ -21,6 +32,7 @@ export interface Booking {
   additionalCharges?: { [key: string]: number };
   taxPaidBy?: string;
   isGstApplicable?: boolean;
+  ftlDetails?: FtlDetails;
 }
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';

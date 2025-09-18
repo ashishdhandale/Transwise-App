@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
-import type { Booking } from '@/lib/bookings-dashboard-data';
+import type { Booking, FtlDetails } from '@/lib/bookings-dashboard-data';
 import type { City, Customer } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
@@ -31,6 +31,8 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
+import { FtlDetailsSection } from './ftl-details-section';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -130,6 +132,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
+    const [loadType, setLoadType] = useState('PTL');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
     const [sender, setSender] = useState<Customer | null>(null);
@@ -148,6 +151,15 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const [initialChargesFromBooking, setInitialChargesFromBooking] = useState<{ [key: string]: number; } | undefined>(undefined);
     const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
     const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+    const [ftlDetails, setFtlDetails] = useState<FtlDetails>({
+        vehicleNo: '',
+        driverName: '',
+        lorrySupplier: '',
+        truckFreight: 0,
+        advance: 0,
+        commission: 0,
+        otherDeductions: 0,
+    });
 
 
     const [showReceipt, setShowReceipt] = useState(false);
@@ -195,6 +207,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     setCurrentGrNumber(bookingToEdit.lrNo);
                     setBookingDate(new Date(bookingToEdit.bookingDate));
                     setBookingType(bookingToEdit.lrType);
+                    setLoadType(bookingToEdit.loadType || 'PTL');
                     setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
                     setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
                     setSender(senderProfile);
@@ -206,6 +219,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     setAdditionalCharges(bookingToEdit.additionalCharges || {});
                     setInitialChargesFromBooking(bookingToEdit.additionalCharges || {});
                     setTaxPaidBy(bookingToEdit.taxPaidBy || 'Not Applicable');
+                    if (bookingToEdit.ftlDetails) {
+                        setFtlDetails(bookingToEdit.ftlDetails);
+                    }
 
                 } else {
                      toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
@@ -237,6 +253,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         let keyCounter = 1;
         setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
+        setLoadType('PTL');
         setFromStation(null);
         setToStation(null);
         setSender(null);
@@ -248,6 +265,15 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         setInitialChargesFromBooking(undefined);
         setDeliveryAt('Godown Deliv');
         setErrors({});
+        setFtlDetails({
+            vehicleNo: '',
+            driverName: '',
+            lorrySupplier: '',
+            truckFreight: 0,
+            advance: 0,
+            commission: 0,
+            otherDeductions: 0,
+        });
 
         toast({
             title: "Form Reset",
@@ -304,6 +330,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             fromCity: fromStation!.name,
             toCity: toStation!.name,
             lrType: bookingType as Booking['lrType'],
+            loadType,
             sender: sender!.name,
             receiver: receiver!.name,
             itemDescription: validRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
@@ -314,6 +341,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
+            ...(loadType === 'FTL' && { ftlDetails }),
         };
 
         try {
@@ -413,6 +441,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     isEditMode={isEditMode}
                     companyProfile={companyProfile}
                     errors={errors}
+                    loadType={loadType}
+                    onLoadTypeChange={setLoadType}
                 />
                 <PartyDetailsSection 
                     onSenderChange={setSender}
@@ -423,6 +453,10 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     taxPaidBy={taxPaidBy}
                     errors={errors}
                 />
+                 {loadType === 'FTL' && (
+                    <FtlDetailsSection details={ftlDetails} onDetailsChange={setFtlDetails} />
+                 )}
+
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
@@ -493,7 +527,3 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
-
-    
-
-    
