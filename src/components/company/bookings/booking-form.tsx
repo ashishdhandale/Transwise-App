@@ -343,13 +343,13 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                     <div className="lg:col-span-1">
-                        <DeliveryInstructionsSection />
-                    </div>
-                    <div className="lg:col-span-1">
-                         <SummaryAndActionsSection />
+                        <SummaryAndActionsSection />
                     </div>
                     <div className="lg:col-span-1">
                         <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
+                    </div>
+                     <div className="lg:col-span-1">
+                        <DeliveryInstructionsSection />
                     </div>
                 </div>
 
@@ -398,3 +398,5 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
+
+    
