@@ -216,7 +216,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     }
     
     if (columnId === 'itemName') {
-        const selectedItem = itemOptions.find(item => item.name === value);
+        const selectedItem = itemOptions.find(item => item.name.toLowerCase() === value.toLowerCase());
         if (selectedItem && selectedItem.description) {
             newRow.description = selectedItem.description;
         }
@@ -454,4 +454,3 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </>
   );
 }
-

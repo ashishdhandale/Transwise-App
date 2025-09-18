@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Combobox } from '@/components/ui/combobox';
 import { AddCustomerDialog } from '../master/add-customer-dialog';
 import { useToast } from '@/hooks/use-toast';
-import type { Customer } from '@/lib/types';
+import type { Customer, CustomerType } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
@@ -33,7 +33,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, selectedParty 
     const partyOptions = customers.map(c => ({ label: c.name, value: c.name }));
 
     const handleSelectParty = (value: string) => {
-        const party = customers.find(p => p.name === value);
+        const party = customers.find(p => p.name.toLowerCase() === value.toLowerCase());
         onPartyChange(party || { name: value, id: 0, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
     };
 
@@ -161,9 +161,9 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
             <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} selectedParty={sender} />
             <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} selectedParty={receiver} />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end p-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
                  <div className="space-y-1">
-                    <div className="flex items-center justify-between mb-1 h-5">
+                    <div className="flex items-center justify-between mb-1">
                         <Label className="font-semibold">Shipping Address</Label>
                          <div className="flex items-center space-x-2">
                             <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} />
@@ -180,21 +180,21 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                     />
                 </div>
                  <div className="space-y-1">
-                    <Label className="font-semibold mb-1 block h-5">Bill To</Label>
+                    <Label className="font-semibold mb-1 block">Bill To</Label>
                     <Combobox
                         options={billToOptions}
                         value={billTo}
-                        onChange={setBillTo}
+                        onChange={(val) => setBillTo(val)}
                         placeholder="Select party for billing..."
                         notFoundMessage="No parties selected."
                     />
                 </div>
                  <div className="space-y-1">
-                    <Label className="font-semibold mb-1 block h-5">Tax Paid By</Label>
+                    <Label className="font-semibold mb-1 block">Tax Paid By</Label>
                     <Combobox
                         options={taxPaidByOptions}
                         value={taxPaidBy}
-                        onChange={setTaxPaidBy}
+                        onChange={(val) => setTaxPaidBy(val)}
                         placeholder="Select who pays tax..."
                     />
                 </div>
