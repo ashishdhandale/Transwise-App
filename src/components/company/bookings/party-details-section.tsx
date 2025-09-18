@@ -37,35 +37,10 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [partyDetails]);
 
-    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const name = e.target.value;
-        const existingParty = customers.find(p => p.name.toLowerCase() === name.toLowerCase());
-
-        if (existingParty) {
-            setPartyDetails(existingParty);
-        } else {
-            setPartyDetails(prev => ({
-                id: prev?.id || 0,
-                name: name,
-                gstin: '',
-                address: '',
-                mobile: '',
-                email: '',
-                type: 'Company',
-            }));
-        }
-    };
-    
-    const handleDetailChange = (field: keyof Customer, value: string) => {
-        setPartyDetails(prev => {
-            const newDetails: Customer = prev ? { ...prev } : {
-                id: 0, name: '', gstin: '', address: '', mobile: '', email: '', type: 'Company'
-            };
-            (newDetails as any)[field] = value;
-            return newDetails;
-        });
-    };
-
+    const handlePartySelect = useCallback((partyName: string) => {
+        const selectedParty = customers.find(c => c.name.toLowerCase() === partyName.toLowerCase()) || null;
+        setPartyDetails(selectedParty);
+    }, [customers]);
 
     const handleSaveCustomer = (customerData: Omit<Customer, 'id'>) => {
         if (!customerData.name.trim() || !customerData.address.trim() || !customerData.mobile.trim()) {
@@ -101,40 +76,30 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr_1fr] gap-x-4 gap-y-2 items-start p-3 border-b">
-                <div className="space-y-1">
+                <div className={cn("space-y-1 rounded-md", hasError && 'ring-2 ring-red-500/50')}>
                     <Label className="font-semibold text-primary">{side} Name*</Label>
-                    <Input 
-                        placeholder={`Enter ${side} name...`}
-                        value={partyDetails?.name || ''}
-                        onChange={handleNameChange}
-                        className={cn(hasError && errorClass)}
+                    <Combobox
+                        options={customers.map(c => ({ label: c.name, value: c.name }))}
+                        value={partyDetails?.name}
+                        onChange={handlePartySelect}
+                        placeholder={`Select ${side}...`}
+                        searchPlaceholder="Search customers..."
+                        notFoundMessage="No customer found."
+                        addMessage="Add New Party"
+                        onAdd={() => setIsAddCustomerOpen(true)}
                     />
                 </div>
                  <div className="space-y-1">
                     <Label>GST No.</Label>
-                    <Input 
-                        placeholder="GST Number" 
-                        value={partyDetails?.gstin || ''}
-                        onChange={(e) => handleDetailChange('gstin', e.target.value)}
-                    />
+                    <Input placeholder="GST Number" value={partyDetails?.gstin || ''} readOnly />
                 </div>
                 <div className="space-y-1">
                     <Label>Address</Label>
-                    <Textarea 
-                        placeholder="Party Address" 
-                        rows={1} 
-                        value={partyDetails?.address || ''}
-                        onChange={(e) => handleDetailChange('address', e.target.value)}
-                        className="min-h-[38px]" 
-                    />
+                    <Textarea placeholder="Party Address" rows={1} value={partyDetails?.address || ''} readOnly className="min-h-[38px]" />
                 </div>
                 <div className="space-y-1">
                     <Label>Mobile No.</Label>
-                    <Input 
-                        placeholder="10 Digits Only" 
-                        value={partyDetails?.mobile || ''}
-                        onChange={(e) => handleDetailChange('mobile', e.target.value)}
-                    />
+                    <Input placeholder="10 Digits Only" value={partyDetails?.mobile || ''} readOnly />
                 </div>
             </div>
             <AddCustomerDialog
