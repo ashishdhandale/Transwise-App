@@ -60,7 +60,6 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent
         className="w-[var(--radix-popover-trigger-width)] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
@@ -81,10 +80,8 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.label}
-                  onSelect={(currentValue) => {
-                    // Find the option that matches the selected label (case-insensitive)
-                    const selected = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase());
-                    onChange(selected ? selected.value : "")
+                  onSelect={() => {
+                    onChange(option.value === value ? "" : option.value)
                     setOpen(false)
                   }}
                 >
