@@ -84,8 +84,8 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value?.toLowerCase() ? "" : option.value)
+                  onSelect={() => {
+                    onChange(option.value);
                     setOpen(false)
                     triggerRef.current?.focus();
                   }}
