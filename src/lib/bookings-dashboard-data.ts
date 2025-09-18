@@ -1,4 +1,5 @@
 
+
 import type { ItemRow } from "@/components/company/bookings/item-details-table";
 import { initialBookings } from "./sample-data";
 
@@ -19,6 +20,7 @@ export interface Booking {
   itemRows: ItemRow[];
   additionalCharges?: { [key: string]: number };
   taxPaidBy?: string;
+  isGstApplicable?: boolean;
 }
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';

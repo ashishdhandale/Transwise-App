@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -324,6 +325,11 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton href="/company/reports/history" size="sm" isActive={pathname === '/company/reports/history'} tooltip="History">
                   <History /> History
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/reports/tax" size="sm" isActive={pathname === '/company/reports/tax'} tooltip="Tax Report">
+                  <FileText /> Tax Report
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </div>
