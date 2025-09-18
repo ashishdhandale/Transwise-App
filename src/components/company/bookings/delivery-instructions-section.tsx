@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { bookingOptions } from '@/lib/booking-data';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 
 const InstructionSelect = ({ label, options, defaultValue }: { label: string, options: { value: string, label: string }[], defaultValue: string }) => (
      <div className="grid grid-cols-[100px_1fr] items-center gap-2">
@@ -32,7 +34,7 @@ export function DeliveryInstructionsSection() {
   ];
 
   return (
-    <Card className="p-2 border-cyan-200">
+    <Card className="p-2 border-cyan-200 flex flex-col h-full">
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Delivery Instructions</h3>
         <div className="space-y-1.5">
             {instructions.map(inst => (
@@ -44,6 +46,11 @@ export function DeliveryInstructionsSection() {
                     />
                 </div>
             ))}
+        </div>
+        <Separator className="my-2" />
+        <div className="flex-grow flex flex-col gap-1.5">
+            <Label htmlFor="deliveryNote" className="text-xs text-left font-semibold">Delivery Note</Label>
+            <Textarea id="deliveryNote" placeholder="Enter any notes for delivery..." className="flex-grow text-xs" />
         </div>
     </Card>
   );
