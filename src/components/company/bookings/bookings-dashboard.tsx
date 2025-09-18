@@ -219,7 +219,7 @@ export function BookingsDashboard() {
                         <TableCell className={tdClass}>{booking.itemDescription}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
-                        <TableCell className={`${tdClass} text-right`}>{booking.totalAmount.toLocaleString()}</TableCell>
+                        <TableCell className={`${tdClass} text-right`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(booking.totalAmount)}</TableCell>
                         <TableCell className={tdClass}>
                            <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
                                {booking.status}

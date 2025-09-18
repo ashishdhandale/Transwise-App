@@ -124,8 +124,8 @@ export function TaxReport() {
                                     <TableHead className={thClass}>To</TableHead>
                                     <TableHead className={thClass}>Sender</TableHead>
                                     <TableHead className={thClass}>Receiver</TableHead>
-                                    <TableHead className={`${thClass} text-right`}>Total Freight (₹)</TableHead>
-                                    <TableHead className={`${thClass} text-right`}>GST Amount (₹)</TableHead>
+                                    <TableHead className={`${thClass} text-right`}>Total Freight</TableHead>
+                                    <TableHead className={`${thClass} text-right`}>GST Amount</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -139,8 +139,8 @@ export function TaxReport() {
                                             <TableCell className={tdClass}>{booking.toCity}</TableCell>
                                             <TableCell className={tdClass}>{booking.sender}</TableCell>
                                             <TableCell className={tdClass}>{booking.receiver}</TableCell>
-                                            <TableCell className={`${tdClass} text-right`}>{booking.totalAmount.toLocaleString('en-IN')}</TableCell>
-                                            <TableCell className={`${tdClass} text-right font-semibold text-red-600`}>{booking.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell className={`${tdClass} text-right`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.totalAmount)}</TableCell>
+                                            <TableCell className={`${tdClass} text-right font-semibold text-red-600`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.gstAmount)}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
@@ -155,8 +155,8 @@ export function TaxReport() {
                                 <TableFooter>
                                     <TableRow>
                                         <TableCell colSpan={7} className="text-right font-bold text-lg">Total</TableCell>
-                                        <TableCell className="text-right font-bold text-lg">{totalFreight.toLocaleString('en-IN')}</TableCell>
-                                        <TableCell className="text-right font-bold text-lg text-red-700">{totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                        <TableCell className="text-right font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalFreight)}</TableCell>
+                                        <TableCell className="text-right font-bold text-lg text-red-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalGst)}</TableCell>
                                     </TableRow>
                                 </TableFooter>
                             )}

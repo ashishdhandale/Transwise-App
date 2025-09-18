@@ -20,6 +20,9 @@ const DetailItem = ({ label, value }: { label: string; value: string | number | 
 
 export function BookingReceipt({ booking, companyProfile, copyType }: BookingReceiptProps) {
 
+    const subTotal = booking.itemRows.reduce((s, i) => s + Number(i.lumpsum), 0);
+    const otherCharges = booking.totalAmount - subTotal;
+
     return (
         <div className="p-4 font-mono text-xs text-black">
             <header className="grid grid-cols-3 gap-4 border-b-2 border-black pb-2">
@@ -89,7 +92,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                             <td className="border border-black p-1 text-center">{booking.qty}</td>
                             <td className="border border-black p-1 text-right">{booking.itemRows.reduce((s, i) => s + Number(i.actWt), 0)}</td>
                             <td className="border border-black p-1 text-right">{booking.chgWt}</td>
-                            <td className="border border-black p-1 text-right">{booking.itemRows.reduce((s, i) => s + Number(i.lumpsum), 0).toFixed(2)}</td>
+                            <td className="border border-black p-1 text-right">{subTotal.toFixed(2)}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -107,14 +110,15 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                  <div className="border border-black p-1">
                     <div className="grid grid-cols-2 gap-x-2">
                         <p className="font-semibold">Sub Total:</p>
-                        <p className="text-right">{booking.itemRows.reduce((s, i) => s + Number(i.lumpsum), 0).toFixed(2)}</p>
+                        <p className="text-right">{subTotal.toFixed(2)}</p>
                         
-                        {/* Simplified charges - a full implementation would iterate saved charges */}
                         <p>Other Charges:</p>
-                        <p className="text-right">{(booking.totalAmount - booking.itemRows.reduce((s, i) => s + Number(i.lumpsum), 0)).toFixed(2)}</p>
+                        <p className="text-right">{otherCharges.toFixed(2)}</p>
 
                         <p className="font-bold border-t border-black mt-1 pt-1">GRAND TOTAL:</p>
-                        <p className="font-bold text-right border-t border-black mt-1 pt-1">Rs. {booking.totalAmount.toFixed(2)}</p>
+                        <p className="font-bold text-right border-t border-black mt-1 pt-1">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.totalAmount)}
+                        </p>
                     </div>
                 </div>
             </section>

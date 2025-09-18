@@ -29,7 +29,7 @@ export function TodaysBusinessCards({ data }: TodaysBusinessCardsProps) {
     if (item.isCurrency) {
         const numericValue = parseFloat(item.value.replace(/[^0-9.-]+/g,""));
         if (!isNaN(numericValue)) {
-            return numericValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 });
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(numericValue);
         }
     }
     return item.value;

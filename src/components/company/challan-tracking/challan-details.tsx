@@ -9,11 +9,11 @@ interface ChallanDetailsProps {
     challan: Challan;
 }
 
-const DetailItem = ({ label, value, isEmphasized = false }: { label: string; value: string; isEmphasized?: boolean }) => (
+const DetailItem = ({ label, value, isEmphasized = false, isCurrency = false }: { label: string; value: string | number; isEmphasized?: boolean, isCurrency?: boolean }) => (
     <div>
         <span className="text-sm text-muted-foreground">{label}: </span>
         <span className={isEmphasized ? 'font-bold text-red-600 text-sm' : 'text-sm font-semibold'}>
-            {value}
+            {isCurrency ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value)) : value}
         </span>
     </div>
 );
@@ -41,9 +41,9 @@ export function ChallanDetails({ challan }: ChallanDetailsProps) {
                         <h4 className="font-semibold text-sm border-b pb-1">Vehicle & Driver</h4>
                         <DetailItem label="Vehicle No." value={challan.vehicleNo} isEmphasized />
                         <DetailItem label="Driver Name" value={challan.driverName} />
-                        <DetailItem label="Veh.hire Freight" value={challan.vehicleHireFreight.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} />
-                        <DetailItem label="Advance" value={challan.advance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} />
-                        <DetailItem label="Balance" value={challan.balance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} />
+                        <DetailItem label="Veh.hire Freight" value={challan.vehicleHireFreight} isCurrency />
+                        <DetailItem label="Advance" value={challan.advance} isCurrency />
+                        <DetailItem label="Balance" value={challan.balance} isCurrency />
                     </div>
                     {/* Column 3: Shipment Summary */}
                     <div className="space-y-2">

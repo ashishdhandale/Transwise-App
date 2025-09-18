@@ -57,7 +57,7 @@ export function LrDetailsTable({ lrDetails }: LrDetailsTableProps) {
                         <TableCell className={cn(tdClass)}>{row.quantity}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.actualWeight}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.chargeWeight}</TableCell>
-                        <TableCell className="whitespace-nowrap">{row.grandTotal.toLocaleString()}</TableCell>
+                        <TableCell className="whitespace-nowrap">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.grandTotal)}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

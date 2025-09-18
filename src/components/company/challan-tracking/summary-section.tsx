@@ -12,9 +12,7 @@ const SummaryItem = ({ label, value, isCurrency = true }: { label: string; value
     <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{label}:</span>
         <span className="font-semibold">
-            {isCurrency && typeof value === 'number' 
-             ? value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) 
-             : value}
+            {isCurrency ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value)) : value}
         </span>
     </div>
 );
@@ -28,7 +26,7 @@ export function SummarySection({ challan }: SummarySectionProps) {
         <CardContent className="p-4 space-y-2">
             <div className="flex justify-between font-bold text-base border-b pb-2">
                 <span>Grand Total:</span>
-                <span className="text-red-600">{grandTotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                <span className="text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(grandTotal)}</span>
             </div>
             <SummaryItem label="Total Topay Amount" value={totalTopayAmount} />
             <SummaryItem label="Commission" value={commission} />

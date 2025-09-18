@@ -71,7 +71,7 @@ export function SearchResults({ results, onSelectResult, selectedLrNo }: SearchR
                         onClick={() => onSelectResult(row)}
                     >
                         <TableCell className={cn(tdClass)}>{row.lrNo}</TableCell>
-                        <TableCell className={cn(tdClass)}>{format(new Date(), 'yyyy-MM-dd')}</TableCell>
+                        <TableCell className={cn(tdClass)}>{format(parseISO(row.bookingDate), 'yyyy-MM-dd')}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.sender}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.receiver}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.fromCity}</TableCell>

@@ -8,6 +8,7 @@ import { SearchResults } from './search-results';
 import { ShippingDetails } from './shipping-details';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getHistoryLogs, type BookingHistory } from '@/lib/history-data';
+import { getBookings } from '@/lib/bookings-dashboard-data';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -18,14 +19,7 @@ export function PackageTracking() {
   const [selectedBookingHistory, setSelectedBookingHistory] = useState<BookingHistory | null>(null);
 
   useEffect(() => {
-    try {
-        const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
-        if (savedBookings) {
-            setAllBookings(JSON.parse(savedBookings));
-        }
-    } catch (error) {
-        console.error("Failed to load bookings from localStorage", error);
-    }
+    setAllBookings(getBookings());
   }, []);
 
   const handleSearch = (grNumber: string) => {

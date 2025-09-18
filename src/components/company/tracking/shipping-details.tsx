@@ -1,18 +1,20 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Truck, Package, MapPin, Building, Calendar, Phone, Search } from 'lucide-react';
+import { Truck, Package, MapPin, Building, Calendar, Phone, Search, IndianRupee } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import type { BookingHistory } from '@/lib/history-data';
+import { format, parseISO } from 'date-fns';
 
-const DetailRow = ({ label, value }: { label: string; value?: string | number }) => (
+const DetailRow = ({ label, value }: { label?: string; value?: string | number; children?: React.ReactNode }) => (
   <div className="grid grid-cols-[150px_1fr] text-sm border-b last:border-b-0">
     <div className="bg-primary/10 text-primary font-semibold p-2 border-r">{label}</div>
-    <div className="p-2 break-words">{value || '-'}</div>
+    <div className="p-2 break-words flex items-center">{value}{children || ''}</div>
   </div>
 );
 
@@ -53,14 +55,16 @@ export function ShippingDetails({ booking, history }: ShippingDetailsProps) {
                 <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-2">
                         <DetailRow label="LR NO" value={booking.lrNo} />
-                        <DetailRow label="Booking Date" value={new Date().toISOString().split('T')[0]} />
+                        <DetailRow label="Booking Date" value={format(parseISO(booking.bookingDate), 'yyyy-MM-dd')} />
                         <DetailRow label="Booked From" value={booking.fromCity} />
                         <DetailRow label="Booked To" value={booking.toCity} />
                         <DetailRow label="Item Name" value={booking.itemDescription} />
                         <DetailRow label="Total Qty" value={booking.qty} />
                         <DetailRow label="Total Chg Wt" value={`${booking.chgWt} KG`} />
                         <DetailRow label="Payment Mode" value={booking.lrType} />
-                        <DetailRow label="Total Freight" value={`Rs. ${booking.totalAmount.toLocaleString()}`} />
+                        <DetailRow label="Total Freight">
+                            <IndianRupee className="size-3.5 mr-0.5" /> {booking.totalAmount.toLocaleString('en-IN')}
+                        </DetailRow>
                         <DetailRow label="Booking Note" value="Handle with care" />
                     </div>
                 </CardContent>
