@@ -76,7 +76,7 @@ export function AppSidebar() {
      if (pathname.startsWith('/company')) {
       setOpenDashboardMenu(true);
     }
-     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock')) {
+     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan')) {
       setOpenConsignmentMenu(true);
      }
      if (pathname.startsWith('/company/master')) {
@@ -247,7 +247,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="/company/bookings" size="sm" isActive={pathname.startsWith('/company/bookings')} tooltip="Bookings"><BookCopy />Bookings</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Challan"><FileText />Challan</SidebarMenuButton>
+                <SidebarMenuButton href="/company/challan" size="sm" isActive={pathname.startsWith('/company/challan')} tooltip="Challan"><FileText />Challan</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
