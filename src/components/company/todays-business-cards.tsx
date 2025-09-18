@@ -5,6 +5,7 @@ interface SummaryItem {
     title: string;
     value: string;
     details?: string;
+    isCurrency?: boolean;
 }
 
 interface TodaysBusinessCardsProps {
@@ -17,12 +18,22 @@ const defaultData = [
   { title: 'Cancelled Bookings', value: '0' },
   { title: 'Vehicle Dispatch', value: '0' },
   { title: 'Vehicle Inward', value: '0' },
-  { title: 'Revenue', value: 'Rs. 0' },
+  { title: 'Revenue', value: '0', isCurrency: true },
 ];
 
 
 export function TodaysBusinessCards({ data }: TodaysBusinessCardsProps) {
   const displayData = data && data.length > 0 ? data : defaultData;
+
+  const formatValue = (item: SummaryItem) => {
+    if (item.isCurrency) {
+        const numericValue = parseFloat(item.value.replace(/[^0-9.-]+/g,""));
+        if (!isNaN(numericValue)) {
+            return numericValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 });
+        }
+    }
+    return item.value;
+  };
 
   return (
     <Card className="bg-white border border-[#b2dfdb]">
@@ -39,7 +50,7 @@ export function TodaysBusinessCards({ data }: TodaysBusinessCardsProps) {
           >
             <CardContent className="p-3 text-center">
               <p className="text-sm">{item.title}</p>
-              <p className="text-2xl font-bold">{item.value}</p>
+              <p className="text-2xl font-bold">{formatValue(item)}</p>
               {item.details && <p className="text-xs text-accent-foreground/80">{item.details}</p>}
             </CardContent>
           </Card>

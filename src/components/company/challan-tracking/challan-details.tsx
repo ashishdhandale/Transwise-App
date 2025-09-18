@@ -41,9 +41,9 @@ export function ChallanDetails({ challan }: ChallanDetailsProps) {
                         <h4 className="font-semibold text-sm border-b pb-1">Vehicle & Driver</h4>
                         <DetailItem label="Vehicle No." value={challan.vehicleNo} isEmphasized />
                         <DetailItem label="Driver Name" value={challan.driverName} />
-                        <DetailItem label="Veh.hire Freight" value={`Rs. ${challan.vehicleHireFreight.toLocaleString()}`} />
-                        <DetailItem label="Advance" value={`Rs. ${challan.advance.toLocaleString()}`} />
-                        <DetailItem label="Balance" value={`Rs. ${challan.balance.toLocaleString()}`} />
+                        <DetailItem label="Veh.hire Freight" value={challan.vehicleHireFreight.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} />
+                        <DetailItem label="Advance" value={challan.advance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} />
+                        <DetailItem label="Balance" value={challan.balance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} />
                     </div>
                     {/* Column 3: Shipment Summary */}
                     <div className="space-y-2">

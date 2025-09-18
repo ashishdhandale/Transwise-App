@@ -31,7 +31,7 @@ export function CompanyDashboard() {
       { title: 'Cancelled Bookings', value: todaysCancellations.length.toString() },
       { title: 'Vehicle Dispatch', value: '0' },
       { title: 'Vehicle Inward', value: '0' },
-      { title: 'Revenue', value: `Rs. ${bookingsRevenue.toLocaleString()}` },
+      { title: 'Revenue', value: bookingsRevenue.toString(), isCurrency: true },
     ];
   }, [allBookings]);
 

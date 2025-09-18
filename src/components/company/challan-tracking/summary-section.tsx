@@ -8,10 +8,14 @@ interface SummarySectionProps {
     challan: Challan;
 }
 
-const SummaryItem = ({ label, value }: { label: string; value: string | number; }) => (
+const SummaryItem = ({ label, value, isCurrency = true }: { label: string; value: string | number; isCurrency?: boolean; }) => (
     <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{label}:</span>
-        <span className="font-semibold">{typeof value === 'number' ? value.toLocaleString() : value}</span>
+        <span className="font-semibold">
+            {isCurrency && typeof value === 'number' 
+             ? value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) 
+             : value}
+        </span>
     </div>
 );
 
@@ -24,7 +28,7 @@ export function SummarySection({ challan }: SummarySectionProps) {
         <CardContent className="p-4 space-y-2">
             <div className="flex justify-between font-bold text-base border-b pb-2">
                 <span>Grand Total:</span>
-                <span className="text-red-600">Rs. {grandTotal.toLocaleString()}</span>
+                <span className="text-red-600">{grandTotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
             </div>
             <SummaryItem label="Total Topay Amount" value={totalTopayAmount} />
             <SummaryItem label="Commission" value={commission} />
