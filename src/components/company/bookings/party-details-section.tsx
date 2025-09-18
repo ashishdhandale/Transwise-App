@@ -108,6 +108,8 @@ interface PartyDetailsSectionProps {
 
 export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver }: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [billTo, setBillTo] = useState<string>('');
+    const [taxPaidBy, setTaxPaidBy] = useState<string>('');
 
     const loadCustomers = useCallback(() => {
         try {
@@ -122,11 +124,50 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     useEffect(() => {
         loadCustomers();
     }, [loadCustomers]);
+    
+    useEffect(() => {
+        // Set default "Bill To" to sender if sender exists
+        if (sender && !billTo) {
+            setBillTo(sender.name);
+        }
+    }, [sender, billTo]);
+
+    const billToOptions = [
+        ... (sender ? [{ label: sender.name, value: sender.name }] : []),
+        ... (receiver && receiver.name !== sender?.name ? [{ label: receiver.name, value: receiver.name }] : []),
+    ];
+    
+    const taxPaidByOptions = [
+        { label: 'Sender', value: 'Sender' },
+        { label: 'Receiver', value: 'Receiver' },
+        { label: 'Transporter', value: 'Transporter' },
+    ];
 
     return (
         <div className="border rounded-md">
             <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} selectedParty={sender} />
             <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} selectedParty={receiver} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 items-start p-3">
+                 <div className="space-y-1">
+                    <Label className="font-semibold">Bill To</Label>
+                    <Combobox
+                        options={billToOptions}
+                        value={billTo}
+                        onChange={setBillTo}
+                        placeholder="Select party for billing..."
+                        notFoundMessage="No parties selected."
+                    />
+                </div>
+                 <div className="space-y-1">
+                    <Label className="font-semibold">Tax Paid By</Label>
+                    <Combobox
+                        options={taxPaidByOptions}
+                        value={taxPaidBy}
+                        onChange={setTaxPaidBy}
+                        placeholder="Select who pays tax..."
+                    />
+                </div>
+            </div>
         </div>
     );
 }
