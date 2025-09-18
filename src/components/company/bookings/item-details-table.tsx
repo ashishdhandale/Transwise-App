@@ -53,7 +53,7 @@ export interface ItemRow {
 const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
 const tdClass = "p-1";
 const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs";
-const inputClass = "h-8 text-xs px-1";
+const inputClass = "h-8 text-xs px-1 uppercase";
 
 const BOOKING_SETTINGS_KEY = 'transwise_booking_settings';
 const ITEM_DETAILS_SETTINGS_KEY = 'transwise_item_details_settings';
@@ -206,7 +206,24 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
     const newRows = [...rows];
-    const newRow = { ...newRows[rowIndex], [columnId]: value };
+    let processedValue = value;
+
+    const numericColumns = ['qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'dValue'];
+    const textColumns = ['ewbNo', 'description', 'pvtMark', 'invoiceNo'];
+
+    if (numericColumns.includes(columnId)) {
+        // Allow only numbers and a single decimal point
+        if (value !== '' && !/^[0-9]*\.?[0-9]*$/.test(value)) {
+            toast({ title: 'Invalid Input', description: 'Only numbers are allowed in this field.', variant: 'destructive'});
+            return;
+        }
+    }
+
+    if (textColumns.includes(columnId)) {
+        processedValue = value.toUpperCase();
+    }
+    
+    const newRow = { ...newRows[rowIndex], [columnId]: processedValue };
 
     if (columnId === 'freightOn') {
         if (value === 'Fixed') {
@@ -222,7 +239,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     if (columnId === 'itemName') {
         const selectedItem = itemOptions.find(item => item.name.toLowerCase() === value.toLowerCase());
         if (selectedItem && selectedItem.description) {
-            newRow.description = selectedItem.description;
+            newRow.description = selectedItem.description.toUpperCase();
         }
     }
     
@@ -284,16 +301,16 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 </Select>
             );
         case 'rate':
-            return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
+            return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
         case 'lumpsum':
-             return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={!isFixedFreight} />;
+             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={!isFixedFreight} />;
         case 'dValue':
-            return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+            return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'qty':
-             return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'actWt':
         case 'chgWt':
-             return <Input type="text" inputMode="decimal" pattern="[0-9.]*" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
