@@ -8,10 +8,10 @@ import { bookingOptions } from '@/lib/booking-data';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 
-const InstructionSelect = ({ label, options, defaultValue }: { label: string, options: { value: string, label: string }[], defaultValue: string }) => (
+const InstructionSelect = ({ label, options, defaultValue, value, onChange }: { label: string, options: { value: string, label: string }[], defaultValue?: string, value?: string, onChange?: (value: string) => void }) => (
      <div className="grid grid-cols-[100px_1fr] items-center gap-2">
         <Label className="text-sm text-left">{label}</Label>
-        <Select defaultValue={defaultValue}>
+        <Select defaultValue={defaultValue} value={value} onValueChange={onChange}>
             <SelectTrigger className="h-7 text-sm">
                 <SelectValue />
             </SelectTrigger>
@@ -22,11 +22,14 @@ const InstructionSelect = ({ label, options, defaultValue }: { label: string, op
     </div>
 )
 
-export function DeliveryInstructionsSection() {
+interface DeliveryInstructionsSectionProps {
+    deliveryAt: string;
+    onDeliveryAtChange: (value: string) => void;
+}
+
+export function DeliveryInstructionsSection({ deliveryAt, onDeliveryAtChange }: DeliveryInstructionsSectionProps) {
   const instructions = [
     { key: 'insurance', label: 'Insurance', options: bookingOptions.yesNo, defaultValue: 'No' },
-    { key: 'deliveryAt', label: 'Delivery At', options: bookingOptions.deliveryAt, defaultValue: 'Godown Deliv' },
-    { key: 'dpoint', label: 'D.Point', options: bookingOptions.deliveryPoints, defaultValue: 'DWARKA COI' },
     { key: 'pod', label: 'POD?', options: bookingOptions.yesNo, defaultValue: 'No' },
     { key: 'attachCc', label: 'Attach CC', options: bookingOptions.yesNo, defaultValue: 'Yes' },
     { key: 'priority', label: 'Priority', options: bookingOptions.priorities, defaultValue: 'Express' },
@@ -37,6 +40,12 @@ export function DeliveryInstructionsSection() {
     <Card className="p-2 border-cyan-200 flex flex-col h-full">
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Delivery Instructions</h3>
         <div className="space-y-1.5">
+             <InstructionSelect 
+                label="Delivery At" 
+                options={bookingOptions.deliveryAt} 
+                value={deliveryAt}
+                onChange={onDeliveryAtChange}
+            />
             {instructions.map(inst => (
                 <InstructionSelect 
                     key={inst.key}

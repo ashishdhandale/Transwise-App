@@ -10,6 +10,7 @@ import { AddCustomerDialog } from '../master/add-customer-dialog';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer, CustomerType } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 
@@ -19,9 +20,10 @@ interface PartyRowProps {
     onPartyAdded: () => void;
     onPartyChange: (party: Customer | null) => void;
     initialParty: Customer | null;
+    hasError: boolean;
 }
 
-const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty }: PartyRowProps) => {
+const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError }: PartyRowProps) => {
     const { toast } = useToast();
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [partyDetails, setPartyDetails] = useState<Customer | null>(initialParty);
@@ -94,6 +96,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty }
         }
     };
 
+    const errorClass = 'border-red-500 ring-2 ring-red-500/50';
 
     return (
         <>
@@ -104,6 +107,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty }
                         placeholder={`Enter ${side} name...`}
                         value={partyDetails?.name || ''}
                         onChange={handleNameChange}
+                        className={cn(hasError && errorClass)}
                     />
                 </div>
                  <div className="space-y-1">
@@ -149,9 +153,10 @@ interface PartyDetailsSectionProps {
     receiver: Customer | null;
     onTaxPaidByChange: (value: string) => void;
     taxPaidBy: string;
+    errors: { [key: string]: boolean };
 }
 
-export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy }: PartyDetailsSectionProps) {
+export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy, errors }: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
     const [shippingAddress, setShippingAddress] = useState('');
@@ -202,8 +207,8 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
 
     return (
         <div className="border rounded-md">
-            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} />
-            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} />
+            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} />
+            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} />
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
                  <div className="space-y-1">

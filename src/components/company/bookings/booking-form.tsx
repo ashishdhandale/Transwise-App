@@ -137,6 +137,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const [isGstApplicable, setIsGstApplicable] = useState(false);
     const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
     const [initialChargesFromBooking, setInitialChargesFromBooking] = useState<{ [key: string]: number; } | undefined>(undefined);
+    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
+    const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+
 
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState<Booking | null>(null);
@@ -223,6 +226,12 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
     }, [taxPaidBy]);
 
+    useEffect(() => {
+        if (additionalCharges.doorDelivery && additionalCharges.doorDelivery > 0) {
+            setDeliveryAt('Door Deliv');
+        }
+    }, [additionalCharges]);
+
 
     const basicFreight = useMemo(() => {
         return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
@@ -230,7 +239,16 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
 
     const handleSaveOrUpdate = async () => {
-        if (!fromStation || !toStation || !sender || !receiver || !bookingDate) {
+        const newErrors: { [key: string]: boolean } = {};
+        if (!fromStation) newErrors.fromStation = true;
+        if (!toStation) newErrors.toStation = true;
+        if (!sender?.name) newErrors.sender = true;
+        if (!receiver?.name) newErrors.receiver = true;
+        if (!bookingDate) newErrors.bookingDate = true;
+        
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) {
             toast({ title: 'Missing Information', description: 'Please fill all required fields.', variant: 'destructive' });
             return;
         }
@@ -240,12 +258,12 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
         const newBookingData: Omit<Booking, 'id'> = {
             lrNo: currentGrNumber,
-            bookingDate: bookingDate.toISOString(),
-            fromCity: fromStation.name,
-            toCity: toStation.name,
+            bookingDate: bookingDate!.toISOString(),
+            fromCity: fromStation!.name,
+            toCity: toStation!.name,
             lrType: bookingType as Booking['lrType'],
-            sender: sender.name,
-            receiver: receiver.name,
+            sender: sender!.name,
+            receiver: receiver!.name,
             itemDescription: itemRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
             qty: itemRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
@@ -353,6 +371,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     onBookingDateChange={setBookingDate}
                     isEditMode={isEditMode}
                     companyProfile={companyProfile}
+                    errors={errors}
                 />
                 <PartyDetailsSection 
                     onSenderChange={setSender}
@@ -361,11 +380,15 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     receiver={receiver}
                     onTaxPaidByChange={setTaxPaidBy}
                     taxPaidBy={taxPaidBy}
+                    errors={errors}
                 />
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
-                    <DeliveryInstructionsSection />
+                    <DeliveryInstructionsSection 
+                        deliveryAt={deliveryAt}
+                        onDeliveryAtChange={setDeliveryAt}
+                    />
                     <ChargesSection 
                         basicFreight={basicFreight} 
                         onGrandTotalChange={setGrandTotal} 

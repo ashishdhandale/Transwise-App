@@ -36,6 +36,7 @@ interface BookingDetailsSectionProps {
     onBookingDateChange: (date?: Date) => void;
     isEditMode: boolean;
     companyProfile: CompanyProfileFormValues | null;
+    errors: { [key: string]: boolean };
 }
 
 
@@ -51,6 +52,7 @@ export function BookingDetailsSection({
     onBookingDateChange,
     isEditMode,
     companyProfile,
+    errors,
 }: BookingDetailsSectionProps) {
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
@@ -151,6 +153,7 @@ export function BookingDetailsSection({
         }
     };
 
+    const errorClass = 'border-red-500 ring-2 ring-red-500/50';
 
     return (
         <>
@@ -167,7 +170,8 @@ export function BookingDetailsSection({
                             variant={'outline'}
                             className={cn(
                                 'w-full justify-between text-left font-normal',
-                                !bookingDate && 'text-muted-foreground'
+                                !bookingDate && 'text-muted-foreground',
+                                errors.bookingDate && errorClass
                             )}
                         >
                             {bookingDate ? format(bookingDate, 'dd/MM/yyyy') : <span>Pick a date</span>}
@@ -195,7 +199,7 @@ export function BookingDetailsSection({
                     </SelectContent>
                 </Select>
             </div>
-            <div className="space-y-1">
+            <div className={cn('space-y-1 rounded-md', errors.fromStation && 'ring-2 ring-red-500/50')}>
                 <Label htmlFor="fromStation">From Station</Label>
                 <Combobox
                     options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
@@ -208,7 +212,7 @@ export function BookingDetailsSection({
                     onAdd={handleAddCity}
                 />
             </div>
-            <div className="space-y-1">
+            <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
                 <Label htmlFor="toStation">To Station</Label>
                 <Combobox
                     options={stationOptions.map(s => ({ label: s.name, value: s.name }))}
