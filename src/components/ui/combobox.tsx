@@ -42,6 +42,7 @@ export function Combobox({
     onAdd
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
 
   const selectedOption = options.find(option => option.value.toLowerCase() === value?.toLowerCase());
 
@@ -49,6 +50,7 @@ export function Combobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          ref={triggerRef}
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -85,6 +87,7 @@ export function Combobox({
                   onSelect={(currentValue) => {
                     onChange(currentValue === value?.toLowerCase() ? "" : option.value)
                     setOpen(false)
+                    triggerRef.current?.focus();
                   }}
                 >
                   <Check
