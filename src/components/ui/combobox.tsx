@@ -11,8 +11,8 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
+  CommandItem,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -42,8 +42,20 @@ export function Combobox({
     onAdd
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState("")
 
   const selectedOption = options.find(option => option.value === value);
+
+  const filteredOptions = React.useMemo(() => {
+    if (!search) {
+      // Show a limited number of initial options or nothing until user types
+      return options.slice(0, 200); 
+    }
+    return options.filter(option =>
+      option.label.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [options, search]);
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -61,8 +73,12 @@ export function Combobox({
       <PopoverContent
         className="w-[var(--radix-popover-trigger-width)] p-0"
       >
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder={searchPlaceholder}
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
             <CommandEmpty>
                 <div className="py-4 text-center text-sm">
@@ -76,12 +92,12 @@ export function Combobox({
                 </div>
             </CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label}
-                  onSelect={() => {
-                    onChange(option.value === value ? "" : option.value)
+                  value={option.value}
+                  onSelect={(currentValue) => {
+                    onChange(currentValue === value ? "" : currentValue)
                     setOpen(false)
                   }}
                 >
