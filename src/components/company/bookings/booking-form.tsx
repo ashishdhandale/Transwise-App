@@ -341,25 +341,21 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 />
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                    <div className="lg:col-span-1">
-                        <SummaryAndActionsSection />
-                    </div>
-                    <div className="lg:col-span-1">
-                        <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
-                    </div>
-                     <div className="lg:col-span-1">
-                        <DeliveryInstructionsSection />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <SummaryAndActionsSection />
+                    <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
                 </div>
-
-                <div className="text-center py-4">
-                    <p className="text-xl font-bold text-green-600">
-                        Booking Type: {bookingType}
-                    </p>
+                
+                <div className="space-y-4">
+                    <DeliveryInstructionsSection />
+                    <div className="text-center py-4">
+                        <p className="text-xl font-bold text-green-600">
+                            Booking Type: {bookingType}
+                        </p>
+                    </div>
+                    <Separator />
+                    <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} onClose={onClose} />
                 </div>
-                <Separator />
-                <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} onClose={onClose} />
             </CardContent>
         </Card>
         
@@ -398,7 +394,3 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
-
-    
-
-    
