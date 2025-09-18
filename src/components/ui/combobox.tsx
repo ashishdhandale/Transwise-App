@@ -43,7 +43,7 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
-  const selectedOption = options.find(option => option.value === value);
+  const selectedOption = options.find(option => option.value.toLowerCase() === value?.toLowerCase());
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -84,14 +84,16 @@ export function Combobox({
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue);
+                    // Always call onChange with the selected value.
+                    // Let the parent component decide what to do.
+                    onChange(currentValue);
                     setOpen(false);
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      value?.toLowerCase() === option.value.toLowerCase() ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {option.label}
