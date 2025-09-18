@@ -12,11 +12,6 @@ import type { Customer, CustomerType } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
-const initialCustomers: Customer[] = [
-    { id: 1, name: 'NOVA INDUSTERIES', gstin: '27AAFCN0123A1Z5', address: '123, Industrial Area, Ahmedabad', mobile: '9876543210', email: 'contact@nova.com', type: 'Company'},
-    { id: 2, name: 'MONIKA SALES', gstin: '22AAAAA0000A1Z5', address: '456, Trade Center, Mumbai', mobile: '9876543211', email: 'sales@monika.com', type: 'Individual' },
-    { id: 3, name: 'PARTY NAME1', gstin: '24ABCDE1234F1Z5', address: '789, Business Park, Pune', mobile: '9876543212', email: 'party1@example.com', type: 'Company' },
-];
 
 interface PartyRowProps {
     side: 'Sender' | 'Receiver';
@@ -38,6 +33,11 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, selectedParty 
     };
 
     const handleSaveCustomer = (customerData: Omit<Customer, 'id'>) => {
+        if (!customerData.name.trim() || !customerData.address.trim() || !customerData.mobile.trim()) {
+            toast({ title: 'Error', description: 'Customer Name, Address, and Mobile Number are required.', variant: 'destructive' });
+            return false;
+        }
+
         try {
             const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
             const currentCustomers: Customer[] = savedCustomers ? JSON.parse(savedCustomers) : [];
@@ -117,10 +117,10 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     const loadCustomers = useCallback(() => {
         try {
             const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
-            setCustomers(savedCustomers ? JSON.parse(savedCustomers) : initialCustomers);
+            setCustomers(savedCustomers ? JSON.parse(savedCustomers) : []);
         } catch (error) {
             console.error("Failed to load party options", error);
-            setCustomers(initialCustomers);
+            setCustomers([]);
         }
     }, []);
 

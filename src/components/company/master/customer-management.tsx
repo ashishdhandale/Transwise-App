@@ -43,7 +43,9 @@ export function CustomerManagement() {
       if (savedCustomers) {
         setCustomers(JSON.parse(savedCustomers));
       } else {
+        // If no customers are in local storage, initialize it with the default list
         setCustomers(initialCustomers);
+        localStorage.setItem(LOCAL_STORAGE_KEY_CUSTOMERS, JSON.stringify(initialCustomers));
       }
     } catch (error) {
       console.error("Failed to load customer data from local storage", error);
@@ -90,6 +92,11 @@ export function CustomerManagement() {
   };
 
   const handleSave = (customerData: Omit<Customer, 'id'>) => {
+    if (!customerData.name.trim() || !customerData.address.trim() || !customerData.mobile.trim()) {
+        toast({ title: 'Error', description: 'Customer Name, Address, and Mobile Number are required.', variant: 'destructive' });
+        return false;
+    }
+      
     let updatedCustomers;
     if (currentCustomer) {
       updatedCustomers = customers.map(customer => (customer.id === currentCustomer.id ? { ...customer, ...customerData } : customer));
