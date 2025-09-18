@@ -31,6 +31,8 @@ import type { Booking } from '@/lib/bookings-dashboard-data';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import { getCompanyProfile } from '@/app/company/settings/actions';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -51,11 +53,14 @@ export function BookingsDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
   const router = useRouter();
 
-  const loadBookings = () => {
+  const loadBookings = async () => {
     try {
+        const profile = await getCompanyProfile();
+        setCompanyProfile(profile);
         const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
         if (savedBookings) {
             setBookings(JSON.parse(savedBookings));
@@ -94,6 +99,11 @@ export function BookingsDashboard() {
         booking.toCity.toLowerCase().includes(lowercasedQuery)
     );
   }, [bookings, searchQuery]);
+
+  const formatCurrency = (amount: number) => {
+    if (!companyProfile) return amount.toLocaleString();
+    return new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency, minimumFractionDigits: 0 }).format(amount);
+  }
 
   const tdClass = "p-1 whitespace-nowrap";
 
@@ -219,7 +229,7 @@ export function BookingsDashboard() {
                         <TableCell className={tdClass}>{booking.itemDescription}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
-                        <TableCell className={`${tdClass} text-right`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(booking.totalAmount)}</TableCell>
+                        <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
                         <TableCell className={tdClass}>
                            <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
                                {booking.status}

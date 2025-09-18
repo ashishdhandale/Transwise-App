@@ -9,6 +9,8 @@ import { ShippingDetails } from './shipping-details';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getHistoryLogs, type BookingHistory } from '@/lib/history-data';
 import { getBookings } from '@/lib/bookings-dashboard-data';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -17,9 +19,15 @@ export function PackageTracking() {
   const [searchResults, setSearchResults] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedBookingHistory, setSelectedBookingHistory] = useState<BookingHistory | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
   useEffect(() => {
-    setAllBookings(getBookings());
+    async function loadData() {
+        setAllBookings(getBookings());
+        const profile = await getCompanyProfile();
+        setCompanyProfile(profile);
+    }
+    loadData();
   }, []);
 
   const handleSearch = (grNumber: string) => {
@@ -62,7 +70,7 @@ export function PackageTracking() {
         </div>
         <div className="w-full lg:w-3/4 space-y-4">
           <SearchResults results={searchResults} onSelectResult={handleSelectBooking} selectedLrNo={selectedBooking?.lrNo} />
-          <ShippingDetails booking={selectedBooking} history={selectedBookingHistory} />
+          <ShippingDetails booking={selectedBooking} history={selectedBookingHistory} profile={companyProfile} />
         </div>
       </div>
     </main>

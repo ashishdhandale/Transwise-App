@@ -366,6 +366,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         isGstApplicable={isGstApplicable}
                         onChargesChange={setAdditionalCharges}
                         initialCharges={initialChargesFromBooking}
+                        profile={companyProfile}
                     />
                 </div>
                 

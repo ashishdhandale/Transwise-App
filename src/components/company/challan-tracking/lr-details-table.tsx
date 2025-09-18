@@ -12,15 +12,17 @@ import {
 import type { LrDetail } from '@/lib/challan-data';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 const thClass = 'bg-primary/10 text-primary font-bold border-r';
 const tdClass = "whitespace-nowrap border-r";
 
 interface LrDetailsTableProps {
     lrDetails: LrDetail[];
+    profile: CompanyProfileFormValues | null;
 }
 
-export function LrDetailsTable({ lrDetails }: LrDetailsTableProps) {
+export function LrDetailsTable({ lrDetails, profile }: LrDetailsTableProps) {
   return (
     <div className="space-y-2">
         <div className="overflow-x-auto border rounded-md max-h-60">
@@ -57,7 +59,7 @@ export function LrDetailsTable({ lrDetails }: LrDetailsTableProps) {
                         <TableCell className={cn(tdClass)}>{row.quantity}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.actualWeight}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.chargeWeight}</TableCell>
-                        <TableCell className="whitespace-nowrap">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.grandTotal)}</TableCell>
+                        <TableCell className="whitespace-nowrap">{profile ? new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(row.grandTotal) : row.grandTotal}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

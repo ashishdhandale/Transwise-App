@@ -19,6 +19,8 @@ import { Combobox } from '@/components/ui/combobox';
 import type { Customer } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 const tdClass = "whitespace-nowrap";
@@ -39,17 +41,23 @@ export function TaxReport() {
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
     useEffect(() => {
-        setAllBookings(getBookings());
-        try {
-            const savedCustomers = localStorage.getItem(CUSTOMERS_KEY);
-            if (savedCustomers) {
-                setAllCustomers(JSON.parse(savedCustomers));
+        async function loadData() {
+            setAllBookings(getBookings());
+            const profile = await getCompanyProfile();
+            setCompanyProfile(profile);
+            try {
+                const savedCustomers = localStorage.getItem(CUSTOMERS_KEY);
+                if (savedCustomers) {
+                    setAllCustomers(JSON.parse(savedCustomers));
+                }
+            } catch (error) {
+                console.error("Failed to load customers", error);
             }
-        } catch (error) {
-            console.error("Failed to load customers", error);
         }
+        loadData();
     }, []);
 
     const taxBookings = useMemo(() => {
@@ -79,6 +87,11 @@ export function TaxReport() {
     const customerOptions = useMemo(() => {
         return allCustomers.map(c => ({ label: c.name, value: c.name }));
     }, [allCustomers]);
+
+    const formatCurrency = (amount: number) => {
+        if (!companyProfile) return amount.toFixed(2);
+        return new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency }).format(amount);
+    }
 
 
     return (
@@ -139,8 +152,8 @@ export function TaxReport() {
                                             <TableCell className={tdClass}>{booking.toCity}</TableCell>
                                             <TableCell className={tdClass}>{booking.sender}</TableCell>
                                             <TableCell className={tdClass}>{booking.receiver}</TableCell>
-                                            <TableCell className={`${tdClass} text-right`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.totalAmount)}</TableCell>
-                                            <TableCell className={`${tdClass} text-right font-semibold text-red-600`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.gstAmount)}</TableCell>
+                                            <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
+                                            <TableCell className={`${tdClass} text-right font-semibold text-red-600`}>{formatCurrency(booking.gstAmount)}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
@@ -155,8 +168,8 @@ export function TaxReport() {
                                 <TableFooter>
                                     <TableRow>
                                         <TableCell colSpan={7} className="text-right font-bold text-lg">Total</TableCell>
-                                        <TableCell className="text-right font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalFreight)}</TableCell>
-                                        <TableCell className="text-right font-bold text-lg text-red-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalGst)}</TableCell>
+                                        <TableCell className="text-right font-bold text-lg">{formatCurrency(totalFreight)}</TableCell>
+                                        <TableCell className="text-right font-bold text-lg text-red-700">{formatCurrency(totalGst)}</TableCell>
                                     </TableRow>
                                 </TableFooter>
                             )}

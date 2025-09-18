@@ -9,14 +9,22 @@ import { ChallanDetails } from './challan-details';
 import { LrDetailsTable } from './lr-details-table';
 import { SummarySection } from './summary-section';
 import { getChallanData, getLrDetailsData, type Challan } from '@/lib/challan-data';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 export function ChallanTracking() {
   const [selectedChallan, setSelectedChallan] = useState<Challan | null>(null);
   const [challans, setChallans] = useState<Challan[]>([]);
   const [lrDetails, setLrDetails] = useState(getLrDetailsData());
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
   useEffect(() => {
-    setChallans(getChallanData());
+    async function loadData() {
+        const profile = await getCompanyProfile();
+        setCompanyProfile(profile);
+        setChallans(getChallanData());
+    }
+    loadData();
   }, []);
 
   return (
@@ -38,13 +46,13 @@ export function ChallanTracking() {
         
         {selectedChallan && (
             <div className="border bg-card shadow-sm rounded-lg p-4">
-                <ChallanDetails challan={selectedChallan} />
+                <ChallanDetails challan={selectedChallan} profile={companyProfile} />
                 <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="lg:col-span-2">
-                        <LrDetailsTable lrDetails={lrDetails} />
+                        <LrDetailsTable lrDetails={lrDetails} profile={companyProfile} />
                     </div>
                     <div>
-                        <SummarySection challan={selectedChallan} />
+                        <SummarySection challan={selectedChallan} profile={companyProfile} />
                     </div>
                 </div>
             </div>

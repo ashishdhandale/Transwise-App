@@ -117,7 +117,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 
                         <p className="font-bold border-t border-black mt-1 pt-1">GRAND TOTAL:</p>
                         <p className="font-bold text-right border-t border-black mt-1 pt-1">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(booking.totalAmount)}
+                            {new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency }).format(booking.totalAmount)}
                         </p>
                     </div>
                 </div>

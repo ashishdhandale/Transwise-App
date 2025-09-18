@@ -10,8 +10,9 @@ import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import type { BookingHistory } from '@/lib/history-data';
 import { format, parseISO } from 'date-fns';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
-const DetailRow = ({ label, value }: { label?: string; value?: string | number; children?: React.ReactNode }) => (
+const DetailRow = ({ label, value, profile, children }: { label?: string; value?: string | number; profile: CompanyProfileFormValues | null; children?: React.ReactNode }) => (
   <div className="grid grid-cols-[150px_1fr] text-sm border-b last:border-b-0">
     <div className="bg-primary/10 text-primary font-semibold p-2 border-r">{label}</div>
     <div className="p-2 break-words flex items-center">{value}{children || ''}</div>
@@ -21,9 +22,10 @@ const DetailRow = ({ label, value }: { label?: string; value?: string | number; 
 interface ShippingDetailsProps {
     booking: Booking | null;
     history: BookingHistory | null;
+    profile: CompanyProfileFormValues | null;
 }
 
-export function ShippingDetails({ booking, history }: ShippingDetailsProps) {
+export function ShippingDetails({ booking, history, profile }: ShippingDetailsProps) {
     
     if (!booking) {
         return (
@@ -35,6 +37,11 @@ export function ShippingDetails({ booking, history }: ShippingDetailsProps) {
                 </div>
             </Card>
         );
+    }
+
+    const formatCurrency = (amount: number) => {
+        if (!profile) return amount.toLocaleString();
+        return new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(amount);
     }
     
     const deliveredEvent = history?.logs.find(log => log.action === 'Delivered');
@@ -54,18 +61,18 @@ export function ShippingDetails({ booking, history }: ShippingDetailsProps) {
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-2">
-                        <DetailRow label="LR NO" value={booking.lrNo} />
-                        <DetailRow label="Booking Date" value={format(parseISO(booking.bookingDate), 'yyyy-MM-dd')} />
-                        <DetailRow label="Booked From" value={booking.fromCity} />
-                        <DetailRow label="Booked To" value={booking.toCity} />
-                        <DetailRow label="Item Name" value={booking.itemDescription} />
-                        <DetailRow label="Total Qty" value={booking.qty} />
-                        <DetailRow label="Total Chg Wt" value={`${booking.chgWt} KG`} />
-                        <DetailRow label="Payment Mode" value={booking.lrType} />
-                        <DetailRow label="Total Freight">
-                            <IndianRupee className="size-3.5 mr-0.5" /> {booking.totalAmount.toLocaleString('en-IN')}
+                        <DetailRow label="LR NO" value={booking.lrNo} profile={profile} />
+                        <DetailRow label="Booking Date" value={format(parseISO(booking.bookingDate), 'yyyy-MM-dd')} profile={profile} />
+                        <DetailRow label="Booked From" value={booking.fromCity} profile={profile} />
+                        <DetailRow label="Booked To" value={booking.toCity} profile={profile} />
+                        <DetailRow label="Item Name" value={booking.itemDescription} profile={profile} />
+                        <DetailRow label="Total Qty" value={booking.qty} profile={profile} />
+                        <DetailRow label="Total Chg Wt" value={`${booking.chgWt} KG`} profile={profile} />
+                        <DetailRow label="Payment Mode" value={booking.lrType} profile={profile} />
+                        <DetailRow label="Total Freight" profile={profile}>
+                            {formatCurrency(booking.totalAmount)}
                         </DetailRow>
-                        <DetailRow label="Booking Note" value="Handle with care" />
+                        <DetailRow label="Booking Note" value="Handle with care" profile={profile} />
                     </div>
                 </CardContent>
             </Card>
@@ -77,12 +84,12 @@ export function ShippingDetails({ booking, history }: ShippingDetailsProps) {
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-2">
-                        <DetailRow label="Status" value={booking.status} />
-                        <DetailRow label="Delivery Type" value="Door" />
-                        <DetailRow label="D.M. NO" value={deliveredEvent ? `DM-${booking.id}`: '-'} />
-                        <DetailRow label="Delivery Date" value={deliveredEvent?.timestamp} />
-                        <DetailRow label="Received BY" value={deliveredEvent ? 'Signature on File' : '-'} />
-                        <DetailRow label="Deliverd By" value={deliveredEvent?.user} />
+                        <DetailRow label="Status" value={booking.status} profile={profile} />
+                        <DetailRow label="Delivery Type" value="Door" profile={profile} />
+                        <DetailRow label="D.M. NO" value={deliveredEvent ? `DM-${booking.id}`: '-'} profile={profile} />
+                        <DetailRow label="Delivery Date" value={deliveredEvent?.timestamp} profile={profile} />
+                        <DetailRow label="Received BY" value={deliveredEvent ? 'Signature on File' : '-'} profile={profile} />
+                        <DetailRow label="Deliverd By" value={deliveredEvent?.user} profile={profile} />
                     </div>
                 </CardContent>
             </Card>

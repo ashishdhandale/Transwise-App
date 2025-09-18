@@ -9,16 +9,23 @@ import { TodaysBusinessCards } from './todays-business-cards';
 import { Monitor } from 'lucide-react';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { isToday, subDays, format, parseISO } from 'date-fns';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from './settings/company-profile-settings';
 
 export function CompanyDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
   useEffect(() => {
-    setAllBookings(getBookings());
+    async function loadData() {
+        setAllBookings(getBookings());
+        const profile = await getCompanyProfile();
+        setCompanyProfile(profile);
+    }
+    loadData();
   }, []);
 
   const todaysBusinessData = useMemo(() => {
-    const today = new Date();
     const todaysBookings = allBookings.filter(b => isToday(parseISO(b.bookingDate)));
     const todaysDeliveries = allBookings.filter(b => b.status === 'Delivered' && isToday(parseISO(b.bookingDate))); // Assuming delivery date is booking date for simplicity
     const todaysCancellations = allBookings.filter(b => b.status === 'Cancelled' && isToday(parseISO(b.bookingDate)));
@@ -92,7 +99,7 @@ export function CompanyDashboard() {
           <StockPieCharts {...stockPieChartData} />
         </div>
         <div>
-          <TodaysBusinessCards data={todaysBusinessData} />
+          <TodaysBusinessCards data={todaysBusinessData} profile={companyProfile} />
         </div>
       </div>
     </main>

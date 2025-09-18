@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { ChargeSetting } from '@/components/company/settings/additional-charges-settings';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
@@ -24,9 +25,10 @@ interface ChargesSectionProps {
     isGstApplicable: boolean;
     onChargesChange: (charges: { [key: string]: number }) => void;
     initialCharges?: { [key: string]: number };
+    profile: CompanyProfileFormValues | null;
 }
 
-export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal, isGstApplicable, onChargesChange: notifyParentOfChanges, initialCharges }: ChargesSectionProps) {
+export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal, isGstApplicable, onChargesChange: notifyParentOfChanges, initialCharges, profile }: ChargesSectionProps) {
     const [chargeSettings, setChargeSettings] = useState<ChargeSetting[]>([]);
     const [bookingCharges, setBookingCharges] = useState<{ [key: string]: number }>({});
     const [gstValue, setGstValue] = useState(0);
@@ -146,7 +148,7 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
             <Separator />
             <div className="grid grid-cols-[1fr_100px] items-center gap-2">
                 <Label className="text-sm text-left font-bold">Grand Total:</Label>
-                <Input value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(grandTotal)} className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
+                <Input value={profile ? new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(grandTotal) : grandTotal.toFixed(2)} className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
             </div>
         </div>
     </Card>

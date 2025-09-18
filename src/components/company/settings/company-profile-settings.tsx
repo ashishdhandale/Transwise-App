@@ -34,6 +34,8 @@ const profileSchema = z.object({
   gstNo: z.string().length(15, { message: 'GST Number must be 15 characters.' }).optional().or(z.literal('')),
   companyContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
   companyEmail: z.string().email({ message: 'Please enter a valid company email address.' }),
+  currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
+  countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
 });
 
 export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
@@ -56,6 +58,8 @@ export function CompanyProfileSettings() {
             gstNo: '',
             companyContactNo: '',
             companyEmail: '',
+            currency: 'INR',
+            countryCode: 'en-IN',
         },
     });
 
@@ -259,6 +263,50 @@ export function CompanyProfileSettings() {
                                 <FormControl>
                                     <Input type="email" placeholder="contact@yourcompany.com" {...field} />
                                 </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="currency"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Currency</FormLabel>
+                                 <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="INR">INR (Indian Rupee)</SelectItem>
+                                        <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                                        <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormDescription>The default currency for all financial values.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="countryCode"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Country/Region Code</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="en-IN">en-IN (India)</SelectItem>
+                                        <SelectItem value="en-US">en-US (United States)</SelectItem>
+                                        <SelectItem value="en-GB">en-GB (United Kingdom)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormDescription>Determines number and date formatting.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}

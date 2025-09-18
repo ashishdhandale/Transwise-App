@@ -1,3 +1,4 @@
+
 'use server';
 
 import type { CompanyProfileFormValues } from "@/components/company/settings/company-profile-settings";
@@ -16,6 +17,8 @@ const defaultProfile: CompanyProfileFormValues = {
     gstNo: '27ABCDE1234F1Z5',
     companyContactNo: '9876543210',
     companyEmail: 'contact@transwise.com',
+    currency: 'INR',
+    countryCode: 'en-IN',
 };
 
 

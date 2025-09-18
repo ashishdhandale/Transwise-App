@@ -10,6 +10,8 @@ import { LedgerSummary } from './ledger-summary';
 import type { Customer } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
 import { getLedgerForCustomer } from '@/lib/accounts-data';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 const CUSTOMERS_KEY = 'transwise_customers';
 
@@ -17,16 +19,22 @@ export function AccountsDashboard() {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
     useEffect(() => {
-        try {
-            const savedCustomers = localStorage.getItem(CUSTOMERS_KEY);
-            if (savedCustomers) {
-                setCustomers(JSON.parse(savedCustomers));
+        async function loadData() {
+            try {
+                const profile = await getCompanyProfile();
+                setCompanyProfile(profile);
+                const savedCustomers = localStorage.getItem(CUSTOMERS_KEY);
+                if (savedCustomers) {
+                    setCustomers(JSON.parse(savedCustomers));
+                }
+            } catch (error) {
+                console.error("Failed to load initial data", error);
             }
-        } catch (error) {
-            console.error("Failed to load customers", error);
         }
+        loadData();
     }, []);
 
     const handleCustomerSelect = (customerName: string | null) => {
@@ -76,7 +84,7 @@ export function AccountsDashboard() {
 
                 <Card>
                     <CardContent className="p-4">
-                        {selectedCustomer ? (
+                        {selectedCustomer && companyProfile ? (
                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div className="lg:col-span-2">
                                     <LedgerTable entries={ledger} customerName={selectedCustomer.name} />
@@ -87,6 +95,7 @@ export function AccountsDashboard() {
                                         totalDebit={totalDebit}
                                         totalCredit={totalCredit}
                                         closingBalance={closingBalance}
+                                        profile={companyProfile}
                                     />
                                 </div>
                             </div>

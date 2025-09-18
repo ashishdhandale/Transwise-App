@@ -1,5 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { CompanyProfileFormValues } from './settings/company-profile-settings';
 
 interface SummaryItem {
     title: string;
@@ -10,6 +11,7 @@ interface SummaryItem {
 
 interface TodaysBusinessCardsProps {
     data: SummaryItem[];
+    profile: CompanyProfileFormValues | null;
 }
 
 const defaultData = [
@@ -22,14 +24,14 @@ const defaultData = [
 ];
 
 
-export function TodaysBusinessCards({ data }: TodaysBusinessCardsProps) {
+export function TodaysBusinessCards({ data, profile }: TodaysBusinessCardsProps) {
   const displayData = data && data.length > 0 ? data : defaultData;
 
   const formatValue = (item: SummaryItem) => {
-    if (item.isCurrency) {
+    if (item.isCurrency && profile) {
         const numericValue = parseFloat(item.value.replace(/[^0-9.-]+/g,""));
         if (!isNaN(numericValue)) {
-            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(numericValue);
+            return new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency, minimumFractionDigits: 0 }).format(numericValue);
         }
     }
     return item.value;
