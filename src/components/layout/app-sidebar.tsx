@@ -33,6 +33,7 @@ import {
   Settings,
   Truck,
   Users,
+  Wallet,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -74,7 +75,7 @@ export function AppSidebar() {
      if (pathname.startsWith('/company')) {
       setOpenDashboardMenu(true);
     }
-     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock')) {
+     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/accounts')) {
       setOpenConsignmentMenu(true);
      }
      if (pathname.startsWith('/company/master')) {
@@ -249,6 +250,9 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/accounts" size="sm" isActive={pathname.startsWith('/company/accounts')} tooltip="Accounts"><Wallet />Accounts</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Bills"><FileText />Bills</SidebarMenuButton>
