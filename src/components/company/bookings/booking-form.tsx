@@ -30,7 +30,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
-import { SummaryAndActionsSection } from './summary-and-actions-section';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -342,12 +341,11 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                    <SummaryAndActionsSection />
                     <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
+                    <DeliveryInstructionsSection />
                 </div>
                 
                 <div className="space-y-4">
-                    <DeliveryInstructionsSection />
                     <div className="text-center py-4">
                         <p className="text-xl font-bold text-green-600">
                             Booking Type: {bookingType}
@@ -394,3 +392,5 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
+
+    
