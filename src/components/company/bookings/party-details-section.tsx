@@ -59,8 +59,11 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
             localStorage.setItem(LOCAL_STORAGE_KEY_CUSTOMERS, JSON.stringify(updatedCustomers));
             
             toast({ title: 'Customer Added', description: `"${customerData.name}" has been added to your master list.` });
-            onPartyAdded();
             
+            // This reloads the customer list in the parent component
+            onPartyAdded(); 
+            
+            // This sets the newly created customer as the selected one for the current booking
             setPartyDetails(newCustomer);
 
             return true;
