@@ -158,9 +158,16 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
         <div className="border rounded-md">
             <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} selectedParty={sender} />
             <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} selectedParty={receiver} />
-            <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-4 gap-y-2 items-start p-3 border-b">
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
                  <div className="space-y-1">
-                    <Label className="font-semibold">Shipping Address</Label>
+                    <div className="flex items-center justify-between mb-1">
+                        <Label className="font-semibold">Shipping Address</Label>
+                         <div className="flex items-center space-x-2">
+                            <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} />
+                            <Label htmlFor="sameAsReceiver" className="text-xs font-normal">Same as Receiver</Label>
+                        </div>
+                    </div>
                     <Textarea 
                         placeholder="Shipping Address" 
                         rows={1} 
@@ -170,12 +177,6 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                         className="min-h-[38px]" 
                     />
                 </div>
-                 <div className="flex items-center space-x-2 pt-7">
-                    <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} />
-                    <Label htmlFor="sameAsReceiver">Same as Receiver</Label>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 items-start p-3">
                  <div className="space-y-1">
                     <Label className="font-semibold">Bill To</Label>
                     <Combobox
