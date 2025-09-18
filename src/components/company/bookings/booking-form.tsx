@@ -120,7 +120,7 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string
 }
 
 const isRowEmpty = (row: ItemRow) => {
-    return !row.description && !row.qty && !row.actWt && !row.chgWt && !row.itemName;
+    return !row.description && !row.qty && !row.actWt && !row.chgWt && row.itemName === 'Frm MAS';
 };
 
 const isRowPartiallyFilled = (row: ItemRow) => {
@@ -326,6 +326,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         setIsSubmitting(true);
         await new Promise(resolve => setTimeout(resolve, 100)); // allow UI to update
 
+        const isFtlBooking = loadType === 'FTL';
+        const currentStatus = isFtlBooking ? 'In Transit' : 'In Stock';
+
         const newBookingData: Omit<Booking, 'id'> = {
             lrNo: currentGrNumber,
             bookingDate: bookingDate!.toISOString(),
@@ -339,7 +342,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
             totalAmount: grandTotal,
-            status: 'In Stock',
+            status: isEditMode ? allBookings.find(b => b.id === bookingId)?.status || currentStatus : currentStatus,
             itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
@@ -372,6 +375,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 const updatedBookings = [...allBookings, newBooking];
                 saveBookings(updatedBookings);
                 addHistoryLog(currentGrNumber, 'Booking Created', 'Admin');
+                if (isFtlBooking) {
+                    addHistoryLog(currentGrNumber, 'Dispatched from Warehouse', 'Admin', `Dispatched via vehicle ${ftlDetails.vehicleNo}`);
+                }
                 toast({ title: 'Booking Saved', description: `Successfully saved GR Number: ${currentGrNumber}` });
 
                 // If FTL, generate and save challan
