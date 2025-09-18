@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Archive, Download } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
+import { getBookings } from '@/lib/bookings-dashboard-data';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -27,7 +28,6 @@ import {
 } from '@/components/ui/select';
 
 const thClass = "bg-primary/10 text-primary font-bold";
-const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 const tdClass = "whitespace-nowrap";
 
 const statusColors: { [key: string]: string } = {
@@ -44,14 +44,11 @@ export function StockDashboard() {
 
   useEffect(() => {
     try {
-        const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
-        if (savedBookings) {
-            const allBookings: Booking[] = JSON.parse(savedBookings);
-            const inStockBookings = allBookings.filter(
-                (booking) => booking.status === 'In Stock'
-            );
-            setStock(inStockBookings);
-        }
+        const allBookings = getBookings();
+        const inStockBookings = allBookings.filter(
+            (booking) => booking.status === 'In Stock'
+        );
+        setStock(inStockBookings);
     } catch (error) {
         console.error("Failed to load stock from localStorage", error);
     }
