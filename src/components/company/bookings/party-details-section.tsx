@@ -9,6 +9,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { AddCustomerDialog } from '../master/add-customer-dialog';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 const initialCustomers: Customer[] = [
@@ -110,6 +111,8 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
     const [taxPaidBy, setTaxPaidBy] = useState<string>('');
+    const [shippingAddress, setShippingAddress] = useState('');
+    const [isSameAsReceiver, setIsSameAsReceiver] = useState(true);
 
     const loadCustomers = useCallback(() => {
         try {
@@ -132,6 +135,14 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
         }
     }, [sender, billTo]);
 
+    useEffect(() => {
+        if (isSameAsReceiver && receiver) {
+            setShippingAddress(receiver.address);
+        } else if (isSameAsReceiver) {
+            setShippingAddress('');
+        }
+    }, [receiver, isSameAsReceiver]);
+
     const billToOptions = [
         ... (sender ? [{ label: sender.name, value: sender.name }] : []),
         ... (receiver && receiver.name !== sender?.name ? [{ label: receiver.name, value: receiver.name }] : []),
@@ -147,6 +158,23 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
         <div className="border rounded-md">
             <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} selectedParty={sender} />
             <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} selectedParty={receiver} />
+            <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-x-4 gap-y-2 items-start p-3 border-b">
+                 <div className="space-y-1">
+                    <Label className="font-semibold">Shipping Address</Label>
+                    <Textarea 
+                        placeholder="Shipping Address" 
+                        rows={1} 
+                        value={shippingAddress} 
+                        onChange={(e) => setShippingAddress(e.target.value)}
+                        readOnly={isSameAsReceiver}
+                        className="min-h-[38px]" 
+                    />
+                </div>
+                 <div className="flex items-center space-x-2 pt-7">
+                    <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} />
+                    <Label htmlFor="sameAsReceiver">Same as Receiver</Label>
+                </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 items-start p-3">
                  <div className="space-y-1">
                     <Label className="font-semibold">Bill To</Label>
