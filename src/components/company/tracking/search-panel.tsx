@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +19,7 @@ import { Calendar as CalendarIcon, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { ClientOnly } from '@/components/ui/client-only';
 
 interface SearchPanelProps {
     onSearch: (grNumber: string) => void;
@@ -25,15 +27,8 @@ interface SearchPanelProps {
 
 
 export function SearchPanel({ onSearch }: SearchPanelProps) {
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<Date | undefined>(new Date('2014-10-03'));
   const [grNumber, setGrNumber] = useState('');
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    // This ensures the date is only set on the client, avoiding hydration mismatch.
-    setDate(new Date('2014-10-03'));
-    setIsClient(true);
-  }, []);
 
   const handleSearchClick = () => {
     onSearch(grNumber);
@@ -85,7 +80,7 @@ export function SearchPanel({ onSearch }: SearchPanelProps) {
                 <h3 className="font-semibold text-center">Advanced Search</h3>
                 <div className="space-y-2">
                     <Label>Dispatch Date</Label>
-                    {isClient && (
+                    <ClientOnly>
                       <Popover>
                         <PopoverTrigger asChild>
                             <Button
@@ -103,7 +98,7 @@ export function SearchPanel({ onSearch }: SearchPanelProps) {
                             <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
                         </PopoverContent>
                       </Popover>
-                    )}
+                    </ClientOnly>
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="sender-name">Sender Name</Label>

@@ -76,8 +76,9 @@ const defaultColumns: ColumnSetting[] = [
     { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
 ];
 
-const createEmptyRow = (id: number): ItemRow => ({
-    id,
+let nextId = 1;
+const createEmptyRow = (): ItemRow => ({
+    id: nextId++,
     ewbNo: '',
     itemName: DEFAULT_ITEM_NAME,
     description: '',
@@ -129,20 +130,21 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   }, [loadItems]);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || rows.length > 0) return; // Only run if rows are not already populated
 
     try {
       const savedBookingSettings = localStorage.getItem(BOOKING_SETTINGS_KEY);
+      let defaultRowCount = DEFAULT_ROWS;
       if (savedBookingSettings) {
         const parsed = JSON.parse(savedBookingSettings);
         if (parsed.defaultItemRows && typeof parsed.defaultItemRows === 'number') {
-            if (rows.length < parsed.defaultItemRows) {
-                const newRows = Array.from({ length: parsed.defaultItemRows - rows.length }, (_, i) => createEmptyRow(Date.now() + i));
-                onRowsChange([...rows, ...newRows]);
-            }
+            defaultRowCount = parsed.defaultItemRows;
         }
       }
-
+      
+      const newRows = Array.from({ length: defaultRowCount }, () => createEmptyRow());
+      onRowsChange(newRows);
+      
       const savedItemDetailsSettings = localStorage.getItem(ITEM_DETAILS_SETTINGS_KEY);
       if (savedItemDetailsSettings) {
           const parsed = JSON.parse(savedItemDetailsSettings);
@@ -153,6 +155,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
     } catch (error) {
       console.error("Could not load settings, using defaults.", error);
+      const newRows = Array.from({ length: DEFAULT_ROWS }, () => createEmptyRow());
+      onRowsChange(newRows);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]);
@@ -300,7 +304,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
 
   const addRow = () => {
-    onRowsChange([...rows, createEmptyRow(Date.now())]);
+    onRowsChange([...rows, createEmptyRow()]);
   };
   
   const removeRow = (id: number) => {

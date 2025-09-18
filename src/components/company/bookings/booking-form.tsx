@@ -167,6 +167,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
     useEffect(() => {
         if (!isEditMode) {
+            // Set date only on client to avoid hydration errors
             setBookingDate(new Date());
         }
     }, [isEditMode]);
@@ -180,6 +181,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
                 const parsedBookings = getBookings();
                 setAllBookings(parsedBookings);
+                
+                // Initialize a counter for unique keys
+                let keyCounter = 1;
 
                 if (isEditMode) {
                     const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
@@ -195,7 +199,10 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
                         setSender(senderProfile);
                         setReceiver(receiverProfile);
-                        setItemRows(bookingToEdit.itemRows || Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
+                        // Ensure item rows have unique IDs
+                        const itemRowsWithIds = bookingToEdit.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
+                        setItemRows(itemRowsWithIds);
+                        
                         setGrandTotal(bookingToEdit.totalAmount);
                         setAdditionalCharges(bookingToEdit.additionalCharges || {});
                         setInitialChargesFromBooking(bookingToEdit.additionalCharges || {});
@@ -208,7 +215,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 } else {
                     let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
                     setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
-                    setItemRows(Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
+                    setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                 }
 
             } catch (error) {

@@ -27,8 +27,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format, parseISO } from 'date-fns';
-import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { ClientOnly } from '../ui/client-only';
 
 const statusColors: Record<DeliveryStatus, string> = {
   Pending: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:text-yellow-400',
@@ -41,13 +41,7 @@ const statusColors: Record<DeliveryStatus, string> = {
 const tdClass = "whitespace-nowrap";
 
 function FormattedDate({ dateString }: { dateString: string }) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  return <>{isClient ? format(parseISO(dateString), "MMM d, h:mm a") : null}</>;
+  return <>{format(parseISO(dateString), "MMM d, h:mm a")}</>;
 }
 
 
@@ -88,7 +82,9 @@ export function DeliveriesList() {
                     </Badge>
                   </TableCell>
                   <TableCell className={cn(tdClass)}>
-                    <FormattedDate dateString={delivery.eta} />
+                    <ClientOnly>
+                      <FormattedDate dateString={delivery.eta} />
+                    </ClientOnly>
                   </TableCell>
                   <TableCell className={cn(tdClass)}>
                     <DropdownMenu>
