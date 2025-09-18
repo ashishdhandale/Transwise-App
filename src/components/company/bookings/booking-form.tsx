@@ -31,6 +31,7 @@ import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { SummaryAndActionsSection } from './summary-and-actions-section';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const CUSTOMERS_KEY = 'transwise_customers';
 
@@ -338,18 +339,32 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     sender={sender}
                     receiver={receiver}
                 />
-                <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
-                <Separator className="my-6 border-dashed" />
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                    <div className="lg:col-span-2 space-y-4">
-                        <DeliveryInstructionsSection />
-                        <SummaryAndActionsSection />
-                    </div>
-                    <div className="space-y-4">
-                        <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
-                    </div>
-                </div>
-                 <div className="text-center py-4">
+                
+                <Tabs defaultValue="items" className="w-full">
+                    <TabsList>
+                        <TabsTrigger value="items">Item Details & Charges</TabsTrigger>
+                        <TabsTrigger value="instructions">Delivery Instructions</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="items">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start mt-4">
+                            <div className="lg:col-span-2">
+                                <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
+                            </div>
+                            <div className="space-y-4">
+                                <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
+                            </div>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="instructions">
+                        <div className="mt-4">
+                            <DeliveryInstructionsSection />
+                        </div>
+                    </TabsContent>
+                </Tabs>
+                
+                <SummaryAndActionsSection />
+                
+                <div className="text-center py-4">
                     <p className="text-xl font-bold text-green-600">
                         Booking Type: {bookingType}
                     </p>

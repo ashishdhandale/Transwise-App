@@ -33,16 +33,17 @@ function CompanySettingsPage() {
                     <GeneralInstructionsSettings />
                     <Card>
                         <CardContent className="p-4">
-                             <Tabs defaultValue="item-table" className="space-y-4">
+                             <Tabs defaultValue="item-table-columns" className="space-y-4">
                                 <TabsList>
-                                    <TabsTrigger value="item-table">Item Table</TabsTrigger>
-                                    <TabsTrigger value="charges">Charges</TabsTrigger>
+                                    <TabsTrigger value="item-table-rows">Item Table Rows</TabsTrigger>
+                                    <TabsTrigger value="item-table-columns">Item Table Columns</TabsTrigger>
+                                    <TabsTrigger value="charges">Additional Charges</TabsTrigger>
                                 </TabsList>
-                                <TabsContent value="item-table">
-                                    <div className="space-y-6">
-                                        <BookingSettings />
-                                        <ItemDetailsSettings />
-                                    </div>
+                                <TabsContent value="item-table-rows">
+                                    <BookingSettings />
+                                </TabsContent>
+                                <TabsContent value="item-table-columns">
+                                    <ItemDetailsSettings />
                                 </TabsContent>
                                 <TabsContent value="charges">
                                     <AdditionalChargesSettings />
