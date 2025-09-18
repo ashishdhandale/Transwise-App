@@ -40,8 +40,8 @@ export function AccountsDashboard() {
         if (customer) {
             setSelectedCustomer(customer);
             // In a real app, you'd fetch this from a server.
-            // For now, we generate it on the fly.
-            setLedger(getLedgerForCustomer(customer.id));
+            // For this prototype, we now generate it from local storage bookings.
+            setLedger(getLedgerForCustomer(customer));
         } else {
             setSelectedCustomer(null);
             setLedger([]);
