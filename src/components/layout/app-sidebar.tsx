@@ -75,7 +75,7 @@ export function AppSidebar() {
      if (pathname.startsWith('/company')) {
       setOpenDashboardMenu(true);
     }
-     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/accounts')) {
+     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock')) {
       setOpenConsignmentMenu(true);
      }
      if (pathname.startsWith('/company/master')) {
@@ -252,9 +252,6 @@ export function AppSidebar() {
                 <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/accounts" size="sm" isActive={pathname.startsWith('/company/accounts')} tooltip="Accounts"><Wallet />Accounts</SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Bills"><FileText />Bills</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
@@ -263,6 +260,17 @@ export function AppSidebar() {
             </div>
           </CollapsibleContent>
         </Collapsible>
+        
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            href="/company/accounts"
+            tooltip="Accounts"
+            isActive={pathname.startsWith('/company/accounts')}
+          >
+            <Wallet />
+            <span>Accounts</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
 
         <Collapsible open={openMasterMenu} onOpenChange={setOpenMasterMenu}>
           <CollapsibleTrigger asChild>
