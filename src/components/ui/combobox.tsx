@@ -42,50 +42,28 @@ export function Combobox({
     onAdd
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  const popoverRef = React.useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find(option => option.value === value);
-
-  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-    // Check if the new focused element is outside the popover and its trigger
-    if (
-      popoverRef.current &&
-      !popoverRef.current.contains(event.relatedTarget as Node) &&
-      triggerRef.current !== event.relatedTarget
-    ) {
-      setOpen(false);
-    }
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          ref={triggerRef}
           variant="outline"
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
-          onFocus={() => setOpen(true)}
-          onBlur={(e) => {
-            if (!popoverRef.current?.contains(e.relatedTarget as Node)) {
-              setOpen(false);
-            }
-          }}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        ref={popoverRef}
-        onBlur={handleBlur}
         className="w-[var(--radix-popover-trigger-width)] p-0"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command>
-          <CommandInput placeholder={searchPlaceholder} autoFocus />
+          <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>
                 <div className="py-4 text-center text-sm">
