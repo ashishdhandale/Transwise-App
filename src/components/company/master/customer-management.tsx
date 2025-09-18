@@ -51,9 +51,9 @@ export function CustomerManagement() {
   const filteredCustomers = useMemo(() => {
     return customers.filter(customer => 
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.gstin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.mobile.includes(searchTerm) ||
-        customer.email.toLowerCase().includes(searchTerm)
+        (customer.gstin && customer.gstin.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (customer.mobile && customer.mobile.includes(searchTerm)) ||
+        (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [customers, searchTerm]);
 
