@@ -102,13 +102,16 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
             </div>
             <div className="grid grid-cols-[auto_1fr_100px] items-center gap-2">
                 <Label className="text-sm text-left col-start-1">GST</Label>
-                <Input 
-                    type="number" 
-                    value={gstValue} 
-                    onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} 
-                    className="h-7 text-sm" 
-                    disabled={!isGstApplicable}
-                />
+                <div className="relative">
+                    <Input 
+                        type="number" 
+                        value={gstValue} 
+                        onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} 
+                        className="h-7 text-sm pr-6" 
+                        disabled={!isGstApplicable}
+                    />
+                    <span className="absolute inset-y-0 right-2 flex items-center text-sm text-muted-foreground">%</span>
+                </div>
                 <Input 
                     type="number" 
                     value={gstAmount.toFixed(2)} 
