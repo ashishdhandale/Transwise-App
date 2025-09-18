@@ -140,7 +140,6 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
             setShippingAddress(receiver.address);
         } else if (!isSameAsReceiver) {
             // When unchecked, don't clear the address, just make it editable.
-            // The value is already in the state.
         } else {
             setShippingAddress('');
         }
@@ -162,13 +161,13 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
             <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} selectedParty={sender} />
             <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} selectedParty={receiver} />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end p-3">
                  <div className="space-y-1">
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1 h-5">
                         <Label className="font-semibold">Shipping Address</Label>
                          <div className="flex items-center space-x-2">
                             <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} />
-                            <Label htmlFor="sameAsReceiver" className="text-xs font-normal">Same as Receiver</Label>
+                            <Label htmlFor="sameAsReceiver" className="text-xs font-normal cursor-pointer">Same as Receiver</Label>
                         </div>
                     </div>
                     <Textarea 
@@ -177,11 +176,11 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                         value={shippingAddress} 
                         onChange={(e) => setShippingAddress(e.target.value)}
                         readOnly={isSameAsReceiver}
-                        className="min-h-[38px]" 
+                        className="min-h-[40px]" 
                     />
                 </div>
                  <div className="space-y-1">
-                    <Label className="font-semibold">Bill To</Label>
+                    <Label className="font-semibold mb-1 block h-5">Bill To</Label>
                     <Combobox
                         options={billToOptions}
                         value={billTo}
@@ -191,7 +190,7 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                     />
                 </div>
                  <div className="space-y-1">
-                    <Label className="font-semibold">Tax Paid By</Label>
+                    <Label className="font-semibold mb-1 block h-5">Tax Paid By</Label>
                     <Combobox
                         options={taxPaidByOptions}
                         value={taxPaidBy}
