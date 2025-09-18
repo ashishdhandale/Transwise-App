@@ -82,12 +82,9 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
                   onSelect={(currentValue) => {
-                    // Always call onChange with the selected value.
-                    // Let the parent component decide what to do.
-                    onChange(currentValue);
-                    setOpen(false);
+                    onChange(currentValue === value ? "" : currentValue)
+                    setOpen(false)
                   }}
                 >
                   <Check
