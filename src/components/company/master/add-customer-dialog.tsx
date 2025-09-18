@@ -66,8 +66,8 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
 
 
     const handleSave = () => {
-        if (!name.trim() || !mobile.trim() || !email.trim()) {
-            toast({ title: 'Error', description: 'Name, Mobile, and Email are required.', variant: 'destructive' });
+        if (!name.trim() || !address.trim() || !mobile.trim()) {
+            toast({ title: 'Error', description: 'Customer Name, Address, and Mobile Number are required.', variant: 'destructive' });
             return;
         }
 
