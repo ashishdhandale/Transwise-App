@@ -315,7 +315,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     };
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-4">
         <h1 className="text-2xl font-bold text-primary">{isEditMode ? `Edit Booking: ${currentGrNumber}` : 'Create New Booking'}</h1>
         <Card className="border-2 border-green-200">
             <CardContent className="p-4 space-y-4">
@@ -340,9 +340,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 />
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                    <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
+                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
                     <DeliveryInstructionsSection />
+                    <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
                 </div>
                 
                 <div className="space-y-4">
@@ -392,5 +392,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
+
+    
 
     
