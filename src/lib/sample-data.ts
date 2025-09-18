@@ -10,6 +10,9 @@ export const initialCustomers: Customer[] = [
     { id: 1, name: 'NOVA INDUSTERIES', gstin: '27AAFCN0123A1Z5', address: '123, Industrial Area, Ahmedabad', mobile: '9876543210', email: 'contact@nova.com', type: 'Company'},
     { id: 2, name: 'MONIKA SALES', gstin: '22AAAAA0000A1Z5', address: '456, Trade Center, Mumbai', mobile: '9876543211', email: 'sales@monika.com', type: 'Individual' },
     { id: 3, name: 'PARTY NAME1', gstin: '24ABCDE1234F1Z5', address: '789, Business Park, Pune', mobile: '9876543212', email: 'party1@example.com', type: 'Company' },
+    { id: 4, name: 'John Doe', gstin: '', address: '111 Oak Avenue, Delhi', mobile: '9988776655', email: 'john.doe@email.com', type: 'Individual'},
+    { id: 5, name: 'Jane Smith', gstin: '29AABBC1234D1Z5', address: '222 Pine Street, Bangalore', mobile: '9988776644', email: 'jane.smith@email.com', type: 'Company' },
+    { id: 6, name: 'Robert Brown', gstin: '', address: '333 Maple Drive, Kolkata', mobile: '9988776633', email: 'robert.brown@email.com', type: 'Individual' }
 ];
 
 
