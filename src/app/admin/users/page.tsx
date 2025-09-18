@@ -11,7 +11,7 @@ function UserManagementPage() {
     <SidebarProvider>
       <DashboardLayout>
         <main className="flex-1 p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
+            <div>
                  <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">
                     User Management
                 </h1>

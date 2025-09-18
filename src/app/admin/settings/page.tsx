@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense } from 'react';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 function SettingsPage() {
   return (
     <main className="flex-1 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">
           Settings
         </h1>
