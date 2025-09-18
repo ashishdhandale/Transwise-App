@@ -32,7 +32,8 @@ import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { FtlDetailsSection } from './ftl-details-section';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
+import { FtlChallan } from '../challan-tracking/ftl-challan';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -164,6 +165,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState<Booking | null>(null);
+    const [generatedChallan, setGeneratedChallan] = useState<Challan | null>(null);
     const receiptRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
 
@@ -292,7 +294,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         } else {
             setDeliveryAt('Godown Deliv');
         }
-    }, [additionalCharges]);
+    }, [additionalCharges, setDeliveryAt]);
 
 
     const basicFreight = useMemo(() => {
@@ -371,6 +373,64 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 saveBookings(updatedBookings);
                 addHistoryLog(currentGrNumber, 'Booking Created', 'Admin');
                 toast({ title: 'Booking Saved', description: `Successfully saved GR Number: ${currentGrNumber}` });
+
+                // If FTL, generate and save challan
+                if (newBooking.loadType === 'FTL' && newBooking.ftlDetails) {
+                    const allChallans = getChallanData();
+                    const newChallanId = `CHLN${String(allChallans.length + 1).padStart(3, '0')}`;
+                    const challan: Challan = {
+                        challanId: newChallanId,
+                        dispatchDate: format(new Date(newBooking.bookingDate), 'yyyy-MM-dd'),
+                        dispatchToParty: newBooking.toCity,
+                        vehicleNo: newBooking.ftlDetails.vehicleNo,
+                        driverName: newBooking.ftlDetails.driverName,
+                        fromStation: newBooking.fromCity,
+                        toStation: newBooking.toCity,
+                        senderId: newBooking.sender,
+                        inwardId: '',
+                        inwardDate: '',
+                        receivedFromParty: '',
+                        challanType: 'Dispatch',
+                        vehicleHireFreight: newBooking.ftlDetails.truckFreight,
+                        advance: newBooking.ftlDetails.advance,
+                        balance: newBooking.ftlDetails.truckFreight - newBooking.ftlDetails.advance,
+                        totalLr: 1,
+                        totalPackages: newBooking.qty,
+                        totalItems: newBooking.itemRows.length,
+                        totalActualWeight: newBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                        totalChargeWeight: newBooking.chgWt,
+                        summary: { // Simplified summary, adjust as needed
+                            grandTotal: newBooking.totalAmount,
+                            totalTopayAmount: newBooking.lrType === 'TOPAY' ? newBooking.totalAmount : 0,
+                            commission: newBooking.ftlDetails.commission,
+                            labour: 0,
+                            crossing: 0,
+                            carting: 0,
+                            balanceTruckHire: newBooking.ftlDetails.truckFreight - newBooking.ftlDetails.advance,
+                            debitCreditAmount: 0
+                        }
+                    };
+                    saveChallanData([...allChallans, challan]);
+
+                    const lrDetail: LrDetail = {
+                        lrNo: newBooking.lrNo,
+                        lrType: newBooking.lrType,
+                        sender: newBooking.sender,
+                        receiver: newBooking.receiver,
+                        from: newBooking.fromCity,
+                        to: newBooking.toCity,
+                        bookingDate: format(new Date(newBooking.bookingDate), 'yyyy-MM-dd'),
+                        itemDescription: newBooking.itemDescription,
+                        quantity: newBooking.qty,
+                        actualWeight: newBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                        chargeWeight: newBooking.chgWt,
+                        grandTotal: newBooking.totalAmount
+                    };
+                    const allLrDetails = getLrDetailsData();
+                    saveLrDetailsData([...allLrDetails, lrDetail]);
+                    
+                    setGeneratedChallan(challan);
+                }
                 
                 setReceiptData(newBooking);
                 setShowReceipt(true);
@@ -392,7 +452,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             scale: 2,
             useCORS: true,
             logging: true,
-            scrollY: -window.scrollY
+            scrollY: -window.scrollY,
+            windowWidth: input.scrollWidth,
+            windowHeight: input.scrollHeight
         }).then(canvas => {
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({
@@ -403,21 +465,25 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const ratio = canvasWidth / canvasHeight;
-            let imgWidth = pdfWidth;
-            let imgHeight = imgWidth / ratio;
-             if (imgHeight > pdfHeight) {
-                imgHeight = pdfHeight;
-                imgWidth = imgHeight * ratio;
+            
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgWidth = imgProps.width;
+            const imgHeight = imgProps.height;
+
+            const ratio = imgWidth / imgHeight;
+            let finalImgWidth = pdfWidth;
+            let finalImgHeight = pdfWidth / ratio;
+            
+            if (finalImgHeight > pdfHeight) {
+                finalImgHeight = pdfHeight;
+                finalImgWidth = finalImgHeight * ratio;
             }
+            
+            const x = (pdfWidth - finalImgWidth) / 2;
+            let y = 0;
 
-            const x = (pdfWidth - imgWidth) / 2;
-            const y = 0;
-
-            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-            pdf.save(`receipt-${receiptData?.lrNo || 'download'}.pdf`);
+            pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
+            pdf.save(`docs-${receiptData?.lrNo || 'download'}.pdf`);
         });
 
         setIsDownloading(false);
@@ -487,6 +553,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         isEditMode={isEditMode} 
                         onClose={onClose} 
                         onReset={handleReset}
+                        isSubmitting={isSubmitting}
                     />
                 </div>
             </CardContent>
@@ -501,10 +568,10 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             }}>
                 <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                     <DialogHeader>
-                        <DialogTitle>Receipt Preview</DialogTitle>
+                        <DialogTitle>Documents Preview</DialogTitle>
                     </DialogHeader>
                     <div className="flex-grow overflow-auto p-4 bg-gray-200">
-                       <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '216mm', minHeight: '356mm', padding: '10mm'}}>
+                       <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '216mm'}}>
                             <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Receiver" />
                             <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
                             <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Sender" />
@@ -512,6 +579,12 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                             <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Driver" />
                             <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
                             <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Office" />
+                            {generatedChallan && (
+                                <>
+                                    <div className="border-t-2 border-dashed border-gray-400 my-4" style={{pageBreakBefore: 'always'}}></div>
+                                    <FtlChallan challan={generatedChallan} booking={receiptData} profile={companyProfile} />
+                                </>
+                            )}
                        </div>
                     </div>
                     <DialogFooter>

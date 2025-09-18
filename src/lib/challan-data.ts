@@ -34,7 +34,7 @@ export interface Challan {
 
 export interface LrDetail {
   lrNo: string;
-  lrType: 'TBB' | 'Topay' | 'PAID';
+  lrType: 'FOC' | 'PAID' | 'TOPAY' | 'TBB';
   sender: string;
   receiver: string;
   from: string;

@@ -1,9 +1,11 @@
 
+
 'use client';
 
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { format, parseISO } from 'date-fns';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import { Separator } from '@/components/ui/separator';
 
 interface BookingReceiptProps {
     booking: Booking;
@@ -11,10 +13,10 @@ interface BookingReceiptProps {
     copyType: 'Receiver' | 'Sender' | 'Driver' | 'Office';
 }
 
-const DetailItem = ({ label, value }: { label: string; value: string | number | undefined }) => (
+const DetailItem = ({ label, value, isBold = false }: { label: string; value: string | number | undefined, isBold?: boolean }) => (
     <div className="flex">
         <p className="w-28 font-semibold">{label}</p>
-        <p className="flex-1">: {value}</p>
+        <p className={`flex-1 ${isBold ? 'font-bold' : ''}`}>: {value}</p>
     </div>
 );
 
@@ -22,10 +24,13 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 
     const validItemRows = booking.itemRows.filter(item => (item.description || item.itemName) && item.qty && item.actWt && item.chgWt);
     const subTotal = validItemRows.reduce((s, i) => s + Number(i.lumpsum), 0);
-    const otherCharges = booking.totalAmount - subTotal;
+    const otherChargesTotal = Object.values(booking.additionalCharges || {}).reduce((sum, charge) => sum + charge, 0);
+    const gstAmount = booking.totalAmount - (subTotal + otherChargesTotal);
+
+    const isFtl = booking.loadType === 'FTL';
 
     return (
-        <div className="p-4 font-mono text-xs text-black">
+        <div className="p-4 font-mono text-xs text-black bg-white">
             <header className="grid grid-cols-3 gap-4 border-b-2 border-black pb-2">
                 <div className="col-span-2">
                     <h1 className="text-xl font-bold">{companyProfile.companyName || 'TRANSWISE LOGISTICS'}</h1>
@@ -41,8 +46,8 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 
             <section className="grid grid-cols-2 gap-4 mt-2 border-b-2 border-black pb-2">
                 <div>
-                    <DetailItem label="GR No" value={booking.lrNo} />
-                    <DetailItem label="GR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} />
+                    <DetailItem label="GR No" value={booking.lrNo} isBold />
+                    <DetailItem label="GR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
                 </div>
                 <div>
                      <DetailItem label="From" value={booking.fromCity} />
@@ -62,6 +67,20 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     {/* Add address from customer master if available */}
                 </div>
             </section>
+            
+            {isFtl && booking.ftlDetails && (
+                 <section className="mt-2 border-b-2 border-black pb-2 text-[11px]">
+                     <h3 className="font-bold underline text-center mb-1">VEHICLE & FREIGHT DETAILS</h3>
+                    <div className="grid grid-cols-3 gap-x-4">
+                        <p><span className="font-semibold">Vehicle No:</span> {booking.ftlDetails.vehicleNo}</p>
+                        <p><span className="font-semibold">Driver:</span> {booking.ftlDetails.driverName}</p>
+                        <p><span className="font-semibold">Supplier:</span> {booking.ftlDetails.lorrySupplier}</p>
+                        <p><span className="font-semibold">Truck Freight:</span> {booking.ftlDetails.truckFreight.toFixed(2)}</p>
+                        <p><span className="font-semibold">Advance:</span> {booking.ftlDetails.advance.toFixed(2)}</p>
+                        <p><span className="font-semibold">Balance:</span> {(booking.ftlDetails.truckFreight - booking.ftlDetails.advance).toFixed(2)}</p>
+                    </div>
+                 </section>
+            )}
             
             <section className="mt-2">
                 <table className="w-full border-collapse border border-black">
@@ -83,7 +102,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                                 <td className="border border-black p-1 text-center">{item.qty}</td>
                                 <td className="border border-black p-1 text-right">{item.actWt}</td>
                                 <td className="border border-black p-1 text-right">{item.chgWt}</td>
-                                <td className="border border-black p-1 text-right">{item.lumpsum}</td>
+                                <td className="border border-black p-1 text-right">{Number(item.lumpsum).toFixed(2)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -91,8 +110,8 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <tr className="font-bold">
                             <td className="border border-black p-1 text-right" colSpan={2}>TOTAL</td>
                             <td className="border border-black p-1 text-center">{booking.qty}</td>
-                            <td className="border border-black p-1 text-right">{validItemRows.reduce((s, i) => s + Number(i.actWt), 0)}</td>
-                            <td className="border border-black p-1 text-right">{booking.chgWt}</td>
+                            <td className="border border-black p-1 text-right">{validItemRows.reduce((s, i) => s + Number(i.actWt), 0).toFixed(2)}</td>
+                            <td className="border border-black p-1 text-right">{booking.chgWt.toFixed(2)}</td>
                             <td className="border border-black p-1 text-right">{subTotal.toFixed(2)}</td>
                         </tr>
                     </tfoot>
@@ -109,15 +128,27 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     </ol>
                 </div>
                  <div className="border border-black p-1">
-                    <div className="grid grid-cols-2 gap-x-2">
+                    <div className="grid grid-cols-2 gap-x-2 text-[11px]">
                         <p className="font-semibold">Sub Total:</p>
                         <p className="text-right">{subTotal.toFixed(2)}</p>
                         
-                        <p>Other Charges:</p>
-                        <p className="text-right">{otherCharges.toFixed(2)}</p>
+                        {Object.entries(booking.additionalCharges || {}).map(([key, value]) => (
+                             value > 0 && <React.Fragment key={key}>
+                                <p>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</p>
+                                <p className="text-right">{value.toFixed(2)}</p>
+                            </React.Fragment>
+                        ))}
+                        
+                        {gstAmount > 0 && (
+                            <>
+                                <p>GST:</p>
+                                <p className="text-right">{gstAmount.toFixed(2)}</p>
+                            </>
+                        )}
+
 
                         <p className="font-bold border-t border-black mt-1 pt-1">GRAND TOTAL:</p>
-                        <p className="font-bold text-right border-t border-black mt-1 pt-1">
+                        <p className="font-bold text-right border-t border-black mt-1 pt-1 text-sm">
                             {new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency }).format(booking.totalAmount)}
                         </p>
                     </div>
