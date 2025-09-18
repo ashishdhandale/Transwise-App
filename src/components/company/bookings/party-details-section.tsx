@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Customer, CustomerType } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 
@@ -207,13 +208,19 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                     />
                 </div>
                  <div className="space-y-1">
-                    <Label className="font-semibold mb-1 block">Tax Paid By</Label>
-                    <Combobox
-                        options={taxPaidByOptions}
-                        value={taxPaidBy}
-                        onChange={onTaxPaidByChange}
-                        placeholder="Select who pays tax..."
-                    />
+                    <Label htmlFor="tax-paid-by" className="font-semibold mb-1 block">Tax Paid By</Label>
+                     <Select onValueChange={onTaxPaidByChange} value={taxPaidBy}>
+                        <SelectTrigger id="tax-paid-by">
+                            <SelectValue placeholder="Select who pays tax..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {taxPaidByOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
         </div>
