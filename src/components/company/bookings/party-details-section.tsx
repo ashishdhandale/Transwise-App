@@ -198,14 +198,19 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                     />
                 </div>
                  <div className="space-y-1">
-                    <Label className="font-semibold mb-1 block">Bill To</Label>
-                    <Combobox
-                        options={billToOptions}
-                        value={billTo}
-                        onChange={(val) => setBillTo(val)}
-                        placeholder="Select party for billing..."
-                        notFoundMessage="No parties selected."
-                    />
+                    <Label htmlFor="bill-to" className="font-semibold mb-1 block">Bill To</Label>
+                    <Select onValueChange={setBillTo} value={billTo}>
+                        <SelectTrigger id="bill-to">
+                            <SelectValue placeholder="Select party for billing..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {billToOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                  <div className="space-y-1">
                     <Label htmlFor="tax-paid-by" className="font-semibold mb-1 block">Tax Paid By</Label>
