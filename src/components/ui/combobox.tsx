@@ -48,8 +48,7 @@ export function Combobox({
 
   const filteredOptions = React.useMemo(() => {
     if (!search) {
-      // Show a limited number of initial options or nothing until user types
-      return options.slice(0, 200); 
+      return []; 
     }
     return options.filter(option =>
       option.label.toLowerCase().includes(search.toLowerCase())
@@ -78,6 +77,7 @@ export function Combobox({
             placeholder={searchPlaceholder}
             value={search}
             onValueChange={setSearch}
+            autoFocus
           />
           <CommandList>
             <CommandEmpty>
@@ -97,8 +97,11 @@ export function Combobox({
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
+                    const selected = options.find(o => o.value.toLowerCase() === currentValue.toLowerCase());
+                    if (selected) {
+                        onChange(selected.value === value ? "" : selected.value);
+                    }
+                    setOpen(false);
                   }}
                 >
                   <Check
