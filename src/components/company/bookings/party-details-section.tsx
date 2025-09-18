@@ -18,19 +18,53 @@ interface PartyRowProps {
     customers: Customer[];
     onPartyAdded: () => void;
     onPartyChange: (party: Customer | null) => void;
-    selectedParty: Customer | null;
+    initialParty: Customer | null;
 }
 
-const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, selectedParty }: PartyRowProps) => {
+const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty }: PartyRowProps) => {
     const { toast } = useToast();
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
+    const [partyDetails, setPartyDetails] = useState<Customer | null>(initialParty);
+
+    useEffect(() => {
+        setPartyDetails(initialParty);
+    }, [initialParty]);
     
+    useEffect(() => {
+        onPartyChange(partyDetails);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [partyDetails]);
+
     const partyOptions = customers.map(c => ({ label: c.name, value: c.name }));
 
     const handleSelectParty = (value: string) => {
-        const party = customers.find(p => p.name.toLowerCase() === value.toLowerCase());
-        onPartyChange(party || { name: value, id: 0, gstin: '', address: '', mobile: '', email: '', type: 'Company' });
+        const existingParty = customers.find(p => p.name.toLowerCase() === value.toLowerCase());
+        if (existingParty) {
+            setPartyDetails(existingParty);
+        } else {
+            // It's a new name, keep existing details other than name
+            setPartyDetails(prev => ({
+                id: prev?.id || 0, // Keep id if it exists, otherwise 0
+                name: value,
+                gstin: '',
+                address: '',
+                mobile: '',
+                email: '',
+                type: 'Company',
+            }));
+        }
     };
+    
+    const handleDetailChange = (field: keyof Customer, value: string) => {
+        setPartyDetails(prev => {
+            const newDetails: Customer = prev ? { ...prev } : {
+                id: 0, name: '', gstin: '', address: '', mobile: '', email: '', type: 'Company'
+            };
+            (newDetails as any)[field] = value;
+            return newDetails;
+        });
+    };
+
 
     const handleSaveCustomer = (customerData: Omit<Customer, 'id'>) => {
         if (!customerData.name.trim() || !customerData.address.trim() || !customerData.mobile.trim()) {
@@ -69,26 +103,40 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, selectedParty 
                     <Label className="font-semibold text-primary">{side} Name*</Label>
                     <Combobox
                         options={partyOptions}
-                        value={selectedParty?.name || ''}
+                        value={partyDetails?.name || ''}
                         onChange={handleSelectParty}
-                        placeholder={`Select ${side}...`}
+                        placeholder={`Select or type ${side}...`}
                         searchPlaceholder="Search by name..."
-                        notFoundMessage="No party found."
-                        addMessage="Add New Party"
+                        notFoundMessage="No party found. You can type a new name."
+                        addMessage="Add to Master List"
                         onAdd={() => setIsAddCustomerOpen(true)}
                     />
                 </div>
                  <div className="space-y-1">
                     <Label>GST No.</Label>
-                    <Input placeholder="GST Number" value={selectedParty?.gstin || ''} readOnly />
+                    <Input 
+                        placeholder="GST Number" 
+                        value={partyDetails?.gstin || ''}
+                        onChange={(e) => handleDetailChange('gstin', e.target.value)}
+                    />
                 </div>
                 <div className="space-y-1">
                     <Label>Address</Label>
-                    <Textarea placeholder="Party Address" rows={1} value={selectedParty?.address || ''} readOnly className="min-h-[38px]" />
+                    <Textarea 
+                        placeholder="Party Address" 
+                        rows={1} 
+                        value={partyDetails?.address || ''}
+                        onChange={(e) => handleDetailChange('address', e.target.value)}
+                        className="min-h-[38px]" 
+                    />
                 </div>
                 <div className="space-y-1">
                     <Label>Mobile No.</Label>
-                    <Input placeholder="10 Digits Only" value={selectedParty?.mobile || ''} readOnly />
+                    <Input 
+                        placeholder="10 Digits Only" 
+                        value={partyDetails?.mobile || ''}
+                        onChange={(e) => handleDetailChange('mobile', e.target.value)}
+                    />
                 </div>
             </div>
             <AddCustomerDialog
@@ -147,8 +195,8 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     }, [receiver, isSameAsReceiver]);
 
     const billToOptions = [
-        ... (sender ? [{ label: sender.name, value: sender.name }] : []),
-        ... (receiver && receiver.name !== sender?.name ? [{ label: receiver.name, value: receiver.name }] : []),
+        ... (sender?.name ? [{ label: sender.name, value: sender.name }] : []),
+        ... (receiver?.name && receiver.name !== sender?.name ? [{ label: receiver.name, value: receiver.name }] : []),
     ];
     
     const taxPaidByOptions = [
@@ -160,8 +208,8 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
 
     return (
         <div className="border rounded-md">
-            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} selectedParty={sender} />
-            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} selectedParty={receiver} />
+            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} />
+            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} />
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
                  <div className="space-y-1">
