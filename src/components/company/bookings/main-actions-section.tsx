@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Save, Ban, Calculator, RefreshCw, X, FileX } from 'lucide-react';
+import { Save, Calculator, RefreshCw, X, FileX, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { CalculatorDialog } from './calculator-dialog';
 import { useRouter } from 'next/navigation';
@@ -11,9 +12,10 @@ interface MainActionsSectionProps {
     onSave: () => void;
     isEditMode: boolean;
     onClose?: () => void;
+    onReset?: () => void;
 }
 
-export function MainActionsSection({ onSave, isEditMode, onClose }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, isEditMode, onClose, onReset }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
@@ -34,10 +36,16 @@ export function MainActionsSection({ onSave, isEditMode, onClose }: MainActionsS
                     Exit Without Saving
                 </Button>
             ) : (
-                 <Button variant="destructive" type="button" onClick={handleExit}>
-                    <FileX className="mr-2 h-4 w-4" />
-                    Exit Without Saving
-                </Button>
+                <>
+                    <Button variant="outline" type="button" onClick={onReset}>
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Reset Form
+                    </Button>
+                    <Button variant="destructive" type="button" onClick={handleExit}>
+                        <FileX className="mr-2 h-4 w-4" />
+                        Exit Without Saving
+                    </Button>
+                </>
             )}
 
             <Button variant="outline" onClick={() => setIsCalculatorOpen(true)} type="button">

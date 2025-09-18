@@ -174,70 +174,87 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         return `${prefix}${String(newSequence).padStart(2, '0')}`;
     };
 
-    useEffect(() => {
-        if (!isEditMode) {
-            // Set date only on client to avoid hydration errors
-            setBookingDate(new Date());
-        }
-    }, [isEditMode]);
+    const loadInitialData = useCallback(async () => {
+        try {
+            const profile = await getCompanyProfile();
+            setCompanyProfile(profile);
 
+            const parsedBookings = getBookings();
+            setAllBookings(parsedBookings);
+            
+            let keyCounter = 1;
 
-    useEffect(() => {
-        async function loadInitialData() {
-            try {
-                const profile = await getCompanyProfile();
-                setCompanyProfile(profile);
+            if (isEditMode && bookingId) {
+                const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
+                if (bookingToEdit) {
+                    const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+                    
+                    const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.sender.toLowerCase()) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
+                    const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.receiver.toLowerCase()) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
 
-                const parsedBookings = getBookings();
-                setAllBookings(parsedBookings);
-                
-                // Initialize a counter for unique keys
-                let keyCounter = 1;
-
-                if (isEditMode) {
-                    const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
-                    if (bookingToEdit) {
-                        const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
-                        
-                        const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.sender.toLowerCase()) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
-                        const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.receiver.toLowerCase()) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
-
-                        setCurrentGrNumber(bookingToEdit.lrNo);
-                        setBookingDate(new Date(bookingToEdit.bookingDate));
-                        setBookingType(bookingToEdit.lrType);
-                        setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
-                        setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
-                        setSender(senderProfile);
-                        setReceiver(receiverProfile);
-                        // Ensure item rows have unique IDs
-                        const itemRowsWithIds = bookingToEdit.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
-                        setItemRows(itemRowsWithIds);
-                        
-                        setGrandTotal(bookingToEdit.totalAmount);
-                        setAdditionalCharges(bookingToEdit.additionalCharges || {});
-                        setInitialChargesFromBooking(bookingToEdit.additionalCharges || {});
-                        setTaxPaidBy(bookingToEdit.taxPaidBy || 'Not Applicable');
-
-                    } else {
-                         toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
-                    }
+                    setCurrentGrNumber(bookingToEdit.lrNo);
+                    setBookingDate(new Date(bookingToEdit.bookingDate));
+                    setBookingType(bookingToEdit.lrType);
+                    setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
+                    setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
+                    setSender(senderProfile);
+                    setReceiver(receiverProfile);
+                    const itemRowsWithIds = bookingToEdit.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
+                    setItemRows(itemRowsWithIds);
+                    
+                    setGrandTotal(bookingToEdit.totalAmount);
+                    setAdditionalCharges(bookingToEdit.additionalCharges || {});
+                    setInitialChargesFromBooking(bookingToEdit.additionalCharges || {});
+                    setTaxPaidBy(bookingToEdit.taxPaidBy || 'Not Applicable');
 
                 } else {
-                    let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
-                    setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
-                    setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
+                     toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                 }
 
-            } catch (error) {
-                console.error("Failed to process bookings from localStorage or fetch profile", error);
-                toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
+            } else {
+                let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
+                setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
+                setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
+                setBookingDate(new Date());
             }
+
+        } catch (error) {
+            console.error("Failed to process bookings from localStorage or fetch profile", error);
+            toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-        
+    }, [isEditMode, bookingId, toast]);
+
+    useEffect(() => {
         loadInitialData();
-    // We only want this to run once on mount, so we pass an empty dependency array.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [bookingId, isEditMode, toast]);
+    }, [loadInitialData]);
+
+    const handleReset = () => {
+        const profile = companyProfile;
+        const parsedBookings = getBookings();
+        let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
+        setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
+        
+        let keyCounter = 1;
+        setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
+        setBookingType('TOPAY');
+        setFromStation(null);
+        setToStation(null);
+        setSender(null);
+        setReceiver(null);
+        setBookingDate(new Date());
+        setGrandTotal(0);
+        setTaxPaidBy('Not Applicable');
+        setAdditionalCharges({});
+        setInitialChargesFromBooking(undefined);
+        setDeliveryAt('Godown Deliv');
+        setErrors({});
+
+        toast({
+            title: "Form Reset",
+            description: "All fields have been cleared.",
+        });
+    };
+
 
     useEffect(() => {
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
@@ -270,7 +287,6 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             return;
         }
         
-        // Item row validation
         const validRows = itemRows.filter(row => !isRowEmpty(row));
         if (validRows.some(isRowPartiallyFilled)) {
              toast({ title: 'Incomplete Item Details', description: 'Please fill all required fields (*) for each item row, or clear the row.', variant: 'destructive' });
@@ -349,7 +365,6 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             scrollY: -window.scrollY
         }).then(canvas => {
             const imgData = canvas.toDataURL('image/png');
-            // A4 size in mm: 210 x 297. We use this ratio for Legal size (216 x 356 mm)
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
@@ -431,7 +446,12 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         </p>
                     </div>
                     <Separator />
-                    <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} onClose={onClose} />
+                    <MainActionsSection 
+                        onSave={handleSaveOrUpdate} 
+                        isEditMode={isEditMode} 
+                        onClose={onClose} 
+                        onReset={handleReset}
+                    />
                 </div>
             </CardContent>
         </Card>
@@ -439,7 +459,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         {receiptData && companyProfile && (
             <Dialog open={showReceipt} onOpenChange={(isOpen) => {
                  if (!isOpen) {
-                    window.location.reload(); // Reset form when closing dialog
+                    window.location.reload(); 
                  }
                  setShowReceipt(isOpen);
             }}>
