@@ -20,7 +20,8 @@ const DetailItem = ({ label, value }: { label: string; value: string | number | 
 
 export function BookingReceipt({ booking, companyProfile, copyType }: BookingReceiptProps) {
 
-    const subTotal = booking.itemRows.reduce((s, i) => s + Number(i.lumpsum), 0);
+    const validItemRows = booking.itemRows.filter(item => (item.description || item.itemName) && item.qty && item.actWt && item.chgWt);
+    const subTotal = validItemRows.reduce((s, i) => s + Number(i.lumpsum), 0);
     const otherCharges = booking.totalAmount - subTotal;
 
     return (
@@ -75,7 +76,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         </tr>
                     </thead>
                     <tbody>
-                         {booking.itemRows.map(item => (
+                         {validItemRows.map(item => (
                             <tr key={item.id}>
                                 <td className="border border-black p-1">{item.description || item.itemName}</td>
                                 <td className="border border-black p-1">{item.invoiceNo}</td>
@@ -90,7 +91,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <tr className="font-bold">
                             <td className="border border-black p-1 text-right" colSpan={2}>TOTAL</td>
                             <td className="border border-black p-1 text-center">{booking.qty}</td>
-                            <td className="border border-black p-1 text-right">{booking.itemRows.reduce((s, i) => s + Number(i.actWt), 0)}</td>
+                            <td className="border border-black p-1 text-right">{validItemRows.reduce((s, i) => s + Number(i.actWt), 0)}</td>
                             <td className="border border-black p-1 text-right">{booking.chgWt}</td>
                             <td className="border border-black p-1 text-right">{subTotal.toFixed(2)}</td>
                         </tr>
@@ -135,3 +136,5 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
         </div>
     );
 }
+
+    

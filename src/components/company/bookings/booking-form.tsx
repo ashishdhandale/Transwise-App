@@ -115,6 +115,14 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string
     return changes.length > 0 ? changes.join('\n') : 'No changes detected.';
 }
 
+const isRowEmpty = (row: ItemRow) => {
+    return !row.description && !row.qty && !row.actWt && !row.chgWt;
+};
+
+const isRowPartiallyFilled = (row: ItemRow) => {
+    const filledFields = [row.description, row.qty, row.actWt, row.chgWt].filter(Boolean);
+    return filledFields.length > 0 && filledFields.length < 4;
+};
 
 export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormProps) {
     const isEditMode = !!bookingId;
@@ -259,6 +267,13 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             toast({ title: 'Missing Information', description: 'Please fill all required fields.', variant: 'destructive' });
             return;
         }
+        
+        // Item row validation
+        const validRows = itemRows.filter(row => !isRowEmpty(row));
+        if (validRows.some(isRowPartiallyFilled)) {
+             toast({ title: 'Incomplete Item Details', description: 'Please fill all required fields (*) for each item row, or clear the row.', variant: 'destructive' });
+             return;
+        }
 
         setIsSubmitting(true);
         await new Promise(resolve => setTimeout(resolve, 100)); // allow UI to update
@@ -271,12 +286,12 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             lrType: bookingType as Booking['lrType'],
             sender: sender!.name,
             receiver: receiver!.name,
-            itemDescription: itemRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
-            qty: itemRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
-            chgWt: itemRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
+            itemDescription: validRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
+            qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
+            chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
             totalAmount: grandTotal,
             status: 'In Stock',
-            itemRows: itemRows,
+            itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
         };
@@ -454,5 +469,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
+
+    
 
     
