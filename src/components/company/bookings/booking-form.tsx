@@ -263,6 +263,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     useEffect(() => {
         if (additionalCharges.doorDelivery && additionalCharges.doorDelivery > 0) {
             setDeliveryAt('Door Deliv');
+        } else {
+            setDeliveryAt('Godown Deliv');
         }
     }, [additionalCharges]);
 
