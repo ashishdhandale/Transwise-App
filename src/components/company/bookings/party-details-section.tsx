@@ -35,17 +35,16 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [partyDetails]);
 
-    const partyOptions = customers.map(c => ({ label: c.name, value: c.name }));
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const name = e.target.value;
+        const existingParty = customers.find(p => p.name.toLowerCase() === name.toLowerCase());
 
-    const handleSelectParty = (value: string) => {
-        const existingParty = customers.find(p => p.name.toLowerCase() === value.toLowerCase());
         if (existingParty) {
             setPartyDetails(existingParty);
         } else {
-            // It's a new name, keep existing details other than name
             setPartyDetails(prev => ({
-                id: prev?.id || 0, // Keep id if it exists, otherwise 0
-                name: value,
+                id: prev?.id || 0,
+                name: name,
                 gstin: '',
                 address: '',
                 mobile: '',
@@ -85,7 +84,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty }
             toast({ title: 'Customer Added', description: `"${customerData.name}" has been added to your master list.` });
             onPartyAdded();
             
-            handleSelectParty(newCustomer.name);
+            setPartyDetails(newCustomer);
 
             return true;
         } catch (error) {
@@ -101,15 +100,10 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty }
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr_1fr] gap-x-4 gap-y-2 items-start p-3 border-b">
                 <div className="space-y-1">
                     <Label className="font-semibold text-primary">{side} Name*</Label>
-                    <Combobox
-                        options={partyOptions}
+                    <Input 
+                        placeholder={`Enter ${side} name...`}
                         value={partyDetails?.name || ''}
-                        onChange={handleSelectParty}
-                        placeholder={`Select or type ${side}...`}
-                        searchPlaceholder="Search by name..."
-                        notFoundMessage="No party found. You can type a new name."
-                        addMessage="Add to Master List"
-                        onAdd={() => setIsAddCustomerOpen(true)}
+                        onChange={handleNameChange}
                     />
                 </div>
                  <div className="space-y-1">
