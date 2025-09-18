@@ -21,9 +21,10 @@ interface ChargesSectionProps {
     basicFreight: number;
     onGrandTotalChange: (total: number) => void;
     initialGrandTotal?: number;
+    isGstApplicable: boolean;
 }
 
-export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal }: ChargesSectionProps) {
+export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal, isGstApplicable }: ChargesSectionProps) {
     const [charges, setCharges] = useState<ChargeSetting[]>([]);
     const [gstValue, setGstValue] = useState(0);
     const [gstAmount, setGstAmount] = useState(0);
@@ -53,9 +54,9 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
     }, [basicFreight, additionalChargesTotal]);
     
     useEffect(() => {
-        const newGstAmount = total * (gstValue / 100);
+        const newGstAmount = isGstApplicable ? (total * (gstValue / 100)) : 0;
         setGstAmount(newGstAmount);
-    }, [total, gstValue]);
+    }, [total, gstValue, isGstApplicable]);
 
     const grandTotal = useMemo(() => {
         return total + gstAmount;
@@ -101,8 +102,19 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
             </div>
             <div className="grid grid-cols-[auto_1fr_100px] items-center gap-2">
                 <Label className="text-sm text-left col-start-1">GST</Label>
-                <Input type="number" value={gstValue} onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} className="h-7 text-sm" />
-                <Input type="number" value={gstAmount.toFixed(2)} className="h-7 text-sm bg-muted" readOnly />
+                <Input 
+                    type="number" 
+                    value={gstValue} 
+                    onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} 
+                    className="h-7 text-sm" 
+                    disabled={!isGstApplicable}
+                />
+                <Input 
+                    type="number" 
+                    value={gstAmount.toFixed(2)} 
+                    className="h-7 text-sm bg-muted" 
+                    readOnly 
+                />
             </div>
             <Separator />
             <div className="grid grid-cols-[1fr_100px] items-center gap-2">

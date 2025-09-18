@@ -133,6 +133,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
+    const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
+    const [isGstApplicable, setIsGstApplicable] = useState(false);
+
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState<Booking | null>(null);
     const receiptRef = useRef<HTMLDivElement>(null);
@@ -202,6 +205,10 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     // We only want this to run once on mount, so we pass an empty dependency array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bookingId, isEditMode, toast]);
+
+    useEffect(() => {
+        setIsGstApplicable(taxPaidBy !== 'Not Applicable');
+    }, [taxPaidBy]);
 
 
     const basicFreight = useMemo(() => {
@@ -337,12 +344,19 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     onReceiverChange={setReceiver}
                     sender={sender}
                     receiver={receiver}
+                    onTaxPaidByChange={setTaxPaidBy}
+                    taxPaidBy={taxPaidBy}
                 />
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
                     <DeliveryInstructionsSection />
-                    <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
+                    <ChargesSection 
+                        basicFreight={basicFreight} 
+                        onGrandTotalChange={setGrandTotal} 
+                        initialGrandTotal={isEditMode ? grandTotal : undefined}
+                        isGstApplicable={isGstApplicable}
+                    />
                 </div>
                 
                 <div className="space-y-4">

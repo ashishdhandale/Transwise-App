@@ -105,12 +105,13 @@ interface PartyDetailsSectionProps {
     onReceiverChange: (party: Customer | null) => void;
     sender: Customer | null;
     receiver: Customer | null;
+    onTaxPaidByChange: (value: string) => void;
+    taxPaidBy: string;
 }
 
-export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver }: PartyDetailsSectionProps) {
+export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy }: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
-    const [taxPaidBy, setTaxPaidBy] = useState<string>('');
     const [shippingAddress, setShippingAddress] = useState('');
     const [isSameAsReceiver, setIsSameAsReceiver] = useState(true);
 
@@ -151,6 +152,7 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     ];
     
     const taxPaidByOptions = [
+        { label: 'Not Applicable', value: 'Not Applicable' },
         { label: 'Sender', value: 'Sender' },
         { label: 'Receiver', value: 'Receiver' },
         { label: 'Transporter', value: 'Transporter' },
@@ -194,7 +196,7 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                     <Combobox
                         options={taxPaidByOptions}
                         value={taxPaidBy}
-                        onChange={(val) => setTaxPaidBy(val)}
+                        onChange={onTaxPaidByChange}
                         placeholder="Select who pays tax..."
                     />
                 </div>
