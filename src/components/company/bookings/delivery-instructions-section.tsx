@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 
 const InstructionSelect = ({ label, options, defaultValue }: { label: string, options: { value: string, label: string }[], defaultValue: string }) => (
-     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
+     <div className="grid grid-cols-[100px_1fr] items-center gap-2">
         <Label className="text-xs text-left">{label}</Label>
         <Select defaultValue={defaultValue}>
             <SelectTrigger className="h-7 text-xs">

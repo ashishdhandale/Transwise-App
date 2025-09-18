@@ -340,15 +340,19 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     receiver={receiver}
                 />
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-4">
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    <div className="lg:col-span-1">
                         <DeliveryInstructionsSection />
-                        <SummaryAndActionsSection />
                     </div>
-                    <div>
+                    <div className="lg:col-span-1">
+                         <SummaryAndActionsSection />
+                    </div>
+                    <div className="lg:col-span-1">
                         <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
                     </div>
                 </div>
+
                 <div className="text-center py-4">
                     <p className="text-xl font-bold text-green-600">
                         Booking Type: {bookingType}
