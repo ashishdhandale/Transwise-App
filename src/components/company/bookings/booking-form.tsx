@@ -125,7 +125,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const [toStation, setToStation] = useState<City | null>(null);
     const [sender, setSender] = useState<Customer | null>(null);
     const [receiver, setReceiver] = useState<Customer | null>(null);
-    const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
+    const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [currentGrNumber, setCurrentGrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
@@ -161,6 +161,13 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         
         return `${prefix}${String(newSequence).padStart(2, '0')}`;
     };
+
+    useEffect(() => {
+        if (!isEditMode) {
+            setBookingDate(new Date());
+        }
+    }, [isEditMode]);
+
 
     useEffect(() => {
         async function loadInitialData() {
@@ -417,3 +424,5 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
+
+    
