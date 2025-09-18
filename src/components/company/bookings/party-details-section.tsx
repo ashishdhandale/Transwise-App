@@ -138,7 +138,10 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     useEffect(() => {
         if (isSameAsReceiver && receiver) {
             setShippingAddress(receiver.address);
-        } else if (isSameAsReceiver) {
+        } else if (!isSameAsReceiver) {
+            // When unchecked, don't clear the address, just make it editable.
+            // The value is already in the state.
+        } else {
             setShippingAddress('');
         }
     }, [receiver, isSameAsReceiver]);
