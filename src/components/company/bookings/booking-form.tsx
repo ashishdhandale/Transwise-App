@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { BookingDetailsSection } from '@/components/company/bookings/booking-details-section';
@@ -116,7 +117,7 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string
 }
 
 const isRowEmpty = (row: ItemRow) => {
-    return !row.description && !row.qty && !row.actWt && !row.chgWt;
+    return !row.description && !row.qty && !row.actWt && !row.chgWt && !row.itemName;
 };
 
 const isRowPartiallyFilled = (row: ItemRow) => {
@@ -197,8 +198,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
                     if (bookingToEdit) {
                         const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
-                        const senderProfile = savedCustomers.find(c => c.name === bookingToEdit.sender) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
-                        const receiverProfile = savedCustomers.find(c => c.name === bookingToEdit.receiver) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
+                        
+                        const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.sender.toLowerCase()) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
+                        const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.receiver.toLowerCase()) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
 
                         setCurrentGrNumber(bookingToEdit.lrNo);
                         setBookingDate(new Date(bookingToEdit.bookingDate));
