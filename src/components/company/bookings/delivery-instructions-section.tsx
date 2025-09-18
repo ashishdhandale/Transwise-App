@@ -38,13 +38,12 @@ export function DeliveryInstructionsSection() {
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Delivery Instructions</h3>
         <div className="space-y-1.5">
             {instructions.map(inst => (
-                <div key={inst.key}>
-                    <InstructionSelect 
-                        label={inst.label} 
-                        options={inst.options} 
-                        defaultValue={inst.defaultValue} 
-                    />
-                </div>
+                <InstructionSelect 
+                    key={inst.key}
+                    label={inst.label} 
+                    options={inst.options} 
+                    defaultValue={inst.defaultValue} 
+                />
             ))}
         </div>
         <Separator className="my-2" />
