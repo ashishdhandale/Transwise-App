@@ -10,9 +10,9 @@ import { Separator } from '@/components/ui/separator';
 
 const InstructionSelect = ({ label, options, defaultValue }: { label: string, options: { value: string, label: string }[], defaultValue: string }) => (
      <div className="grid grid-cols-[100px_1fr] items-center gap-2">
-        <Label className="text-xs text-left">{label}</Label>
+        <Label className="text-sm text-left">{label}</Label>
         <Select defaultValue={defaultValue}>
-            <SelectTrigger className="h-7 text-xs">
+            <SelectTrigger className="h-7 text-sm">
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -49,8 +49,8 @@ export function DeliveryInstructionsSection() {
         </div>
         <Separator className="my-2" />
         <div className="flex-grow flex flex-col gap-1.5">
-            <Label htmlFor="deliveryNote" className="text-xs text-left font-semibold">Delivery Note</Label>
-            <Textarea id="deliveryNote" placeholder="Enter any notes for delivery..." className="flex-grow text-xs" />
+            <Label htmlFor="deliveryNote" className="text-sm text-left font-semibold">Delivery Note</Label>
+            <Textarea id="deliveryNote" placeholder="Enter any notes for delivery..." className="flex-grow text-sm min-h-[50px]" />
         </div>
     </Card>
   );

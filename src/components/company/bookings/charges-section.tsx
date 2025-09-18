@@ -12,8 +12,8 @@ const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
 const ChargeInput = ({ label, value, readOnly = false, type = 'number' }: { label: string, value: string | number, readOnly?: boolean, type?: string }) => (
     <div className="grid grid-cols-[1fr_100px] items-center gap-2">
-        <Label className="text-xs text-left whitespace-nowrap overflow-hidden text-ellipsis">{label}</Label>
-        <Input type={type} value={value} readOnly={readOnly} className="h-7 text-xs w-full" />
+        <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">{label}</Label>
+        <Input type={type} value={value} readOnly={readOnly} className="h-7 text-sm w-full" />
     </div>
 )
 
@@ -85,22 +85,24 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
 
 
   return (
-    <Card className="p-2 border-cyan-200">
+    <Card className="p-2 border-cyan-200 h-full flex flex-col">
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Additional Charges</h3>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 flex-grow">
              <ChargeInput label="Basic Freight" value={basicFreight.toFixed(2)} readOnly={true} />
             {charges.filter(c => c.isVisible).map((charge) => (
                 <ChargeInput key={charge.id} label={charge.name} value={charge.value.toString()} readOnly />
             ))}
-            <Separator />
+        </div>
+        <Separator />
+        <div className="space-y-1.5 mt-1.5">
              <div className="grid grid-cols-[1fr_100px] items-center gap-2">
-                <Label className="text-xs text-left font-bold">Total</Label>
-                <Input type="number" value={total.toFixed(2)} className="h-7 text-xs font-bold bg-muted w-full" readOnly />
+                <Label className="text-sm text-left font-bold">Total</Label>
+                <Input type="number" value={total.toFixed(2)} className="h-7 text-sm font-bold bg-muted w-full" readOnly />
             </div>
             <div className="grid grid-cols-[auto_1fr_100px] items-center gap-2">
-                <Label className="text-xs text-left col-start-1">GST</Label>
-                <Input type="number" value={gstValue} onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} className="h-7 text-xs" />
-                <Input type="number" value={gstAmount.toFixed(2)} className="h-7 text-xs bg-muted" readOnly />
+                <Label className="text-sm text-left col-start-1">GST</Label>
+                <Input type="number" value={gstValue} onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} className="h-7 text-sm" />
+                <Input type="number" value={gstAmount.toFixed(2)} className="h-7 text-sm bg-muted" readOnly />
             </div>
             <Separator />
             <div className="grid grid-cols-[1fr_100px] items-center gap-2">
