@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
 import type { Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
 
 interface CustomerSearchProps {
     customers: Customer[];
@@ -12,7 +13,19 @@ interface CustomerSearchProps {
 }
 
 export function CustomerSearch({ customers, onSelectCustomer }: CustomerSearchProps) {
+    const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
     const customerOptions = customers.map(c => ({ label: c.name, value: c.name }));
+
+    const handleSelectionChange = (value: string) => {
+        const customerName = value || null;
+        setSelectedValue(customerName ?? undefined);
+        onSelectCustomer(customerName);
+    };
+
+    const handleReset = () => {
+        setSelectedValue(undefined);
+        onSelectCustomer(null);
+    }
 
     return (
         <Card>
@@ -24,13 +37,14 @@ export function CustomerSearch({ customers, onSelectCustomer }: CustomerSearchPr
                     <div className="w-full max-w-sm">
                         <Combobox
                             options={customerOptions}
-                            onChange={(value) => onSelectCustomer(value)}
+                            value={selectedValue}
+                            onChange={handleSelectionChange}
                             placeholder="Search and select a customer..."
                             searchPlaceholder="Search customers..."
                             notFoundMessage="No customer found."
                         />
                     </div>
-                    <Button onClick={() => onSelectCustomer(null)}>Reset</Button>
+                    <Button onClick={handleReset}>Reset</Button>
                 </div>
             </CardContent>
         </Card>
