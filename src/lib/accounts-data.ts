@@ -41,11 +41,32 @@ export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
         (booking) => booking.sender === customer.name || booking.receiver === customer.name
     );
 
-    const bookingEntries: LedgerEntry[] = customerBookings.map((booking) => ({
-        date: new Date(booking.bookingDate).toLocaleDateString('en-CA'), // YYYY-MM-DD
-        particulars: `Freight - GR #${booking.lrNo}`,
-        debit: booking.totalAmount,
-    }));
+    const bookingEntries: LedgerEntry[] = [];
+    customerBookings.forEach((booking) => {
+        // Add the main freight charge
+        bookingEntries.push({
+            date: new Date(booking.bookingDate).toLocaleDateString('en-CA'), // YYYY-MM-DD
+            particulars: `Freight - GR #${booking.lrNo}`,
+            debit: booking.totalAmount,
+        });
+
+        // If tax was paid by the sender and this customer is the sender, add GST entry
+        if (booking.taxPaidBy === 'Sender' && booking.sender === customer.name) {
+             const basicFreight = booking.itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+             const additionalChargesTotal = Object.values(booking.additionalCharges || {}).reduce((sum, charge) => sum + charge, 0);
+             const subTotal = basicFreight + additionalChargesTotal;
+             const gstAmount = booking.totalAmount - subTotal;
+
+             if (gstAmount > 0) {
+                 bookingEntries.push({
+                    date: new Date(booking.bookingDate).toLocaleDateString('en-CA'), // YYYY-MM-DD
+                    particulars: `GST on GR #${booking.lrNo}`,
+                    debit: gstAmount,
+                 });
+             }
+        }
+    });
+
 
     const openingBalance = openingBalances[customer.name] ?? 0;
 

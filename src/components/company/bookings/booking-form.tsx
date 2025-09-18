@@ -189,6 +189,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         setGrandTotal(bookingToEdit.totalAmount);
                         setAdditionalCharges(bookingToEdit.additionalCharges || {});
                         setInitialChargesFromBooking(bookingToEdit.additionalCharges || {});
+                        setTaxPaidBy(bookingToEdit.taxPaidBy || 'Not Applicable');
 
                     } else {
                          toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
@@ -245,6 +246,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             status: 'In Stock',
             itemRows: itemRows,
             additionalCharges: additionalCharges,
+            taxPaidBy: taxPaidBy,
         };
 
         try {
@@ -414,7 +416,3 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     </div>
   );
 }
-
-    
-
-    
