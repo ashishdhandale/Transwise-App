@@ -30,6 +30,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
+import { SummaryAndActionsSection } from './summary-and-actions-section';
 
 const CUSTOMERS_KEY = 'transwise_customers';
 
@@ -340,12 +341,12 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 <Separator className="my-6 border-dashed" />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                    <div className="lg:col-span-2">
-                         <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} onClose={onClose} />
+                    <div className="lg:col-span-2 space-y-4">
+                        <DeliveryInstructionsSection />
+                        <SummaryAndActionsSection />
                     </div>
                     <div className="space-y-4">
                         <ChargesSection basicFreight={basicFreight} onGrandTotalChange={setGrandTotal} initialGrandTotal={isEditMode ? grandTotal : undefined} />
-                        <DeliveryInstructionsSection />
                     </div>
                 </div>
                  <div className="text-center py-4">
@@ -353,6 +354,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         Booking Type: {bookingType}
                     </p>
                 </div>
+                <Separator />
+                <MainActionsSection onSave={handleSaveOrUpdate} isEditMode={isEditMode} onClose={onClose} />
             </CardContent>
         </Card>
         
