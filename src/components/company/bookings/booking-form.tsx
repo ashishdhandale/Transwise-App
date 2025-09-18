@@ -120,7 +120,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const isEditMode = !!bookingId;
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
-    const [bookingType, setBookingType] = useState('FOC');
+    const [bookingType, setBookingType] = useState('TOPAY');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
     const [sender, setSender] = useState<Customer | null>(null);
