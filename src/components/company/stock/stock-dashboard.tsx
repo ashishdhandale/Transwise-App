@@ -45,6 +45,7 @@ export function StockDashboard() {
   useEffect(() => {
     try {
         const allBookings = getBookings();
+        // Correctly filter for items that are 'In Stock'.
         const inStockBookings = allBookings.filter(
             (booking) => booking.status === 'In Stock'
         );
