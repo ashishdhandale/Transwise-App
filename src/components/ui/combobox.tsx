@@ -61,7 +61,6 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent
         className="w-[var(--radix-popover-trigger-width)] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command>
           <CommandInput 
