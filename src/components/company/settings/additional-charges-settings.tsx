@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -34,6 +35,7 @@ const chargeSchema = z.object({
   calculationType: z.enum(['fixed', 'per_kg_actual', 'per_kg_charge', 'per_quantity']),
   value: z.coerce.number().min(0, 'Value must be a positive number.'),
   isVisible: z.boolean(),
+  isEditable: z.boolean(),
   isCustom: z.boolean(),
 });
 
@@ -47,12 +49,12 @@ export type ChargeSetting = z.infer<typeof chargeSchema>;
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
 const defaultCharges: ChargeSetting[] = [
-    { id: 'builtyCharge', name: 'Builty Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
-    { id: 'doorDelivery', name: 'Door Delivery', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
-    { id: 'collectionCharge', name: 'Collection Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
-    { id: 'loadingLabourCharge', name: 'Loading Labour Charge', calculationType: 'per_kg_actual', value: 0, isVisible: true, isCustom: false },
-    { id: 'pfCharge', name: 'P.F. Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
-    { id: 'othersCharge', name: 'Others Charge', calculationType: 'fixed', value: 0, isVisible: true, isCustom: false },
+    { id: 'builtyCharge', name: 'Builty Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
+    { id: 'doorDelivery', name: 'Door Delivery', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
+    { id: 'collectionCharge', name: 'Collection Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
+    { id: 'loadingLabourCharge', name: 'Loading Labour Charge', calculationType: 'per_kg_actual', value: 0, isVisible: true, isEditable: true, isCustom: false },
+    { id: 'pfCharge', name: 'P.F. Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
+    { id: 'othersCharge', name: 'Others Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: false, isCustom: false },
 ];
 
 
@@ -134,7 +136,7 @@ export function AdditionalChargesSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Additional Charges Preferences</CardTitle>
-        <CardDescription>Drag to reorder, toggle visibility, and set default values and calculation types for charges on the booking form.</CardDescription>
+        <CardDescription>Drag to reorder, set defaults, and control which charges are visible and editable on the booking form.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -221,6 +223,22 @@ export function AdditionalChargesSettings() {
                               </FormItem>
                           )}
                       />
+                      <FormField
+                          control={form.control}
+                          name={`charges.${index}.isEditable`}
+                          render={({ field }) => (
+                              <FormItem className="flex flex-col items-center gap-2">
+                                  <FormLabel>Editable</FormLabel>
+                                  <FormControl>
+                                      <Switch
+                                          checked={field.value}
+                                          onCheckedChange={field.onChange}
+                                          aria-label="Toggle charge edibility"
+                                      />
+                                  </FormControl>
+                              </FormItem>
+                          )}
+                      />
                       {field.isCustom && (
                         <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive">
                             <Trash2 className="h-5 w-5" />
@@ -234,7 +252,7 @@ export function AdditionalChargesSettings() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ id: `custom-${Date.now()}`, name: '', value: 0, calculationType: 'fixed', isVisible: true, isCustom: true })}
+                  onClick={() => append({ id: `custom-${Date.now()}`, name: '', value: 0, calculationType: 'fixed', isVisible: true, isEditable: true, isCustom: true })}
                   >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Custom Charge

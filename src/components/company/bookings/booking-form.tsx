@@ -135,6 +135,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
     const [isGstApplicable, setIsGstApplicable] = useState(false);
+    const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
+    const [initialChargesFromBooking, setInitialChargesFromBooking] = useState<{ [key: string]: number; } | undefined>(undefined);
 
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState<Booking | null>(null);
@@ -185,6 +187,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         setReceiver(receiverProfile);
                         setItemRows(bookingToEdit.itemRows || Array.from({ length: 2 }, (_, i) => createEmptyRow(Date.now() + i)));
                         setGrandTotal(bookingToEdit.totalAmount);
+                        setAdditionalCharges(bookingToEdit.additionalCharges || {});
+                        setInitialChargesFromBooking(bookingToEdit.additionalCharges || {});
+
                     } else {
                          toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                     }
@@ -239,6 +244,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             totalAmount: grandTotal,
             status: 'In Stock',
             itemRows: itemRows,
+            additionalCharges: additionalCharges,
         };
 
         try {
@@ -356,6 +362,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         onGrandTotalChange={setGrandTotal} 
                         initialGrandTotal={isEditMode ? grandTotal : undefined}
                         isGstApplicable={isGstApplicable}
+                        onChargesChange={setAdditionalCharges}
+                        initialCharges={initialChargesFromBooking}
                     />
                 </div>
                 

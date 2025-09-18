@@ -17,6 +17,7 @@ export interface Booking {
   totalAmount: number;
   status: 'In Stock' | 'In Transit' | 'Cancelled' | 'In HOLD' | 'Delivered';
   itemRows: ItemRow[];
+  additionalCharges?: { [key: string]: number };
 }
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
