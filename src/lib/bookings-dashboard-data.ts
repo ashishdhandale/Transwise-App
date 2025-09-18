@@ -1,5 +1,6 @@
 
 import type { ItemRow } from "@/components/company/bookings/item-details-table";
+import { initialBookings } from "./sample-data";
 
 export interface Booking {
   id: string;
@@ -14,7 +15,7 @@ export interface Booking {
   qty: number;
   chgWt: number;
   totalAmount: number;
-  status: 'In Stock' | 'In Transit' | 'Cancelled' | 'In HOLD';
+  status: 'In Stock' | 'In Transit' | 'Cancelled' | 'In HOLD' | 'Delivered';
   itemRows: ItemRow[];
 }
 
@@ -26,10 +27,15 @@ export const getBookings = (): Booking[] => {
     }
     try {
         const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
-        return savedBookings ? JSON.parse(savedBookings) : [];
+        if (savedBookings) {
+            return JSON.parse(savedBookings);
+        }
+        // If no data, initialize with sample data
+        localStorage.setItem(LOCAL_STORAGE_KEY_BOOKINGS, JSON.stringify(initialBookings));
+        return initialBookings;
     } catch (error) {
         console.error("Failed to load bookings from localStorage", error);
-        return [];
+        return initialBookings;
     }
 };
 

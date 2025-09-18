@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -25,6 +26,8 @@ import { Input } from '@/components/ui/input';
 import { newRequests as sampleNewRequests, existingUsers as sampleExistingUsers } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import type { NewRequest, ExistingUser } from '@/lib/types';
+
 
 const thClass = "bg-primary text-primary-foreground";
 const tdClass = "whitespace-nowrap";
@@ -38,33 +41,38 @@ export function UserManagementTables() {
   const [existingUsersPage, setExistingUsersPage] = useState(1);
   const [existingUsersRowsPerPage, setExistingUsersRowsPerPage] = useState(10);
   const [isClient, setIsClient] = useState(false);
+  const [newRequests, setNewRequests] = useState<NewRequest[]>([]);
+  const [existingUsers, setExistingUsers] = useState<ExistingUser[]>([]);
 
   useEffect(() => {
     setIsClient(true);
+    // Directly use imported data. It will be populated after mount.
+    setNewRequests(sampleNewRequests);
+    setExistingUsers(sampleExistingUsers);
   }, []);
 
   const filteredNewRequests = useMemo(() => {
     const lowercasedQuery = newRequestSearch.toLowerCase();
-    if (!lowercasedQuery) return sampleNewRequests;
-    return sampleNewRequests.filter(
+    if (!lowercasedQuery) return newRequests;
+    return newRequests.filter(
       (item) =>
         item.companyName.toLowerCase().includes(lowercasedQuery) ||
         item.gstNo.toLowerCase().includes(lowercasedQuery) ||
         item.transporterId.toLowerCase().includes(lowercasedQuery)
     );
-  }, [newRequestSearch]);
+  }, [newRequestSearch, newRequests]);
 
   const filteredExistingUsers = useMemo(() => {
     const lowercasedQuery = existingUserSearch.toLowerCase();
-    if (!lowercasedQuery) return sampleExistingUsers;
-    return sampleExistingUsers.filter(
+    if (!lowercasedQuery) return existingUsers;
+    return existingUsers.filter(
       (item) =>
         item.companyName.toLowerCase().includes(lowercasedQuery) ||
         item.userId.toLowerCase().includes(lowercasedQuery) ||
         item.gstNo.toLowerCase().includes(lowercasedQuery) ||
         item.transporterId.toLowerCase().includes(lowercasedQuery)
     );
-  }, [existingUserSearch]);
+  }, [existingUserSearch, existingUsers]);
 
   const newRequestsTotalPages = Math.ceil(filteredNewRequests.length / newRequestsRowsPerPage);
   const paginatedNewRequests = useMemo(() => {
