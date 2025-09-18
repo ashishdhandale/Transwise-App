@@ -87,11 +87,6 @@ export function CustomerManagement() {
   };
 
   const handleSave = (customerData: Omit<Customer, 'id'>) => {
-    if (!customerData.name.trim() || !customerData.address.trim() || !customerData.mobile.trim()) {
-        toast({ title: 'Error', description: 'Customer Name, Address, and Mobile Number are required.', variant: 'destructive' });
-        return false;
-    }
-      
     let updatedCustomers;
     if (currentCustomer) {
       updatedCustomers = customers.map(customer => (customer.id === currentCustomer.id ? { ...customer, ...customerData } : customer));
