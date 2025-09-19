@@ -21,7 +21,7 @@ interface AddItemDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onSave: (itemData: Omit<Item, 'id'>) => boolean;
-    item?: Item | null;
+    item?: Partial<Item> | null;
 }
 
 export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDialogProps) {
@@ -32,9 +32,9 @@ export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDia
 
     useEffect(() => {
         if (item) {
-            setName(item.name);
-            setHsnCode(item.hsnCode);
-            setDescription(item.description);
+            setName(item.name || '');
+            setHsnCode(item.hsnCode || '');
+            setDescription(item.description || '');
         } else {
             setName('');
             setHsnCode('');
@@ -64,7 +64,7 @@ export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDia
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{item ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+                    <DialogTitle>{item && 'id' in item ? 'Edit Item' : 'Add New Item'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">

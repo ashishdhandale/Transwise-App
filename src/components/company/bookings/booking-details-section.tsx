@@ -60,6 +60,7 @@ export function BookingDetailsSection({
 }: BookingDetailsSectionProps) {
     const [stationOptions, setStationOptions] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
+    const [initialCityData, setInitialCityData] = useState<Partial<City> | null>(null);
     const { toast } = useToast();
 
     const loadStationOptions = useCallback(() => {
@@ -141,11 +142,16 @@ export function BookingDetailsSection({
         }
     };
 
-    const handleAddCity = () => {
+    const handleAddCity = (query?: string) => {
         const source = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
         if (source === 'custom' || source === null) {
              if (source === null) {
                 localStorage.setItem(LOCAL_STORAGE_KEY_SOURCE, 'custom');
+             }
+             if (query) {
+                 setInitialCityData({ name: query });
+             } else {
+                 setInitialCityData(null);
              }
              setIsAddCityOpen(true);
         } else {
@@ -245,6 +251,7 @@ export function BookingDetailsSection({
             isOpen={isAddCityOpen}
             onOpenChange={setIsAddCityOpen}
             onSave={handleSaveCity}
+            city={initialCityData}
         />
         </>
     );

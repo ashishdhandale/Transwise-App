@@ -21,7 +21,7 @@ interface AddDriverDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onSave: (driverData: Omit<Driver, 'id'>) => boolean;
-    driver?: Driver | null;
+    driver?: Partial<Driver> | null;
 }
 
 export function AddDriverDialog({ isOpen, onOpenChange, onSave, driver }: AddDriverDialogProps) {
@@ -33,10 +33,10 @@ export function AddDriverDialog({ isOpen, onOpenChange, onSave, driver }: AddDri
 
     useEffect(() => {
         if (driver) {
-            setName(driver.name);
-            setLicenseNumber(driver.licenseNumber);
-            setMobile(driver.mobile);
-            setAddress(driver.address);
+            setName(driver.name || '');
+            setLicenseNumber(driver.licenseNumber || '');
+            setMobile(driver.mobile || '');
+            setAddress(driver.address || '');
         } else {
             setName('');
             setLicenseNumber('');
@@ -68,7 +68,7 @@ export function AddDriverDialog({ isOpen, onOpenChange, onSave, driver }: AddDri
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{driver ? 'Edit Driver' : 'Add New Driver'}</DialogTitle>
+                    <DialogTitle>{driver && 'id' in driver ? 'Edit Driver' : 'Add New Driver'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">

@@ -22,7 +22,7 @@ interface AddVendorDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onSave: (vendorData: Omit<Vendor, 'id'>) => boolean;
-    vendor?: Vendor | null;
+    vendor?: Partial<Vendor> | null;
 }
 
 const vendorTypes: VendorType[] = [
@@ -43,11 +43,11 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
 
     useEffect(() => {
         if (vendor) {
-            setName(vendor.name);
-            setType(vendor.type);
-            setAddress(vendor.address);
-            setMobile(vendor.mobile);
-            setEmail(vendor.email);
+            setName(vendor.name || '');
+            setType(vendor.type || 'Vehicle Supplier');
+            setAddress(vendor.address || '');
+            setMobile(vendor.mobile || '');
+            setEmail(vendor.email || '');
         } else {
             setName('');
             setType('Vehicle Supplier');
@@ -81,7 +81,7 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{vendor ? 'Edit Vendor' : 'Add New Vendor'}</DialogTitle>
+                    <DialogTitle>{vendor && 'id' in vendor ? 'Edit Vendor' : 'Add New Vendor'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">

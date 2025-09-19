@@ -28,7 +28,7 @@ interface ComboboxProps {
     searchPlaceholder?: string;
     notFoundMessage?: string;
     addMessage?: string;
-    onAdd?: (query: string) => void;
+    onAdd?: (query?: string) => void;
 }
 
 export function Combobox({ 
@@ -63,7 +63,6 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
-          onFocus={() => setOpen(true)}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

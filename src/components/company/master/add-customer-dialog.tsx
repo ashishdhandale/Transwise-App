@@ -22,7 +22,7 @@ interface AddCustomerDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onSave: (customerData: Omit<Customer, 'id'>) => boolean;
-    customer?: Customer | null;
+    customer?: Partial<Customer> | null;
 }
 
 const customerTypes: CustomerType[] = [
@@ -48,12 +48,12 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
 
     useEffect(() => {
         if (customer) {
-            setName(customer.name);
-            setGstin(customer.gstin);
-            setAddress(customer.address);
-            setMobile(customer.mobile);
-            setEmail(customer.email);
-            setType(customer.type);
+            setName(customer.name || '');
+            setGstin(customer.gstin || '');
+            setAddress(customer.address || '');
+            setMobile(customer.mobile || '');
+            setEmail(customer.email || '');
+            setType(customer.type || 'Company');
         } else {
             setName('');
             setGstin('');
@@ -89,7 +89,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{customer ? 'Edit Customer' : 'Add New Customer'}</DialogTitle>
+                    <DialogTitle>{customer && 'id' in customer ? 'Edit Customer' : 'Add New Customer'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">

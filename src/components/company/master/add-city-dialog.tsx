@@ -20,7 +20,7 @@ interface AddCityDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onSave: (cityData: Omit<City, 'id'>) => boolean;
-    city?: City | null;
+    city?: Partial<City> | null;
 }
 
 export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDialogProps) {
@@ -31,9 +31,9 @@ export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDia
 
     useEffect(() => {
         if (city) {
-            setCityName(city.name);
-            setAliasCode(city.aliasCode);
-            setPinCode(city.pinCode);
+            setCityName(city.name || '');
+            setAliasCode(city.aliasCode || '');
+            setPinCode(city.pinCode || '');
         } else {
             setCityName('');
             setAliasCode('');
@@ -63,7 +63,7 @@ export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDia
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{city ? 'Edit City' : 'Add New City'}</DialogTitle>
+                    <DialogTitle>{city && 'id' in city ? 'Edit City' : 'Add New City'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 space-y-4">
                     <div>

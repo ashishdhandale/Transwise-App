@@ -103,6 +103,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   const [isClient, setIsClient] = useState(false);
   const [itemOptions, setItemOptions] = useState<Item[]>([]);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [initialItemData, setInitialItemData] = useState<Partial<Item> | null>(null);
   const { toast } = useToast();
 
   const loadItems = useCallback(() => {
@@ -246,6 +247,11 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     newRows[rowIndex] = newRow;
     onRowsChange(newRows);
   };
+
+  const handleOpenAddItem = (query?: string) => {
+    setInitialItemData(query ? { name: query } : null);
+    setIsAddItemOpen(true);
+  };
   
    const handleSaveItem = (itemData: Omit<Item, 'id'>) => {
         try {
@@ -283,7 +289,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                     searchPlaceholder="Search items..."
                     notFoundMessage="No item found."
                     addMessage="Add New Item"
-                    onAdd={() => setIsAddItemOpen(true)}
+                    onAdd={handleOpenAddItem}
                 />
             );
         case 'description':
@@ -470,7 +476,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         isOpen={isAddItemOpen}
         onOpenChange={setIsAddItemOpen}
         onSave={handleSaveItem}
-        item={null}
+        item={initialItemData}
       />
     </>
   );

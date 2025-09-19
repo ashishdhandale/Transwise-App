@@ -28,6 +28,8 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
     const { toast } = useToast();
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [partyDetails, setPartyDetails] = useState<Customer | null>(initialParty);
+    const [initialCustomerData, setInitialCustomerData] = useState<Partial<Customer> | null>(null);
+
 
     useEffect(() => {
         setPartyDetails(initialParty);
@@ -42,6 +44,11 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
         const selectedParty = customers.find(c => c.name.toLowerCase() === partyName.toLowerCase()) || null;
         setPartyDetails(selectedParty);
     }, [customers]);
+
+    const handleOpenAddCustomer = (query?: string) => {
+        setInitialCustomerData(query ? { name: query } : null);
+        setIsAddCustomerOpen(true);
+    };
 
     const handleSaveCustomer = (customerData: Omit<Customer, 'id'>) => {
         if (!customerData.name.trim() || !customerData.address.trim() || !customerData.mobile.trim()) {
@@ -90,7 +97,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                         searchPlaceholder="Search customers..."
                         notFoundMessage="No customer found."
                         addMessage="Add New Party"
-                        onAdd={() => setIsAddCustomerOpen(true)}
+                        onAdd={handleOpenAddCustomer}
                     />
                 </div>
                  <div className="space-y-1">
@@ -110,6 +117,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                 isOpen={isAddCustomerOpen}
                 onOpenChange={setIsAddCustomerOpen}
                 onSave={handleSaveCustomer}
+                customer={initialCustomerData}
             />
         </>
     );
