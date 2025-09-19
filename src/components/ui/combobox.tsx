@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -64,6 +63,14 @@ export function Combobox({
     }
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -83,7 +90,7 @@ export function Combobox({
         className="w-[var(--radix-popover-trigger-width)] p-0"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} onKeyDown={handleKeyDown}>
           <CommandInput
             ref={inputRef} 
             placeholder={searchPlaceholder}
@@ -107,7 +114,7 @@ export function Combobox({
                 .filter(option => option.label.toLowerCase().includes(searchQuery.toLowerCase()))
                 .map((option) => (
                 <CommandItem
-                  key={option.label}
+                  key={option.value}
                   onSelect={() => {
                     onChange(option.value);
                     setSearchQuery('');
