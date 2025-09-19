@@ -34,6 +34,7 @@ import {
   PackageSearch,
   Settings,
   Truck,
+  User,
   Users,
   Wallet,
 } from 'lucide-react';
@@ -300,6 +301,12 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="/company/master/vendor" size="sm" isActive={pathname === '/company/master/vendor'} tooltip="Vendors"><Handshake />Vendors</SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="/company/master/driver" size="sm" isActive={pathname === '/company/master/driver'} tooltip="Drivers"><User />Drivers</SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="/company/master/vehicle" size="sm" isActive={pathname === '/company/master/vehicle'} tooltip="Vehicles"><Truck />Vehicles</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>

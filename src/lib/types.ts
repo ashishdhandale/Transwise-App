@@ -122,7 +122,6 @@ export interface Vendor {
   email: string;
 }
 
-
 export type NewRequest = {
     id: number;
     companyName: string;
@@ -146,3 +145,23 @@ export type ExistingUser = {
     licenceType: "Trial" | "Bronze" | "Gold" | "Platinum";
     validTill: string;
 };
+
+export interface Driver {
+  id: number;
+  name: string;
+  licenseNumber: string;
+  mobile: string;
+  address: string;
+}
+
+export type VehicleOwnerType = 'Own' | 'Supplier';
+
+export interface VehicleMaster {
+  id: number;
+  vehicleNo: string;
+  vehicleType: string;
+  ownerType: VehicleOwnerType;
+  supplierName?: string;
+  rcNo: string;
+  insuranceNo: string;
+}
