@@ -60,10 +60,10 @@ export function Combobox({
         inputRef.current.focus();
     }
   }, [open]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Tab' && !open) {
-        setOpen(true);
+  
+  const handleFocus = () => {
+    if (!open) {
+      setOpen(true);
     }
   }
 
@@ -76,7 +76,7 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
-          onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -110,7 +110,7 @@ export function Combobox({
                 .filter(option => option.label.toLowerCase().includes(searchQuery.toLowerCase()))
                 .map((option) => (
                 <CommandItem
-                  key={option.value}
+                  key={option.label}
                   onSelect={() => {
                     onChange(option.value);
                     setSearchQuery('');
