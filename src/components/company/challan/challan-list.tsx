@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -13,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, MoreHorizontal, Search } from 'lucide-react';
+import { FileText, MoreHorizontal, Search, PlusCircle } from 'lucide-react';
 import { getChallanData, type Challan } from '@/lib/challan-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
@@ -44,7 +45,7 @@ export function ChallanList() {
 
     const filteredChallans = useMemo(() => {
         if (!searchQuery) {
-            return challans;
+            return challans.sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
         }
         const lowercasedQuery = searchQuery.toLowerCase();
         return challans.filter((challan) =>
@@ -52,7 +53,7 @@ export function ChallanList() {
             challan.vehicleNo.toLowerCase().includes(lowercasedQuery) ||
             challan.fromStation.toLowerCase().includes(lowercasedQuery) ||
             challan.toStation.toLowerCase().includes(lowercasedQuery)
-        );
+        ).sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
     }, [challans, searchQuery]);
 
     const formatCurrency = (amount: number) => {
@@ -74,15 +75,22 @@ export function ChallanList() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle className="font-headline">All Generated Challans</CardTitle>
-                        <div className="relative w-full max-w-sm">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="Search challans..."
-                                className="pl-8"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
+                        <div className="flex items-center gap-4">
+                             <div className="relative w-full max-w-sm">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search challans..."
+                                    className="pl-8"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <Button asChild>
+                                <Link href="/company/challan/new">
+                                    <PlusCircle className="mr-2 h-4 w-4" /> New Challan
+                                </Link>
+                            </Button>
                         </div>
                     </div>
                 </CardHeader>
