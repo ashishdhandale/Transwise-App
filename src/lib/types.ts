@@ -32,7 +32,7 @@ export interface Vehicle {
   };
 }
 
-export type UserRole = 'Admin' | 'Company' | 'Branch' | 'employee';
+export type UserRole = 'Admin' | 'Company';
 
 export interface BaseUser {
   id: string;
@@ -61,17 +61,7 @@ export interface Branch {
   companyId: string;
 }
 
-export interface BranchUser extends BaseUser {
-  role: 'Branch';
-  branchId: string;
-}
-
-export interface EmployeeUser extends BaseUser {
-  role: 'employee';
-  branchId: string;
-}
-
-export type User = AdminUser | CompanyUser | BranchUser | EmployeeUser;
+export type User = AdminUser | CompanyUser;
 
 export interface City {
   id: number;

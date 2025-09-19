@@ -65,8 +65,6 @@ export function AppSidebar() {
 
   const isAdmin = pathname.startsWith('/admin');
   const isCompany = pathname.startsWith('/company');
-  const isEmployee = pathname.startsWith('/employee');
-  const isBranch = !isAdmin && !isCompany && !isEmployee;
 
   React.useEffect(() => {
     if (
@@ -359,32 +357,13 @@ export function AppSidebar() {
           </SidebarMenuItem>
       </>
     );
-  } else if (isEmployee) {
-    user = 'Driver';
-    email = 'driver@transwise.in';
-    avatarSeed = 'employee-avatar';
-    menu = (
-      <>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            href="/employee"
-            tooltip="My Deliveries"
-            isActive={pathname === '/employee'}
-          >
-            <Truck />
-            <span>My Deliveries</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </>
-    );
   } else {
-    // Branch User
-    user = 'Branch Manager';
-    email = 'branch@transwise.in';
-    avatarSeed = 'branch-avatar';
+    // Fallback for any other route
+    user = 'Guest';
+    email = 'guest@transwise.in';
+    avatarSeed = 'guest-avatar';
     menu = (
-      <>
-        <SidebarMenuItem>
+       <SidebarMenuItem>
           <SidebarMenuButton
             href="/"
             tooltip="Dashboard"
@@ -394,19 +373,6 @@ export function AppSidebar() {
             <span>Dashboard</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Deliveries">
-            <Truck />
-            <span>Deliveries</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Reports">
-            <BarChart3 />
-            <span>Reports</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </>
     );
   }
 

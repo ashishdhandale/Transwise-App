@@ -26,12 +26,6 @@ export default function LoginForm() {
       case 'Company':
         router.push('/company');
         break;
-      case 'employee':
-        router.push('/employee');
-        break;
-      case 'Branch':
-        router.push('/');
-        break;
       default:
         // Default navigation if no role is selected, or handle error
         // For now, let's just prevent submission if no role is selected.
@@ -97,8 +91,6 @@ export default function LoginForm() {
                             <SelectContent>
                                 <SelectItem value="Admin">Admin</SelectItem>
                                 <SelectItem value="Company">Company</SelectItem>
-                                <SelectItem value="Branch">Branch</SelectItem>
-                                <SelectItem value="employee">Employee</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
