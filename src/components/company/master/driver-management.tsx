@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,17 +12,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddDriverDialog } from './add-driver-dialog';
 import type { Driver } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { format, isBefore, startOfToday } from 'date-fns';
 
 const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 
 const initialDrivers: Driver[] = [
-    { id: 1, name: 'Ram Singh', licenseNumber: 'DL1234567890123', mobile: '9876543210', address: '123 Driver Colony, Nagpur' },
-    { id: 2, name: 'Shyam Kumar', licenseNumber: 'MH0987654321321', mobile: '9876543211', address: '456 Trucker Lane, Mumbai' },
+    { id: 1, name: 'Ram Singh', licenseNumber: 'DL1234567890123', mobile: '9876543210', address: '123 Driver Colony, Nagpur', licenseValidity: '2025-12-31T00:00:00.000Z', bloodGroup: 'O+', monthlySalary: 25000, photo: 'https://picsum.photos/seed/driver1/80/80' },
+    { id: 2, name: 'Shyam Kumar', licenseNumber: 'MH0987654321321', mobile: '9876543211', address: '456 Trucker Lane, Mumbai', licenseValidity: '2024-06-30T00:00:00.000Z', bloodGroup: 'A+', monthlySalary: 28000, photo: 'https://picsum.photos/seed/driver2/80/80' },
 ];
 
 const tdClass = "whitespace-nowrap";
@@ -128,30 +129,49 @@ export function DriverManagement() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Photo</TableHead>
                 <TableHead>Driver Name</TableHead>
                 <TableHead>License Number</TableHead>
+                <TableHead>License Validity</TableHead>
                 <TableHead>Mobile</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead className="w-[120px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDrivers.map((driver) => (
-                <TableRow key={driver.id}>
-                  <TableCell className={cn(tdClass, "font-medium")}>{driver.name}</TableCell>
-                  <TableCell className={cn(tdClass)}>{driver.licenseNumber}</TableCell>
-                  <TableCell className={cn(tdClass)}>{driver.mobile}</TableCell>
-                  <TableCell className={cn(tdClass)}>{driver.address}</TableCell>
-                  <TableCell className={cn(tdClass, "text-right")}>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(driver)}>
-                      <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(driver.id)}>
-                      <Trash2 className="h-4 w-4" />
-                      </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredDrivers.map((driver) => {
+                const isExpired = driver.licenseValidity && isBefore(new Date(driver.licenseValidity), startOfToday());
+                return (
+                    <TableRow key={driver.id}>
+                        <TableCell>
+                            <Avatar>
+                                <AvatarImage src={driver.photo} alt={driver.name} />
+                                <AvatarFallback>{driver.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                        </TableCell>
+                        <TableCell className={cn(tdClass, "font-medium")}>{driver.name}</TableCell>
+                        <TableCell className={cn(tdClass)}>{driver.licenseNumber}</TableCell>
+                        <TableCell className={cn(tdClass, isExpired ? 'text-destructive' : '')}>
+                            {driver.licenseValidity ? (
+                                <span className="flex items-center gap-2">
+                                    {isExpired && <Calendar className="h-4 w-4" />}
+                                    {format(new Date(driver.licenseValidity), 'dd-MMM-yyyy')}
+                                </span>
+                            ) : 'N/A'}
+                        </TableCell>
+                        <TableCell className={cn(tdClass)}>{driver.mobile}</TableCell>
+                        <TableCell className={cn(tdClass)}>{driver.address}</TableCell>
+                        <TableCell className={cn(tdClass, "text-right")}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(driver)}>
+                            <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(driver.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

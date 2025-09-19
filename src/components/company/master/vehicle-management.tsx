@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,20 +12,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddVehicleDialog } from './add-vehicle-dialog';
 import type { VehicleMaster } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Vendor } from '@/lib/types';
+import { format, isBefore, startOfToday } from 'date-fns';
 
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 
 const initialVehicles: VehicleMaster[] = [
-    { id: 1, vehicleNo: 'MH-31-CQ-1234', vehicleType: 'Truck', ownerType: 'Own', rcNo: 'RC12345', insuranceNo: 'INS12345' },
-    { id: 2, vehicleNo: 'MH-49-AT-5678', vehicleType: 'Trailer', ownerType: 'Supplier', supplierName: 'Reliable Transports', rcNo: 'RC56789', insuranceNo: 'INS56789' },
+    { id: 1, vehicleNo: 'MH-31-CQ-1234', vehicleType: 'Truck', ownerType: 'Own', rcNo: 'RC12345', capacity: 10000, insuranceValidity: '2025-05-20T00:00:00.000Z' },
+    { id: 2, vehicleNo: 'MH-49-AT-5678', vehicleType: 'Trailer', ownerType: 'Supplier', supplierName: 'Reliable Transports', rcNo: 'RC56789', capacity: 25000, insuranceValidity: '2024-07-15T00:00:00.000Z' },
 ];
 
 const tdClass = "whitespace-nowrap";
@@ -140,32 +140,44 @@ export function VehicleManagement() {
                 <TableHead>Type</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Supplier</TableHead>
+                <TableHead>Capacity (Kg)</TableHead>
+                <TableHead>Insurance Validity</TableHead>
                 <TableHead>RC No</TableHead>
-                <TableHead>Insurance No</TableHead>
                 <TableHead className="w-[120px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredVehicles.map((vehicle) => (
-                <TableRow key={vehicle.id}>
-                  <TableCell className={cn(tdClass, "font-medium")}>{vehicle.vehicleNo}</TableCell>
-                  <TableCell className={cn(tdClass)}>{vehicle.vehicleType}</TableCell>
-                  <TableCell className={cn(tdClass)}>
-                    <Badge variant={vehicle.ownerType === 'Own' ? 'default' : 'secondary'}>{vehicle.ownerType}</Badge>
-                  </TableCell>
-                  <TableCell className={cn(tdClass)}>{vehicle.supplierName || 'N/A'}</TableCell>
-                  <TableCell className={cn(tdClass)}>{vehicle.rcNo}</TableCell>
-                  <TableCell className={cn(tdClass)}>{vehicle.insuranceNo}</TableCell>
-                  <TableCell className={cn(tdClass, "text-right")}>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(vehicle)}>
-                      <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(vehicle.id)}>
-                      <Trash2 className="h-4 w-4" />
-                      </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredVehicles.map((vehicle) => {
+                  const isExpired = vehicle.insuranceValidity && isBefore(new Date(vehicle.insuranceValidity), startOfToday());
+                  return (
+                    <TableRow key={vehicle.id}>
+                        <TableCell className={cn(tdClass, "font-medium")}>{vehicle.vehicleNo}</TableCell>
+                        <TableCell className={cn(tdClass)}>{vehicle.vehicleType}</TableCell>
+                        <TableCell className={cn(tdClass)}>
+                            <Badge variant={vehicle.ownerType === 'Own' ? 'default' : 'secondary'}>{vehicle.ownerType}</Badge>
+                        </TableCell>
+                        <TableCell className={cn(tdClass)}>{vehicle.supplierName || 'N/A'}</TableCell>
+                        <TableCell className={cn(tdClass)}>{vehicle.capacity?.toLocaleString()}</TableCell>
+                        <TableCell className={cn(tdClass, isExpired ? 'text-destructive' : '')}>
+                           {vehicle.insuranceValidity ? (
+                                <span className="flex items-center gap-2">
+                                    {isExpired && <Calendar className="h-4 w-4" />}
+                                    {format(new Date(vehicle.insuranceValidity), 'dd-MMM-yyyy')}
+                                </span>
+                            ) : 'N/A'}
+                        </TableCell>
+                        <TableCell className={cn(tdClass)}>{vehicle.rcNo}</TableCell>
+                        <TableCell className={cn(tdClass, "text-right")}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(vehicle)}>
+                            <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(vehicle.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

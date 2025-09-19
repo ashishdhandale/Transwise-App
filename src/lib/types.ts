@@ -110,7 +110,7 @@ export interface Item {
 export type VendorType = 
   | 'Vehicle Supplier'
   | 'Freight Forwarder'
-  | 'Delivery Agent'
+  | 'Delivery Agent' 
   | 'Booking Agent';
 
 export interface Vendor {
@@ -150,8 +150,12 @@ export interface Driver {
   id: number;
   name: string;
   licenseNumber: string;
+  licenseValidity: string;
   mobile: string;
   address: string;
+  bloodGroup: string;
+  monthlySalary: number;
+  photo?: string;
 }
 
 export type VehicleOwnerType = 'Own' | 'Supplier';
@@ -163,5 +167,9 @@ export interface VehicleMaster {
   ownerType: VehicleOwnerType;
   supplierName?: string;
   rcNo: string;
-  insuranceNo: string;
+  capacity?: number;
+  insuranceValidity?: string;
+  fitnessCertificateValidity?: string;
+  pucValidity?: string;
+  permitDetails?: string;
 }
