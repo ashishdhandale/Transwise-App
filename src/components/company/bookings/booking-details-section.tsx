@@ -68,12 +68,8 @@ export function BookingDetailsSection({
             const source = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
             if (source === 'custom') {
                 const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-                if (savedCities) {
-                    const customCities: City[] = JSON.parse(savedCities);
-                    setStationOptions(customCities);
-                } else {
-                     setStationOptions([]);
-                }
+                const customCities: City[] = savedCities ? JSON.parse(savedCities) : [];
+                setStationOptions(customCities);
             } else {
                 const defaultCities: City[] = bookingOptions.stations.map((station, index) => ({
                     id: index,
@@ -97,16 +93,30 @@ export function BookingDetailsSection({
 
     useEffect(() => {
         loadStationOptions();
+        
+        // Listen for storage changes from other tabs/windows
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === LOCAL_STORAGE_KEY_CITIES || event.key === LOCAL_STORAGE_KEY_SOURCE) {
+                loadStationOptions();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+
     }, [loadStationOptions]);
 
 
     const handleFromStationChange = useCallback((stationName: string) => {
-        const selectedStation = stationOptions.find(s => s.name === stationName) || null;
+        const selectedStation = stationOptions.find(s => s.name.toLowerCase() === stationName.toLowerCase()) || null;
         onFromStationChange(selectedStation);
     }, [stationOptions, onFromStationChange]);
 
     const handleToStationChange = useCallback((stationName: string) => {
-        const selectedStation = stationOptions.find(s => s.name === stationName) || null;
+        const selectedStation = stationOptions.find(s => s.name.toLowerCase() === stationName.toLowerCase()) || null;
         onToStationChange(selectedStation);
     }, [stationOptions, onToStationChange]);
 
@@ -122,8 +132,12 @@ export function BookingDetailsSection({
 
     const handleSaveCity = (cityData: Omit<City, 'id'>) => {
         try {
+            let cities: City[] = [];
             const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-            const cities: City[] = savedCities ? JSON.parse(savedCities) : [];
+             if (savedCities) {
+                cities = JSON.parse(savedCities);
+            }
+
             const newCity: City = {
                 id: cities.length > 0 ? Math.max(...cities.map(c => c.id)) + 1 : 1,
                 ...cityData
