@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -44,6 +45,7 @@ export function Combobox({
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const justClosedByEscape = React.useRef(false);
 
   const selectedOption = options.find(option => option.value.toLowerCase() === value?.toLowerCase());
 
@@ -55,6 +57,10 @@ export function Combobox({
   }
   
   const handleFocus = () => {
+    if (justClosedByEscape.current) {
+        justClosedByEscape.current = false;
+        return;
+    }
     if (!open) {
       setOpen(true);
       setTimeout(() => {
@@ -66,6 +72,7 @@ export function Combobox({
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       event.preventDefault();
+      justClosedByEscape.current = true;
       setOpen(false);
       triggerRef.current?.focus();
     }
