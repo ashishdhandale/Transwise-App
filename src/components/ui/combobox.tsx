@@ -28,7 +28,7 @@ interface ComboboxProps {
     searchPlaceholder?: string;
     notFoundMessage?: string;
     addMessage?: string;
-    onAdd?: () => void;
+    onAdd?: (query: string) => void;
 }
 
 export function Combobox({ 
@@ -43,8 +43,16 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const selectedOption = options.find(option => option.value.toLowerCase() === value?.toLowerCase());
+
+  const handleAdd = () => {
+    if (onAdd) {
+        setOpen(false);
+        onAdd(searchQuery);
+    }
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -64,16 +72,18 @@ export function Combobox({
       <PopoverContent
         className="w-[var(--radix-popover-trigger-width)] p-0"
       >
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput 
             placeholder={searchPlaceholder}
+            value={searchQuery}
+            onValueChange={setSearchQuery}
           />
           <CommandList>
             <CommandEmpty>
                 <div className="py-4 text-center text-sm">
                     <p>{notFoundMessage}</p>
                     {onAdd && (
-                         <Button variant="link" size="sm" className="mt-2" onClick={() => { setOpen(false); onAdd(); }}>
+                         <Button variant="link" size="sm" className="mt-2" onClick={handleAdd}>
                             <PlusCircle className="mr-2 h-4 w-4"/>
                             {addMessage}
                         </Button>
@@ -81,12 +91,15 @@ export function Combobox({
                 </div>
             </CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {options
+                .filter(option => option.label.toLowerCase().includes(searchQuery.toLowerCase()))
+                .map((option) => (
                 <CommandItem
                   key={option.value}
                   onSelect={() => {
                     onChange(option.value);
-                    setOpen(false)
+                    setSearchQuery('');
+                    setOpen(false);
                     triggerRef.current?.focus();
                   }}
                 >

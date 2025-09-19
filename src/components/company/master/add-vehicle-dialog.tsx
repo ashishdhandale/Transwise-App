@@ -22,7 +22,7 @@ interface AddVehicleDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onSave: (vehicleData: Omit<VehicleMaster, 'id'>) => boolean;
-    vehicle?: VehicleMaster | null;
+    vehicle?: Partial<VehicleMaster> | null;
     vendors: Vendor[];
 }
 
@@ -37,12 +37,12 @@ export function AddVehicleDialog({ isOpen, onOpenChange, onSave, vehicle, vendor
 
     useEffect(() => {
         if (vehicle) {
-            setVehicleNo(vehicle.vehicleNo);
-            setVehicleType(vehicle.vehicleType);
-            setOwnerType(vehicle.ownerType);
-            setSupplierName(vehicle.supplierName);
-            setRcNo(vehicle.rcNo);
-            setInsuranceNo(vehicle.insuranceNo);
+            setVehicleNo(vehicle.vehicleNo || '');
+            setVehicleType(vehicle.vehicleType || '');
+            setOwnerType(vehicle.ownerType || 'Own');
+            setSupplierName(vehicle.supplierName || undefined);
+            setRcNo(vehicle.rcNo || '');
+            setInsuranceNo(vehicle.insuranceNo || '');
         } else {
             setVehicleNo('');
             setVehicleType('');
@@ -85,7 +85,7 @@ export function AddVehicleDialog({ isOpen, onOpenChange, onSave, vehicle, vendor
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>{vehicle ? 'Edit Vehicle' : 'Add New Vehicle'}</DialogTitle>
+                    <DialogTitle>{vehicle && 'id' in vehicle ? 'Edit Vehicle' : 'Add New Vehicle'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>

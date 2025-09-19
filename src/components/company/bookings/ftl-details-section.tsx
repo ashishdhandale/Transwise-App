@@ -27,6 +27,7 @@ export function FtlDetailsSection({ details, onDetailsChange, drivers, vehicles,
     const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
     const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+    const [initialVehicleData, setInitialVehicleData] = useState<Partial<VehicleMaster> | null>(null);
 
     const handleChange = (field: keyof FtlDetails, value: string | number) => {
         onDetailsChange({ ...details, [field]: value });
@@ -39,6 +40,11 @@ export function FtlDetailsSection({ details, onDetailsChange, drivers, vehicles,
             newDetails.lorrySupplier = vehicle.supplierName;
         }
         onDetailsChange(newDetails);
+    };
+    
+    const handleOpenAddVehicle = (query: string) => {
+        setInitialVehicleData({ vehicleNo: query.toUpperCase() });
+        setIsAddVehicleOpen(true);
     };
 
     const handleSave = (saveFunction: (data: any) => boolean, data: any, storageKey: string, successMessage: string) => {
@@ -90,7 +96,7 @@ export function FtlDetailsSection({ details, onDetailsChange, drivers, vehicles,
                             searchPlaceholder="Search vehicle..."
                             notFoundMessage="No vehicle found."
                             addMessage="Add New Vehicle"
-                            onAdd={() => setIsAddVehicleOpen(true)}
+                            onAdd={handleOpenAddVehicle}
                         />
                     </div>
                     <div className="space-y-1">
@@ -145,7 +151,8 @@ export function FtlDetailsSection({ details, onDetailsChange, drivers, vehicles,
                 isOpen={isAddVehicleOpen} 
                 onOpenChange={setIsAddVehicleOpen} 
                 onSave={handleSaveVehicle} 
-                vendors={vendors} 
+                vendors={vendors}
+                vehicle={initialVehicleData}
             />
             <AddDriverDialog 
                 isOpen={isAddDriverOpen} 
