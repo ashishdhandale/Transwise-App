@@ -210,18 +210,9 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     let processedValue = value;
 
     const numericColumns = ['qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'dValue'];
-    const textColumns = ['ewbNo', 'description', 'pvtMark', 'invoiceNo'];
 
-    if (numericColumns.includes(columnId)) {
-        // Allow only numbers and a single decimal point
-        if (value !== '' && !/^[0-9]*\.?[0-9]*$/.test(value)) {
-            toast({ title: 'Invalid Input', description: 'Only numbers are allowed in this field.', variant: 'destructive'});
-            return;
-        }
-    }
-
-    if (textColumns.includes(columnId)) {
-        processedValue = value.toUpperCase();
+    if (typeof value === 'string' && !numericColumns.includes(columnId)) {
+      processedValue = value.toUpperCase();
     }
     
     const newRow = { ...newRows[rowIndex], [columnId]: processedValue };
