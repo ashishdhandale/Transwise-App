@@ -107,6 +107,22 @@ export interface Item {
   description: string;
 }
 
+export type VendorType = 
+  | 'Vehicle Supplier'
+  | 'Freight Forwarder'
+  | 'Delivery Agent'
+  | 'Booking Agent';
+
+export interface Vendor {
+  id: number;
+  name: string;
+  type: VendorType;
+  address: string;
+  mobile: string;
+  email: string;
+}
+
+
 export type NewRequest = {
     id: number;
     companyName: string;

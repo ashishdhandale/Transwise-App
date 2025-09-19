@@ -23,6 +23,7 @@ import {
   Database,
   FileSignature,
   FileText,
+  Handshake,
   History,
   Home,
   List,
@@ -296,6 +297,9 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="/company/master/item" size="sm" isActive={pathname === '/company/master/item'} tooltip="Items"><Package />Items</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/master/vendor" size="sm" isActive={pathname === '/company/master/vendor'} tooltip="Vendors"><Handshake />Vendors</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>
