@@ -43,6 +43,7 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const selectedOption = options.find(option => option.value.toLowerCase() === value?.toLowerCase());
@@ -51,6 +52,18 @@ export function Combobox({
     if (onAdd) {
         setOpen(false);
         onAdd(searchQuery);
+    }
+  }
+  
+  React.useEffect(() => {
+    if (open && inputRef.current) {
+        inputRef.current.focus();
+    }
+  }, [open]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Tab' && !open) {
+        setOpen(true);
     }
   }
 
@@ -63,6 +76,7 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          onKeyDown={handleKeyDown}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -73,7 +87,8 @@ export function Combobox({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command shouldFilter={false}>
-          <CommandInput 
+          <CommandInput
+            ref={inputRef} 
             placeholder={searchPlaceholder}
             value={searchQuery}
             onValueChange={setSearchQuery}
