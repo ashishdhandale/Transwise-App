@@ -9,8 +9,6 @@ import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import React, { useEffect, useState, useCallback } from 'react';
 import type { City } from '@/lib/types';
-import { AddCityDialog } from '../master/add-city-dialog';
-import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -19,10 +17,12 @@ import { Calendar } from '@/components/ui/calendar';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 
-const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
-const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
-
-type CityListSource = 'default' | 'custom';
+const stationOptions = bookingOptions.stations.map((station, index) => ({
+    id: index,
+    name: station,
+    aliasCode: station.substring(0,3).toUpperCase(),
+    pinCode: '000000'
+}));
 
 interface BookingDetailsSectionProps {
     bookingType: string;
@@ -58,67 +58,15 @@ export function BookingDetailsSection({
     companyProfile,
     errors,
 }: BookingDetailsSectionProps) {
-    const [stationOptions, setStationOptions] = useState<City[]>([]);
-    const [isAddCityOpen, setIsAddCityOpen] = useState(false);
-    const [initialCityData, setInitialCityData] = useState<Partial<City> | null>(null);
-    const { toast } = useToast();
-
-    const loadStationOptions = useCallback(() => {
-         try {
-            const source = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
-            if (source === 'custom') {
-                const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-                const customCities: City[] = savedCities ? JSON.parse(savedCities) : [];
-                setStationOptions(customCities);
-            } else {
-                const defaultCities: City[] = bookingOptions.stations.map((station, index) => ({
-                    id: index,
-                    name: station,
-                    aliasCode: station.substring(0,3).toUpperCase(),
-                    pinCode: '000000'
-                }));
-                setStationOptions(defaultCities);
-            }
-        } catch (error) {
-            console.error("Failed to load station options from local storage", error);
-             const defaultCities: City[] = bookingOptions.stations.map((station, index) => ({
-                id: index,
-                name: station,
-                aliasCode: station.substring(0,3).toUpperCase(),
-                pinCode: '000000'
-            }));
-            setStationOptions(defaultCities);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadStationOptions();
-        
-        // Listen for storage changes from other tabs/windows
-        const handleStorageChange = (event: StorageEvent) => {
-            if (event.key === LOCAL_STORAGE_KEY_CITIES || event.key === LOCAL_STORAGE_KEY_SOURCE) {
-                loadStationOptions();
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
-
-    }, [loadStationOptions]);
-
-
     const handleFromStationChange = useCallback((stationName: string) => {
         const selectedStation = stationOptions.find(s => s.name.toLowerCase() === stationName.toLowerCase()) || null;
         onFromStationChange(selectedStation);
-    }, [stationOptions, onFromStationChange]);
+    }, [onFromStationChange]);
 
     const handleToStationChange = useCallback((stationName: string) => {
         const selectedStation = stationOptions.find(s => s.name.toLowerCase() === stationName.toLowerCase()) || null;
         onToStationChange(selectedStation);
-    }, [stationOptions, onToStationChange]);
+    }, [onToStationChange]);
 
     useEffect(() => {
         if (isEditMode || !companyProfile) return;
@@ -127,55 +75,8 @@ export function BookingDetailsSection({
             handleFromStationChange(companyProfile.city);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fromStation, stationOptions, isEditMode, companyProfile]); 
+    }, [fromStation, isEditMode, companyProfile]); 
 
-
-    const handleSaveCity = (cityData: Omit<City, 'id'>) => {
-        try {
-            let cities: City[] = [];
-            const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-             if (savedCities) {
-                cities = JSON.parse(savedCities);
-            }
-
-            const newCity: City = {
-                id: cities.length > 0 ? Math.max(...cities.map(c => c.id)) + 1 : 1,
-                ...cityData
-            };
-            const updatedCities = [newCity, ...cities];
-            localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
-            
-            loadStationOptions();
-            
-            toast({ title: 'City Added', description: `"${cityData.name}" has been added to your custom list.` });
-            return true;
-        } catch (error) {
-            console.error("Failed to save new city", error);
-            toast({ title: 'Error', description: 'Could not save the new city.', variant: 'destructive'});
-            return false;
-        }
-    };
-
-    const handleAddCity = (query?: string) => {
-        const source = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
-        if (source === 'custom' || source === null) {
-             if (source === null) {
-                localStorage.setItem(LOCAL_STORAGE_KEY_SOURCE, 'custom');
-             }
-             if (query) {
-                 setInitialCityData({ name: query });
-             } else {
-                 setInitialCityData(null);
-             }
-             setIsAddCityOpen(true);
-        } else {
-            toast({
-                title: 'Action Not Allowed',
-                description: 'To add a new city, please switch to "Use My Custom List" in the City Master settings.',
-                variant: 'destructive',
-            });
-        }
-    };
 
     const errorClass = 'border-red-500 ring-2 ring-red-500/50';
 
@@ -232,8 +133,6 @@ export function BookingDetailsSection({
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
                     notFoundMessage="No station found."
-                    addMessage="Add New City"
-                    onAdd={handleAddCity}
                 />
             </div>
             <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
@@ -245,8 +144,6 @@ export function BookingDetailsSection({
                     placeholder="Select station..."
                     searchPlaceholder="Search stations..."
                     notFoundMessage="No station found."
-                    addMessage="Add New City"
-                    onAdd={handleAddCity}
                 />
             </div>
              <div className="space-y-1">
@@ -261,12 +158,6 @@ export function BookingDetailsSection({
                 </Select>
             </div>
         </div>
-         <AddCityDialog
-            isOpen={isAddCityOpen}
-            onOpenChange={setIsAddCityOpen}
-            onSave={handleSaveCity}
-            city={initialCityData}
-        />
         </>
     );
 }
