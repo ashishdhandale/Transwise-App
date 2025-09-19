@@ -87,11 +87,14 @@ export function BookingsDashboard() {
   };
 
   const filteredBookings = useMemo(() => {
+    const sortedBookings = [...bookings].sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+
     if (!searchQuery) {
-      return bookings;
+      return sortedBookings;
     }
+    
     const lowercasedQuery = searchQuery.toLowerCase();
-    return bookings.filter((booking) => 
+    return sortedBookings.filter((booking) => 
         booking.lrNo.toLowerCase().includes(lowercasedQuery) ||
         booking.sender.toLowerCase().includes(lowercasedQuery) ||
         booking.receiver.toLowerCase().includes(lowercasedQuery) ||
