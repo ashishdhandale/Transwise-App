@@ -31,7 +31,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
-import { FtlDetailsSection } from './ftl-details-section';
+import { VehicleDetailsSection } from './vehicle-details-section';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { FtlChallan } from '../challan-tracking/ftl-challan';
 
@@ -547,16 +547,15 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     taxPaidBy={taxPaidBy}
                     errors={errors}
                 />
-                 {loadType === 'FTL' && (
-                    <FtlDetailsSection 
-                        details={ftlDetails} 
-                        onDetailsChange={setFtlDetails} 
-                        drivers={drivers}
-                        vehicles={vehicles}
-                        vendors={vendors}
-                        onMasterDataChange={loadMasterData}
-                    />
-                 )}
+                <VehicleDetailsSection 
+                    details={ftlDetails} 
+                    onDetailsChange={setFtlDetails} 
+                    drivers={drivers}
+                    vehicles={vehicles}
+                    vendors={vendors}
+                    onMasterDataChange={loadMasterData}
+                    loadType={loadType}
+                />
 
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 

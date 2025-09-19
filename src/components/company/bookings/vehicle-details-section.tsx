@@ -13,16 +13,17 @@ import { AddVehicleDialog } from '../master/add-vehicle-dialog';
 import { AddDriverDialog } from '../master/add-driver-dialog';
 import { AddVendorDialog } from '../master/add-vendor-dialog';
 
-interface FtlDetailsSectionProps {
+interface VehicleDetailsSectionProps {
     details: FtlDetails;
     onDetailsChange: (details: FtlDetails) => void;
     drivers: Driver[];
     vehicles: VehicleMaster[];
     vendors: Vendor[];
     onMasterDataChange: () => void;
+    loadType: 'PTL' | 'FTL';
 }
 
-export function FtlDetailsSection({ details, onDetailsChange, drivers, vehicles, vendors, onMasterDataChange }: FtlDetailsSectionProps) {
+export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehicles, vendors, onMasterDataChange, loadType }: VehicleDetailsSectionProps) {
     const { toast } = useToast();
     const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
@@ -91,12 +92,14 @@ export function FtlDetailsSection({ details, onDetailsChange, drivers, vehicles,
     const vehicleOptions = vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
     const driverOptions = drivers.map(d => ({ label: d.name, value: d.name }));
     const supplierOptions = vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name, value: v.name }));
+    
+    const cardTitle = loadType === 'FTL' ? 'FTL (Full Truck Load) Details' : 'Vehicle & Driver Details';
 
     return (
         <>
             <Card className="border-orange-200 bg-orange-50/50">
                 <CardHeader className="p-3">
-                    <CardTitle className="text-base text-orange-700 font-headline">FTL (Full Truck Load) Details</CardTitle>
+                    <CardTitle className="text-base text-orange-700 font-headline">{cardTitle}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
