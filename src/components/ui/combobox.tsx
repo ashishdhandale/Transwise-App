@@ -51,10 +51,11 @@ export function Combobox({
 
   const handleAdd = () => {
     if (onAdd) {
-        setOpen(false);
-        onAdd(searchQuery);
-        // After the dialog process, return focus to the trigger
-        setTimeout(() => triggerRef.current?.focus(), 0);
+        setOpen(false); // Close the popover first
+        onAdd(searchQuery); // Then open the dialog
+        // Focus is automatically returned by the Dialog component to its trigger, 
+        // which in this case is not what we want. We want to return it to our button.
+        // We will handle this by re-focusing our trigger when the popover's open state changes.
     }
   }
   
@@ -65,23 +66,38 @@ export function Combobox({
     }
     if (!open) {
       setOpen(true);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
     }
   }
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       justClosedByEscape.current = true;
       setOpen(false);
       triggerRef.current?.focus();
     }
   }
+  
+  React.useEffect(() => {
+    if (open) {
+      // Small timeout to allow the popover to render before focusing the input
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+            // When popover closes, ensure focus returns to the trigger button.
+            // This also handles the case after a dialog closes.
+            triggerRef.current?.focus();
+        }
+    }}>
       <PopoverTrigger asChild>
         <Button
           ref={triggerRef}
@@ -90,6 +106,15 @@ export function Combobox({
           aria-expanded={open}
           className="w-full justify-between"
           onFocus={handleFocus}
+          // We use onKeyDown here for Enter/Space to open, but not for Escape.
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (!open) {
+                    e.preventDefault();
+                    setOpen(true);
+                }
+            }
+          }}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -98,6 +123,7 @@ export function Combobox({
       <PopoverContent
         className="w-[var(--radix-popover-trigger-width)] p-0"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <Command shouldFilter={false} onKeyDown={handleKeyDown}>
           <CommandInput
