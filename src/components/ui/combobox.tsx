@@ -53,6 +53,8 @@ export function Combobox({
     if (onAdd) {
         setOpen(false);
         onAdd(searchQuery);
+        // After the dialog process, return focus to the trigger
+        setTimeout(() => triggerRef.current?.focus(), 0);
     }
   }
   
