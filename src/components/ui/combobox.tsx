@@ -55,15 +55,12 @@ export function Combobox({
     }
   }
   
-  React.useEffect(() => {
-    if (open && inputRef.current) {
-        inputRef.current.focus();
-    }
-  }, [open]);
-  
   const handleFocus = () => {
     if (!open) {
       setOpen(true);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   }
 
