@@ -12,7 +12,7 @@ import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking, FtlDetails } from '@/lib/bookings-dashboard-data';
-import type { City, Customer } from '@/lib/types';
+import type { City, Customer, Driver, VehicleMaster, Vendor } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
@@ -37,6 +37,9 @@ import { FtlChallan } from '../challan-tracking/ftl-challan';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
+const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
+const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
+const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 
 
 const createEmptyRow = (id: number): ItemRow => ({
@@ -145,6 +148,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [drivers, setDrivers] = useState<Driver[]>([]);
+    const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
+    const [vendors, setVendors] = useState<Vendor[]>([]);
 
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
     const [isGstApplicable, setIsGstApplicable] = useState(false);
@@ -188,10 +194,26 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         return `${prefix}${String(newSequence).padStart(2, '0')}`;
     };
 
+    const loadMasterData = useCallback(() => {
+        try {
+            const savedDrivers = localStorage.getItem(LOCAL_STORAGE_KEY_DRIVERS);
+            if (savedDrivers) setDrivers(JSON.parse(savedDrivers));
+            
+            const savedVehicles = localStorage.getItem(LOCAL_STORAGE_KEY_VEHICLES);
+            if (savedVehicles) setVehicles(JSON.parse(savedVehicles));
+
+            const savedVendors = localStorage.getItem(LOCAL_STORAGE_KEY_VENDORS);
+            if (savedVendors) setVendors(JSON.parse(savedVendors));
+        } catch (error) {
+            console.error("Failed to load master data", error);
+        }
+    }, []);
+
     const loadInitialData = useCallback(async () => {
         try {
             const profile = await getCompanyProfile();
             setCompanyProfile(profile);
+            loadMasterData();
 
             const parsedBookings = getBookings();
             setAllBookings(parsedBookings);
@@ -240,7 +262,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [isEditMode, bookingId, toast]);
+    }, [isEditMode, bookingId, toast, loadMasterData]);
 
     useEffect(() => {
         loadInitialData();
@@ -526,7 +548,14 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     errors={errors}
                 />
                  {loadType === 'FTL' && (
-                    <FtlDetailsSection details={ftlDetails} onDetailsChange={setFtlDetails} />
+                    <FtlDetailsSection 
+                        details={ftlDetails} 
+                        onDetailsChange={setFtlDetails} 
+                        drivers={drivers}
+                        vehicles={vehicles}
+                        vendors={vendors}
+                        onMasterDataChange={loadMasterData}
+                    />
                  )}
 
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
