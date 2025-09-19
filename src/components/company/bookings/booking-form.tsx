@@ -547,15 +547,17 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     taxPaidBy={taxPaidBy}
                     errors={errors}
                 />
-                <VehicleDetailsSection 
-                    details={ftlDetails} 
-                    onDetailsChange={setFtlDetails} 
-                    drivers={drivers}
-                    vehicles={vehicles}
-                    vendors={vendors}
-                    onMasterDataChange={loadMasterData}
-                    loadType={loadType}
-                />
+                {loadType === 'FTL' && (
+                    <VehicleDetailsSection 
+                        details={ftlDetails} 
+                        onDetailsChange={setFtlDetails} 
+                        drivers={drivers}
+                        vehicles={vehicles}
+                        vendors={vendors}
+                        onMasterDataChange={loadMasterData}
+                        loadType={loadType}
+                    />
+                )}
 
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
