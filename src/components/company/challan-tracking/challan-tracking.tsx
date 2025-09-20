@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { ClipboardList } from 'lucide-react';
 import { SearchFilters } from './search-filters';
 import { SearchResultsTable } from './search-results-table';
@@ -11,8 +11,10 @@ import { SummarySection } from './summary-section';
 import { getChallanData, getLrDetailsData, type Challan } from '@/lib/challan-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import { useSearchParams } from 'next/navigation';
 
-export function ChallanTracking() {
+function ChallanTrackingComponent() {
+  const searchParams = useSearchParams();
   const [selectedChallan, setSelectedChallan] = useState<Challan | null>(null);
   const [challans, setChallans] = useState<Challan[]>([]);
   const [lrDetails, setLrDetails] = useState(getLrDetailsData());
@@ -22,10 +24,19 @@ export function ChallanTracking() {
     async function loadData() {
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
-        setChallans(getChallanData());
+        const allChallans = getChallanData();
+        setChallans(allChallans);
+
+        const challanIdFromUrl = searchParams.get('challanId');
+        if (challanIdFromUrl) {
+            const challanToSelect = allChallans.find(c => c.challanId === challanIdFromUrl);
+            if (challanToSelect) {
+                setSelectedChallan(challanToSelect);
+            }
+        }
     }
     loadData();
-  }, []);
+  }, [searchParams]);
 
   return (
     <main className="flex-1 p-4 md:p-6 bg-[#e0f7fa]">
@@ -60,4 +71,13 @@ export function ChallanTracking() {
       </div>
     </main>
   );
+}
+
+
+export function ChallanTracking() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ChallanTrackingComponent />
+        </Suspense>
+    )
 }

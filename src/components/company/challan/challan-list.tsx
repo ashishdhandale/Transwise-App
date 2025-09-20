@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 
@@ -37,6 +38,7 @@ export function ChallanList() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const { toast } = useToast();
+    const router = useRouter();
 
     const loadChallans = () => {
         setChallans(getChallanData());
@@ -121,7 +123,9 @@ export function ChallanList() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem><Eye className="mr-2 h-4 w-4" />View/Print</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>
+                                                        <Eye className="mr-2 h-4 w-4" />View/Print
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
                                                     {isPending && (
                                                         <>
@@ -137,7 +141,11 @@ export function ChallanList() {
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
-                                        <TableCell className={`${tdClass} font-medium`}>{challan.challanId}</TableCell>
+                                        <TableCell className={`${tdClass} font-medium`}>
+                                            <Link href={`/company/challan-tracking?challanId=${challan.challanId}`} className="text-primary hover:underline">
+                                                {challan.challanId}
+                                            </Link>
+                                        </TableCell>
                                         <TableCell className={tdClass}>
                                             <Badge variant={challan.status === 'Pending' ? 'destructive' : 'default'}>{challan.status}</Badge>
                                         </TableCell>
@@ -197,5 +205,3 @@ export function ChallanList() {
         </div>
     )
 }
-
-    
