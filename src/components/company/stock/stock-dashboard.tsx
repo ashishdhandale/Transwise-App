@@ -13,9 +13,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Archive, Download } from 'lucide-react';
+import { Search, Archive, Download, PlusCircle } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
-import { getBookings } from '@/lib/bookings-dashboard-data';
+import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { getChallanData, saveChallanData, type Challan } from '@/lib/challan-data';
+import { addHistoryLog } from '@/lib/history-data';
 
 const thClass = "bg-primary/10 text-primary font-bold";
 const tdClass = "whitespace-nowrap";
@@ -41,11 +45,12 @@ const statusColors: { [key: string]: string } = {
 export function StockDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [stock, setStock] = useState<Booking[]>([]);
+  const [selectedLrs, setSelectedLrs] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
-  useEffect(() => {
-    try {
+  const loadStock = () => {
+     try {
         const allBookings = getBookings();
-        // Correctly filter for items that are 'In Stock'.
         const inStockBookings = allBookings.filter(
             (booking) => booking.status === 'In Stock'
         );
@@ -53,6 +58,10 @@ export function StockDashboard() {
     } catch (error) {
         console.error("Failed to load stock from localStorage", error);
     }
+  }
+
+  useEffect(() => {
+    loadStock();
   }, []);
   
   const filteredStock = useMemo(() => {
@@ -71,6 +80,81 @@ export function StockDashboard() {
 
   const totalQty = useMemo(() => filteredStock.reduce((acc, item) => acc + item.qty, 0), [filteredStock]);
   const totalWeight = useMemo(() => filteredStock.reduce((acc, item) => acc + item.chgWt, 0), [filteredStock]);
+
+  const handleSelectAll = (checked: boolean | string) => {
+    if (checked) {
+        setSelectedLrs(new Set(filteredStock.map(item => item.id)));
+    } else {
+        setSelectedLrs(new Set());
+    }
+  }
+
+  const handleSelectRow = (id: string, checked: boolean | string) => {
+      const newSelection = new Set(selectedLrs);
+      if (checked) {
+          newSelection.add(id);
+      } else {
+          newSelection.delete(id);
+      }
+      setSelectedLrs(newSelection);
+  }
+
+  const handleGenerateLoadingChallan = () => {
+    if (selectedLrs.size === 0) {
+      toast({ title: "No LRs Selected", description: "Please select at least one LR to generate a challan.", variant: "destructive" });
+      return;
+    }
+
+    const selectedBookings = stock.filter(item => selectedLrs.has(item.id));
+    const allChallans = getChallanData();
+    const newChallanId = `TEMP-CHLN-${Date.now()}`;
+
+    const newChallan: Challan = {
+      challanId: newChallanId,
+      dispatchDate: format(new Date(), 'yyyy-MM-dd'),
+      challanType: 'Dispatch',
+      status: 'Pending',
+      totalLr: selectedBookings.length,
+      totalPackages: selectedBookings.reduce((sum, b) => sum + b.qty, 0),
+      totalItems: selectedBookings.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
+      totalActualWeight: selectedBookings.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
+      totalChargeWeight: selectedBookings.reduce((sum, b) => sum + b.chgWt, 0),
+      // Set defaults for fields that will be finalized later
+      dispatchToParty: selectedBookings[0]?.toCity || '',
+      vehicleNo: '',
+      driverName: '',
+      fromStation: selectedBookings[0]?.fromCity || '',
+      toStation: selectedBookings[0]?.toCity || '',
+      senderId: '',
+      inwardId: '',
+      inwardDate: '',
+      receivedFromParty: '',
+      vehicleHireFreight: 0,
+      advance: 0,
+      balance: 0,
+      summary: {
+        grandTotal: selectedBookings.reduce((sum, b) => sum + b.totalAmount, 0),
+        totalTopayAmount: selectedBookings.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
+        commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0,
+      }
+    };
+
+    saveChallanData([...allChallans, newChallan]);
+
+    const allBookings = getBookings();
+    const updatedBookings = allBookings.map(b => {
+        if (selectedLrs.has(b.id)) {
+            addHistoryLog(b.lrNo, 'In Transit', 'System', `Added to loading challan ${newChallanId}`);
+            return { ...b, status: 'In Transit' as const };
+        }
+        return b;
+    });
+    saveBookings(updatedBookings);
+
+    toast({ title: "Loading Challan Generated", description: `Temporary challan ${newChallanId} has been created.` });
+    setSelectedLrs(new Set());
+    loadStock(); // Refresh the stock list
+  };
 
   return (
     <main className="flex-1 p-4 md:p-6 bg-secondary/30">
@@ -109,6 +193,9 @@ export function StockDashboard() {
                             <Download className="mr-2 h-4 w-4" />
                             Export
                         </Button>
+                         <Button onClick={handleGenerateLoadingChallan} disabled={selectedLrs.size === 0}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Generate Loading Challan
+                        </Button>
                      </div>
                 </div>
             </CardHeader>
@@ -117,6 +204,13 @@ export function StockDashboard() {
                 <Table>
                     <TableHeader>
                     <TableRow>
+                        <TableHead className={thClass}>
+                             <Checkbox 
+                                onCheckedChange={handleSelectAll}
+                                checked={filteredStock.length > 0 && selectedLrs.size === filteredStock.length}
+                                aria-label="Select all rows"
+                            />
+                        </TableHead>
                         <TableHead className={thClass}>LR No.</TableHead>
                         <TableHead className={thClass}>Booking Date</TableHead>
                         <TableHead className={thClass}>From</TableHead>
@@ -132,26 +226,33 @@ export function StockDashboard() {
                     <TableBody>
                     {filteredStock.length > 0 ? (
                       filteredStock.map((item) => (
-                        <TableRow key={item.id}>
-                        <TableCell className={cn(tdClass, "font-medium")}>{item.lrNo}</TableCell>
-                        <TableCell className={cn(tdClass)}>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
-                        <TableCell className={cn(tdClass)}>{item.fromCity}</TableCell>
-                        <TableCell className={cn(tdClass)}>{item.toCity}</TableCell>
-                        <TableCell className={cn(tdClass)}>{item.sender}</TableCell>
-                        <TableCell className={cn(tdClass)}>{item.receiver}</TableCell>
-                        <TableCell className={cn(tdClass)}>{item.itemDescription}</TableCell>
-                        <TableCell className={cn(tdClass, "text-right")}>{item.qty}</TableCell>
-                        <TableCell className={cn(tdClass, "text-right")}>{item.chgWt} kg</TableCell>
-                        <TableCell className={cn(tdClass)}>
-                            <Badge variant="outline" className={cn('font-semibold', statusColors[item.status])}>
-                                {item.status}
-                            </Badge>
-                        </TableCell>
+                        <TableRow key={item.id} data-state={selectedLrs.has(item.id) && "selected"}>
+                            <TableCell>
+                                <Checkbox
+                                    checked={selectedLrs.has(item.id)}
+                                    onCheckedChange={(checked) => handleSelectRow(item.id, checked)}
+                                    aria-label={`Select row ${item.lrNo}`}
+                                />
+                            </TableCell>
+                            <TableCell className={cn(tdClass, "font-medium")}>{item.lrNo}</TableCell>
+                            <TableCell className={cn(tdClass)}>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.fromCity}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.toCity}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.sender}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.receiver}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.itemDescription}</TableCell>
+                            <TableCell className={cn(tdClass, "text-right")}>{item.qty}</TableCell>
+                            <TableCell className={cn(tdClass, "text-right")}>{item.chgWt} kg</TableCell>
+                            <TableCell className={cn(tdClass)}>
+                                <Badge variant="outline" className={cn('font-semibold', statusColors[item.status])}>
+                                    {item.status}
+                                </Badge>
+                            </TableCell>
                         </TableRow>
                     ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={10} className="text-center h-24">No stock items found.</TableCell>
+                        <TableCell colSpan={11} className="text-center h-24">No stock items found.</TableCell>
                       </TableRow>
                     )}
                     </TableBody>
