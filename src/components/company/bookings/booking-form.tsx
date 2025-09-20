@@ -419,6 +419,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         inwardDate: '',
                         receivedFromParty: '',
                         challanType: 'Dispatch',
+                        status: 'Finalized',
                         vehicleHireFreight: newBooking.ftlDetails.truckFreight,
                         advance: newBooking.ftlDetails.advance,
                         balance: newBooking.ftlDetails.truckFreight - newBooking.ftlDetails.advance,
@@ -441,6 +442,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     saveChallanData([...allChallans, challan]);
 
                     const lrDetail: LrDetail = {
+                        challanId: newChallanId,
                         lrNo: newBooking.lrNo,
                         lrType: newBooking.lrType,
                         sender: newBooking.sender,

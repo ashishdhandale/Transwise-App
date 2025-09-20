@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { getChallanData, saveChallanData, type Challan } from '@/lib/challan-data';
+import { getChallanData, saveChallanData, type Challan, getLrDetailsData, saveLrDetailsData, LrDetail } from '@/lib/challan-data';
 import { addHistoryLog } from '@/lib/history-data';
 
 const thClass = "bg-primary/10 text-primary font-bold";
@@ -140,6 +141,26 @@ export function StockDashboard() {
     };
 
     saveChallanData([...allChallans, newChallan]);
+    
+    const newLrDetails: LrDetail[] = selectedBookings.map(b => ({
+      challanId: newChallanId,
+      lrNo: b.lrNo,
+      lrType: b.lrType,
+      sender: b.sender,
+      receiver: b.receiver,
+      from: b.fromCity,
+      to: b.toCity,
+      bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
+      itemDescription: b.itemDescription,
+      quantity: b.qty,
+      actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+      chargeWeight: b.chgWt,
+      grandTotal: b.totalAmount
+    }));
+
+    const allLrDetails = getLrDetailsData();
+    saveLrDetailsData([...allLrDetails, ...newLrDetails]);
+
 
     const allBookings = getBookings();
     const updatedBookings = allBookings.map(b => {

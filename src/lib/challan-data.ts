@@ -1,4 +1,5 @@
 
+
 export interface Challan {
   challanId: string;
   dispatchDate: string;
@@ -12,7 +13,7 @@ export interface Challan {
   inwardDate: string;
   receivedFromParty: string;
   challanType: 'Dispatch' | 'Inward';
-  status: 'Pending' | 'Finalized';
+  status?: 'Pending' | 'Finalized';
   vehicleHireFreight: number;
   advance: number;
   balance: number;
@@ -34,6 +35,7 @@ export interface Challan {
 }
 
 export interface LrDetail {
+  challanId: string; // Link to the Challan
   lrNo: string;
   lrType: 'FOC' | 'PAID' | 'TOPAY' | 'TBB';
   sender: string;

@@ -1,14 +1,15 @@
 
+
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { ClipboardList } from 'lucide-react';
 import { SearchFilters } from './search-filters';
 import { SearchResultsTable } from './search-results-table';
 import { ChallanDetails } from './challan-details';
 import { LrDetailsTable } from './lr-details-table';
 import { SummarySection } from './summary-section';
-import { getChallanData, getLrDetailsData, type Challan } from '@/lib/challan-data';
+import { getChallanData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { useSearchParams } from 'next/navigation';
@@ -16,20 +17,21 @@ import { useSearchParams } from 'next/navigation';
 function ChallanTrackingComponent() {
   const searchParams = useSearchParams();
   const [selectedChallan, setSelectedChallan] = useState<Challan | null>(null);
-  const [challans, setChallans] = useState<Challan[]>([]);
-  const [lrDetails, setLrDetails] = useState(getLrDetailsData());
+  const [allChallans, setAllChallans] = useState<Challan[]>([]);
+  const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
   useEffect(() => {
     async function loadData() {
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
-        const allChallans = getChallanData();
-        setChallans(allChallans);
+        const challans = getChallanData();
+        setAllChallans(challans);
+        setAllLrDetails(getLrDetailsData());
 
         const challanIdFromUrl = searchParams.get('challanId');
         if (challanIdFromUrl) {
-            const challanToSelect = allChallans.find(c => c.challanId === challanIdFromUrl);
+            const challanToSelect = challans.find(c => c.challanId === challanIdFromUrl);
             if (challanToSelect) {
                 setSelectedChallan(challanToSelect);
             }
@@ -37,6 +39,13 @@ function ChallanTrackingComponent() {
     }
     loadData();
   }, [searchParams]);
+
+  const filteredLrDetails = useMemo(() => {
+    if (!selectedChallan) {
+      return [];
+    }
+    return allLrDetails.filter(detail => detail.challanId === selectedChallan.challanId);
+  }, [selectedChallan, allLrDetails]);
 
   return (
     <main className="flex-1 p-4 md:p-6 bg-[#e0f7fa]">
@@ -50,7 +59,7 @@ function ChallanTrackingComponent() {
       <div className="space-y-4">
         <SearchFilters />
         <SearchResultsTable 
-          challans={challans} 
+          challans={allChallans} 
           onSelectChallan={setSelectedChallan} 
           selectedChallanId={selectedChallan?.challanId}
         />
@@ -60,7 +69,7 @@ function ChallanTrackingComponent() {
                 <ChallanDetails challan={selectedChallan} profile={companyProfile} />
                 <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="lg:col-span-2">
-                        <LrDetailsTable lrDetails={lrDetails} profile={companyProfile} />
+                        <LrDetailsTable lrDetails={filteredLrDetails} profile={companyProfile} />
                     </div>
                     <div>
                         <SummarySection challan={selectedChallan} profile={companyProfile} />
