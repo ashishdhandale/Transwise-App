@@ -52,15 +52,16 @@ export function ChallanList() {
     }, []);
 
     const { pendingChallans, finalizedChallans } = useMemo(() => {
-        const pending = challans.filter(c => c.status === 'Pending')
+        const all = getChallanData();
+        const pending = all.filter(c => c.status === 'Pending')
             .sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
-        const finalized = challans.filter(c => c.status === 'Finalized')
+        const finalized = all.filter(c => c.status === 'Finalized')
             .sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
         return { pendingChallans: pending, finalizedChallans: finalized };
     }, [challans]);
 
     const handleFinalize = (challanId: string) => {
-        const updatedChallans = challans.map(c => {
+        const updatedChallans = getChallanData().map(c => {
             if (c.challanId === challanId) {
                 return { ...c, status: 'Finalized' as const, challanId: c.challanId.replace('TEMP-', '') };
             }
@@ -72,7 +73,7 @@ export function ChallanList() {
     };
     
     const handleDelete = (challanId: string) => {
-        const updatedChallans = challans.filter(c => c.challanId !== challanId);
+        const updatedChallans = getChallanData().filter(c => c.challanId !== challanId);
         saveChallanData(updatedChallans);
         setChallans(updatedChallans);
         toast({ title: "Challan Deleted", variant: "destructive" });
@@ -196,3 +197,5 @@ export function ChallanList() {
         </div>
     )
 }
+
+    

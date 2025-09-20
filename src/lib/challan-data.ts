@@ -77,3 +77,5 @@ export const saveLrDetailsData = (data: LrDetail[]) => {
 
 export const challanData: Challan[] = [];
 export const lrDetailsData: LrDetail[] = [];
+
+    
