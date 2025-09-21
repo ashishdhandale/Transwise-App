@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { City } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -63,6 +63,7 @@ export function BookingDetailsSection({
     const [customCities, setCustomCities] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const [initialCityData, setInitialCityData] = useState<Partial<City> | null>(null);
+    const datePickerRef = useRef<HTMLButtonElement>(null);
 
     const loadCityData = useCallback(() => {
         try {
@@ -102,6 +103,12 @@ export function BookingDetailsSection({
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fromStation, isEditMode, companyProfile, stationOptions, customCities, cityListSource]);
+
+    useEffect(() => {
+        if (!isEditMode) {
+            datePickerRef.current?.focus();
+        }
+    }, [isEditMode]);
 
     const getCityObjectByName = (name: string): City | null => {
         if (cityListSource === 'custom') {
@@ -160,6 +167,7 @@ export function BookingDetailsSection({
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
+                                ref={datePickerRef}
                                 variant={'outline'}
                                 className={cn(
                                     'w-full justify-between text-left font-normal',
