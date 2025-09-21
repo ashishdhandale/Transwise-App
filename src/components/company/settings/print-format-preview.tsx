@@ -83,10 +83,14 @@ export function PrintFormatPreview({ format }: PrintFormatPreviewProps) {
                     <div>
                         {getField('Parties', 'consignorName') && <p className="font-semibold">CONSIGNOR NAME</p>}
                         {getField('Parties', 'consignorAddress') && <p>Consignor Address, City</p>}
+                        {getField('Parties', 'consignorGstin') && <p>GST: 27ABCDE1234F1Z5</p>}
+                        {getField('Parties', 'consignorMobile') && <p>Mob: 9876543210</p>}
                     </div>
                     <div>
                         {getField('Parties', 'consigneeName') && <p className="font-semibold">CONSIGNEE NAME</p>}
                         {getField('Parties', 'consigneeAddress') && <p>Consignee Address, City</p>}
+                        {getField('Parties', 'consigneeGstin') && <p>GST: 29ABCDE1234F1Z6</p>}
+                        {getField('Parties', 'consigneeMobile') && <p>Mob: 9876543211</p>}
                     </div>
                 </div>
             </PreviewSection>
@@ -164,4 +168,3 @@ export function PrintFormatPreview({ format }: PrintFormatPreviewProps) {
         </div>
     );
 }
-
