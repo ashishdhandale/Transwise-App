@@ -207,22 +207,37 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
     const newRows = [...rows];
+    const newRow = { ...newRows[rowIndex] };
+    
     let processedValue = value;
-
     const numericColumns = ['qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'dValue'];
 
     if (typeof value === 'string' && !numericColumns.includes(columnId)) {
       processedValue = value.toUpperCase();
     }
     
-    const newRow = { ...newRows[rowIndex], [columnId]: processedValue };
+    newRow[columnId] = processedValue;
 
+    if (columnId === 'actWt') {
+        newRow.chgWt = processedValue;
+        newRow.freightOn = 'Act.wt';
+    }
+
+    if (columnId === 'chgWt') {
+        const actWt = parseFloat(newRow.actWt) || 0;
+        const chgWt = parseFloat(processedValue) || 0;
+        if (actWt !== chgWt) {
+            newRow.freightOn = 'Chg.wt';
+        } else {
+            newRow.freightOn = 'Act.wt';
+        }
+    }
+    
     if (columnId === 'freightOn') {
         if (value === 'Fixed') {
-            newRow.rate = '0'; // Set rate to 0 when 'Fixed' is chosen
-            newRow.lumpsum = ''; // Clear lumpsum for manual entry
+            newRow.rate = '0'; 
+            newRow.lumpsum = '';
         } else {
-             // If switching away from fixed, recalculate lumpsum based on current values
             const recalulatedLumpsum = calculateLumpsum(newRow);
             newRow.lumpsum = recalulatedLumpsum > 0 ? recalulatedLumpsum.toString() : '';
         }
