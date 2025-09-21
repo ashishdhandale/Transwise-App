@@ -41,51 +41,47 @@ const openingBalances: { [customerName: string]: number } = {
 export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
     const allBookings = getBookings();
 
-    const bookingEntries: LedgerEntry[] = [];
+    const transactionEntries: LedgerEntry[] = [];
 
     allBookings.forEach((booking) => {
-        let shouldDebit = false;
+        const bookingDate = new Date(booking.bookingDate).toLocaleDateString('en-CA'); // YYYY-MM-DD
         
         // Logic for when the current customer is the SENDER
         if (booking.sender === customer.name) {
-            // Only debit the sender if it's a "To Be Billed" booking
             if (booking.lrType === 'TBB') {
-                shouldDebit = true;
+                // 'To Be Billed' creates a debit for the sender
+                transactionEntries.push({
+                    date: bookingDate,
+                    particulars: `Freight - GR #${booking.lrNo}`,
+                    debit: booking.totalAmount,
+                });
+            } else if (booking.lrType === 'PAID') {
+                // 'PAID' is a cash transaction, record both debit and credit
+                transactionEntries.push({
+                    date: bookingDate,
+                    particulars: `Freight - GR #${booking.lrNo}`,
+                    debit: booking.totalAmount,
+                });
+                transactionEntries.push({
+                    date: bookingDate,
+                    particulars: `By Cash/Bank - GR #${booking.lrNo}`,
+                    credit: booking.totalAmount,
+                });
             }
+            // 'TOPAY' and 'FOC' bookings do not create a debit for the sender
         } 
         // Logic for when the current customer is the RECEIVER
         else if (booking.receiver === customer.name) {
-            // Only debit the receiver if it's a "To Pay" booking
+            // 'To Pay' creates a debit for the receiver
             if (booking.lrType === 'TOPAY') {
-                shouldDebit = true;
-            }
-        }
-
-        if (shouldDebit) {
-            bookingEntries.push({
-                date: new Date(booking.bookingDate).toLocaleDateString('en-CA'), // YYYY-MM-DD
-                particulars: `Freight - GR #${booking.lrNo}`,
-                debit: booking.totalAmount,
-            });
-
-            // If tax was paid by the sender and this customer is the sender, add GST entry
-            if (booking.taxPaidBy === 'Sender' && booking.sender === customer.name) {
-                const basicFreight = booking.itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
-                const additionalChargesTotal = Object.values(booking.additionalCharges || {}).reduce((sum, charge) => sum + charge, 0);
-                const subTotal = basicFreight + additionalChargesTotal;
-                const gstAmount = booking.totalAmount - subTotal;
-
-                if (gstAmount > 0) {
-                    bookingEntries.push({
-                        date: new Date(booking.bookingDate).toLocaleDateString('en-CA'), // YYYY-MM-DD
-                        particulars: `GST on GR #${booking.lrNo}`,
-                        debit: gstAmount,
-                    });
-                }
+                transactionEntries.push({
+                    date: bookingDate,
+                    particulars: `Freight - GR #${booking.lrNo}`,
+                    debit: booking.totalAmount,
+                });
             }
         }
     });
-
 
     const openingBalance = openingBalances[customer.name] ?? 0;
 
@@ -93,7 +89,7 @@ export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
 
     const ledger: LedgerEntry[] = [
         { date: '2024-04-01', particulars: 'Opening Balance', balance: openingBalance },
-        ...bookingEntries,
+        ...transactionEntries,
         ...creditEntries,
     ];
 
