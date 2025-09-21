@@ -236,13 +236,13 @@ export function BookingsDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className={`${thClass} w-[80px]`}>ACTION</TableHead>
+                      <TableHead className={`${thClass} w-[80px]`}>Action</TableHead>
                       <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                       <TableHead className={thClass}>LR No</TableHead>
-                      <TableHead className={thClass}>DATE</TableHead>
-                      <TableHead className={thClass}>From CITY</TableHead>
+                      <TableHead className={thClass}>Date</TableHead>
+                      <TableHead className={thClass}>From City</TableHead>
                       <TableHead className={thClass}>To City</TableHead>
-                      <TableHead className={thClass}>LR type</TableHead>
+                      <TableHead className={thClass}>LR Type</TableHead>
                       <TableHead className={thClass}>Sender</TableHead>
                       <TableHead className={thClass}>Receiver</TableHead>
                       <TableHead className={thClass}>Item & Description</TableHead>
