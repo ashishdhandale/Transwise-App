@@ -64,6 +64,7 @@ export function BookingDetailsSection({
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const [initialCityData, setInitialCityData] = useState<Partial<City> | null>(null);
     const datePickerRef = useRef<HTMLButtonElement>(null);
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
     const loadCityData = useCallback(() => {
         try {
@@ -156,6 +157,11 @@ export function BookingDetailsSection({
             return false;
         }
     };
+    
+    const handleDateSelect = (date?: Date) => {
+        onBookingDateChange(date);
+        setIsDatePickerOpen(false); // Close the popover on selection
+    };
 
     const errorClass = 'border-red-500 ring-2 ring-red-500/50';
 
@@ -168,7 +174,7 @@ export function BookingDetailsSection({
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="bookingDate">Booking Date</Label>
-                    <Popover>
+                    <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                         <PopoverTrigger asChild>
                             <Button
                                 ref={datePickerRef}
@@ -187,8 +193,7 @@ export function BookingDetailsSection({
                             <Calendar
                                 mode="single"
                                 selected={bookingDate}
-                                onSelect={onBookingDateChange}
-                                initialFocus
+                                onSelect={handleDateSelect}
                             />
                         </PopoverContent>
                     </Popover>
