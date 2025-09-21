@@ -52,19 +52,15 @@ export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
                 // 'To Be Billed' creates a debit for the sender
                 transactionEntries.push({
                     date: bookingDate,
-                    particulars: `Freight - GR #${booking.lrNo}`,
+                    particulars: `To Freight A/c - GR #${booking.lrNo}`,
                     debit: booking.totalAmount,
                 });
             } else if (booking.lrType === 'PAID') {
-                // 'PAID' is a cash transaction, record both debit and credit
+                // 'PAID' is a cash transaction, record a single entry with no balance impact.
                 transactionEntries.push({
                     date: bookingDate,
-                    particulars: `Freight - GR #${booking.lrNo}`,
+                    particulars: `To Cash/Bank A/c - GR #${booking.lrNo}`,
                     debit: booking.totalAmount,
-                });
-                transactionEntries.push({
-                    date: bookingDate,
-                    particulars: `By Cash/Bank - GR #${booking.lrNo}`,
                     credit: booking.totalAmount,
                 });
             }
@@ -76,7 +72,7 @@ export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
             if (booking.lrType === 'TOPAY') {
                 transactionEntries.push({
                     date: bookingDate,
-                    particulars: `Freight - GR #${booking.lrNo}`,
+                    particulars: `To Freight A/c - GR #${booking.lrNo}`,
                     debit: booking.totalAmount,
                 });
             }
