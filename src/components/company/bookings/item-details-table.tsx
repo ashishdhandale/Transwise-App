@@ -104,6 +104,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   const [itemOptions, setItemOptions] = useState<Item[]>([]);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [initialItemData, setInitialItemData] = useState<Partial<Item> | null>(null);
+  const [weightWarning, setWeightWarning] = useState<{ rowIndex: number; value: string } | null>(null);
   const { toast } = useToast();
 
   const loadItems = useCallback(() => {
@@ -204,6 +205,12 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     }
   }, [rows, calculateLumpsum, onRowsChange]);
 
+  const updateRow = (rowIndex: number, newRowData: Partial<ItemRow>) => {
+    const newRows = [...rows];
+    newRows[rowIndex] = { ...newRows[rowIndex], ...newRowData };
+    onRowsChange(newRows);
+  };
+
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
     const newRows = [...rows];
@@ -226,6 +233,11 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     if (columnId === 'chgWt') {
         const actWt = parseFloat(newRow.actWt) || 0;
         const chgWt = parseFloat(processedValue) || 0;
+        if (chgWt < actWt) {
+            setWeightWarning({ rowIndex, value: processedValue });
+            return; // Don't update the state yet, wait for user confirmation
+        }
+
         if (actWt !== chgWt) {
             newRow.freightOn = 'Chg.wt';
         } else {
@@ -253,6 +265,32 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     newRows[rowIndex] = newRow;
     onRowsChange(newRows);
   };
+  
+    const handleWeightWarningConfirm = () => {
+        if (!weightWarning) return;
+        const { rowIndex, value } = weightWarning;
+        const actWt = parseFloat(rows[rowIndex].actWt) || 0;
+        const chgWt = parseFloat(value) || 0;
+
+        let freightOn = rows[rowIndex].freightOn;
+        if (actWt !== chgWt) {
+            freightOn = 'Chg.wt';
+        } else {
+            freightOn = 'Act.wt';
+        }
+
+        updateRow(rowIndex, { chgWt: value, freightOn });
+        setWeightWarning(null);
+    };
+
+    const handleWeightWarningCancel = () => {
+        if (!weightWarning) return;
+        const { rowIndex } = weightWarning;
+        const input = document.getElementById(`chgWt-${rows[rowIndex].id}`);
+        input?.focus();
+        setWeightWarning(null);
+    };
+
 
   const handleOpenAddItem = (query?: string) => {
     setInitialItemData(query ? { name: query } : null);
@@ -322,7 +360,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
              return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'actWt':
         case 'chgWt':
-             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+             return <Input type="text" id={`${columnId}-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
@@ -484,6 +522,20 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         onSave={handleSaveItem}
         item={initialItemData}
       />
+      <AlertDialog open={!!weightWarning} onOpenChange={(open) => !open && setWeightWarning(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Weight Mismatch Warning</AlertDialogTitle>
+            <AlertDialogDescription>
+              Chargeable weight is less than actual weight. This will result in a loss. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleWeightWarningCancel}>Correct Weight</AlertDialogCancel>
+            <AlertDialogAction onClick={handleWeightWarningConfirm}>Continue Anyway</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
