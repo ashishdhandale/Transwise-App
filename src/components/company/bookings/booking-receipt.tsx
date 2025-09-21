@@ -65,6 +65,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                 <div>
                     <DetailItem label="GR No" value={booking.lrNo} isBold />
                     <DetailItem label="GR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
+                    <DetailItem label="Booking Type" value={booking.lrType} isBold />
                 </div>
                 <div>
                      <DetailItem label="From" value={booking.fromCity} />
@@ -192,4 +193,5 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 }
 
     
+
 
