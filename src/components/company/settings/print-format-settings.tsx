@@ -9,12 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +25,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PrintFormatPreview } from './print-format-preview';
 
 // --- SCHEMA DEFINITIONS ---
 const fieldSchema = z.object({
@@ -34,7 +35,7 @@ const fieldSchema = z.object({
   checked: z.boolean(),
 });
 
-const fieldGroupSchema = z.object({
+export const fieldGroupSchema = z.object({
   groupLabel: z.string(),
   fields: z.array(fieldSchema),
 });
@@ -49,8 +50,8 @@ const settingsSchema = z.object({
   formats: z.array(printFormatSchema),
 });
 
-type PrintFormat = z.infer<typeof printFormatSchema>;
-type SettingsFormValues = z.infer<typeof settingsSchema>;
+export type PrintFormat = z.infer<typeof printFormatSchema>;
+export type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 // --- CONSTANTS ---
 const LOCAL_STORAGE_KEY = 'transwise_print_formats';
@@ -85,10 +86,12 @@ export function PrintFormatSettings() {
     },
   });
 
-  const { fields: formatFields, append, remove, update } = useFieldArray({
+  const { fields: formatFields, append, remove } = useFieldArray({
     control: form.control,
     name: 'formats',
   });
+
+  const watchedFormats = form.watch('formats');
 
   useEffect(() => {
     try {
@@ -119,14 +122,11 @@ export function PrintFormatSettings() {
     const formatToRemoveId = formatFields[index].id;
     remove(index);
     
-    // If the deleted format was the active one, select a new one
     if(activeFormatId === formatToRemoveId) {
-        if (formatFields.length > 1) {
-            // Select the previous one, or the first one if the deleted one was the first
-            const newIndex = Math.max(0, index - 1);
-            setActiveFormatId(formatFields[newIndex].id);
+        const remainingFormats = form.getValues('formats');
+        if (remainingFormats.length > 0) {
+            setActiveFormatId(remainingFormats[0].id);
         } else {
-            // No formats left
             setActiveFormatId(null);
         }
     }
@@ -157,6 +157,8 @@ export function PrintFormatSettings() {
     }
     setIsSubmitting(false);
   };
+  
+  const activeFormatData = activeFormatIndex !== -1 ? watchedFormats[activeFormatIndex] : null;
 
   return (
     <Card>
@@ -179,7 +181,7 @@ export function PrintFormatSettings() {
                         className="flex-1 justify-start"
                         onClick={() => setActiveFormatId(format.id)}
                     >
-                        {format.name}
+                        {watchedFormats[index]?.name || 'Untitled Format'}
                     </Button>
                      <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -189,7 +191,7 @@ export function PrintFormatSettings() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Delete "{format.name}"?</AlertDialogTitle>
+                                <AlertDialogTitle>Delete "{watchedFormats[index]?.name}"?</AlertDialogTitle>
                                 <AlertDialogDescription>
                                 This action cannot be undone. This will permanently delete this print format.
                                 </AlertDialogDescription>
@@ -209,7 +211,7 @@ export function PrintFormatSettings() {
 
           {/* Form Editor */}
           <div className="flex-1 border-l pl-6">
-            {activeFormatIndex !== -1 ? (
+            {activeFormatIndex !== -1 && activeFormatData ? (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {/* Format Name */}
@@ -267,10 +269,25 @@ export function PrintFormatSettings() {
 
                   <Separator />
 
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save All Formats
-                  </Button>
+                  <div className="flex items-center gap-4">
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save All Formats
+                    </Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button type="button" variant="outline"><Eye className="mr-2 h-4 w-4" /> Preview</Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                            <DialogHeader>
+                                <DialogTitle>Print Preview: {activeFormatData.name}</DialogTitle>
+                            </DialogHeader>
+                             <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
+                                <PrintFormatPreview format={activeFormatData} />
+                             </div>
+                        </DialogContent>
+                    </Dialog>
+                  </div>
                 </form>
               </Form>
             ) : (
