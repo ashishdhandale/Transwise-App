@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card } from '@/components/ui/card';
@@ -57,7 +56,6 @@ export function DeliveryInstructionsSection({ deliveryAt, onDeliveryAtChange }: 
     { key: 'pod', label: 'POD?', options: bookingOptions.yesNo, defaultValue: 'No' },
     { key: 'attachCc', label: 'Attach CC', options: bookingOptions.yesNo, defaultValue: 'Yes' },
     { key: 'priority', label: 'Priority', options: bookingOptions.priorities, defaultValue: 'Express' },
-    { key: 'print', label: 'Print', options: printFormats, defaultValue: printFormats[0]?.value || 'Custom Copy' },
   ];
 
   return (
@@ -78,6 +76,11 @@ export function DeliveryInstructionsSection({ deliveryAt, onDeliveryAtChange }: 
                     defaultValue={inst.defaultValue} 
                 />
             ))}
+             <InstructionSelect 
+                label="Print" 
+                options={printFormats} 
+                defaultValue={printFormats[0]?.value}
+            />
         </div>
         <Separator className="my-2" />
         <div className="flex-grow flex flex-col gap-1.5">

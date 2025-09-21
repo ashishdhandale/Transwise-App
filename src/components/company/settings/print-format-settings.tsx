@@ -15,6 +15,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 // --- SCHEMA DEFINITIONS ---
 const fieldSchema = z.object({
@@ -105,12 +116,21 @@ export function PrintFormatSettings() {
   };
 
   const handleRemoveFormat = (index: number) => {
+    const formatToRemoveId = formatFields[index].id;
     remove(index);
-    if (formatFields.length > 1) {
-        setActiveFormatId(formatFields[index - 1]?.id || formatFields[0]?.id);
-    } else {
-        setActiveFormatId(null);
+    
+    // If the deleted format was the active one, select a new one
+    if(activeFormatId === formatToRemoveId) {
+        if (formatFields.length > 1) {
+            // Select the previous one, or the first one if the deleted one was the first
+            const newIndex = Math.max(0, index - 1);
+            setActiveFormatId(formatFields[newIndex].id);
+        } else {
+            // No formats left
+            setActiveFormatId(null);
+        }
     }
+    toast({ title: 'Format Deleted', variant: 'destructive'});
   };
   
   const toggleCollapsible = (groupLabel: string) => {
@@ -153,7 +173,7 @@ export function PrintFormatSettings() {
           <div className="w-1/4 space-y-2">
              <h3 className="font-semibold px-1">My Formats</h3>
             {formatFields.map((format, index) => (
-                <div key={format.id} className="flex items-center gap-1">
+                <div key={format.id} className="flex items-center gap-1 group">
                     <Button 
                         variant={activeFormatId === format.id ? 'secondary' : 'ghost'} 
                         className="flex-1 justify-start"
@@ -161,9 +181,25 @@ export function PrintFormatSettings() {
                     >
                         {format.name}
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleRemoveFormat(index)}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Delete "{format.name}"?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this print format.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleRemoveFormat(index)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             ))}
              <Button variant="outline" size="sm" onClick={handleAddNewFormat}>
@@ -238,8 +274,8 @@ export function PrintFormatSettings() {
                 </form>
               </Form>
             ) : (
-                <div className="text-center text-muted-foreground p-8">
-                    <p>Select a format to edit, or add a new one.</p>
+                <div className="text-center text-muted-foreground p-8 h-96 flex items-center justify-center border-dashed border-2 rounded-md">
+                    <p>Select a format to edit, or add a new one to begin.</p>
                 </div>
             )}
           </div>
