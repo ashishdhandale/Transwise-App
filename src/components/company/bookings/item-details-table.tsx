@@ -229,21 +229,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         newRow.chgWt = processedValue;
         newRow.freightOn = 'Act.wt';
     }
-
-    if (columnId === 'chgWt') {
-        const actWt = parseFloat(newRow.actWt) || 0;
-        const chgWt = parseFloat(processedValue) || 0;
-        if (chgWt < actWt) {
-            setWeightWarning({ rowIndex, value: processedValue });
-            return; // Don't update the state yet, wait for user confirmation
-        }
-
-        if (actWt !== chgWt) {
-            newRow.freightOn = 'Chg.wt';
-        } else {
-            newRow.freightOn = 'Act.wt';
-        }
-    }
     
     if (columnId === 'freightOn') {
         if (value === 'Fixed') {
@@ -264,13 +249,28 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     
     newRows[rowIndex] = newRow;
     onRowsChange(newRows);
+
+    if (columnId === 'chgWt') {
+        const actWt = parseFloat(newRow.actWt) || 0;
+        const chgWt = parseFloat(processedValue) || 0;
+
+        if (actWt !== chgWt) {
+            newRow.freightOn = 'Chg.wt';
+        } else {
+            newRow.freightOn = 'Act.wt';
+        }
+
+        if (chgWt > 0 && chgWt < actWt) {
+            setWeightWarning({ rowIndex, value: processedValue });
+        }
+    }
   };
   
     const handleWeightWarningConfirm = () => {
         if (!weightWarning) return;
-        const { rowIndex, value } = weightWarning;
+        const { rowIndex } = weightWarning;
         const actWt = parseFloat(rows[rowIndex].actWt) || 0;
-        const chgWt = parseFloat(value) || 0;
+        const chgWt = parseFloat(rows[rowIndex].chgWt) || 0;
 
         let freightOn = rows[rowIndex].freightOn;
         if (actWt !== chgWt) {
@@ -279,13 +279,14 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
             freightOn = 'Act.wt';
         }
 
-        updateRow(rowIndex, { chgWt: value, freightOn });
+        updateRow(rowIndex, { freightOn });
         setWeightWarning(null);
     };
 
     const handleWeightWarningCancel = () => {
         if (!weightWarning) return;
         const { rowIndex } = weightWarning;
+        updateRow(rowIndex, { chgWt: rows[rowIndex].actWt, freightOn: 'Act.wt' });
         const input = document.getElementById(`chgWt-${rows[rowIndex].id}`);
         input?.focus();
         setWeightWarning(null);
