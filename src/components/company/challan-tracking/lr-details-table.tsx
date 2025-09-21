@@ -23,6 +23,10 @@ interface LrDetailsTableProps {
 }
 
 export function LrDetailsTable({ lrDetails, profile }: LrDetailsTableProps) {
+  const formatValue = (amount: number) => {
+    if (!profile) return amount.toFixed(2);
+    return amount.toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
   return (
     <div className="space-y-2">
         <div className="overflow-x-auto border rounded-md max-h-60">
@@ -59,7 +63,7 @@ export function LrDetailsTable({ lrDetails, profile }: LrDetailsTableProps) {
                         <TableCell className={cn(tdClass)}>{row.quantity}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.actualWeight}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.chargeWeight}</TableCell>
-                        <TableCell className="whitespace-nowrap">{profile ? new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(row.grandTotal) : row.grandTotal}</TableCell>
+                        <TableCell className="whitespace-nowrap">{formatValue(row.grandTotal)}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

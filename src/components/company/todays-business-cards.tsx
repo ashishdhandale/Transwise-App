@@ -31,7 +31,7 @@ export function TodaysBusinessCards({ data, profile }: TodaysBusinessCardsProps)
     if (item.isCurrency && profile) {
         const numericValue = parseFloat(item.value.replace(/[^0-9.-]+/g,""));
         if (!isNaN(numericValue)) {
-            return new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency, minimumFractionDigits: 0 }).format(numericValue);
+            return numericValue.toLocaleString(profile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         }
     }
     return item.value;

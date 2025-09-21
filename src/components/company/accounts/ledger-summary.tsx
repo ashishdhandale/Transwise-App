@@ -17,7 +17,7 @@ const SummaryRow = ({ label, value, className, profile }: { label: string; value
     <div className={cn("flex justify-between items-center p-2 rounded-md", className)}>
         <span className="font-medium">{label}</span>
         <span className="font-bold text-lg">
-            {new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(value)}
+            {value.toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
     </div>
 );
@@ -40,7 +40,7 @@ export function LedgerSummary({ openingBalance, totalDebit, totalCredit, closing
                         <span className="font-bold text-base">Closing Balance</span>
                         <div className="text-right">
                             <p className="font-extrabold text-xl">
-                                {new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(Math.abs(closingBalance))}
+                                {Math.abs(closingBalance).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                             <p className="text-sm font-semibold">{balanceType}</p>
                         </div>

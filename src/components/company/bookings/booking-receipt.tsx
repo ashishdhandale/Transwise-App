@@ -45,6 +45,10 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
     }
     // For TBB and FOC, shouldShowFinancials remains false for non-office copies.
 
+    const formatValue = (value: number) => {
+        return value.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
 
     return (
         <div className="p-4 font-mono text-xs text-black bg-white">
@@ -93,9 +97,9 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <p><span className="font-semibold">Vehicle No:</span> {booking.ftlDetails.vehicleNo}</p>
                         <p><span className="font-semibold">Driver:</span> {booking.ftlDetails.driverName}</p>
                         <p><span className="font-semibold">Supplier:</span> {booking.ftlDetails.lorrySupplier}</p>
-                        <p><span className="font-semibold">Truck Freight:</span> {booking.ftlDetails.truckFreight.toFixed(2)}</p>
-                        <p><span className="font-semibold">Advance:</span> {booking.ftlDetails.advance.toFixed(2)}</p>
-                        <p><span className="font-semibold">Balance:</span> {(booking.ftlDetails.truckFreight - booking.ftlDetails.advance).toFixed(2)}</p>
+                        <p><span className="font-semibold">Truck Freight:</span> {formatValue(booking.ftlDetails.truckFreight)}</p>
+                        <p><span className="font-semibold">Advance:</span> {formatValue(booking.ftlDetails.advance)}</p>
+                        <p><span className="font-semibold">Balance:</span> {formatValue(booking.ftlDetails.truckFreight - booking.ftlDetails.advance)}</p>
                     </div>
                  </section>
             )}
@@ -149,26 +153,26 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     {shouldShowFinancials ? (
                         <div className="grid grid-cols-2 gap-x-2 text-[11px]">
                             <p className="font-semibold">Sub Total:</p>
-                            <p className="text-right">{subTotal.toFixed(2)}</p>
+                            <p className="text-right">{formatValue(subTotal)}</p>
                             
                             {Object.entries(booking.additionalCharges || {}).map(([key, value]) => (
                                  value > 0 && <React.Fragment key={key}>
                                     <p>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</p>
-                                    <p className="text-right">{value.toFixed(2)}</p>
+                                    <p className="text-right">{formatValue(value)}</p>
                                 </React.Fragment>
                             ))}
                             
                             {gstAmount > 0 && (
                                 <>
                                     <p>GST:</p>
-                                    <p className="text-right">{gstAmount.toFixed(2)}</p>
+                                    <p className="text-right">{formatValue(gstAmount)}</p>
                                 </>
                             )}
 
 
                             <p className="font-bold border-t border-black mt-1 pt-1">GRAND TOTAL:</p>
                             <p className="font-bold text-right border-t border-black mt-1 pt-1 text-sm">
-                                {new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency }).format(booking.totalAmount)}
+                                {formatValue(booking.totalAmount)}
                             </p>
                         </div>
                     ) : (

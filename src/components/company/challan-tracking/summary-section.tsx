@@ -14,7 +14,7 @@ const SummaryItem = ({ label, value, isCurrency = true, profile }: { label: stri
     <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{label}:</span>
         <span className="font-semibold">
-            {isCurrency && profile ? new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(Number(value)) : value}
+            {isCurrency && profile ? (Number(value)).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
         </span>
     </div>
 );
@@ -28,7 +28,7 @@ export function SummarySection({ challan, profile }: SummarySectionProps) {
         <CardContent className="p-4 space-y-2">
             <div className="flex justify-between font-bold text-base border-b pb-2">
                 <span>Grand Total:</span>
-                <span className="text-red-600">{profile ? new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(grandTotal) : grandTotal}</span>
+                <span className="text-red-600">{profile ? grandTotal.toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : grandTotal}</span>
             </div>
             <SummaryItem label="Total Topay Amount" value={totalTopayAmount} profile={profile} />
             <SummaryItem label="Commission" value={commission} profile={profile} />

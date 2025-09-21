@@ -81,9 +81,9 @@ export function ChallanList() {
         toast({ title: "Challan Deleted", variant: "destructive" });
     }
 
-    const formatCurrency = (amount: number) => {
+    const formatValue = (amount: number) => {
         if (!companyProfile) return amount.toLocaleString();
-        return new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency, minimumFractionDigits: 0 }).format(amount);
+        return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
     const tdClass = "p-2 whitespace-nowrap";
@@ -155,7 +155,7 @@ export function ChallanList() {
                                         <TableCell className={tdClass}>{challan.vehicleNo}</TableCell>
                                         <TableCell className={`${tdClass} text-right`}>{challan.totalPackages}</TableCell>
                                         <TableCell className={`${tdClass} text-right`}>{challan.totalChargeWeight.toFixed(2)} kg</TableCell>
-                                        <TableCell className={`${tdClass} text-right`}>{formatCurrency(challan.vehicleHireFreight)}</TableCell>
+                                        <TableCell className={`${tdClass} text-right`}>{formatValue(challan.vehicleHireFreight)}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (

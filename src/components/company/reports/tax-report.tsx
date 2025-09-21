@@ -88,9 +88,9 @@ export function TaxReport() {
         return allCustomers.map(c => ({ label: c.name, value: c.name }));
     }, [allCustomers]);
 
-    const formatCurrency = (amount: number) => {
+    const formatValue = (amount: number) => {
         if (!companyProfile) return amount.toFixed(2);
-        return new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency }).format(amount);
+        return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
 
@@ -152,8 +152,8 @@ export function TaxReport() {
                                             <TableCell className={tdClass}>{booking.toCity}</TableCell>
                                             <TableCell className={tdClass}>{booking.sender}</TableCell>
                                             <TableCell className={tdClass}>{booking.receiver}</TableCell>
-                                            <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
-                                            <TableCell className={`${tdClass} text-right font-semibold text-red-600`}>{formatCurrency(booking.gstAmount)}</TableCell>
+                                            <TableCell className={`${tdClass} text-right`}>{formatValue(booking.totalAmount)}</TableCell>
+                                            <TableCell className={`${tdClass} text-right font-semibold text-red-600`}>{formatValue(booking.gstAmount)}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
@@ -168,8 +168,8 @@ export function TaxReport() {
                                 <TableFooter>
                                     <TableRow>
                                         <TableCell colSpan={7} className="text-right font-bold text-lg">Total</TableCell>
-                                        <TableCell className="text-right font-bold text-lg">{formatCurrency(totalFreight)}</TableCell>
-                                        <TableCell className="text-right font-bold text-lg text-red-700">{formatCurrency(totalGst)}</TableCell>
+                                        <TableCell className="text-right font-bold text-lg">{formatValue(totalFreight)}</TableCell>
+                                        <TableCell className="text-right font-bold text-lg text-red-700">{formatValue(totalGst)}</TableCell>
                                     </TableRow>
                                 </TableFooter>
                             )}

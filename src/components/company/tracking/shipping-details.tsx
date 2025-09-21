@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Truck, Package, MapPin, Building, Calendar, Phone, Search, IndianRupee } from 'lucide-react';
+import { Truck, Package, MapPin, Building, Calendar, Phone, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import type { BookingHistory } from '@/lib/history-data';
@@ -39,9 +39,9 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
         );
     }
 
-    const formatCurrency = (amount: number) => {
+    const formatValue = (amount: number) => {
         if (!profile) return amount.toLocaleString();
-        return new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(amount);
+        return amount.toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     
     const deliveredEvent = history?.logs.find(log => log.action === 'Delivered');
@@ -70,7 +70,7 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                         <DetailRow label="Total Chg Wt" value={`${booking.chgWt} KG`} profile={profile} />
                         <DetailRow label="Payment Mode" value={booking.lrType} profile={profile} />
                         <DetailRow label="Total Freight" profile={profile}>
-                            {formatCurrency(booking.totalAmount)}
+                            {formatValue(booking.totalAmount)}
                         </DetailRow>
                         <DetailRow label="Booking Note" value="Handle with care" profile={profile} />
                     </div>

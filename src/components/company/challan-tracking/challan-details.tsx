@@ -15,7 +15,7 @@ const DetailItem = ({ label, value, isEmphasized = false, isCurrency = false, pr
     <div>
         <span className="text-sm text-muted-foreground">{label}: </span>
         <span className={isEmphasized ? 'font-bold text-red-600 text-sm' : 'text-sm font-semibold'}>
-            {isCurrency && profile ? new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(Number(value)) : value}
+            {isCurrency && profile ? (Number(value)).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
         </span>
     </div>
 );
