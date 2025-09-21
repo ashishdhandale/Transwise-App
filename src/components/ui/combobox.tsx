@@ -77,10 +77,6 @@ export function Combobox({
       setOpen(false);
       triggerRef.current?.focus();
     }
-    // Allow tab to move to the next element
-    if (event.key === 'Tab') {
-      setOpen(false);
-    }
   }
   
   React.useEffect(() => {
