@@ -26,8 +26,6 @@ type CityListSource = 'default' | 'custom';
 interface BookingDetailsSectionProps {
     bookingType: string;
     onBookingTypeChange: (type: string) => void;
-    paymentMode: 'Cash' | 'Online';
-    onPaymentModeChange: (mode: 'Cash' | 'Online') => void;
     loadType: string;
     onLoadTypeChange: (type: string) => void;
     onFromStationChange: (station: City | null) => void;
@@ -46,8 +44,6 @@ interface BookingDetailsSectionProps {
 export function BookingDetailsSection({ 
     bookingType, 
     onBookingTypeChange,
-    paymentMode,
-    onPaymentModeChange,
     loadType,
     onLoadTypeChange,
     onFromStationChange,
@@ -171,7 +167,7 @@ export function BookingDetailsSection({
 
     return (
         <>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                 <div className="space-y-1">
                     <Label htmlFor="lrNo">GR Number</Label>
                     <Input id="lrNo" value={grNumber} className="font-bold text-red-600 border-red-300" readOnly />
@@ -250,20 +246,6 @@ export function BookingDetailsSection({
                         </SelectContent>
                     </Select>
                 </div>
-                {bookingType === 'PAID' && (
-                    <div className="space-y-1">
-                        <Label htmlFor="paymentMode">Payment Mode</Label>
-                        <Select value={paymentMode} onValueChange={(value) => onPaymentModeChange(value as 'Cash' | 'Online')}>
-                            <SelectTrigger id="paymentMode">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Cash">Cash</SelectItem>
-                                <SelectItem value="Online">Online</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                )}
             </div>
             <AddCityDialog
                 isOpen={isAddCityOpen}

@@ -34,6 +34,7 @@ import type { CompanyProfileFormValues } from '@/components/company/settings/com
 import { VehicleDetailsSection } from './vehicle-details-section';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { FtlChallan } from '../challan-tracking/ftl-challan';
+import { PaymentDialog } from './payment-dialog';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -136,7 +137,6 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
-    const [paymentMode, setPaymentMode] = useState<'Cash' | 'Online'>('Cash');
     const [loadType, setLoadType] = useState('PTL');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
@@ -175,6 +175,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     const [generatedChallan, setGeneratedChallan] = useState<Challan | null>(null);
     const receiptRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+
 
     const generateGrNumber = (bookings: Booking[], prefix: string) => {
         const relevantGrNumbers = bookings
@@ -232,7 +234,6 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     setCurrentGrNumber(bookingToEdit.lrNo);
                     setBookingDate(new Date(bookingToEdit.bookingDate));
                     setBookingType(bookingToEdit.lrType);
-                    setPaymentMode(bookingToEdit.paymentMode || 'Cash');
                     setLoadType(bookingToEdit.loadType || 'PTL');
                     setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
                     setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
@@ -279,7 +280,6 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         let keyCounter = 1;
         setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
-        setPaymentMode('Cash');
         setLoadType('PTL');
         setFromStation(null);
         setToStation(null);
@@ -327,7 +327,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     }, [itemRows]);
 
 
-    const handleSaveOrUpdate = async () => {
+    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online') => {
         const newErrors: { [key: string]: boolean } = {};
         if (!fromStation) newErrors.fromStation = true;
         if (!toStation) newErrors.toStation = true;
@@ -347,8 +347,14 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
              toast({ title: 'Incomplete Item Details', description: 'Please fill all required fields (*) for each item row, or clear the row.', variant: 'destructive' });
              return;
         }
+        
+        if (bookingType === 'PAID' && !isEditMode && !paymentMode) {
+            setIsPaymentDialogOpen(true);
+            return;
+        }
 
         setIsSubmitting(true);
+        if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100)); // allow UI to update
 
         const isFtlBooking = loadType === 'FTL';
@@ -531,8 +537,6 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 <BookingDetailsSection 
                     bookingType={bookingType} 
                     onBookingTypeChange={setBookingType}
-                    paymentMode={paymentMode}
-                    onPaymentModeChange={setPaymentMode}
                     onFromStationChange={setFromStation}
                     onToStationChange={setToStation}
                     fromStation={fromStation}
@@ -593,7 +597,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                             </p>
                         </Card>
                         <MainActionsSection 
-                            onSave={handleSaveOrUpdate} 
+                            onSave={() => handleSaveOrUpdate()} 
                             isEditMode={isEditMode} 
                             onClose={onClose} 
                             onReset={handleReset}
@@ -604,6 +608,13 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             </CardContent>
         </Card>
         
+        <PaymentDialog
+            isOpen={isPaymentDialogOpen}
+            onOpenChange={setIsPaymentDialogOpen}
+            onConfirm={handleSaveOrUpdate}
+            amount={grandTotal}
+        />
+
         {receiptData && companyProfile && (
             <Dialog open={showReceipt} onOpenChange={(isOpen) => {
                  if (!isOpen) {

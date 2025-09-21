@@ -6,6 +6,12 @@
       "description": "A stylized, abstract map background for the real-time fleet view.",
       "imageUrl": "https://picsum.photos/seed/mapview/1200/900",
       "imageHint": "abstract map"
+    },
+    {
+      "id": "qr-code",
+      "description": "A sample QR code for UPI payments.",
+      "imageUrl": "https://picsum.photos/seed/qrcode/200/200",
+      "imageHint": "qr code"
     }
   ]
 }
