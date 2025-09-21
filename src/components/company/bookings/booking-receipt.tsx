@@ -6,6 +6,7 @@ import type { Booking } from '@/lib/bookings-dashboard-data';
 import { format, parseISO } from 'date-fns';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { Separator } from '@/components/ui/separator';
+import React from 'react';
 
 interface BookingReceiptProps {
     booking: Booking;
@@ -28,6 +29,22 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
     const gstAmount = booking.totalAmount - (subTotal + otherChargesTotal);
 
     const isFtl = booking.loadType === 'FTL';
+    
+    // Conditional logic for showing financial details
+    let shouldShowFinancials = false;
+    if (copyType === 'Office') {
+        shouldShowFinancials = true;
+    } else if (booking.lrType === 'PAID') {
+        if (copyType === 'Sender') {
+            shouldShowFinancials = true;
+        }
+    } else if (booking.lrType === 'TOPAY') {
+        if (copyType === 'Sender' || copyType === 'Receiver') {
+            shouldShowFinancials = true;
+        }
+    }
+    // For TBB and FOC, shouldShowFinancials remains false for non-office copies.
+
 
     return (
         <div className="p-4 font-mono text-xs text-black bg-white">
@@ -68,7 +85,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                 </div>
             </section>
             
-            {isFtl && booking.ftlDetails && (
+            {isFtl && booking.ftlDetails && shouldShowFinancials && (
                  <section className="mt-2 border-b-2 border-black pb-2 text-[11px]">
                      <h3 className="font-bold underline text-center mb-1">VEHICLE & FREIGHT DETAILS</h3>
                     <div className="grid grid-cols-3 gap-x-4">
@@ -91,7 +108,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                             <th className="border border-black p-1">Qty</th>
                             <th className="border border-black p-1">Act. Wt.</th>
                             <th className="border border-black p-1">Chg. Wt.</th>
-                            <th className="border border-black p-1">Freight</th>
+                            {shouldShowFinancials && <th className="border border-black p-1">Freight</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -102,7 +119,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                                 <td className="border border-black p-1 text-center">{item.qty}</td>
                                 <td className="border border-black p-1 text-right">{item.actWt}</td>
                                 <td className="border border-black p-1 text-right">{item.chgWt}</td>
-                                <td className="border border-black p-1 text-right">{Number(item.lumpsum).toFixed(2)}</td>
+                                {shouldShowFinancials && <td className="border border-black p-1 text-right">{Number(item.lumpsum).toFixed(2)}</td>}
                             </tr>
                         ))}
                     </tbody>
@@ -112,7 +129,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                             <td className="border border-black p-1 text-center">{booking.qty}</td>
                             <td className="border border-black p-1 text-right">{validItemRows.reduce((s, i) => s + Number(i.actWt), 0).toFixed(2)}</td>
                             <td className="border border-black p-1 text-right">{booking.chgWt.toFixed(2)}</td>
-                            <td className="border border-black p-1 text-right">{subTotal.toFixed(2)}</td>
+                            {shouldShowFinancials && <td className="border border-black p-1 text-right">{subTotal.toFixed(2)}</td>}
                         </tr>
                     </tfoot>
                 </table>
@@ -128,30 +145,36 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     </ol>
                 </div>
                  <div className="border border-black p-1">
-                    <div className="grid grid-cols-2 gap-x-2 text-[11px]">
-                        <p className="font-semibold">Sub Total:</p>
-                        <p className="text-right">{subTotal.toFixed(2)}</p>
-                        
-                        {Object.entries(booking.additionalCharges || {}).map(([key, value]) => (
-                             value > 0 && <React.Fragment key={key}>
-                                <p>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</p>
-                                <p className="text-right">{value.toFixed(2)}</p>
-                            </React.Fragment>
-                        ))}
-                        
-                        {gstAmount > 0 && (
-                            <>
-                                <p>GST:</p>
-                                <p className="text-right">{gstAmount.toFixed(2)}</p>
-                            </>
-                        )}
+                    {shouldShowFinancials ? (
+                        <div className="grid grid-cols-2 gap-x-2 text-[11px]">
+                            <p className="font-semibold">Sub Total:</p>
+                            <p className="text-right">{subTotal.toFixed(2)}</p>
+                            
+                            {Object.entries(booking.additionalCharges || {}).map(([key, value]) => (
+                                 value > 0 && <React.Fragment key={key}>
+                                    <p>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</p>
+                                    <p className="text-right">{value.toFixed(2)}</p>
+                                </React.Fragment>
+                            ))}
+                            
+                            {gstAmount > 0 && (
+                                <>
+                                    <p>GST:</p>
+                                    <p className="text-right">{gstAmount.toFixed(2)}</p>
+                                </>
+                            )}
 
 
-                        <p className="font-bold border-t border-black mt-1 pt-1">GRAND TOTAL:</p>
-                        <p className="font-bold text-right border-t border-black mt-1 pt-1 text-sm">
-                            {new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency }).format(booking.totalAmount)}
-                        </p>
-                    </div>
+                            <p className="font-bold border-t border-black mt-1 pt-1">GRAND TOTAL:</p>
+                            <p className="font-bold text-right border-t border-black mt-1 pt-1 text-sm">
+                                {new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency }).format(booking.totalAmount)}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full">
+                            <p className="font-bold text-lg">{booking.lrType}</p>
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -169,3 +192,4 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 }
 
     
+
