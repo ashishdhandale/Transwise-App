@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -106,6 +106,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   const [initialItemData, setInitialItemData] = useState<Partial<Item> | null>(null);
   const [weightWarning, setWeightWarning] = useState<{ rowIndex: number; value: string } | null>(null);
   const { toast } = useToast();
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const loadItems = useCallback(() => {
     try {
@@ -288,9 +289,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
         updateRow(rowIndex, { freightOn });
         setWeightWarning(null);
-
-        const rateInput = document.getElementById(`rate-${row.id}`);
-        rateInput?.focus();
+        inputRefs.current[`rate-${row.id}`]?.focus();
     };
 
     const handleWeightWarningCancel = () => {
@@ -298,9 +297,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         const { rowIndex } = weightWarning;
         const row = rows[rowIndex];
         updateRow(rowIndex, { chgWt: row.actWt, freightOn: 'Act.wt' });
-        const input = document.getElementById(`chgWt-${row.id}`);
-        input?.focus();
         setWeightWarning(null);
+        inputRefs.current[`chgWt-${row.id}`]?.focus();
     };
 
 
@@ -363,7 +361,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 </Select>
             );
         case 'rate':
-            return <Input type="text" id={`rate-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
+            return <Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
         case 'lumpsum':
              return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={!isFixedFreight} />;
         case 'dValue':
@@ -373,7 +371,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'actWt':
             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'chgWt':
-             return <Input type="text" id={`chgWt-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} onBlur={() => handleChgWtBlur(index)} />;
+             return <Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} onBlur={() => handleChgWtBlur(index)} />;
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
@@ -544,8 +542,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleWeightWarningCancel}>Correct Weight</AlertDialogCancel>
             <AlertDialogAction onClick={handleWeightWarningConfirm}>Continue Anyway</AlertDialogAction>
+            <AlertDialogCancel onClick={handleWeightWarningCancel}>Correct Weight</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
