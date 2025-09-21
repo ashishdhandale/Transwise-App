@@ -77,6 +77,10 @@ export function Combobox({
       setOpen(false);
       triggerRef.current?.focus();
     }
+    // Allow tab to move to the next element
+    if (event.key === 'Tab') {
+      setOpen(false);
+    }
   }
   
   React.useEffect(() => {
@@ -113,6 +117,9 @@ export function Combobox({
                     e.preventDefault();
                     setOpen(true);
                 }
+            } else if (e.key === 'Tab') {
+                // This allows the user to tab away from the component
+                return;
             }
           }}
         >
