@@ -30,6 +30,7 @@ import {
   MapPin,
   MoreHorizontal,
   Mountain,
+  Notebook,
   Package,
   PackageSearch,
   Settings,
@@ -60,6 +61,7 @@ export function AppSidebar() {
   const [openDashboardMenu, setOpenDashboardMenu] = React.useState(false);
   const [openBranchMenu, setOpenBranchMenu] = React.useState(false);
   const [openConsignmentMenu, setOpenConsignmentMenu] = React.useState(false);
+  const [openAccountsMenu, setOpenAccountsMenu] = React.useState(false);
   const [openMasterMenu, setOpenMasterMenu] = React.useState(false);
   const [openReportsMenu, setOpenReportsMenu] = React.useState(false);
 
@@ -79,6 +81,9 @@ export function AppSidebar() {
      if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan')) {
       setOpenConsignmentMenu(true);
      }
+      if (pathname.startsWith('/company/accounts')) {
+      setOpenAccountsMenu(true);
+     }
      if (pathname.startsWith('/company/master')) {
       setOpenMasterMenu(true);
      }
@@ -93,6 +98,7 @@ export function AppSidebar() {
       setOpenDashboardMenu(false);
       setOpenBranchMenu(false);
       setOpenConsignmentMenu(false);
+      setOpenAccountsMenu(false);
       setOpenMasterMenu(false);
       setOpenReportsMenu(false);
     }
@@ -262,16 +268,34 @@ export function AppSidebar() {
           </CollapsibleContent>
         </Collapsible>
         
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            href="/company/accounts"
-            tooltip="Accounts"
-            isActive={pathname.startsWith('/company/accounts')}
-          >
-            <Wallet />
-            <span>Accounts</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        <Collapsible open={openAccountsMenu} onOpenChange={setOpenAccountsMenu}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Accounts">
+              <Wallet />
+              <span>Accounts</span>
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform ml-auto',
+                  openAccountsMenu && 'rotate-180'
+                )}
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/accounts/customer-ledger" size="sm" isActive={pathname.startsWith('/company/accounts/customer-ledger')} tooltip="Customer Ledger">
+                  <Users /> Customer Ledger
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/accounts/cashbook" size="sm" isActive={pathname.startsWith('/company/accounts/cashbook')} tooltip="Cashbook">
+                  <Notebook /> Cashbook
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         <Collapsible open={openMasterMenu} onOpenChange={setOpenMasterMenu}>
           <CollapsibleTrigger asChild>

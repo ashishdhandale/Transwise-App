@@ -1,23 +1,15 @@
 
+
 'use client';
-
-import { Suspense } from 'react';
-import DashboardLayout from '../../(dashboard)/layout';
-import { AccountsDashboard } from '@/components/company/accounts/accounts-dashboard';
-
-
-function AccountsPage() {
-  return (
-    <DashboardLayout>
-      <AccountsDashboard />
-    </DashboardLayout>
-  );
-}
+// This file is now a directory. 
+// Redirecting to the main customer ledger page.
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function AccountsRootPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AccountsPage />
-    </Suspense>
-  );
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/company/accounts/customer-ledger');
+  }, [router]);
+  return null;
 }
