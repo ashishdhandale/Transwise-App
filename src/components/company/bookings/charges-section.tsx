@@ -148,7 +148,7 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
             <Separator />
             <div className="grid grid-cols-[1fr_100px] items-center gap-2">
                 <Label className="text-sm text-left font-bold">Grand Total:</Label>
-                <Input value={profile ? new Intl.NumberFormat(profile.countryCode, { style: 'currency', currency: profile.currency }).format(grandTotal) : grandTotal.toFixed(2)} className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
+                <Input value={grandTotal.toFixed(2)} className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
             </div>
         </div>
     </Card>
