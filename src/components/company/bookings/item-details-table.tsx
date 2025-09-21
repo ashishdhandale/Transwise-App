@@ -105,6 +105,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [initialItemData, setInitialItemData] = useState<Partial<Item> | null>(null);
   const [weightWarning, setWeightWarning] = useState<{ rowIndex: number; value: string } | null>(null);
+  const [nextFocusRef, setNextFocusRef] = useState<React.RefObject<HTMLInputElement> | null>(null);
   const { toast } = useToast();
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
@@ -163,6 +164,13 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]);
+
+  useEffect(() => {
+    if (nextFocusRef && !weightWarning) {
+      nextFocusRef.current?.focus();
+      setNextFocusRef(null);
+    }
+  }, [nextFocusRef, weightWarning]);
 
   const calculateLumpsum = useCallback((row: ItemRow) => {
     const qty = parseFloat(row.qty) || 0;
@@ -248,16 +256,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         }
     }
     
-    if (columnId === 'chgWt') {
-        const actWt = parseFloat(newRow.actWt) || 0;
-        const chgWt = parseFloat(processedValue) || 0;
-        if (actWt !== chgWt) {
-            newRow.freightOn = 'Chg.wt';
-        } else {
-            newRow.freightOn = 'Act.wt';
-        }
-    }
-
     newRows[rowIndex] = newRow;
     onRowsChange(newRows);
   };
@@ -288,8 +286,10 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         }
 
         updateRow(rowIndex, { freightOn });
+        
+        const rateRef = { current: inputRefs.current[`rate-${row.id}`] };
+        setNextFocusRef(rateRef);
         setWeightWarning(null);
-        inputRefs.current[`rate-${row.id}`]?.focus();
     };
 
     const handleWeightWarningCancel = () => {
@@ -297,8 +297,10 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         const { rowIndex } = weightWarning;
         const row = rows[rowIndex];
         updateRow(rowIndex, { chgWt: row.actWt, freightOn: 'Act.wt' });
+        
+        const chgWtRef = { current: inputRefs.current[`chgWt-${row.id}`] };
+        setNextFocusRef(chgWtRef);
         setWeightWarning(null);
-        inputRefs.current[`chgWt-${row.id}`]?.focus();
     };
 
 
@@ -533,7 +535,11 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         onSave={handleSaveItem}
         item={initialItemData}
       />
-      <AlertDialog open={!!weightWarning} onOpenChange={(open) => !open && setWeightWarning(null)}>
+      <AlertDialog open={!!weightWarning} onOpenChange={(open) => {
+          if (!open && weightWarning) {
+              handleWeightWarningCancel();
+          }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Weight Mismatch Warning</AlertDialogTitle>
@@ -550,5 +556,3 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </>
   );
 }
-
-    
