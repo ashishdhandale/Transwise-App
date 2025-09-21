@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -42,6 +41,7 @@ import { getCompanyProfile } from '@/app/company/settings/actions';
 import { BookingReceipt } from './booking-receipt';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -245,79 +245,90 @@ export function BookingsDashboard() {
                       <TableHead className={thClass}>LR Type</TableHead>
                       <TableHead className={thClass}>Sender</TableHead>
                       <TableHead className={thClass}>Receiver</TableHead>
-                      <TableHead className={thClass}>Item & Description</TableHead>
+                      <TableHead className={thClass}>Item &amp; Description</TableHead>
                       <TableHead className={`${thClass} text-right`}>Qty</TableHead>
                       <TableHead className={`${thClass} text-right`}>Chg Wt</TableHead>
                       <TableHead className={`${thClass} text-right`}>Total Amount</TableHead>
                       <TableHead className={thClass}>Status</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {filteredBookings.length > 0 ? (
-                      filteredBookings.map((booking, index) => (
-                      <TableRow key={booking.id} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
-                        <TableCell className="p-1 text-center whitespace-nowrap">
-                          <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                      <span className="sr-only">More actions</span>
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleEditOpen(booking.id)}>
-                                      <Pencil className="mr-2 h-4 w-4" /> Edit
-                                  </DropdownMenuItem>
-                                   <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                      <Printer className="mr-2 h-4 w-4" />
-                                      Print
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuPortal>
-                                      <DropdownMenuSubContent>
-                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')}>Sender Copy</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')}>Receiver Copy</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')}>Driver Copy</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Office')}>Office Copy</DropdownMenuItem>
-                                      </DropdownMenuSubContent>
-                                    </DropdownMenuPortal>
-                                  </DropdownMenuSub>
-                                  {booking.status !== 'Cancelled' && (
-                                      <DropdownMenuItem className="text-red-500"><XCircle className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>
-                                  )}
-                                  {booking.status === 'Cancelled' && (
-                                      <DropdownMenuItem className="text-red-500"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
-                                  )}
-                              </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                        <TableCell className={`${tdClass} text-center`}>{index + 1}</TableCell>
-                        <TableCell className={tdClass}>{booking.lrNo}</TableCell>
-                        <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
-                        <TableCell className={tdClass}>{booking.fromCity}</TableCell>
-                        <TableCell className={tdClass}>{booking.toCity}</TableCell>
-                        <TableCell className={tdClass}>{booking.lrType}</TableCell>
-                        <TableCell className={tdClass}>{booking.sender}</TableCell>
-                        <TableCell className={tdClass}>{booking.receiver}</TableCell>
-                        <TableCell className={tdClass}>{booking.itemDescription}</TableCell>
-                        <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
-                        <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
-                        <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
-                        <TableCell className={tdClass}>
-                           <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
-                               {booking.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={14} className="text-center h-24">No bookings found.</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
+                  <TooltipProvider>
+                    <TableBody>
+                      {filteredBookings.length > 0 ? (
+                        filteredBookings.map((booking, index) => (
+                        <TableRow key={booking.id} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
+                          <TableCell className="p-1 text-center whitespace-nowrap">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">More actions</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleEditOpen(booking.id)}>
+                                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSub>
+                                      <DropdownMenuSubTrigger>
+                                        <Printer className="mr-2 h-4 w-4" />
+                                        Print
+                                      </DropdownMenuSubTrigger>
+                                      <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')}>Sender Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')}>Receiver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')}>Driver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Office')}>Office Copy</DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                      </DropdownMenuPortal>
+                                    </DropdownMenuSub>
+                                    {booking.status !== 'Cancelled' && (
+                                        <DropdownMenuItem className="text-red-500"><XCircle className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>
+                                    )}
+                                    {booking.status === 'Cancelled' && (
+                                        <DropdownMenuItem className="text-red-500"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                          <TableCell className={`${tdClass} text-center`}>{index + 1}</TableCell>
+                          <TableCell className={tdClass}>{booking.lrNo}</TableCell>
+                          <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
+                          <TableCell className={tdClass}>{booking.fromCity}</TableCell>
+                          <TableCell className={tdClass}>{booking.toCity}</TableCell>
+                          <TableCell className={tdClass}>{booking.lrType}</TableCell>
+                          <TableCell className={tdClass}>{booking.sender}</TableCell>
+                          <TableCell className={tdClass}>{booking.receiver}</TableCell>
+                          <TableCell className={tdClass}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="truncate max-w-[200px]">{booking.itemDescription}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{booking.itemDescription}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
+                          <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
+                          <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
+                          <TableCell className={tdClass}>
+                            <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
+                                {booking.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={14} className="text-center h-24">No bookings found.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </TooltipProvider>
                 </Table>
               </div>
             </div>
