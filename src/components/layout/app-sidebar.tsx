@@ -289,6 +289,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                <SidebarMenuButton href="/company/accounts/vendor-ledger" size="sm" isActive={pathname.startsWith('/company/accounts/vendor-ledger')} tooltip="Vendor Ledger">
+                  <Handshake /> Vendor Ledger
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton href="/company/accounts/cashbook" size="sm" isActive={pathname.startsWith('/company/accounts/cashbook')} tooltip="Cashbook">
                   <Notebook /> Cashbook
                 </SidebarMenuButton>
