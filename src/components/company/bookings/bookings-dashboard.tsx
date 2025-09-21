@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,8 +23,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
-import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle, Download, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
@@ -33,6 +38,9 @@ import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { getCompanyProfile } from '@/app/company/settings/actions';
+import { BookingReceipt } from './booking-receipt';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -41,6 +49,7 @@ const statusColors: { [key: string]: string } = {
   'In Transit': 'text-blue-600',
   Cancelled: 'text-red-600',
   'In HOLD': 'text-yellow-600',
+  'Delivered': 'text-gray-500'
 };
 
 const thClass = 'bg-cyan-600 text-white h-10';
@@ -55,6 +64,12 @@ export function BookingsDashboard() {
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [bookingToPrint, setBookingToPrint] = useState<Booking | null>(null);
+  const [copyTypeToPrint, setCopyTypeToPrint] = useState<'Sender' | 'Receiver' | 'Driver' | 'Office' | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+
   const router = useRouter();
 
   const loadBookings = async () => {
@@ -84,6 +99,49 @@ export function BookingsDashboard() {
     setIsEditDialogOpen(false);
     setSelectedBookingId(null);
     loadBookings(); // Refresh data after closing dialog
+  };
+
+  const handlePrintOpen = (booking: Booking, copyType: 'Sender' | 'Receiver' | 'Driver' | 'Office') => {
+      setBookingToPrint(booking);
+      setCopyTypeToPrint(copyType);
+      setIsPrintDialogOpen(true);
+  }
+
+  const handleDownloadPdf = async () => {
+    const input = printRef.current;
+    if (!input || !bookingToPrint || !copyTypeToPrint) return;
+
+    setIsDownloading(true);
+
+    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgProps = pdf.getImageProperties(imgData);
+    const ratio = imgProps.height / imgProps.width;
+    const imgWidth = pdfWidth - 20;
+    const imgHeight = imgWidth * ratio;
+
+    let height = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+    height -= pdfHeight;
+
+    while (height > 0) {
+      position = height - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      height -= pdfHeight;
+    }
+    pdf.save(`receipt-${bookingToPrint.lrNo}-${copyTypeToPrint}.pdf`);
+    setIsDownloading(false);
+    setIsPrintDialogOpen(false);
   };
 
   const filteredBookings = useMemo(() => {
@@ -211,7 +269,20 @@ export function BookingsDashboard() {
                                   <DropdownMenuItem onClick={() => handleEditOpen(booking.id)}>
                                       <Pencil className="mr-2 h-4 w-4" /> Edit
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem><Printer className="mr-2 h-4 w-4" /> Print</DropdownMenuItem>
+                                   <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                      <Printer className="mr-2 h-4 w-4" />
+                                      Print
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                      <DropdownMenuSubContent>
+                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')}>Sender Copy</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')}>Receiver Copy</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')}>Driver Copy</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Office')}>Office Copy</DropdownMenuItem>
+                                      </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                  </DropdownMenuSub>
                                   {booking.status !== 'Cancelled' && (
                                       <DropdownMenuItem className="text-red-500"><XCircle className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>
                                   )}
@@ -259,6 +330,29 @@ export function BookingsDashboard() {
           bookingId={selectedBookingId}
         />
       )}
+       {bookingToPrint && copyTypeToPrint && companyProfile && (
+        <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Print Receipt: {bookingToPrint.lrNo} - {copyTypeToPrint} Copy</DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
+                    <div ref={printRef}>
+                       <BookingReceipt booking={bookingToPrint} companyProfile={companyProfile} copyType={copyTypeToPrint} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsPrintDialogOpen(false)}>Close</Button>
+                    <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                        Download PDF
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
+
+    
