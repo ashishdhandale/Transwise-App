@@ -35,6 +35,7 @@ import { VehicleDetailsSection } from './vehicle-details-section';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { FtlChallan } from '../challan-tracking/ftl-challan';
 import { PaymentDialog } from './payment-dialog';
+import { useSearchParams } from 'next/navigation';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -70,6 +71,10 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string
 
     if (oldBooking.bookingDate && newBooking.bookingDate && format(new Date(oldBooking.bookingDate), 'yyyy-MM-dd') !== format(new Date(newBooking.bookingDate), 'yyyy-MM-dd')) {
         changes.push(`- Booking Date changed from '${format(new Date(oldBooking.bookingDate), 'dd-MMM-yyyy')}' to '${format(new Date(newBooking.bookingDate), 'dd-MMM-yyyy')}'`);
+    }
+    
+    if (oldBooking.lrNo !== newBooking.lrNo) {
+        changes.push(`- GR Number changed from '${oldBooking.lrNo}' to '${newBooking.lrNo}'`);
     }
 
     if (oldBooking.lrType !== newBooking.lrType) {
@@ -133,7 +138,10 @@ const isRowPartiallyFilled = (row: ItemRow) => {
 };
 
 export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: BookingFormProps) {
+    const searchParams = useSearchParams();
+    const mode = searchParams.get('mode');
     const isEditMode = !!trackingId;
+    const isOfflineMode = mode === 'offline';
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
@@ -179,6 +187,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
 
 
     const generateGrNumber = (bookings: Booking[], prefix: string) => {
+        if (isOfflineMode || isEditMode) return '';
+
         const relevantGrNumbers = bookings
             .map(b => b.lrNo)
             .filter(lrNo => lrNo.startsWith(prefix));
@@ -228,8 +238,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                 if (bookingToEdit) {
                     const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
                     
-                    const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.sender.toLowerCase()) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
-                    const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.receiver.toLowerCase()) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company' };
+                    const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.sender.toLowerCase()) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+                    const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.receiver.toLowerCase()) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
 
                     setCurrentGrNumber(bookingToEdit.lrNo);
                     setBookingDate(new Date(bookingToEdit.bookingDate));
@@ -265,7 +275,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [isEditMode, trackingId, toast, loadMasterData]);
+    }, [isEditMode, trackingId, toast, loadMasterData, isOfflineMode]);
 
     useEffect(() => {
         loadInitialData();
@@ -275,7 +285,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
         const profile = companyProfile;
         const parsedBookings = getBookings();
         let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
-        setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
+        setCurrentGrNumber(isOfflineMode ? '' : generateGrNumber(parsedBookings, grnPrefix));
         
         let keyCounter = 1;
         setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
@@ -334,7 +344,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
         if (!sender?.name) newErrors.sender = true;
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
-        
+        if ((isOfflineMode || isEditMode) && !currentGrNumber) newErrors.grNumber = true;
+
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length > 0) {
@@ -525,7 +536,9 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
 
   return (
     <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-primary">{isEditMode ? `Edit Booking: ${currentGrNumber}` : 'Create New Booking'}</h1>
+        <h1 className="text-2xl font-bold text-primary">
+            {isEditMode ? `Edit Booking: ${currentGrNumber}` : (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking')}
+        </h1>
         <Card className="border-2 border-green-200">
             <CardContent className="p-4 space-y-4">
                 <BookingDetailsSection 
@@ -536,9 +549,11 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                     fromStation={fromStation}
                     toStation={toStation}
                     grNumber={currentGrNumber}
+                    onGrNumberChange={setCurrentGrNumber}
                     bookingDate={bookingDate}
                     onBookingDateChange={setBookingDate}
                     isEditMode={isEditMode}
+                    isOfflineMode={isOfflineMode}
                     companyProfile={companyProfile}
                     errors={errors}
                     loadType={loadType}

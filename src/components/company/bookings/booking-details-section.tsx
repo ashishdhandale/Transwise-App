@@ -33,9 +33,11 @@ interface BookingDetailsSectionProps {
     fromStation: City | null;
     toStation: City | null;
     grNumber: string;
+    onGrNumberChange: (grNumber: string) => void;
     bookingDate?: Date;
     onBookingDateChange: (date?: Date) => void;
     isEditMode: boolean;
+    isOfflineMode: boolean;
     companyProfile: CompanyProfileFormValues | null;
     errors: { [key: string]: boolean };
 }
@@ -51,9 +53,11 @@ export function BookingDetailsSection({
     fromStation,
     toStation,
     grNumber,
+    onGrNumberChange,
     bookingDate,
     onBookingDateChange,
     isEditMode,
+    isOfflineMode,
     companyProfile,
     errors,
 }: BookingDetailsSectionProps) {
@@ -164,13 +168,26 @@ export function BookingDetailsSection({
     };
 
     const errorClass = 'border-red-500 ring-2 ring-red-500/50';
+    const isGrEditable = isOfflineMode || isEditMode;
 
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                 <div className="space-y-1">
                     <Label htmlFor="lrNo">GR Number</Label>
-                    <Input id="lrNo" value={grNumber} className="font-bold text-red-600 border-red-300" readOnly />
+                    <Input 
+                        id="lrNo" 
+                        value={grNumber}
+                        onChange={(e) => onGrNumberChange(e.target.value)}
+                        className={cn(
+                            'font-bold',
+                            !isGrEditable && 'text-red-600 border-red-300',
+                            isGrEditable && 'text-blue-600 border-blue-300',
+                            errors.grNumber && errorClass
+                        )}
+                        readOnly={!isGrEditable}
+                        placeholder={isGrEditable ? "Enter Manual GRN" : ""}
+                    />
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="bookingDate">Booking Date</Label>
