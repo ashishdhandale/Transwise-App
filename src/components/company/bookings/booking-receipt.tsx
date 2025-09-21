@@ -61,15 +61,15 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                 </div>
             </header>
 
-            <section className="grid grid-cols-2 gap-4 mt-2 border-b-2 border-black pb-2">
-                <div>
+            <section className="grid grid-cols-3 gap-4 mt-2 border-b-2 border-black pb-2">
+                <div className="col-span-2">
                     <DetailItem label="GR No" value={booking.lrNo} isBold />
                     <DetailItem label="GR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
-                    <DetailItem label="Booking Type" value={booking.lrType} isBold />
+                    <DetailItem label="From" value={booking.fromCity} />
+                    <DetailItem label="To" value={booking.toCity} />
                 </div>
-                <div>
-                     <DetailItem label="From" value={booking.fromCity} />
-                     <DetailItem label="To" value={booking.toCity} />
+                <div className="flex items-center justify-center border-2 border-black rounded-md">
+                    <h2 className="text-lg font-extrabold text-center">{booking.lrType}</h2>
                 </div>
             </section>
 
@@ -193,5 +193,6 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 }
 
     
+
 
 
