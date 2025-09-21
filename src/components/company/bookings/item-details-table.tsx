@@ -274,10 +274,12 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     const handleWeightWarningConfirm = () => {
         if (!weightWarning) return;
         const { rowIndex } = weightWarning;
-        const actWt = parseFloat(rows[rowIndex].actWt) || 0;
-        const chgWt = parseFloat(rows[rowIndex].chgWt) || 0;
+        const row = rows[rowIndex];
+        
+        const actWt = parseFloat(row.actWt) || 0;
+        const chgWt = parseFloat(row.chgWt) || 0;
 
-        let freightOn = rows[rowIndex].freightOn;
+        let freightOn = row.freightOn;
         if (actWt !== chgWt) {
             freightOn = 'Chg.wt';
         } else {
@@ -286,13 +288,17 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
         updateRow(rowIndex, { freightOn });
         setWeightWarning(null);
+
+        const rateInput = document.getElementById(`rate-${row.id}`);
+        rateInput?.focus();
     };
 
     const handleWeightWarningCancel = () => {
         if (!weightWarning) return;
         const { rowIndex } = weightWarning;
-        updateRow(rowIndex, { chgWt: rows[rowIndex].actWt, freightOn: 'Act.wt' });
-        const input = document.getElementById(`chgWt-${rows[rowIndex].id}`);
+        const row = rows[rowIndex];
+        updateRow(rowIndex, { chgWt: row.actWt, freightOn: 'Act.wt' });
+        const input = document.getElementById(`chgWt-${row.id}`);
         input?.focus();
         setWeightWarning(null);
     };
@@ -357,7 +363,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
                 </Select>
             );
         case 'rate':
-            return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
+            return <Input type="text" id={`rate-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
         case 'lumpsum':
              return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={!isFixedFreight} />;
         case 'dValue':
@@ -367,7 +373,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'actWt':
             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'chgWt':
-             return <Input type="text" id={`${columnId}-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} onBlur={() => handleChgWtBlur(index)} />;
+             return <Input type="text" id={`chgWt-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} onBlur={() => handleChgWtBlur(index)} />;
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
@@ -534,7 +540,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
           <AlertDialogHeader>
             <AlertDialogTitle>Weight Mismatch Warning</AlertDialogTitle>
             <AlertDialogDescription>
-              Chargeable weight is less than actual weight. This will result in a loss. Do you want to continue?
+              Chargeable weight is less than actual weight. Do you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -546,3 +552,5 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </>
   );
 }
+
+    
