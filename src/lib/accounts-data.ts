@@ -29,8 +29,8 @@ const sampleCreditData: { [customerName: string]: LedgerEntry[] } = {
 };
 
 const openingBalances: { [customerName: string]: number } = {
-    'NOVA INDUSTERIES': 50000,
-    'MONIKA SALES': -15000,
+    'NOVA INDUSTERIES': 0,
+    'MONIKA SALES': 0,
     'PARTY NAME1': 0,
     'Madhav Enterprises': 0
 };
