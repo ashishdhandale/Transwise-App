@@ -41,7 +41,7 @@ export function PackageTracking() {
     const lowercasedId = id.toLowerCase();
     const results = allBookings.filter(b => 
         b.lrNo.toLowerCase().includes(lowercasedId) ||
-        b.trackingId.toLowerCase().includes(lowercasedId)
+        String(b.trackingId).toLowerCase().includes(lowercasedId)
     );
     setSearchResults(results);
 
