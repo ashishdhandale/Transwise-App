@@ -20,9 +20,11 @@ import type { Customer } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { initialCustomers } from '@/lib/sample-data';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 
+const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
 
 export function CustomerManagement() {
@@ -124,39 +126,56 @@ export function CustomerManagement() {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto border rounded-md max-h-[70vh]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>GSTIN</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="w-[120px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell className={cn(tdClass, "font-medium")}>{customer.name}</TableCell>
-                  <TableCell className={cn(tdClass)}><Badge variant="secondary">{customer.type}</Badge></TableCell>
-                  <TableCell className={cn(tdClass)}>{customer.gstin}</TableCell>
-                  <TableCell className={cn(tdClass)}>{customer.address}</TableCell>
-                  <TableCell className={cn(tdClass)}>{customer.mobile}</TableCell>
-                  <TableCell className={cn(tdClass)}>{customer.email}</TableCell>
-                  <TableCell className={cn(tdClass, "text-right")}>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(customer)}>
-                      <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(customer.id)}>
-                      <Trash2 className="h-4 w-4" />
-                      </Button>
-                  </TableCell>
+          <TooltipProvider>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className={thClass}>Customer Name</TableHead>
+                  <TableHead className={thClass}>Type</TableHead>
+                  <TableHead className={thClass}>GSTIN</TableHead>
+                  <TableHead className={thClass}>Address</TableHead>
+                  <TableHead className={thClass}>Mobile</TableHead>
+                  <TableHead className={thClass}>Email</TableHead>
+                  <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredCustomers.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell className={cn(tdClass, "font-medium")}>
+                      <Tooltip>
+                        <TooltipTrigger asChild><p className="truncate max-w-[200px]">{customer.name}</p></TooltipTrigger>
+                        <TooltipContent><p>{customer.name}</p></TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell className={cn(tdClass)}><Badge variant="secondary">{customer.type}</Badge></TableCell>
+                    <TableCell className={cn(tdClass)}>{customer.gstin}</TableCell>
+                    <TableCell className={cn(tdClass)}>
+                       <Tooltip>
+                        <TooltipTrigger asChild><p className="truncate max-w-[250px]">{customer.address}</p></TooltipTrigger>
+                        <TooltipContent><p>{customer.address}</p></TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell className={cn(tdClass)}>{customer.mobile}</TableCell>
+                    <TableCell className={cn(tdClass)}>
+                       <Tooltip>
+                        <TooltipTrigger asChild><p className="truncate max-w-[200px]">{customer.email}</p></TooltipTrigger>
+                        <TooltipContent><p>{customer.email}</p></TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell className={cn(tdClass, "text-right")}>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(customer)}>
+                        <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(customer.id)}>
+                        <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TooltipProvider>
         </div>
         {filteredCustomers.length === 0 && (
           <div className="text-center p-8 text-muted-foreground">

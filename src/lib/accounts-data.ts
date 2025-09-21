@@ -28,13 +28,6 @@ const sampleCreditData: { [customerName: string]: LedgerEntry[] } = {
    'Madhav Enterprises': [],
 };
 
-const openingBalances: { [customerName: string]: number } = {
-    'NOVA INDUSTERIES': 0,
-    'MONIKA SALES': 0,
-    'PARTY NAME1': 0,
-    'Madhav Enterprises': 0
-};
-
 // This function now dynamically generates the ledger from bookings.
 export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
     const allBookings = getBookings();
@@ -77,7 +70,7 @@ export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
         }
     });
 
-    const openingBalance = openingBalances[customer.name] ?? 0;
+    const openingBalance = customer.openingBalance ?? 0;
 
     const creditEntries = sampleCreditData[customer.name] || [];
 

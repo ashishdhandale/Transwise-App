@@ -11,10 +11,6 @@ const samplePaymentsToVendors: { [vendorName: string]: LedgerEntry[] } = {
   ],
 };
 
-const openingBalances: { [vendorName: string]: number } = {
-    'Reliable Transports': 0, // Opening credit (we owed them money)
-};
-
 // This function generates the ledger for vendors (payables).
 export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {
     const allBookings = getBookings();
@@ -44,7 +40,7 @@ export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {
         }
     });
 
-    const openingBalance = openingBalances[vendor.name] ?? 0;
+    const openingBalance = vendor.openingBalance ?? 0;
 
     const paymentEntries = samplePaymentsToVendors[vendor.name] || [];
 

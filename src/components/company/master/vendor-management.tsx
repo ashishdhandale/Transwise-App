@@ -19,15 +19,17 @@ import { AddVendorDialog } from './add-vendor-dialog';
 import type { Vendor } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 
 const initialVendors: Vendor[] = [
-    { id: 1, name: 'Reliable Transports', type: 'Vehicle Supplier', address: '123 Trucking Way, Nagpur', mobile: '9876501234', email: 'contact@reliable.com' },
-    { id: 2, name: 'Speedy Delivery Co', type: 'Delivery Agent', address: '456 Express Lane, Pune', mobile: '9876512345', email: 'speedy@delivery.co' },
-    { id: 3, name: 'Global Forwarders', type: 'Freight Forwarder', address: '789 Ocean Drive, Mumbai', mobile: '9876523456', email: 'info@global.fwd' },
+    { id: 1, name: 'Reliable Transports', type: 'Vehicle Supplier', address: '123 Trucking Way, Nagpur', mobile: '9876501234', email: 'contact@reliable.com', openingBalance: 0 },
+    { id: 2, name: 'Speedy Delivery Co', type: 'Delivery Agent', address: '456 Express Lane, Pune', mobile: '9876512345', email: 'speedy@delivery.co', openingBalance: 0 },
+    { id: 3, name: 'Global Forwarders', type: 'Freight Forwarder', address: '789 Ocean Drive, Mumbai', mobile: '9876523456', email: 'info@global.fwd', openingBalance: 0 },
 ];
 
+const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
 
 export function VendorManagement() {
@@ -128,37 +130,54 @@ export function VendorManagement() {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto border rounded-md max-h-[70vh]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Vendor Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="w-[120px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredVendors.map((vendor) => (
-                <TableRow key={vendor.id}>
-                  <TableCell className={cn(tdClass, "font-medium")}>{vendor.name}</TableCell>
-                  <TableCell className={cn(tdClass)}><Badge variant="outline">{vendor.type}</Badge></TableCell>
-                  <TableCell className={cn(tdClass)}>{vendor.address}</TableCell>
-                  <TableCell className={cn(tdClass)}>{vendor.mobile}</TableCell>
-                  <TableCell className={cn(tdClass)}>{vendor.email}</TableCell>
-                  <TableCell className={cn(tdClass, "text-right")}>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(vendor)}>
-                      <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(vendor.id)}>
-                      <Trash2 className="h-4 w-4" />
-                      </Button>
-                  </TableCell>
+          <TooltipProvider>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className={thClass}>Vendor Name</TableHead>
+                  <TableHead className={thClass}>Type</TableHead>
+                  <TableHead className={thClass}>Address</TableHead>
+                  <TableHead className={thClass}>Mobile</TableHead>
+                  <TableHead className={thClass}>Email</TableHead>
+                  <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredVendors.map((vendor) => (
+                  <TableRow key={vendor.id}>
+                    <TableCell className={cn(tdClass, "font-medium")}>
+                       <Tooltip>
+                        <TooltipTrigger asChild><p className="truncate max-w-[200px]">{vendor.name}</p></TooltipTrigger>
+                        <TooltipContent><p>{vendor.name}</p></TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell className={cn(tdClass)}><Badge variant="outline">{vendor.type}</Badge></TableCell>
+                    <TableCell className={cn(tdClass)}>
+                       <Tooltip>
+                        <TooltipTrigger asChild><p className="truncate max-w-[250px]">{vendor.address}</p></TooltipTrigger>
+                        <TooltipContent><p>{vendor.address}</p></TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell className={cn(tdClass)}>{vendor.mobile}</TableCell>
+                    <TableCell className={cn(tdClass)}>
+                       <Tooltip>
+                        <TooltipTrigger asChild><p className="truncate max-w-[200px]">{vendor.email}</p></TooltipTrigger>
+                        <TooltipContent><p>{vendor.email}</p></TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell className={cn(tdClass, "text-right")}>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(vendor)}>
+                        <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(vendor.id)}>
+                        <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TooltipProvider>
         </div>
         {filteredVendors.length === 0 && (
           <div className="text-center p-8 text-muted-foreground">

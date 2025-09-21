@@ -88,6 +88,7 @@ export interface Customer {
   mobile: string;
   email: string;
   type: CustomerType;
+  openingBalance: number;
 }
 
 export interface Item {
@@ -110,6 +111,7 @@ export interface Vendor {
   address: string;
   mobile: string;
   email: string;
+  openingBalance: number;
 }
 
 export type NewRequest = {
@@ -163,3 +165,4 @@ export interface VehicleMaster {
   pucValidity?: string;
   permitDetails?: string;
 }
+

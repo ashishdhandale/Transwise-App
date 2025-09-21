@@ -38,6 +38,7 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
     const [address, setAddress] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
+    const [openingBalance, setOpeningBalance] = useState<number | ''>('');
 
     const { toast } = useToast();
 
@@ -48,12 +49,14 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             setAddress(vendor.address || '');
             setMobile(vendor.mobile || '');
             setEmail(vendor.email || '');
+            setOpeningBalance(vendor.openingBalance || 0);
         } else {
             setName('');
             setType('Vehicle Supplier');
             setAddress('');
             setMobile('');
             setEmail('');
+            setOpeningBalance(0);
         }
     }, [vendor, isOpen]);
 
@@ -70,6 +73,7 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             address,
             mobile,
             email,
+            openingBalance: Number(openingBalance) || 0,
         });
 
         if (success) {
@@ -112,6 +116,10 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
                      <div className="md:col-span-2">
                         <Label htmlFor="email">Email Address</Label>
                         <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                    <div className="md:col-span-2">
+                        <Label htmlFor="opening-balance">Opening Balance</Label>
+                        <Input id="opening-balance" type="number" value={openingBalance} onChange={(e) => setOpeningBalance(Number(e.target.value))} />
                     </div>
                 </div>
                 <DialogFooter>

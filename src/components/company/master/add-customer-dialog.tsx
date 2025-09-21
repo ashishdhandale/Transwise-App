@@ -43,6 +43,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [type, setType] = useState<CustomerType>('Company');
+    const [openingBalance, setOpeningBalance] = useState<number | ''>('');
 
     const { toast } = useToast();
 
@@ -54,6 +55,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             setMobile(customer.mobile || '');
             setEmail(customer.email || '');
             setType(customer.type || 'Company');
+            setOpeningBalance(customer.openingBalance || 0);
         } else {
             setName('');
             setGstin('');
@@ -61,6 +63,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             setMobile('');
             setEmail('');
             setType('Company');
+            setOpeningBalance(0);
         }
     }, [customer, isOpen]);
 
@@ -78,6 +81,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             mobile,
             email,
             type,
+            openingBalance: Number(openingBalance) || 0,
         });
 
         if (success) {
@@ -124,6 +128,10 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                      <div>
                         <Label htmlFor="email">Email Address</Label>
                         <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                    <div className="md:col-span-2">
+                        <Label htmlFor="opening-balance">Opening Balance</Label>
+                        <Input id="opening-balance" type="number" value={openingBalance} onChange={(e) => setOpeningBalance(Number(e.target.value))} />
                     </div>
                 </div>
                 <DialogFooter>
