@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { GeneralInstructionsSettings } from '@/components/company/settings/general-instructions-settings';
 import { CompanyProfileSettings } from '@/components/company/settings/company-profile-settings';
+import { PrintFormatSettings } from '@/components/company/settings/print-format-settings';
 
 function CompanySettingsPage() {
   return (
@@ -24,6 +25,7 @@ function CompanySettingsPage() {
             <TabsList>
                 <TabsTrigger value="profile">Company Profile</TabsTrigger>
                 <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
+                <TabsTrigger value="print-formats">Print Formats</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
                 <CompanyProfileSettings />
@@ -52,6 +54,9 @@ function CompanySettingsPage() {
                         </CardContent>
                     </Card>
                 </div>
+            </TabsContent>
+             <TabsContent value="print-formats">
+                <PrintFormatSettings />
             </TabsContent>
         </Tabs>
       </div>

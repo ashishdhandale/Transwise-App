@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { useState, useEffect } from 'react';
+
+const LOCAL_STORAGE_KEY_PRINT = 'transwise_print_formats';
 
 const InstructionSelect = ({ label, options, defaultValue, value, onChange }: { label: string, options: { value: string, label: string }[], defaultValue?: string, value?: string, onChange?: (value: string) => void }) => (
      <div className="grid grid-cols-[100px_1fr] items-center gap-2">
@@ -28,12 +31,33 @@ interface DeliveryInstructionsSectionProps {
 }
 
 export function DeliveryInstructionsSection({ deliveryAt, onDeliveryAtChange }: DeliveryInstructionsSectionProps) {
+  const [printFormats, setPrintFormats] = useState<{ value: string, label: string }[]>(bookingOptions.printFormats);
+
+  useEffect(() => {
+    try {
+        const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY_PRINT);
+        if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            if (parsed.formats && parsed.formats.length > 0) {
+                const customFormats = parsed.formats.map((format: {id: string, name: string}) => ({
+                    value: format.id,
+                    label: format.name,
+                }));
+                // Keep "Standard" and add custom ones
+                setPrintFormats([bookingOptions.printFormats[0], ...customFormats]);
+            }
+        }
+    } catch (error) {
+        console.error('Could not load custom print formats.', error);
+    }
+  }, []);
+
   const instructions = [
     { key: 'insurance', label: 'Insurance', options: bookingOptions.yesNo, defaultValue: 'No' },
     { key: 'pod', label: 'POD?', options: bookingOptions.yesNo, defaultValue: 'No' },
     { key: 'attachCc', label: 'Attach CC', options: bookingOptions.yesNo, defaultValue: 'Yes' },
     { key: 'priority', label: 'Priority', options: bookingOptions.priorities, defaultValue: 'Express' },
-    { key: 'print', label: 'Print', options: bookingOptions.printFormats, defaultValue: 'Custom Copy' },
+    { key: 'print', label: 'Print', options: printFormats, defaultValue: printFormats[0]?.value || 'Custom Copy' },
   ];
 
   return (

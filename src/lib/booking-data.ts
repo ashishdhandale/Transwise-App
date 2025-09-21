@@ -40,8 +40,6 @@ export const bookingOptions = {
         { value: 'Standard', label: 'Standard' },
     ],
     printFormats: [
-        { value: 'Custom Copy', label: 'Custom Copy' },
-        { value: 'Original Copy', label: 'Original Copy' },
-        { value: 'Duplicate Copy', label: 'Duplicate Copy' },
+        { value: 'standard', label: 'Standard' },
     ],
 };
