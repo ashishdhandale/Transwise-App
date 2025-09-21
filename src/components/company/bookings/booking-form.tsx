@@ -36,6 +36,7 @@ import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, t
 import { FtlChallan } from '../challan-tracking/ftl-challan';
 import { PaymentDialog } from './payment-dialog';
 import { useSearchParams } from 'next/navigation';
+import { ClientOnly } from '@/components/ui/client-only';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -535,133 +536,135 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
     };
 
   return (
-    <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-primary">
-            {isEditMode ? `Edit Booking: ${currentGrNumber}` : (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking')}
-        </h1>
-        <Card className="border-2 border-green-200">
-            <CardContent className="p-4 space-y-4">
-                <BookingDetailsSection 
-                    bookingType={bookingType} 
-                    onBookingTypeChange={setBookingType}
-                    onFromStationChange={setFromStation}
-                    onToStationChange={setToStation}
-                    fromStation={fromStation}
-                    toStation={toStation}
-                    grNumber={currentGrNumber}
-                    onGrNumberChange={setCurrentGrNumber}
-                    bookingDate={bookingDate}
-                    onBookingDateChange={setBookingDate}
-                    isEditMode={isEditMode}
-                    isOfflineMode={isOfflineMode}
-                    companyProfile={companyProfile}
-                    errors={errors}
-                    loadType={loadType}
-                    onLoadTypeChange={setLoadType}
-                />
-                <PartyDetailsSection 
-                    onSenderChange={setSender}
-                    onReceiverChange={setReceiver}
-                    sender={sender}
-                    receiver={receiver}
-                    onTaxPaidByChange={setTaxPaidBy}
-                    taxPaidBy={taxPaidBy}
-                    errors={errors}
-                />
-                {loadType === 'FTL' && (
-                    <VehicleDetailsSection 
-                        details={ftlDetails} 
-                        onDetailsChange={setFtlDetails} 
-                        drivers={drivers}
-                        vehicles={vehicles}
-                        vendors={vendors}
-                        onMasterDataChange={loadMasterData}
+    <ClientOnly>
+        <div className="space-y-4">
+            <h1 className="text-2xl font-bold text-primary">
+                {isEditMode ? `Edit Booking: ${currentGrNumber}` : (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking')}
+            </h1>
+            <Card className="border-2 border-green-200">
+                <CardContent className="p-4 space-y-4">
+                    <BookingDetailsSection 
+                        bookingType={bookingType} 
+                        onBookingTypeChange={setBookingType}
+                        onFromStationChange={setFromStation}
+                        onToStationChange={setToStation}
+                        fromStation={fromStation}
+                        toStation={toStation}
+                        grNumber={currentGrNumber}
+                        onGrNumberChange={setCurrentGrNumber}
+                        bookingDate={bookingDate}
+                        onBookingDateChange={setBookingDate}
+                        isEditMode={isEditMode}
+                        isOfflineMode={isOfflineMode}
+                        companyProfile={companyProfile}
+                        errors={errors}
                         loadType={loadType}
+                        onLoadTypeChange={setLoadType}
                     />
-                )}
-
-                <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
-                
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
-                    <ChargesSection 
-                        basicFreight={basicFreight} 
-                        onGrandTotalChange={setGrandTotal} 
-                        initialGrandTotal={isEditMode ? grandTotal : undefined}
-                        isGstApplicable={isGstApplicable}
-                        onChargesChange={setAdditionalCharges}
-                        initialCharges={initialChargesFromBooking}
-                        profile={companyProfile}
+                    <PartyDetailsSection 
+                        onSenderChange={setSender}
+                        onReceiverChange={setReceiver}
+                        sender={sender}
+                        receiver={receiver}
+                        onTaxPaidByChange={setTaxPaidBy}
+                        taxPaidBy={taxPaidBy}
+                        errors={errors}
                     />
-                    <div className="w-[300px]">
-                        <DeliveryInstructionsSection 
-                            deliveryAt={deliveryAt}
-                            onDeliveryAtChange={setDeliveryAt}
+                    {loadType === 'FTL' && (
+                        <VehicleDetailsSection 
+                            details={ftlDetails} 
+                            onDetailsChange={setFtlDetails} 
+                            drivers={drivers}
+                            vehicles={vehicles}
+                            vendors={vendors}
+                            onMasterDataChange={loadMasterData}
+                            loadType={loadType}
                         />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <Card className="flex-1 flex flex-col items-center justify-center p-2 text-center border-green-300">
-                            <p className="text-sm text-muted-foreground">Booking Type</p>
-                            <p className="text-xl font-bold text-green-600">
-                                {bookingType}
-                            </p>
-                        </Card>
-                        <MainActionsSection 
-                            onSave={() => handleSaveOrUpdate()} 
-                            isEditMode={isEditMode} 
-                            onClose={onClose} 
-                            onReset={handleReset}
-                            isSubmitting={isSubmitting}
-                        />
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-        
-        <PaymentDialog
-            isOpen={isPaymentDialogOpen}
-            onOpenChange={setIsPaymentDialogOpen}
-            onConfirm={handleSaveOrUpdate}
-            amount={grandTotal}
-        />
+                    )}
 
-        {receiptData && companyProfile && (
-            <Dialog open={showReceipt} onOpenChange={(isOpen) => {
-                 if (!isOpen) {
-                    window.location.reload(); 
-                 }
-                 setShowReceipt(isOpen);
-            }}>
-                <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle>Documents Preview</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex-grow overflow-auto p-4 bg-gray-200">
-                       <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '216mm'}}>
-                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Receiver" />
-                            <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Sender" />
-                            <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Driver" />
-                            <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                            <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Office" />
-                            {generatedChallan && (
-                                <>
-                                    <div className="border-t-2 border-dashed border-gray-400 my-4" style={{pageBreakBefore: 'always'}}></div>
-                                    <FtlChallan challan={generatedChallan} booking={receiptData} profile={companyProfile} />
-                                </>
-                            )}
-                       </div>
+                    <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
+                        <ChargesSection 
+                            basicFreight={basicFreight} 
+                            onGrandTotalChange={setGrandTotal} 
+                            initialGrandTotal={isEditMode ? grandTotal : undefined}
+                            isGstApplicable={isGstApplicable}
+                            onChargesChange={setAdditionalCharges}
+                            initialCharges={initialChargesFromBooking}
+                            profile={companyProfile}
+                        />
+                        <div className="w-[300px]">
+                            <DeliveryInstructionsSection 
+                                deliveryAt={deliveryAt}
+                                onDeliveryAtChange={setDeliveryAt}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <Card className="flex-1 flex flex-col items-center justify-center p-2 text-center border-green-300">
+                                <p className="text-sm text-muted-foreground">Booking Type</p>
+                                <p className="text-xl font-bold text-green-600">
+                                    {bookingType}
+                                </p>
+                            </Card>
+                            <MainActionsSection 
+                                onSave={() => handleSaveOrUpdate()} 
+                                isEditMode={isEditMode} 
+                                onClose={onClose} 
+                                onReset={handleReset}
+                                isSubmitting={isSubmitting}
+                            />
+                        </div>
                     </div>
-                    <DialogFooter>
-                        <Button type="button" variant="secondary" onClick={() => window.location.reload()}>Close & New Booking</Button>
-                        <Button onClick={handleDownloadPdf} disabled={isDownloading}>
-                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                            Download PDF
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        )}
-    </div>
+                </CardContent>
+            </Card>
+            
+            <PaymentDialog
+                isOpen={isPaymentDialogOpen}
+                onOpenChange={setIsPaymentDialogOpen}
+                onConfirm={handleSaveOrUpdate}
+                amount={grandTotal}
+            />
+
+            {receiptData && companyProfile && (
+                <Dialog open={showReceipt} onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        window.location.reload(); 
+                    }
+                    setShowReceipt(isOpen);
+                }}>
+                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                        <DialogHeader>
+                            <DialogTitle>Documents Preview</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex-grow overflow-auto p-4 bg-gray-200">
+                        <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '216mm'}}>
+                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Receiver" />
+                                <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
+                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Sender" />
+                                <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
+                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Driver" />
+                                <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
+                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Office" />
+                                {generatedChallan && (
+                                    <>
+                                        <div className="border-t-2 border-dashed border-gray-400 my-4" style={{pageBreakBefore: 'always'}}></div>
+                                        <FtlChallan challan={generatedChallan} booking={receiptData} profile={companyProfile} />
+                                    </>
+                                )}
+                        </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="secondary" onClick={() => window.location.reload()}>Close & New Booking</Button>
+                            <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                                Download PDF
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+        </div>
+    </ClientOnly>
   );
 }
