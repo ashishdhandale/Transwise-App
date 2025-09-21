@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -161,9 +162,9 @@ export function BookingsDashboard() {
     );
   }, [bookings, searchQuery]);
 
-  const formatCurrency = (amount: number) => {
+  const formatValue = (amount: number) => {
     if (!companyProfile) return amount.toLocaleString();
-    return new Intl.NumberFormat(companyProfile.countryCode, { style: 'currency', currency: companyProfile.currency, minimumFractionDigits: 0 }).format(amount);
+    return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
   const tdClass = "p-1 whitespace-nowrap";
@@ -303,7 +304,7 @@ export function BookingsDashboard() {
                         <TableCell className={tdClass}>{booking.itemDescription}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
-                        <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
+                        <TableCell className={`${tdClass} text-right`}>{formatValue(booking.totalAmount)}</TableCell>
                         <TableCell className={tdClass}>
                            <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
                                {booking.status}
