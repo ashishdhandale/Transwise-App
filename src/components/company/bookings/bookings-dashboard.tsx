@@ -298,7 +298,12 @@ export function BookingsDashboard() {
                             </DropdownMenu>
                           </TableCell>
                           <TableCell className={`${tdClass} text-center`}>{index + 1}</TableCell>
-                          <TableCell className={tdClass}>{booking.lrNo}</TableCell>
+                          <TableCell className={tdClass}>
+                            <Tooltip>
+                              <TooltipTrigger asChild><p className="cursor-help">{booking.lrNo}</p></TooltipTrigger>
+                              <TooltipContent><p>Tracking ID: {booking.trackingId}</p></TooltipContent>
+                            </Tooltip>
+                          </TableCell>
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
@@ -369,5 +374,3 @@ export function BookingsDashboard() {
     </>
   );
 }
-
-    
