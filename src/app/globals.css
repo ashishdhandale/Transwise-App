@@ -41,6 +41,8 @@ body {
     --sidebar-accent-foreground: 224 71.4% 4.1%;
     --sidebar-border: 0 0% 89.8%;
     --sidebar-ring: 195 79% 53%;
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--sidebar-foreground);
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -75,6 +77,8 @@ body {
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 195 79% 53%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: var(--sidebar-foreground);
   }
 }
 
