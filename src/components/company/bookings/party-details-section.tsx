@@ -72,7 +72,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
             onPartyAdded(); 
             
             // This sets the newly created customer as the selected one for the current booking
-            onPartyChange(newCustomer);
+            setPartyDetails(newCustomer);
 
             return true;
         } catch (error) {
@@ -84,13 +84,18 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
 
     const errorClass = 'border-red-500 ring-2 ring-red-500/50';
 
+    const customerOptions = useMemo(() => customers.map(c => ({
+        label: c.name.toUpperCase(),
+        value: c.name.toUpperCase()
+    })), [customers]);
+
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr_1fr] gap-x-4 gap-y-2 items-start p-3 border-b">
                 <div className={cn("space-y-1 rounded-md", hasError && 'ring-2 ring-red-500/50')}>
                     <Label className="font-semibold text-primary">{side} Name*</Label>
                     <Combobox
-                        options={customers.map(c => ({ label: c.name, value: c.name }))}
+                        options={customerOptions}
                         value={partyDetails?.name}
                         onChange={handlePartySelect}
                         placeholder={`Select ${side}...`}
@@ -198,7 +203,10 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
         return options;
     }, [billTo, otherBillToParty, sender, receiver]);
 
-    const customerOptions = customers.map(c => ({ label: c.name, value: c.name }));
+    const customerOptions = useMemo(() => customers.map(c => ({
+        label: c.name.toUpperCase(),
+        value: c.name.toUpperCase()
+    })), [customers]);
 
     return (
         <div className="border rounded-md">

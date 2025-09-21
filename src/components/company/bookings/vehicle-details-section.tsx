@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import type { FtlDetails } from '@/lib/bookings-dashboard-data';
 import { Combobox } from '@/components/ui/combobox';
 import type { Driver, VehicleMaster, Vendor } from '@/lib/types';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AddVehicleDialog } from '../master/add-vehicle-dialog';
 import { AddDriverDialog } from '../master/add-driver-dialog';
@@ -89,9 +89,9 @@ export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehic
     );
 
 
-    const vehicleOptions = vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
-    const driverOptions = drivers.map(d => ({ label: d.name, value: d.name }));
-    const supplierOptions = vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name, value: v.name }));
+    const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo.toUpperCase(), value: v.vehicleNo.toUpperCase() })), [vehicles]);
+    const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name.toUpperCase(), value: d.name.toUpperCase() })), [drivers]);
+    const supplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name.toUpperCase(), value: v.name.toUpperCase() })), [vendors]);
     
     const cardTitle = loadType === 'FTL' ? 'FTL (Full Truck Load) Details' : 'Vehicle & Driver Details';
 

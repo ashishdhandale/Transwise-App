@@ -53,7 +53,7 @@ export interface ItemRow {
 const thClass = "p-1.5 h-9 bg-primary/10 text-primary font-semibold text-xs text-center";
 const tdClass = "p-1";
 const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs";
-const inputClass = "h-8 text-xs px-1 uppercase";
+const inputClass = "h-8 text-xs px-1";
 
 const BOOKING_SETTINGS_KEY = 'transwise_booking_settings';
 const ITEM_DETAILS_SETTINGS_KEY = 'transwise_item_details_settings';
@@ -226,11 +226,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     const newRow = { ...newRows[rowIndex] };
     
     let processedValue = value;
-    const numericColumns = ['qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'dValue'];
-
-    if (typeof value === 'string' && !numericColumns.includes(columnId)) {
-      processedValue = value.toUpperCase();
-    }
     
     newRow[columnId] = processedValue;
 
@@ -252,7 +247,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     if (columnId === 'itemName') {
         const selectedItem = itemOptions.find(item => item.name.toLowerCase() === value.toLowerCase());
         if (selectedItem && selectedItem.description) {
-            newRow.description = selectedItem.description.toUpperCase();
+            newRow.description = selectedItem.description;
         }
     }
     
@@ -314,6 +309,10 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
             return false;
         }
     };
+    
+    const uppercaseItemOptions = useMemo(() => itemOptions.map(i => ({
+        label: i.name.toUpperCase(), value: i.name.toUpperCase()
+    })), [itemOptions]);
 
   const getInputForColumn = (columnId: string, index: number) => {
     const row = rows[index];
@@ -328,7 +327,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'itemName':
             return (
                  <Combobox
-                    options={itemOptions.map(i => ({ label: i.name, value: i.name }))}
+                    options={uppercaseItemOptions}
                     value={value}
                     onChange={(val) => handleInputChange(index, columnId, val)}
                     placeholder="Select item..."

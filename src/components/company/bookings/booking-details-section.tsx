@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import type { City } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -63,12 +63,18 @@ export function BookingDetailsSection({
 }: BookingDetailsSectionProps) {
     const { toast } = useToast();
     const [cityListSource, setCityListSource] = useState<CityListSource>('default');
-    const [stationOptions, setStationOptions] = useState<{ label: string, value: string }[]>([]);
-    const [customCities, setCustomCities] = useState<City[]>([]);
+    const [allCustomCities, setAllCustomCities] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const [initialCityData, setInitialCityData] = useState<Partial<City> | null>(null);
     const datePickerRef = useRef<HTMLButtonElement>(null);
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+    const stationOptions = useMemo(() => {
+        if (cityListSource === 'custom') {
+            return allCustomCities.map(c => ({ label: c.name.toUpperCase(), value: c.name.toUpperCase() }));
+        }
+        return bookingOptions.stations.map(name => ({ label: name.toUpperCase(), value: name.toUpperCase() }));
+    }, [cityListSource, allCustomCities]);
 
     const loadCityData = useCallback(() => {
         try {
@@ -79,14 +85,10 @@ export function BookingDetailsSection({
             if (source === 'custom') {
                 const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
                 const parsedCities: City[] = savedCities ? JSON.parse(savedCities) : [];
-                setCustomCities(parsedCities);
-                setStationOptions(parsedCities.map(c => ({ label: c.name, value: c.name })));
-            } else {
-                setStationOptions(bookingOptions.stations.map(name => ({ label: name, value: name })));
+                setAllCustomCities(parsedCities);
             }
         } catch (error) {
             console.error("Failed to load city data", error);
-            setStationOptions(bookingOptions.stations.map(name => ({ label: name, value: name })));
         }
     }, []);
 
@@ -101,13 +103,13 @@ export function BookingDetailsSection({
             const defaultStation = stationOptions.find(s => s.value.toLowerCase() === companyProfile.city.toLowerCase());
             if (defaultStation) {
                 const cityObj = cityListSource === 'custom' 
-                    ? customCities.find(c => c.name === defaultStation.value)
+                    ? allCustomCities.find(c => c.name === defaultStation.value)
                     : { id: 0, name: defaultStation.value, aliasCode: '', pinCode: '' };
                 onFromStationChange(cityObj || null);
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fromStation, isEditMode, companyProfile, stationOptions, customCities, cityListSource]);
+    }, [fromStation, isEditMode, companyProfile, stationOptions, allCustomCities, cityListSource]);
 
     useEffect(() => {
         if (!isEditMode) {
@@ -121,18 +123,18 @@ export function BookingDetailsSection({
 
     const getCityObjectByName = (name: string): City | null => {
         if (cityListSource === 'custom') {
-            return customCities.find(c => c.name.toLowerCase() === name.toLowerCase()) || null;
+            return allCustomCities.find(c => c.name.toLowerCase() === name.toLowerCase()) || null;
         }
         return { id: 0, name, aliasCode: name.substring(0,3).toUpperCase(), pinCode: '' };
     };
 
     const handleFromStationChange = useCallback((stationName: string) => {
         onFromStationChange(getCityObjectByName(stationName));
-    }, [onFromStationChange, customCities, cityListSource]);
+    }, [onFromStationChange, allCustomCities, cityListSource]);
 
     const handleToStationChange = useCallback((stationName: string) => {
         onToStationChange(getCityObjectByName(stationName));
-    }, [onToStationChange, customCities, cityListSource]);
+    }, [onToStationChange, allCustomCities, cityListSource]);
 
     const handleOpenAddCity = (query?: string) => {
         if (cityListSource !== 'custom') {
@@ -149,9 +151,9 @@ export function BookingDetailsSection({
 
     const handleSaveCity = (cityData: Omit<City, 'id'>): boolean => {
         try {
-            const newId = customCities.length > 0 ? Math.max(...customCities.map(c => c.id)) + 1 : 1;
+            const newId = allCustomCities.length > 0 ? Math.max(...allCustomCities.map(c => c.id)) + 1 : 1;
             const newCity: City = { id: newId, ...cityData };
-            const updatedCities = [newCity, ...customCities];
+            const updatedCities = [newCity, ...allCustomCities];
             localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
             toast({ title: 'City Added', description: `"${cityData.name}" has been added to your custom list.` });
             loadCityData(); // Refresh the city list
