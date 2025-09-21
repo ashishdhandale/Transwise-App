@@ -49,8 +49,8 @@ export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDia
         }
 
         const success = onSave({
-            name: cityName,
-            aliasCode,
+            name: cityName.toUpperCase(),
+            aliasCode: aliasCode.toUpperCase(),
             pinCode,
         });
 
@@ -72,7 +72,7 @@ export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDia
                             id="city-name"
                             placeholder="Enter city name"
                             value={cityName}
-                            onChange={(e) => setCityName(e.target.value)}
+                            onChange={(e) => setCityName(e.target.value.toUpperCase())}
                             autoFocus
                         />
                     </div>
@@ -82,7 +82,7 @@ export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDia
                             id="alias-code"
                             placeholder="Enter alias code (e.g., NGP)"
                             value={aliasCode}
-                            onChange={(e) => setAliasCode(e.target.value)}
+                            onChange={(e) => setAliasCode(e.target.value.toUpperCase())}
                         />
                     </div>
                     <div>
