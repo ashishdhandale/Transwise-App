@@ -115,7 +115,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     <tbody>
                          {validItemRows.map(item => (
                             <tr key={item.id}>
-                                <td className="border border-black p-1">{item.description || item.itemName}</td>
+                                <td className="border border-black p-1">{`${item.itemName || ''} - ${item.description || ''}`}</td>
                                 <td className="border border-black p-1">{item.invoiceNo}</td>
                                 <td className="border border-black p-1 text-center">{item.qty}</td>
                                 <td className="border border-black p-1 text-right">{item.actWt}</td>
@@ -173,7 +173,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         </div>
                     ) : (
                         <div className="flex items-center justify-center h-full">
-                            <p className="font-bold text-lg">{booking.lrType}</p>
+                            {/* This space is intentionally left blank for TBB/FOC on non-office copies */}
                         </div>
                     )}
                 </div>
@@ -191,8 +191,3 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
         </div>
     );
 }
-
-    
-
-
-
