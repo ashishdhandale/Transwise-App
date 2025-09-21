@@ -53,7 +53,7 @@ const statusColors: { [key: string]: string } = {
   'Delivered': 'text-gray-500'
 };
 
-const thClass = 'bg-cyan-600 text-white h-10';
+const thClass = 'bg-cyan-600 text-white h-10 whitespace-nowrap';
 
 export function BookingsDashboard() {
   const [fromDate, setFromDate] = useState<Date | undefined>();
@@ -162,7 +162,7 @@ export function BookingsDashboard() {
     );
   }, [bookings, searchQuery]);
 
-  const formatValue = (amount: number) => {
+  const formatCurrency = (amount: number) => {
     if (!companyProfile) return amount.toLocaleString();
     return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
@@ -304,7 +304,7 @@ export function BookingsDashboard() {
                         <TableCell className={tdClass}>{booking.itemDescription}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
                         <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
-                        <TableCell className={`${tdClass} text-right`}>{formatValue(booking.totalAmount)}</TableCell>
+                        <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
                         <TableCell className={tdClass}>
                            <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
                                {booking.status}
