@@ -563,7 +563,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
-                 <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-4 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
                     <ChargesSection 
                         basicFreight={basicFreight} 
                         onGrandTotalChange={setGrandTotal} 
@@ -573,26 +573,27 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         initialCharges={initialChargesFromBooking}
                         profile={companyProfile}
                     />
-                    <DeliveryInstructionsSection 
-                        deliveryAt={deliveryAt}
-                        onDeliveryAtChange={setDeliveryAt}
-                    />
-                </div>
-                
-                <div className="space-y-4">
-                    <div className="text-center py-4">
-                        <p className="text-xl font-bold text-green-600">
-                            Booking Type: {bookingType}
-                        </p>
+                    <div className="w-[300px]">
+                        <DeliveryInstructionsSection 
+                            deliveryAt={deliveryAt}
+                            onDeliveryAtChange={setDeliveryAt}
+                        />
                     </div>
-                    <Separator />
-                    <MainActionsSection 
-                        onSave={handleSaveOrUpdate} 
-                        isEditMode={isEditMode} 
-                        onClose={onClose} 
-                        onReset={handleReset}
-                        isSubmitting={isSubmitting}
-                    />
+                    <div className="flex flex-col gap-2">
+                        <Card className="flex-1 flex flex-col items-center justify-center p-2 text-center border-green-300">
+                            <p className="text-sm text-muted-foreground">Booking Type</p>
+                            <p className="text-xl font-bold text-green-600">
+                                {bookingType}
+                            </p>
+                        </Card>
+                        <MainActionsSection 
+                            onSave={handleSaveOrUpdate} 
+                            isEditMode={isEditMode} 
+                            onClose={onClose} 
+                            onReset={handleReset}
+                            isSubmitting={isSubmitting}
+                        />
+                    </div>
                 </div>
             </CardContent>
         </Card>
