@@ -106,7 +106,11 @@ export function BookingDetailsSection({
 
     useEffect(() => {
         if (!isEditMode) {
-            datePickerRef.current?.focus();
+            // We need a small timeout to allow the UI to render before focusing.
+            const timer = setTimeout(() => {
+                datePickerRef.current?.focus();
+            }, 0);
+            return () => clearTimeout(timer);
         }
     }, [isEditMode]);
 
