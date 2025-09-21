@@ -166,8 +166,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   }, [isClient]);
 
   useEffect(() => {
-    if (nextFocusRef && !weightWarning) {
-      nextFocusRef.current?.focus();
+    if (nextFocusRef?.current && !weightWarning) {
+      nextFocusRef.current.focus();
       setNextFocusRef(null);
     }
   }, [nextFocusRef, weightWarning]);
@@ -267,27 +267,17 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
         if (chgWt > 0 && chgWt < actWt) {
             setWeightWarning({ rowIndex, value: row.chgWt });
+        } else if (chgWt > actWt) {
+            updateRow(rowIndex, { freightOn: 'Chg.wt' });
+        } else {
+            updateRow(rowIndex, { freightOn: 'Act.wt' });
         }
     }
 
     const handleWeightWarningConfirm = () => {
         if (!weightWarning) return;
-        const { rowIndex } = weightWarning;
-        const row = rows[rowIndex];
         
-        const actWt = parseFloat(row.actWt) || 0;
-        const chgWt = parseFloat(row.chgWt) || 0;
-
-        let freightOn = row.freightOn;
-        if (actWt !== chgWt) {
-            freightOn = 'Chg.wt';
-        } else {
-            freightOn = 'Act.wt';
-        }
-
-        updateRow(rowIndex, { freightOn });
-        
-        const rateRef = { current: inputRefs.current[`rate-${row.id}`] };
+        const rateRef = { current: inputRefs.current[`rate-${rows[weightWarning.rowIndex].id}`] };
         setNextFocusRef(rateRef);
         setWeightWarning(null);
     };
