@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
-const thClass = "bg-primary/10 text-primary font-semibold";
+const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
 const CUSTOMERS_KEY = 'transwise_customers';
 
