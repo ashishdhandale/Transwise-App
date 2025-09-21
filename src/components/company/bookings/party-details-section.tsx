@@ -136,6 +136,7 @@ interface PartyDetailsSectionProps {
 export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy, errors }: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
+    const [otherBillToParty, setOtherBillToParty] = useState<string | undefined>(undefined);
     const [shippingAddress, setShippingAddress] = useState('');
     const [isSameAsReceiver, setIsSameAsReceiver] = useState(true);
 
@@ -154,7 +155,6 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     }, [loadCustomers]);
     
     useEffect(() => {
-        // Set default "Bill To" to sender if sender exists
         if (sender && !billTo) {
             setBillTo(sender.name);
         }
@@ -171,8 +171,9 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
     }, [receiver, isSameAsReceiver]);
 
     const billToOptions = [
-        ... (sender?.name ? [{ label: sender.name, value: sender.name }] : []),
-        ... (receiver?.name && receiver.name !== sender?.name ? [{ label: receiver.name, value: receiver.name }] : []),
+        ...(sender ? [{ label: sender.name, value: sender.name }] : []),
+        ...(receiver && receiver.name !== sender?.name ? [{ label: receiver.name, value: receiver.name }] : []),
+        { label: 'Other', value: 'Other' },
     ];
     
     const taxPaidByOptions = [
@@ -181,6 +182,8 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
         { label: 'Receiver', value: 'Receiver' },
         { label: 'Transporter', value: 'Transporter' },
     ];
+
+    const customerOptions = customers.map(c => ({ label: c.name, value: c.name }));
 
     return (
         <div className="border rounded-md">
@@ -219,6 +222,18 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                             ))}
                         </SelectContent>
                     </Select>
+                    {billTo === 'Other' && (
+                        <div className="mt-2">
+                             <Combobox
+                                options={customerOptions}
+                                value={otherBillToParty}
+                                onChange={setOtherBillToParty}
+                                placeholder="Select billing party..."
+                                searchPlaceholder="Search customers..."
+                                notFoundMessage="No customer found."
+                            />
+                        </div>
+                    )}
                 </div>
                  <div className="space-y-1">
                     <Label htmlFor="tax-paid-by" className="font-semibold mb-1 block">Tax Paid By</Label>
