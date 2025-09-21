@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -25,10 +26,10 @@ const tdClass = "whitespace-nowrap";
 interface SearchResultsProps {
   results: Booking[];
   onSelectResult: (booking: Booking) => void;
-  selectedLrNo?: string;
+  selectedTrackingId?: string;
 }
 
-export function SearchResults({ results, onSelectResult, selectedLrNo }: SearchResultsProps) {
+export function SearchResults({ results, onSelectResult, selectedTrackingId }: SearchResultsProps) {
   if (results.length === 0) {
     return (
         <Card className="border-gray-300">
@@ -55,28 +56,28 @@ export function SearchResults({ results, onSelectResult, selectedLrNo }: SearchR
                 <TableHeader>
                 <TableRow>
                     <TableHead className={thClass}>L.R. No.</TableHead>
+                    <TableHead className={thClass}>Tracking ID</TableHead>
                     <TableHead className={thClass}>Date</TableHead>
                     <TableHead className={thClass}>Sender</TableHead>
                     <TableHead className={thClass}>Receiver</TableHead>
                     <TableHead className={thClass}>From Station</TableHead>
                     <TableHead className={thClass}>To Station</TableHead>
-                    <TableHead className={thClass}>Track Vehicle</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                  {results.map((row) => (
                     <TableRow 
-                        key={row.lrNo} 
-                        className={cn("cursor-pointer hover:bg-muted/50", row.lrNo === selectedLrNo && 'bg-primary/20 hover:bg-primary/20')}
+                        key={row.trackingId} 
+                        className={cn("cursor-pointer hover:bg-muted/50", row.trackingId === selectedTrackingId && 'bg-primary/20 hover:bg-primary/20')}
                         onClick={() => onSelectResult(row)}
                     >
                         <TableCell className={cn(tdClass)}>{row.lrNo}</TableCell>
+                        <TableCell className={cn(tdClass)}>{row.trackingId}</TableCell>
                         <TableCell className={cn(tdClass)}>{format(parseISO(row.bookingDate), 'yyyy-MM-dd')}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.sender}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.receiver}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.fromCity}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.toCity}</TableCell>
-                        <TableCell className={cn(tdClass)}>{/* Track Link/Button can go here */}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

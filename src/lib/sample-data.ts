@@ -1,4 +1,5 @@
 
+
 import type { Customer } from './types';
 import type { NewRequest, ExistingUser } from './user-management-types';
 import type { Challan, LrDetail } from './challan-data';
@@ -45,12 +46,13 @@ export const existingUsers: ExistingUser[] = Array.from({ length: 23 }, (_, i) =
 // --- BOOKINGS ---
 export const initialBookings: Booking[] = [
   {
-    id: 'booking_1693892011123',
+    trackingId: 'TRK-1693892011123',
     lrNo: 'CONAG01',
     bookingDate: '2024-07-28T10:30:00.000Z',
     fromCity: 'Nagpur',
     toCity: 'Pune',
     lrType: 'PAID',
+    loadType: 'PTL',
     sender: 'NOVA INDUSTERIES',
     receiver: 'MONIKA SALES',
     itemDescription: 'Electronic Components - 1 Box',
@@ -63,12 +65,13 @@ export const initialBookings: Booking[] = [
     }]
   },
     {
-    id: 'booking_1693892022234',
+    trackingId: 'TRK-1693892022234',
     lrNo: 'CONAG02',
     bookingDate: '2024-07-29T11:00:00.000Z',
     fromCity: 'Mumbai',
     toCity: 'Delhi',
     lrType: 'TOPAY',
+    loadType: 'PTL',
     sender: 'MONIKA SALES',
     receiver: 'PARTY NAME1',
     itemDescription: 'Textile Rolls',
@@ -117,8 +120,9 @@ export const initialChallanData: Challan[] = [{
 }];
 
 export const initialLrDetailsData: LrDetail[] = [{
+    challanId: 'CHLN001',
     lrNo: 'CONAG02',
-    lrType: 'Topay',
+    lrType: 'TOPAY',
     sender: 'MONIKA SALES',
     receiver: 'PARTY NAME1',
     from: 'Mumbai',

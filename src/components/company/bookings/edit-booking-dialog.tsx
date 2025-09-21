@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -13,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface EditBookingDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  bookingId: string;
+  bookingId: string; // This is now trackingId
 }
 
 export function EditBookingDialog({

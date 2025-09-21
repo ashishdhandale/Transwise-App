@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +33,7 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
              <Card className="border-gray-300 w-full flex items-center justify-center min-h-96">
                 <div className="text-center text-muted-foreground">
                     <Search className="h-12 w-12 mx-auto" />
-                    <p className="mt-2 font-medium">Search for a GR Number to see details</p>
+                    <p className="mt-2 font-medium">Search for a GR Number or Tracking ID to see details</p>
                     <p className="text-sm">The shipping and delivery details will appear here.</p>
                 </div>
             </Card>
@@ -62,6 +63,7 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                 <CardContent className="p-0">
                     <div className="grid grid-cols-1 md:grid-cols-2">
                         <DetailRow label="LR NO" value={booking.lrNo} profile={profile} />
+                        <DetailRow label="Tracking ID" value={booking.trackingId} profile={profile} />
                         <DetailRow label="Booking Date" value={format(parseISO(booking.bookingDate), 'yyyy-MM-dd')} profile={profile} />
                         <DetailRow label="Booked From" value={booking.fromCity} profile={profile} />
                         <DetailRow label="Booked To" value={booking.toCity} profile={profile} />
@@ -86,7 +88,7 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                     <div className="grid grid-cols-1 md:grid-cols-2">
                         <DetailRow label="Status" value={booking.status} profile={profile} />
                         <DetailRow label="Delivery Type" value="Door" profile={profile} />
-                        <DetailRow label="D.M. NO" value={deliveredEvent ? `DM-${booking.id}`: '-'} profile={profile} />
+                        <DetailRow label="D.M. NO" value={deliveredEvent ? `DM-${booking.trackingId}`: '-'} profile={profile} />
                         <DetailRow label="Delivery Date" value={deliveredEvent?.timestamp} profile={profile} />
                         <DetailRow label="Received BY" value={deliveredEvent ? 'Signature on File' : '-'} profile={profile} />
                         <DetailRow label="Deliverd By" value={deliveredEvent?.user} profile={profile} />

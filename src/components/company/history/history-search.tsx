@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -13,7 +14,7 @@ interface HistorySearchProps {
 }
 
 export function HistorySearch({ onSearch, isLoading }: HistorySearchProps) {
-  const [searchId, setSearchId] = useState('TRK999');
+  const [searchId, setSearchId] = useState('CONAG01');
 
   const handleSearchClick = () => {
     onSearch(searchId);
@@ -36,7 +37,7 @@ export function HistorySearch({ onSearch, isLoading }: HistorySearchProps) {
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter LR / GR / Tracking ID..."
+            placeholder="Enter GR or Tracking ID..."
             className="flex-grow"
           />
           <Button onClick={handleSearchClick} disabled={isLoading || !searchId} className="w-full sm:w-auto">

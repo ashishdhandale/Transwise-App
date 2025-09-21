@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Suspense, useState } from 'react';
@@ -8,6 +9,7 @@ import { HistorySearch } from '@/components/company/history/history-search';
 import { HistoryLogDisplay } from '@/components/company/history/history-log-display';
 import type { BookingHistory } from '@/lib/history-data';
 import { getHistoryLogs } from '@/lib/history-data';
+import { getBookings } from '@/lib/bookings-dashboard-data';
 
 function HistoryReportPage() {
   const [logs, setLogs] = useState<BookingHistory | null>(null);
@@ -24,11 +26,25 @@ function HistoryReportPage() {
     setIsLoading(true);
     setSearchedId(id);
     
-    // Simulate API call to fetch logs, in our case from localStorage
     setTimeout(() => {
         const allHistory = getHistoryLogs();
-        const foundLogs = allHistory.find(item => item.id === id);
-        setLogs(foundLogs || { id, logs: [] });
+        const allBookings = getBookings();
+        const lowercasedId = id.toLowerCase();
+        
+        // Find booking by GR or Tracking ID
+        const booking = allBookings.find(b => 
+            b.lrNo.toLowerCase() === lowercasedId ||
+            b.trackingId.toLowerCase() === lowercasedId
+        );
+
+        if (booking) {
+            // History is always keyed by GR number (lrNo)
+            const foundLogs = allHistory.find(item => item.id === booking.lrNo);
+            setLogs(foundLogs || { id: booking.lrNo, logs: [] });
+        } else {
+            setLogs({ id, logs: [] }); // Show not found message
+        }
+
         setIsLoading(false);
     }, 500);
   };

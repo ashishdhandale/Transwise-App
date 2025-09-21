@@ -84,18 +84,18 @@ export function StockDashboard() {
 
   const handleSelectAll = (checked: boolean | string) => {
     if (checked) {
-        setSelectedLrs(new Set(filteredStock.map(item => item.id)));
+        setSelectedLrs(new Set(filteredStock.map(item => item.trackingId)));
     } else {
         setSelectedLrs(new Set());
     }
   }
 
-  const handleSelectRow = (id: string, checked: boolean | string) => {
+  const handleSelectRow = (trackingId: string, checked: boolean | string) => {
       const newSelection = new Set(selectedLrs);
       if (checked) {
-          newSelection.add(id);
+          newSelection.add(trackingId);
       } else {
-          newSelection.delete(id);
+          newSelection.delete(trackingId);
       }
       setSelectedLrs(newSelection);
   }
@@ -106,7 +106,7 @@ export function StockDashboard() {
       return;
     }
 
-    const selectedBookings = stock.filter(item => selectedLrs.has(item.id));
+    const selectedBookings = stock.filter(item => selectedLrs.has(item.trackingId));
     const allChallans = getChallanData();
     const newChallanId = `TEMP-CHLN-${Date.now()}`;
 
@@ -164,7 +164,7 @@ export function StockDashboard() {
 
     const allBookings = getBookings();
     const updatedBookings = allBookings.map(b => {
-        if (selectedLrs.has(b.id)) {
+        if (selectedLrs.has(b.trackingId)) {
             addHistoryLog(b.lrNo, 'In Transit', 'System', `Added to loading challan ${newChallanId}`);
             return { ...b, status: 'In Transit' as const };
         }
@@ -247,11 +247,11 @@ export function StockDashboard() {
                     <TableBody>
                     {filteredStock.length > 0 ? (
                       filteredStock.map((item) => (
-                        <TableRow key={item.id} data-state={selectedLrs.has(item.id) && "selected"}>
+                        <TableRow key={item.trackingId} data-state={selectedLrs.has(item.trackingId) && "selected"}>
                             <TableCell>
                                 <Checkbox
-                                    checked={selectedLrs.has(item.id)}
-                                    onCheckedChange={(checked) => handleSelectRow(item.id, checked)}
+                                    checked={selectedLrs.has(item.trackingId)}
+                                    onCheckedChange={(checked) => handleSelectRow(item.trackingId, checked)}
                                     aria-label={`Select row ${item.lrNo}`}
                                 />
                             </TableCell>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,14 +31,18 @@ export function PackageTracking() {
     loadData();
   }, []);
 
-  const handleSearch = (grNumber: string) => {
-    if (!grNumber) {
+  const handleSearch = (id: string) => {
+    if (!id) {
       setSearchResults([]);
       setSelectedBooking(null);
       setSelectedBookingHistory(null);
       return;
     }
-    const results = allBookings.filter(b => b.lrNo.toLowerCase().includes(grNumber.toLowerCase()));
+    const lowercasedId = id.toLowerCase();
+    const results = allBookings.filter(b => 
+        b.lrNo.toLowerCase().includes(lowercasedId) ||
+        b.trackingId.toLowerCase().includes(lowercasedId)
+    );
     setSearchResults(results);
 
     if (results.length === 1) {
@@ -51,6 +56,7 @@ export function PackageTracking() {
   const handleSelectBooking = (booking: Booking) => {
     setSelectedBooking(booking);
     const allHistory = getHistoryLogs();
+    // History is tied to the GR Number (lrNo)
     const history = allHistory.find(h => h.id === booking.lrNo) || null;
     setSelectedBookingHistory(history);
   };
@@ -69,7 +75,7 @@ export function PackageTracking() {
           <SearchPanel onSearch={handleSearch} />
         </div>
         <div className="w-full lg:w-3/4 space-y-4">
-          <SearchResults results={searchResults} onSelectResult={handleSelectBooking} selectedLrNo={selectedBooking?.lrNo} />
+          <SearchResults results={searchResults} onSelectResult={handleSelectBooking} selectedTrackingId={selectedBooking?.trackingId} />
           <ShippingDetails booking={selectedBooking} history={selectedBookingHistory} profile={companyProfile} />
         </div>
       </div>

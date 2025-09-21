@@ -14,7 +14,7 @@ export interface FtlDetails {
 }
 
 export interface Booking {
-  id: string;
+  trackingId: string; // New unique internal ID
   lrNo: string;
   bookingDate: string;
   fromCity: string;
@@ -45,7 +45,17 @@ export const getBookings = (): Booking[] => {
     try {
         const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
         if (savedBookings) {
-            return JSON.parse(savedBookings);
+            // Check if data needs migration
+            const parsedBookings = JSON.parse(savedBookings);
+            if (parsedBookings.length > 0 && !parsedBookings[0].trackingId) {
+                const migratedBookings = parsedBookings.map((b: any) => ({
+                    ...b,
+                    trackingId: b.id || `TRK-${Date.now()}-${Math.random()}`
+                }));
+                saveBookings(migratedBookings);
+                return migratedBookings;
+            }
+            return parsedBookings;
         }
         // If no data, initialize with sample data
         localStorage.setItem(LOCAL_STORAGE_KEY_BOOKINGS, JSON.stringify(initialBookings));

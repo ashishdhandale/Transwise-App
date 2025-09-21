@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -22,16 +23,16 @@ import { Separator } from '@/components/ui/separator';
 import { ClientOnly } from '@/components/ui/client-only';
 
 interface SearchPanelProps {
-    onSearch: (grNumber: string) => void;
+    onSearch: (id: string) => void;
 }
 
 
 export function SearchPanel({ onSearch }: SearchPanelProps) {
   const [date, setDate] = useState<Date | undefined>(new Date('2014-10-03'));
-  const [grNumber, setGrNumber] = useState('');
+  const [searchId, setSearchId] = useState('');
 
   const handleSearchClick = () => {
-    onSearch(grNumber);
+    onSearch(searchId);
   };
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -52,25 +53,14 @@ export function SearchPanel({ onSearch }: SearchPanelProps) {
         <CardContent className="p-3 space-y-4">
              {/* Search By Number */}
             <div>
-                <Label htmlFor="gr-number" className="font-semibold">GR Number</Label>
+                <Label htmlFor="search-id" className="font-semibold">GR Number or Tracking ID</Label>
                 <Input 
-                    id="gr-number" 
-                    placeholder="Enter GR Number"
-                    value={grNumber}
-                    onChange={(e) => setGrNumber(e.target.value)}
+                    id="search-id" 
+                    placeholder="Enter ID"
+                    value={searchId}
+                    onChange={(e) => setSearchId(e.target.value)}
                     onKeyDown={handleKeyDown}
                 />
-            </div>
-
-            <div className="flex items-center gap-2">
-                <Separator className="flex-1" />
-                <span className="text-xs text-muted-foreground">OR</span>
-                <Separator className="flex-1" />
-            </div>
-            
-             <div>
-                <Label htmlFor="tracking-id" className="font-semibold">Tracking ID</Label>
-                <Input id="tracking-id" placeholder="Enter Tracking ID" />
             </div>
 
             <Separator />

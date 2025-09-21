@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -256,7 +257,7 @@ export function BookingsDashboard() {
                     <TableBody>
                       {filteredBookings.length > 0 ? (
                         filteredBookings.map((booking, index) => (
-                        <TableRow key={booking.id} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
+                        <TableRow key={booking.trackingId} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
                           <TableCell className="p-1 text-center whitespace-nowrap">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -268,7 +269,7 @@ export function BookingsDashboard() {
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleEditOpen(booking.id)}>
+                                    <DropdownMenuItem onClick={() => handleEditOpen(booking.trackingId)}>
                                         <Pencil className="mr-2 h-4 w-4" /> Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuSub>

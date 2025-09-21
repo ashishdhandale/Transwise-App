@@ -60,7 +60,7 @@ const createEmptyRow = (id: number): ItemRow => ({
 });
 
 interface BookingFormProps {
-    bookingId?: string;
+    bookingId?: string; // This is now trackingId
     onSaveSuccess?: () => void;
     onClose?: () => void;
 }
@@ -132,8 +132,8 @@ const isRowPartiallyFilled = (row: ItemRow) => {
     return filledFields.length > 0 && filledFields.length < 4;
 };
 
-export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormProps) {
-    const isEditMode = !!bookingId;
+export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: BookingFormProps) {
+    const isEditMode = !!trackingId;
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
@@ -223,8 +223,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             
             let keyCounter = 1;
 
-            if (isEditMode && bookingId) {
-                const bookingToEdit = parsedBookings.find(b => b.id === bookingId);
+            if (isEditMode && trackingId) {
+                const bookingToEdit = parsedBookings.find(b => b.trackingId === trackingId);
                 if (bookingToEdit) {
                     const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
                     
@@ -265,7 +265,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [isEditMode, bookingId, toast, loadMasterData]);
+    }, [isEditMode, trackingId, toast, loadMasterData]);
 
     useEffect(() => {
         loadInitialData();
@@ -359,8 +359,9 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
         const isFtlBooking = loadType === 'FTL';
         const currentStatus = isFtlBooking ? 'In Transit' : 'In Stock';
+        const currentBooking = isEditMode ? allBookings.find(b => b.trackingId === trackingId) : undefined;
 
-        const newBookingData: Omit<Booking, 'id'> = {
+        const newBookingData: Omit<Booking, 'trackingId'> = {
             lrNo: currentGrNumber,
             bookingDate: bookingDate!.toISOString(),
             fromCity: fromStation!.name,
@@ -374,7 +375,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
             totalAmount: grandTotal,
-            status: isEditMode ? allBookings.find(b => b.id === bookingId)?.status || currentStatus : currentStatus,
+            status: currentBooking?.status || currentStatus,
             itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
@@ -382,18 +383,11 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         };
 
         try {
-            if (isEditMode) {
-                const oldBooking = allBookings.find(b => b.id === bookingId);
-                if (!oldBooking) {
-                    toast({ title: 'Error', description: 'Original booking not found for update.', variant: 'destructive' });
-                    setIsSubmitting(false);
-                    return;
-                }
-
-                const updatedBooking = { ...oldBooking, ...newBookingData };
-                const changeDetails = generateChangeDetails(oldBooking, updatedBooking);
+            if (isEditMode && currentBooking) {
+                const updatedBooking = { ...currentBooking, ...newBookingData };
+                const changeDetails = generateChangeDetails(currentBooking, updatedBooking);
                 
-                const updatedBookings = allBookings.map(b => b.id === bookingId ? updatedBooking : b);
+                const updatedBookings = allBookings.map(b => b.trackingId === trackingId ? updatedBooking : b);
                 saveBookings(updatedBookings);
                 
                 if (changeDetails !== 'No changes detected.') {
@@ -403,7 +397,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 toast({ title: 'Booking Updated', description: `Successfully updated GR Number: ${currentGrNumber}` });
                 if (onSaveSuccess) onSaveSuccess();
             } else {
-                const newBooking: Booking = { id: `booking_${Date.now()}`, ...newBookingData };
+                const newBooking: Booking = { trackingId: `TRK-${Date.now()}`, ...newBookingData };
                 const updatedBookings = [...allBookings, newBooking];
                 saveBookings(updatedBookings);
                 addHistoryLog(currentGrNumber, 'Booking Created', 'Admin');
