@@ -50,7 +50,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
         setIsAddCustomerOpen(true);
     };
 
-    const handleSaveCustomer = (customerData: Omit<Customer, 'id'>) => {
+    const handleSaveCustomer = (customerData: Omit<Customer, 'id'>): boolean => {
         if (!customerData.name.trim() || !customerData.address.trim() || !customerData.mobile.trim()) {
             toast({ title: 'Error', description: 'Customer Name, Address, and Mobile Number are required.', variant: 'destructive' });
             return false;
@@ -72,7 +72,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
             onPartyAdded(); 
             
             // This sets the newly created customer as the selected one for the current booking
-            setPartyDetails(newCustomer);
+            onPartyChange(newCustomer);
 
             return true;
         } catch (error) {
