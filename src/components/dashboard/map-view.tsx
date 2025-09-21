@@ -16,6 +16,7 @@ import { vehicles } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { Truck } from 'lucide-react';
+import { ClientOnly } from '../ui/client-only';
 
 const mapImage = PlaceHolderImages.find(img => img.id === 'map-background');
 
@@ -38,71 +39,73 @@ export function MapView() {
         <CardDescription>Live locations of all active vehicles.</CardDescription>
       </CardHeader>
       <CardContent>
-        <TooltipProvider>
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
-            {mapImage && (
-              <Image
-                src={mapImage.imageUrl}
-                alt={mapImage.description}
-                fill
-                className="object-cover"
-                data-ai-hint={mapImage.imageHint}
-                priority
-              />
-            )}
-            <div className="absolute inset-0 bg-black/10" />
-            {vehicles.map((vehicle) => {
-              const position = getPosition(vehicle.id);
-              return (
-                <Tooltip key={vehicle.id}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className="absolute -translate-x-1/2 -translate-y-1/2"
-                      style={{ top: position.top, left: position.left }}
-                    >
-                      <div className="relative">
-                        <div
-                          className={cn(
-                            'h-3 w-3 rounded-full',
-                            vehicle.status === 'In Transit'
-                              ? 'bg-primary'
-                              : vehicle.status === 'Idle'
-                              ? 'bg-accent'
-                              : 'bg-destructive'
-                          )}
-                        />
-                         <div
-                          className={cn(
-                            'absolute inset-0 -z-10 h-3 w-3 animate-ping rounded-full',
-                            vehicle.status === 'In Transit'
-                              ? 'bg-primary'
-                              : vehicle.status === 'Idle'
-                              ? 'bg-accent/70'
-                              : 'bg-destructive/70'
-                          )}
-                        />
+        <ClientOnly>
+          <TooltipProvider>
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg">
+              {mapImage && (
+                <Image
+                  src={mapImage.imageUrl}
+                  alt={mapImage.description}
+                  fill
+                  className="object-cover"
+                  data-ai-hint={mapImage.imageHint}
+                  priority
+                />
+              )}
+              <div className="absolute inset-0 bg-black/10" />
+              {vehicles.map((vehicle) => {
+                const position = getPosition(vehicle.id);
+                return (
+                  <Tooltip key={vehicle.id}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                        style={{ top: position.top, left: position.left }}
+                      >
+                        <div className="relative">
+                          <div
+                            className={cn(
+                              'h-3 w-3 rounded-full',
+                              vehicle.status === 'In Transit'
+                                ? 'bg-primary'
+                                : vehicle.status === 'Idle'
+                                ? 'bg-accent'
+                                : 'bg-destructive'
+                            )}
+                          />
+                           <div
+                            className={cn(
+                              'absolute inset-0 -z-10 h-3 w-3 animate-ping rounded-full',
+                              vehicle.status === 'In Transit'
+                                ? 'bg-primary'
+                                : vehicle.status === 'Idle'
+                                ? 'bg-accent/70'
+                                : 'bg-destructive/70'
+                            )}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="flex items-start gap-2 p-1">
-                      <Truck className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="font-semibold">{vehicle.driver}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {vehicle.id} - {vehicle.status}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          At: {vehicle.location.name}
-                        </p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="flex items-start gap-2 p-1">
+                        <Truck className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="font-semibold">{vehicle.driver}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {vehicle.id} - {vehicle.status}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            At: {vehicle.location.name}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </div>
-        </TooltipProvider>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </TooltipProvider>
+        </ClientOnly>
       </CardContent>
     </Card>
   );
