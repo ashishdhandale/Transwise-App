@@ -247,25 +247,30 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         }
     }
     
-    newRows[rowIndex] = newRow;
-    onRowsChange(newRows);
-
     if (columnId === 'chgWt') {
         const actWt = parseFloat(newRow.actWt) || 0;
         const chgWt = parseFloat(processedValue) || 0;
-
         if (actWt !== chgWt) {
             newRow.freightOn = 'Chg.wt';
         } else {
             newRow.freightOn = 'Act.wt';
         }
-
-        if (chgWt > 0 && chgWt < actWt) {
-            setWeightWarning({ rowIndex, value: processedValue });
-        }
     }
+
+    newRows[rowIndex] = newRow;
+    onRowsChange(newRows);
   };
   
+    const handleChgWtBlur = (rowIndex: number) => {
+        const row = rows[rowIndex];
+        const actWt = parseFloat(row.actWt) || 0;
+        const chgWt = parseFloat(row.chgWt) || 0;
+
+        if (chgWt > 0 && chgWt < actWt) {
+            setWeightWarning({ rowIndex, value: row.chgWt });
+        }
+    }
+
     const handleWeightWarningConfirm = () => {
         if (!weightWarning) return;
         const { rowIndex } = weightWarning;
@@ -360,8 +365,9 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'qty':
              return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'actWt':
+            return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         case 'chgWt':
-             return <Input type="text" id={`${columnId}-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+             return <Input type="text" id={`${columnId}-${row.id}`} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} onBlur={() => handleChgWtBlur(index)} />;
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
