@@ -21,6 +21,7 @@ export interface Booking {
   toCity: string;
   lrType: 'FOC' | 'PAID' | 'TOPAY' | 'TBB';
   loadType: 'PTL' | 'FTL';
+  paymentMode?: 'Cash' | 'Online';
   sender: string;
   receiver: string;
   itemDescription: string;

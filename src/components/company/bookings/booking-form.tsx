@@ -136,6 +136,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
+    const [paymentMode, setPaymentMode] = useState<'Cash' | 'Online'>('Cash');
     const [loadType, setLoadType] = useState('PTL');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
@@ -231,6 +232,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                     setCurrentGrNumber(bookingToEdit.lrNo);
                     setBookingDate(new Date(bookingToEdit.bookingDate));
                     setBookingType(bookingToEdit.lrType);
+                    setPaymentMode(bookingToEdit.paymentMode || 'Cash');
                     setLoadType(bookingToEdit.loadType || 'PTL');
                     setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
                     setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
@@ -277,6 +279,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
         let keyCounter = 1;
         setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
+        setPaymentMode('Cash');
         setLoadType('PTL');
         setFromStation(null);
         setToStation(null);
@@ -357,6 +360,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
             fromCity: fromStation!.name,
             toCity: toStation!.name,
             lrType: bookingType as Booking['lrType'],
+            paymentMode: bookingType === 'PAID' ? paymentMode : undefined,
             loadType,
             sender: sender!.name,
             receiver: receiver!.name,
@@ -527,6 +531,8 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                 <BookingDetailsSection 
                     bookingType={bookingType} 
                     onBookingTypeChange={setBookingType}
+                    paymentMode={paymentMode}
+                    onPaymentModeChange={setPaymentMode}
                     onFromStationChange={setFromStation}
                     onToStationChange={setToStation}
                     fromStation={fromStation}
