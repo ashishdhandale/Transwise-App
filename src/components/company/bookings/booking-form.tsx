@@ -563,11 +563,7 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
 
                 <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                 
-                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
-                    <DeliveryInstructionsSection 
-                        deliveryAt={deliveryAt}
-                        onDeliveryAtChange={setDeliveryAt}
-                    />
+                 <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-4 items-start">
                     <ChargesSection 
                         basicFreight={basicFreight} 
                         onGrandTotalChange={setGrandTotal} 
@@ -576,6 +572,10 @@ export function BookingForm({ bookingId, onSaveSuccess, onClose }: BookingFormPr
                         onChargesChange={setAdditionalCharges}
                         initialCharges={initialChargesFromBooking}
                         profile={companyProfile}
+                    />
+                    <DeliveryInstructionsSection 
+                        deliveryAt={deliveryAt}
+                        onDeliveryAtChange={setDeliveryAt}
                     />
                 </div>
                 
