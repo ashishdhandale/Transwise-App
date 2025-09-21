@@ -25,9 +25,7 @@ const sampleCreditData: { [customerName: string]: LedgerEntry[] } = {
   'PARTY NAME1': [
     { date: '2024-06-20', particulars: 'Payment Received', credit: 100000 },
   ],
-   'Madhav Enterprises': [
-    { date: '2024-07-01', particulars: 'Payment Received', credit: 1110 },
-  ],
+   'Madhav Enterprises': [],
 };
 
 const openingBalances: { [customerName: string]: number } = {
@@ -56,7 +54,7 @@ export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
                     debit: booking.totalAmount,
                 });
             } else if (booking.lrType === 'PAID') {
-                // 'PAID' is a cash transaction, record a single entry with no balance impact.
+                // 'PAID' is a cash transaction, record a single entry with no balance impact, but visible history.
                 transactionEntries.push({
                     date: bookingDate,
                     particulars: `To Cash/Bank A/c - GR #${booking.lrNo}`,
