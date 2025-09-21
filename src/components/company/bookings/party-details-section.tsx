@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -176,12 +176,27 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
         { label: 'Other', value: 'Other' },
     ];
     
-    const taxPaidByOptions = [
-        { label: 'Not Applicable', value: 'Not Applicable' },
-        { label: 'Sender', value: 'Sender' },
-        { label: 'Receiver', value: 'Receiver' },
-        { label: 'Transporter', value: 'Transporter' },
-    ];
+    const taxPaidByOptions = useMemo(() => {
+        const options = [
+            { label: 'Not Applicable', value: 'Not Applicable' },
+            { label: 'Sender', value: 'Sender' },
+            { label: 'Receiver', value: 'Receiver' },
+            { label: 'Transporter', value: 'Transporter' },
+        ];
+
+        if (billTo === 'Other' && otherBillToParty) {
+            const isAlreadyListed = options.some(opt => opt.value === otherBillToParty) ||
+                                     sender?.name === otherBillToParty ||
+                                     receiver?.name === otherBillToParty;
+            
+            const isStandardOption = ['Sender', 'Receiver'].includes(otherBillToParty);
+
+            if (!isAlreadyListed && !isStandardOption) {
+                 options.push({ label: otherBillToParty, value: otherBillToParty });
+            }
+        }
+        return options;
+    }, [billTo, otherBillToParty, sender, receiver]);
 
     const customerOptions = customers.map(c => ({ label: c.name, value: c.name }));
 
