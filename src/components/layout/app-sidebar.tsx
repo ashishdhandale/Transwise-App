@@ -373,17 +373,6 @@ export function AppSidebar() {
             </div>
           </CollapsibleContent>
         </Collapsible>
-
-         <SidebarMenuItem>
-            <SidebarMenuButton
-              href="/company/settings"
-              tooltip="Settings"
-              isActive={pathname.startsWith('/company/settings')}
-            >
-              <Settings />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
       </>
     );
   } else {
@@ -428,9 +417,9 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              href={isAdmin ? '/admin/settings' : '#'}
+              href={isAdmin ? '/admin/settings' : '/company/settings'}
               tooltip="Settings"
-              isActive={pathname.startsWith('/admin/settings')}
+              isActive={pathname.startsWith('/admin/settings') || pathname.startsWith('/company/settings')}
             >
               <Settings />
               <span>Settings</span>
