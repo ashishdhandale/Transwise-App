@@ -39,6 +39,8 @@ export function PtlChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
     // Form State
+    const [challanId, setChallanId] = useState('');
+    const [challanDate, setChallanDate] = useState(new Date());
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
     const [driverName, setDriverName] = useState<string | undefined>();
     const [fromStation, setFromStation] = useState<string | undefined>();
@@ -94,6 +96,7 @@ export function PtlChallanForm() {
                 if (profile?.city) {
                     setFromStation(profile.city);
                 }
+                setChallanId(`TEMP-CHLN-${Date.now()}`);
             } catch (error) {
                 toast({ title: "Error", description: "Failed to load initial data.", variant: "destructive" });
             } finally {
@@ -128,10 +131,11 @@ export function PtlChallanForm() {
     const bookingsByCity = useMemo(() => {
         const grouped: { [city: string]: Booking[] } = {};
         stockBookingsFromStation.forEach(booking => {
-            if (!grouped[booking.toCity]) {
-                grouped[booking.toCity] = [];
+            const cityKey = booking.toCity || 'Unknown';
+            if (!grouped[cityKey]) {
+                grouped[cityKey] = [];
             }
-            grouped[booking.toCity].push(booking);
+            grouped[cityKey].push(booking);
         });
         return Object.entries(grouped).sort((a,b) => a[0].localeCompare(b[0]));
     }, [stockBookingsFromStation]);
@@ -173,8 +177,8 @@ export function PtlChallanForm() {
     }, [selectedBookings]);
     
     const handleSaveChallan = async () => {
-        if (!vehicleNo || !driverName || !fromStation || !toStation || !dispatchToParty || selectedBookings.length === 0) {
-            toast({ title: "Validation Error", description: "Please fill all fields and select at least one booking.", variant: "destructive" });
+        if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0) {
+            toast({ title: "Validation Error", description: "Vehicle, Driver, From Station are required, and at least one booking must be selected.", variant: "destructive" });
             return;
         }
 
@@ -186,20 +190,20 @@ export function PtlChallanForm() {
             const allLrDetails = getLrDetailsData();
             
             const newChallan: Challan = {
-                challanId: `TEMP-CHLN-${Date.now()}`,
+                challanId: challanId,
                 status: 'Pending',
-                dispatchDate: format(new Date(), 'yyyy-MM-dd'),
-                dispatchToParty: dispatchToParty,
+                dispatchDate: format(challanDate, 'yyyy-MM-dd'),
+                dispatchToParty: dispatchToParty || (toStation ? `${toStation} Branch` : ''),
                 vehicleNo,
                 driverName,
                 fromStation,
-                toStation, // Primary destination
-                senderId: '', // PTL challan may not have a single sender
+                toStation: toStation || selectedBookings.map(b => b.toCity).join(', '),
+                senderId: '',
                 inwardId: '',
                 inwardDate: '',
                 receivedFromParty: '',
                 challanType: 'Dispatch',
-                vehicleHireFreight: 0, // Not typically set for PTL manifest
+                vehicleHireFreight: 0,
                 advance: 0,
                 balance: 0,
                 totalLr: selectedBookings.length,
@@ -207,7 +211,7 @@ export function PtlChallanForm() {
                 totalItems: selectedBookings.reduce((sum, b) => sum + b.itemRows.length, 0),
                 totalActualWeight: selectedBookings.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
                 totalChargeWeight: totals.totalWeight,
-                summary: { // Simplified for PTL
+                summary: {
                     grandTotal: selectedBookings.reduce((sum, b) => sum + b.totalAmount, 0),
                     totalTopayAmount: selectedBookings.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
                     commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0,
@@ -271,7 +275,15 @@ export function PtlChallanForm() {
                 <CardHeader>
                     <CardTitle className="font-headline">Dispatch Section (Challan Header)</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                     <div className="space-y-1">
+                        <Label>Challan No.</Label>
+                        <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50/50 border-red-200" />
+                    </div>
+                     <div className="space-y-1">
+                        <Label>Challan Date</Label>
+                        <Input value={format(challanDate, 'dd-MMM-yyyy')} readOnly />
+                    </div>
                      <div className="space-y-1">
                         <Label>From Station</Label>
                         <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
@@ -288,7 +300,7 @@ export function PtlChallanForm() {
                         <Label>Driver Name</Label>
                         <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
                     </div>
-                     <div className="space-y-1">
+                     <div className="space-y-1 col-span-1 md:col-span-2">
                         <Label>Dispatch To (Receiver)</Label>
                         <Input 
                             value={dispatchToParty} 
@@ -355,7 +367,7 @@ export function PtlChallanForm() {
                                     <TableHead className="w-12 text-center">Action</TableHead>
                                     <TableHead>LR No</TableHead>
                                     <TableHead>Date</TableHead>
-                                    <TableHead>To Station</TableHead>
+                                    <TableHead>To</TableHead>
                                     <TableHead>Sender</TableHead>
                                     <TableHead>Receiver</TableHead>
                                     <TableHead className="text-right">Qty</TableHead>
