@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -28,7 +27,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { ColumnSetting } from '@/components/company/settings/item-details-settings';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@/components/ui/combobox';
 import type { Item } from '@/lib/types';
@@ -59,26 +57,8 @@ const tdClass = "p-1";
 const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs";
 const inputClass = "h-8 text-xs px-1";
 
-const ITEM_DETAILS_SETTINGS_KEY = 'transwise_item_details_settings';
 const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 const DEFAULT_ITEM_NAME = 'Frm MAS';
-
-const defaultColumns: ColumnSetting[] = [
-    { id: '#', label: '#', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[40px]' },
-    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[150px]' },
-    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[160px]' },
-    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[200px]' },
-    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[80px]' },
-    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[80px]' },
-    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[80px]' },
-    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[80px]' },
-    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[120px]' },
-    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
-    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: false, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
-    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
-    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[120px]' },
-    { id: 'del', label: 'Del', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[50px]' },
-];
 
 let nextId = 1;
 const createEmptyRow = (): ItemRow => ({
@@ -103,7 +83,6 @@ interface ItemDetailsTableProps {
 }
 
 export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) {
-  const [columns, setColumns] = useState<ColumnSetting[]>(defaultColumns);
   const [isClient, setIsClient] = useState(false);
   const [itemOptions, setItemOptions] = useState<Item[]>([]);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
@@ -134,18 +113,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   useEffect(() => {
     setIsClient(true);
     loadItems();
-    
-    try {
-        const savedSettings = localStorage.getItem(ITEM_DETAILS_SETTINGS_KEY);
-        if (savedSettings) {
-            const parsed = JSON.parse(savedSettings);
-            if (parsed.columns) {
-                setColumns(parsed.columns);
-            }
-        }
-    } catch(e) {
-        console.error('Could not load item table settings', e);
-    }
   }, [loadItems]);
 
 
@@ -335,50 +302,80 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   return (
     <>
       <div className="overflow-x-auto relative border rounded-md">
-        <Table className="min-w-max table-fixed">
+        <Table>
           <TableHeader>
               <TableRow>
-                 {columns.filter(c => c.isVisible).map(column => (
-                     <TableHead key={column.id} className={`${thClass} ${column.width}`}>
-                         {column.label}
-                    </TableHead>
-                 ))}
+                <TableHead className={thClass}>#</TableHead>
+                <TableHead className={thClass}>Item Name*</TableHead>
+                <TableHead className={thClass}>Description*</TableHead>
+                <TableHead className={thClass}>Qty*</TableHead>
+                <TableHead className={thClass}>Act.wt*</TableHead>
+                <TableHead className={thClass}>Chg.wt*</TableHead>
+                <TableHead className={thClass}>Rate</TableHead>
+                <TableHead className={thClass}>Freight ON</TableHead>
+                <TableHead className={thClass}>Lumpsum</TableHead>
+                <TableHead className={thClass}>Del</TableHead>
               </TableRow>
           </TableHeader>
           <TableBody>
               {rows.map((row, index) => (
-                <TableRow key={row.id}>
-                    {columns.filter(c => c.isVisible).map(column => {
-                        switch(column.id) {
-                            case '#': return <TableCell key={column.id} className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
-                            case 'ewbNo': return <TableCell key={column.id} className={tdClass}><Input type="text" className={inputClass} maxLength={12} value={row.ewbNo} onChange={(e) => handleInputChange(index, 'ewbNo', e.target.value)} /></TableCell>
-                            case 'itemName': return <TableCell key={column.id} className={tdClass}><Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Select item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} /></TableCell>
-                            case 'description': return <TableCell key={column.id} className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} /></TableCell>
-                            case 'qty': return <TableCell key={column.id} className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} /></TableCell>
-                            case 'actWt': return <TableCell key={column.id} className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} /></TableCell>
-                            case 'chgWt': return <TableCell key={column.id} className={tdClass}><Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} /></TableCell>
-                            case 'rate': return <TableCell key={column.id} className={tdClass}><Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed'} /></TableCell>
-                            case 'freightOn': return <TableCell key={column.id} className={tdClass}><Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)}><SelectTrigger className={inputClass}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Act.wt">Act.wt</SelectItem><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Fixed">Fixed</SelectItem><SelectItem value="Quantity">Quantity</SelectItem></SelectContent></Select></TableCell>
-                            case 'lumpsum': return <TableCell key={column.id} className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed'} /></TableCell>
-                            case 'pvtMark': return <TableCell key={column.id} className={tdClass}><Input type="text" className={inputClass} value={row.pvtMark} onChange={(e) => handleInputChange(index, 'pvtMark', e.target.value)} /></TableCell>
-                            case 'invoiceNo': return <TableCell key={column.id} className={tdClass}><Input type="text" className={inputClass} value={row.invoiceNo} onChange={(e) => handleInputChange(index, 'invoiceNo', e.target.value)} /></TableCell>
-                            case 'dValue': return <TableCell key={column.id} className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.dValue} onChange={(e) => handleInputChange(index, 'dValue', e.target.value)} /></TableCell>
-                            case 'del': return <TableCell key={column.id} className={`${tdClass} text-center`}><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone. This will permanently delete the item row from the booking.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => removeRow(row.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></TableCell>;
-                            default: return <TableCell key={column.id} className={tdClass}><Input type="text" className={inputClass} value={row[column.id] || ''} onChange={(e) => handleInputChange(index, column.id, e.target.value)} /></TableCell>;
-                        }
-                    })}
-                </TableRow>
+                <React.Fragment key={row.id}>
+                    <TableRow>
+                        <TableCell className={`${tdClass} text-center font-semibold text-red-500`} rowSpan={2}>{index + 1}*</TableCell>
+                        <TableCell className={tdClass}>
+                            <Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Select item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} />
+                        </TableCell>
+                        <TableCell className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} /></TableCell>
+                        <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} /></TableCell>
+                        <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} /></TableCell>
+                        <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} /></TableCell>
+                        <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed'} /></TableCell>
+                        <TableCell className={tdClass}><Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)}><SelectTrigger className={inputClass}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Act.wt">Act.wt</SelectItem><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Fixed">Fixed</SelectItem><SelectItem value="Quantity">Quantity</SelectItem></SelectContent></Select></TableCell>
+                        <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed'} /></TableCell>
+                        <TableCell className={`${tdClass} text-center`} rowSpan={2}>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this item row.</AlertDialogDescription></AlertDialogHeader>
+                                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => removeRow(row.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </TableCell>
+                    </TableRow>
+                     <TableRow>
+                        <TableCell colSpan={4} className={tdClass}>
+                             <div className="grid grid-cols-[auto,1fr] items-center gap-2">
+                                <Label htmlFor={`ewb-${row.id}`} className="text-xs">EWB no.</Label>
+                                <Input id={`ewb-${row.id}`} type="text" className={inputClass} maxLength={12} value={row.ewbNo} onChange={(e) => handleInputChange(index, 'ewbNo', e.target.value)} />
+                             </div>
+                        </TableCell>
+                        <TableCell colSpan={2} className={tdClass}>
+                             <div className="grid grid-cols-[auto,1fr] items-center gap-2">
+                                <Label htmlFor={`pvtMark-${row.id}`} className="text-xs">Pvt.Mark</Label>
+                                <Input id={`pvtMark-${row.id}`} type="text" className={inputClass} value={row.pvtMark} onChange={(e) => handleInputChange(index, 'pvtMark', e.target.value)} />
+                             </div>
+                        </TableCell>
+                         <TableCell colSpan={3} className={tdClass}>
+                            <div className="grid grid-cols-[auto,1fr,auto,1fr] items-center gap-2">
+                                <Label htmlFor={`invoiceNo-${row.id}`} className="text-xs">Inv. No</Label>
+                                <Input id={`invoiceNo-${row.id}`} type="text" className={inputClass} value={row.invoiceNo} onChange={(e) => handleInputChange(index, 'invoiceNo', e.target.value)} />
+                                 <Label htmlFor={`dValue-${row.id}`} className="text-xs">D.Value</Label>
+                                <Input id={`dValue-${row.id}`} type="text" inputMode="decimal" className={inputClass} value={row.dValue} onChange={(e) => handleInputChange(index, 'dValue', e.target.value)} />
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </React.Fragment>
               ))}
           </TableBody>
           <TableFooter>
               <TableRow>
-                <TableCell className={`${tfClass} text-right`} colSpan={4}>
+                <TableCell className={`${tfClass} text-right`} colSpan={3}>
                     <span>TOTAL ITEM: {totals.itemCount}</span>
                 </TableCell>
                 <TableCell className={`${tfClass} text-center`}>{totals.qty}</TableCell>
                 <TableCell className={`${tfClass} text-center`}>{totals.actWt.toFixed(2)}</TableCell>
                 <TableCell className={`${tfClass} text-center`}>{totals.chgWt.toFixed(2)}</TableCell>
-                <TableCell colSpan={columns.filter(c=>c.isVisible).length - 7} className={tfClass}>
+                <TableCell colSpan={3} className={tfClass}>
                     <div className="flex justify-end">
                         <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
                             <PlusCircle className="h-5 w-5" />
