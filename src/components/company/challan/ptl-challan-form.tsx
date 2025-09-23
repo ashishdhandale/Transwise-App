@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { getChallanData, saveChallanData, type Challan } from '@/lib/challan-data';
+import { getChallanData, saveChallanData, type Challan, saveLrDetailsData, getLrDetailsData, LrDetail } from '@/lib/challan-data';
 import { addHistoryLog } from '@/lib/history-data';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
@@ -25,6 +25,8 @@ const tdClass = "p-2 whitespace-nowrap";
 const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
+const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
+type CityListSource = 'default' | 'custom';
 
 export function PtlChallanForm() {
     const { toast } = useToast();
@@ -43,6 +45,7 @@ export function PtlChallanForm() {
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [cities, setCities] = useState<City[]>([]);
+    const [cityListSource, setCityListSource] = useState<CityListSource>('default');
     
     // Bookings Data
     const [availableBookings, setAvailableBookings] = useState<Booking[]>([]);
@@ -56,8 +59,21 @@ export function PtlChallanForm() {
             const savedVehicles = localStorage.getItem(LOCAL_STORAGE_KEY_VEHICLES);
             if (savedVehicles) setVehicles(JSON.parse(savedVehicles));
             
-            const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-            if (savedCities) setCities(JSON.parse(savedCities));
+            const savedSource = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
+            const source = savedSource || 'default';
+            setCityListSource(source);
+
+            if (source === 'custom') {
+                const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
+                const parsedCities: City[] = savedCities ? JSON.parse(savedCities) : [];
+                setCities(parsedCities);
+            } else {
+                // In a real app, default cities would come from a server. Here we'll rely on what's been used in bookings.
+                const allBookings = getBookings();
+                const uniqueCities = [...new Set([...allBookings.map(b => b.fromCity), ...allBookings.map(b => b.toCity)])];
+                const cityObjects = uniqueCities.map((city, i) => ({ id: i, name: city, aliasCode: '', pinCode: '' }));
+                setCities(cityObjects);
+            }
         } catch (error) {
             console.error("Failed to load master data", error);
         }
@@ -119,10 +135,11 @@ export function PtlChallanForm() {
         
         try {
             const allChallans = getChallanData();
-            const newChallanId = `CHLN${String(allChallans.length + 1).padStart(3, '0')}`;
+            const allLrDetails = getLrDetailsData();
             
             const newChallan: Challan = {
-                challanId: newChallanId,
+                challanId: `TEMP-CHLN-${Date.now()}`,
+                status: 'Pending',
                 dispatchDate: format(new Date(), 'yyyy-MM-dd'),
                 dispatchToParty: toStation,
                 vehicleNo,
@@ -151,18 +168,36 @@ export function PtlChallanForm() {
             
             saveChallanData([...allChallans, newChallan]);
             
+            const newLrDetailsForChallan: LrDetail[] = selectedBookingDetails.map(b => ({
+                challanId: newChallan.challanId,
+                lrNo: b.lrNo,
+                lrType: b.lrType,
+                sender: b.sender,
+                receiver: b.receiver,
+                from: b.fromCity,
+                to: b.toCity,
+                bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
+                itemDescription: b.itemDescription,
+                quantity: b.qty,
+                actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                chargeWeight: b.chgWt,
+                grandTotal: b.totalAmount
+            }));
+
+            saveLrDetailsData([...allLrDetails, ...newLrDetailsForChallan]);
+
             // Update booking statuses
             const allBookings = getBookings();
             const updatedBookings = allBookings.map(b => {
                 if (selectedBookings.has(b.lrNo)) {
-                    addHistoryLog(b.lrNo, 'Dispatched from Warehouse', companyProfile?.companyName || 'Admin', `Dispatched via vehicle ${vehicleNo} on Challan ${newChallanId}`);
+                    addHistoryLog(b.lrNo, 'Dispatched from Warehouse', companyProfile?.companyName || 'Admin', `Dispatched via vehicle ${vehicleNo} on Challan ${newChallan.challanId}`);
                     return { ...b, status: 'In Transit' as const };
                 }
                 return b;
             });
             saveBookings(updatedBookings);
 
-            toast({ title: "Challan Created", description: `Challan ${newChallanId} has been successfully generated.` });
+            toast({ title: "Challan Created", description: `Challan ${newChallan.challanId} has been successfully generated.` });
             router.push('/company/challan');
 
         } catch (error) {
@@ -172,6 +207,8 @@ export function PtlChallanForm() {
             setIsSubmitting(false);
         }
     };
+
+    const cityOptions = useMemo(() => cities.map(c => ({ label: c.name, value: c.name })), [cities]);
 
 
     if (isLoading) {
@@ -196,11 +233,11 @@ export function PtlChallanForm() {
                     </div>
                     <div className="space-y-1">
                         <Label>From Station</Label>
-                        <Combobox options={cities.map(c => ({ label: c.name, value: c.name }))} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
+                        <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
                     </div>
                     <div className="space-y-1">
                         <Label>To Station</Label>
-                        <Combobox options={cities.map(c => ({ label: c.name, value: c.name }))} value={toStation} onChange={setToStation} placeholder="Select To..." />
+                        <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="Select To..." />
                     </div>
                 </CardContent>
             </Card>
@@ -233,10 +270,10 @@ export function PtlChallanForm() {
                             </TableHeader>
                             <TableBody>
                                 {bookingsToDisplay.length > 0 ? bookingsToDisplay.map(booking => (
-                                    <TableRow key={booking.id}>
+                                    <TableRow key={booking.trackingId}>
                                         <TableCell>
                                             <Checkbox 
-                                                id={`select-${booking.id}`}
+                                                id={`select-${booking.trackingId}`}
                                                 checked={selectedBookings.has(booking.lrNo)}
                                                 onCheckedChange={(checked) => handleBookingSelection(booking.lrNo, checked)}
                                             />
