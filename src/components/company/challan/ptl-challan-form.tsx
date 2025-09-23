@@ -280,9 +280,8 @@ export function PtlChallanForm() {
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
     
     const dispatchToOptions = useMemo(() => {
-        const uniqueTos = new Set(selectedBookings.map(b => b.toCity));
-        return Array.from(uniqueTos).map(city => ({label: city, value: city}));
-    }, [selectedBookings]);
+        return cities.map(city => ({ label: city.name, value: city.name }));
+    }, [cities]);
 
 
     if (isLoading) return <p>Loading form...</p>;
@@ -433,7 +432,7 @@ export function PtlChallanForm() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className={thClass}>Sr.No</TableHead><TableHead className={thClass}>LR NO</TableHead><TableHead className={thClass}>To Station</TableHead><TableHead className={thClass}>LR TYPE</TableHead><TableHead className={thClass}>consignor</TableHead><TableHead className={thClass}>consignee</TableHead><TableHead className={thClass}>Item & Description</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Disp.Qty</TableHead><TableHead className={thClass}>Act.wt.</TableHead><TableHead className={thClass}>Total Freight</TableHead><TableHead className={thClass}>EWB no</TableHead><TableHead className={thClass}>Action</TableHead>
+                                    <TableHead className={thClass}>Sr.No</TableHead><TableHead className={thClass}>LR NO</TableHead><TableHead className={thClass}>To Station</TableHead><TableHead className={thClass}>LR TYPE</TableHead><TableHead className={thClass}>consignor</TableHead><TableHead className={thClass}>consignee</TableHead><TableHead className={thClass}>Item &amp; Description</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Disp.Qty</TableHead><TableHead className={thClass}>Act.wt.</TableHead><TableHead className={thClass}>Total Freight</TableHead><TableHead className={thClass}>EWB no</TableHead><TableHead className={thClass}>Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -459,7 +458,7 @@ export function PtlChallanForm() {
                     <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Extra / Short Entries</CardTitle></CardHeader><CardContent className="p-1"><div className="h-24 border-dashed border-2 rounded-md flex items-center justify-center text-muted-foreground text-xs">Not Implemented</div></CardContent></Card>
                 </div>
                  <div className="space-y-1">
-                     <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks & Summary</CardTitle></CardHeader><CardContent className="p-1 grid grid-cols-2 gap-1"><Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" /><Textarea placeholder="Dispatch Summary" className="text-xs h-24" /></CardContent></Card>
+                     <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader><CardContent className="p-1 grid grid-cols-2 gap-1"><Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" /><Textarea placeholder="Dispatch Summary" className="text-xs h-24" /></CardContent></Card>
                 </div>
                  <div className="space-y-1">
                      <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader><CardContent className="p-1 space-y-1 text-xs"><div className="flex justify-between font-bold"><span>Total TOPAY:</span><span>{financialSummary.toPayAmt.toFixed(2)}</span></div><div className="flex justify-between"><span>Comission</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Labor</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Crossing</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Carting</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Other Charges</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Veh.Freight</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between items-center"><a>+Add Fuel</a><span><Input className="h-6 w-12 text-xs inline-block" placeholder="Ltr"/><Input className="h-6 w-16 text-xs inline-block ml-1" placeholder="Amt"/></span></div><div className="flex justify-between"><span>Balance Truck Hire</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between font-bold text-red-600"><span>Dr/Cr Amount</span><span>Rs. 12346546</span></div></CardContent></Card>
@@ -472,9 +471,11 @@ export function PtlChallanForm() {
                 <Button variant="outline">Print Loading Copy</Button>
                 <Button onClick={handleFinalize} disabled={isSubmitting || selectedBookings.length === 0}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Save & Finalize
+                    Save &amp; Finalize
                 </Button>
             </div>
         </div>
     );
 }
+
+    
