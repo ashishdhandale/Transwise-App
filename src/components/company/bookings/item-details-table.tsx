@@ -400,7 +400,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   if (!isClient) {
     return (
         <div className="overflow-x-auto border rounded-md">
-            <Table className="table-fixed w-full">
+            <Table>
             <TableHeader>
                 <TableRow>
                     <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
@@ -450,7 +450,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   return (
     <>
       <div className="overflow-x-auto border rounded-md">
-        <Table className="table-fixed w-full">
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
