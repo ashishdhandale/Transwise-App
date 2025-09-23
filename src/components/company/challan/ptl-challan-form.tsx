@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
 import type { Driver, VehicleMaster, City, Vendor } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Save, X, Trash2, Search, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, PlusCircle, Save, X, Trash2, Search, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { getChallanData, saveChallanData, type Challan, saveLrDetailsData, getLrDetailsData, LrDetail } from '@/lib/challan-data';
@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { bookingOptions } from '@/lib/booking-data';
 
 
 const tdClass = "p-1 whitespace-nowrap text-xs";
@@ -46,11 +47,10 @@ export function PtlChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
     // Header Form State
-    const [lotNo, setLotNo] = useState('');
-    const [lotCreationDate, setLotCreationDate] = useState(new Date());
+    const [challanNo, setChallanNo] = useState('');
+    const [challanDate, setChallanDate] = useState(new Date());
     const [lotDispatchDate, setLotDispatchDate] = useState(new Date());
     const [fromStation, setFromStation] = useState<string | undefined>();
-    const [toStation, setToStation] = useState<string | undefined>();
     const [billTo, setBillTo] = useState('==========Branch Offices:============');
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
     const [vehicleSupplier, setVehicleSupplier] = useState<string | undefined>();
@@ -88,9 +88,13 @@ export function PtlChallanForm() {
                 const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
                 setCities(savedCities ? JSON.parse(savedCities) : []);
             } else {
-                const allBookings = getBookings();
-                const uniqueCities = [...new Set([...allBookings.map(b => b.fromCity), ...allBookings.map(b => b.toCity)])];
-                setCities(uniqueCities.map((city, i) => ({ id: i, name: city, aliasCode: '', pinCode: '' })));
+                 const defaultCityObjects = bookingOptions.stations.map((name, index) => ({
+                    id: index,
+                    name: name,
+                    aliasCode: 'N/A',
+                    pinCode: 'N/A'
+                }));
+                setCities(defaultCityObjects);
             }
         } catch (error) {
             console.error("Failed to load master data", error);
@@ -107,7 +111,7 @@ export function PtlChallanForm() {
                 const ptlStock = allBookings.filter(b => b.loadType === 'PTL' && b.status === 'In Stock');
                 setAllStockBookings(ptlStock);
                 if (profile?.city) setFromStation(profile.city);
-                setLotNo(`AUTO`);
+                setChallanNo(`TEMP-${Date.now().toString().slice(-6)}`);
             } catch (error) {
                 toast({ title: "Error", description: "Failed to load initial data.", variant: "destructive" });
             } finally {
@@ -156,7 +160,7 @@ export function PtlChallanForm() {
         }
     };
     
-    const handleToggleBookingSelection = (trackingId: string, isSelected: boolean) => {
+    const handleToggleBookingSelection = (trackingId: string, isSelected: boolean | string) => {
         if (isSelected) {
             const bookingToAdd = stockBookingsFromStation.find(b => b.trackingId === trackingId);
             if (bookingToAdd && !selectedBookings.some(b => b.trackingId === trackingId)) {
@@ -211,17 +215,15 @@ export function PtlChallanForm() {
             const allChallans = getChallanData();
             const allLrDetails = getLrDetailsData();
             
-            const challanId = `CHLN-${Date.now()}`;
-            
             const newChallan: Challan = {
-                challanId: challanId,
-                status: 'Finalized',
+                challanId: challanNo,
+                status: 'Pending',
                 dispatchDate: format(lotDispatchDate, 'yyyy-MM-dd'),
                 dispatchToParty: billTo,
                 vehicleNo,
                 driverName,
                 fromStation,
-                toStation: toStation || selectedBookings.map(b => b.toCity).join(', '),
+                toStation: selectedBookings.map(b => b.toCity).join(', '),
                 senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
                 challanType: 'Dispatch',
                 vehicleHireFreight: 0, advance: 0, balance: 0,
@@ -253,14 +255,14 @@ export function PtlChallanForm() {
             const allBookings = getBookings();
             const updatedBookings = allBookings.map(b => {
                 if (selectedTrackingIds.has(b.trackingId)) {
-                    addHistoryLog(b.lrNo, 'Dispatched from Warehouse', companyProfile?.companyName || 'Admin', `Dispatched via vehicle ${vehicleNo} on Challan ${newChallan.challanId}`);
+                    addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Added to loading challan ${newChallan.challanId}`);
                     return { ...b, status: 'In Transit' as const };
                 }
                 return b;
             });
             saveBookings(updatedBookings);
 
-            toast({ title: "Challan Finalized", description: `Challan ${newChallan.challanId} has been successfully generated.` });
+            toast({ title: "Challan Created", description: `Temporary challan ${newChallan.challanId} is now pending.` });
             router.push('/company/challan');
 
         } catch (error) {
@@ -282,147 +284,152 @@ export function PtlChallanForm() {
             <h1 className="text-xl font-bold text-center">New Dispatch</h1>
             
             {/* Header Section */}
-            <div className="p-2 border rounded-md bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-                <div className="space-y-0.5">
-                    <Label>LOT No.</Label>
-                    <Input value={lotNo} readOnly className="h-7 text-xs font-bold text-red-600" />
-                </div>
-                <div className="space-y-0.5">
-                    <Label>From Station</Label>
-                    <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
-                </div>
-                <div className="space-y-0.5">
-                    <Label>To Station</Label>
-                    <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="Select To..." />
-                </div>
-                 <div className="space-y-0.5">
-                    <Label>Lot Creation</Label>
-                     <Popover><PopoverTrigger asChild><Button variant="outline" className="h-7 w-full justify-between text-xs px-2"><>{format(lotCreationDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lotCreationDate} onSelect={(d) => d && setLotCreationDate(d)}/></PopoverContent></Popover>
-                </div>
-                <div className="space-y-0.5">
-                    <Label>Lot Dispatch</Label>
-                    <Popover><PopoverTrigger asChild><Button variant="outline" className="h-7 w-full justify-between text-xs px-2"><>{format(lotDispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lotDispatchDate} onSelect={(d) => d && setLotDispatchDate(d)}/></PopoverContent></Popover>
-                </div>
-                 <div className="space-y-0.5 lg:col-span-2">
-                    <Label>Bill To:</Label>
-                    <Select value={billTo} onValueChange={setBillTo}>
-                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="==========Branch Offices:============">==========Branch Offices:============</SelectItem></SelectContent>
-                    </Select>
-                </div>
-                 <div className="space-y-0.5">
-                    <Label>Veh.Hire Receipt No</Label>
-                    <Input className="h-7 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
-                </div>
-                <div className="space-y-0.5">
-                    <Label>Vehicle Supplier</Label>
-                    <Combobox options={vehicleSupplierOptions} value={vehicleSupplier} onChange={setVehicleSupplier} placeholder="Select Supplier..." />
-                </div>
-                 <div className="space-y-0.5">
-                    <Label>Vehicle No.</Label>
-                    <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                </div>
-                 <div className="space-y-0.5">
-                    <Label>Veh.Capacity</Label>
-                    <Input className="h-7 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
-                </div>
-                 <div className="space-y-0.5">
-                    <Label>Driver Name</Label>
-                     <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                </div>
-                 <div className="space-y-0.5">
-                    <Label>Driver's Cell Number</Label>
-                    <Input className="h-7 text-xs" value={driverMobile} readOnly />
-                </div>
-            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base font-headline">Dispatch Section</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+                     <div className="space-y-0.5">
+                        <Label>Challan No.</Label>
+                        <Input value={challanNo} readOnly className="h-7 text-xs font-bold text-red-600" />
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>Challan Date</Label>
+                         <Popover><PopoverTrigger asChild><Button variant="outline" className="h-7 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>From Station</Label>
+                        <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>Dispatch To</Label>
+                        <Select value={billTo} onValueChange={setBillTo}>
+                            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="==========Branch Offices:============">==========Branch Offices:============</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>Lot Dispatch Date</Label>
+                        <Popover><PopoverTrigger asChild><Button variant="outline" className="h-7 w-full justify-between text-xs px-2"><>{format(lotDispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lotDispatchDate} onSelect={(d) => d && setLotDispatchDate(d)}/></PopoverContent></Popover>
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>Vehicle No.</Label>
+                        <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>Driver Name</Label>
+                        <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                    </div>
+                     <div className="space-y-0.5">
+                        <Label>Veh.Hire Receipt No</Label>
+                        <Input className="h-7 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>Veh.Capacity</Label>
+                        <Input className="h-7 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
+                    </div>
+                    <div className="space-y-0.5">
+                        <Label>Vehicle Supplier</Label>
+                        <Combobox options={vehicleSupplierOptions} value={vehicleSupplier} onChange={setVehicleSupplier} placeholder="Select Supplier..." />
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Search/Selection Section */}
-            <div className="p-2 border rounded-md bg-white">
-                <Tabs defaultValue="citywise">
-                    <TabsList className="h-8">
-                        <TabsTrigger value="searchlr" className="text-xs h-7">Search By LR</TabsTrigger>
-                        <TabsTrigger value="citywise" className="text-xs h-7">Citywise</TabsTrigger>
-                        <TabsTrigger value="ewbwise" className="text-xs h-7">EWBwise</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="searchlr" className="pt-2">
-                        <div className="flex items-center gap-2">
-                            <Combobox 
-                                options={availableBookingsForDropdown}
-                                value={selectedLrForSearch}
-                                onChange={setSelectedLrForSearch}
-                                placeholder="Search & Select GR No..."
-                                notFoundMessage="No available GRs for this station."
-                            />
-                            <Button onClick={handleAddBooking} size="sm" className="h-8"><Search className="mr-2 h-4 w-4" /> Add</Button>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="citywise" className="pt-2">
-                         <ScrollArea className="h-32 border rounded-md p-2">
-                            <div className="space-y-1">
-                                {bookingsByCity.map(([city, bookings]) => (
-                                    <div key={city} className="flex items-center space-x-2">
-                                        <Checkbox id={`city-${city}`} onCheckedChange={(c) => handleCitySelectionChange(city, c)} checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} />
-                                        <label htmlFor={`city-${city}`} className="text-xs font-medium">{city} ({bookings.length})</label>
-                                    </div>
-                                ))}
+            <Card>
+                 <CardHeader>
+                    <CardTitle className="text-base font-headline">Select Bookings for Challan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="search">
+                        <TabsList className="h-8">
+                            <TabsTrigger value="search" className="text-xs h-7">Search By LR</TabsTrigger>
+                            <TabsTrigger value="citywise" className="text-xs h-7">Citywise Bulk Select</TabsTrigger>
+                             <TabsTrigger value="list" className="text-xs h-7">Select From List</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="search" className="pt-2">
+                            <div className="flex items-center gap-2">
+                                <Combobox 
+                                    options={availableBookingsForDropdown}
+                                    value={selectedLrForSearch}
+                                    onChange={setSelectedLrForSearch}
+                                    placeholder="Search & Select GR No..."
+                                    notFoundMessage="No available GRs for this station."
+                                />
+                                <Button onClick={handleAddBooking} size="sm" className="h-8"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                             </div>
-                         </ScrollArea>
-                    </TabsContent>
-                    <TabsContent value="ewbwise" className="pt-2">
-                        <p className="text-xs text-muted-foreground">E-Way Bill search functionality to be implemented.</p>
-                    </TabsContent>
-                </Tabs>
-                <ScrollArea className="h-40 mt-2 border rounded-md">
-                     <Table>
-                        <TableHeader><TableRow><TableHead className={thClass}>Select</TableHead><TableHead className={thClass}>LR No</TableHead><TableHead className={thClass}>LR Type</TableHead><TableHead className={thClass}>Consignor</TableHead><TableHead className={thClass}>Consignee</TableHead><TableHead className={thClass}>From</TableHead><TableHead className={thClass}>To</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Act.Chg</TableHead><TableHead className={thClass}>Chg wt.</TableHead><TableHead className={thClass}>Total Freight</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            {stockBookingsFromStation.map(b => (
-                                <TableRow key={b.trackingId} className={cn(selectedBookings.some(sb => sb.trackingId === b.trackingId) && 'bg-blue-100/50')}>
-                                    <TableCell className={tdClass}><Checkbox onCheckedChange={(c) => handleToggleBookingSelection(b.trackingId, c)} checked={selectedBookings.some(sb => sb.trackingId === b.trackingId)} /></TableCell>
-                                    <TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.fromCity}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}>{b.chgWt}</TableCell><TableCell className={tdClass}>{b.chgWt}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                     </Table>
-                </ScrollArea>
-            </div>
+                        </TabsContent>
+                        <TabsContent value="citywise" className="pt-2">
+                            <ScrollArea className="h-32 border rounded-md p-2">
+                                <div className="space-y-1">
+                                    {bookingsByCity.map(([city, bookings]) => (
+                                        <div key={city} className="flex items-center space-x-2">
+                                            <Checkbox id={`city-${city}`} onCheckedChange={(c) => handleCitySelectionChange(city, c)} checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} />
+                                            <label htmlFor={`city-${city}`} className="text-xs font-medium">{city} ({bookings.length})</label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+                        <TabsContent value="list" className="pt-2">
+                            <ScrollArea className="h-40 mt-2 border rounded-md">
+                                <Table>
+                                    <TableHeader><TableRow><TableHead className={thClass}>Select</TableHead><TableHead className={thClass}>LR No</TableHead><TableHead className={thClass}>To</TableHead><TableHead className={thClass}>Consignee</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Chg wt.</TableHead></TableRow></TableHeader>
+                                    <TableBody>
+                                        {stockBookingsFromStation.map(b => (
+                                            <TableRow key={b.trackingId} className={cn(selectedBookings.some(sb => sb.trackingId === b.trackingId) && 'bg-blue-100/50')}>
+                                                <TableCell className={tdClass}><Checkbox onCheckedChange={(c) => handleToggleBookingSelection(b.trackingId, c)} checked={selectedBookings.some(sb => sb.trackingId === b.trackingId)} /></TableCell>
+                                                <TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}>{b.chgWt.toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </ScrollArea>
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
             
             {/* Consignment Details */}
-            <div className="p-2 border rounded-md bg-white">
-                <div className="flex justify-between items-center text-xs font-bold text-red-600 mb-1">
-                    <h3>Consignment Details</h3>
-                    <div className="flex gap-4">
-                        <span>Total LR's : {selectedBookings.length}</span>
-                        <span>Total Items : {totals.totalItems}</span>
-                        <span>Total Qty : {totals.totalPackages}</span>
+            <Card>
+                 <CardHeader>
+                    <CardTitle className="text-base font-headline">Consignment Details</CardTitle>
+                    <div className="flex justify-between items-center text-xs font-bold text-red-600 pt-2">
+                        <div className="flex gap-4">
+                            <span>Total LR's : {selectedBookings.length}</span>
+                            <span>Total Items : {totals.totalItems}</span>
+                            <span>Total Qty : {totals.totalPackages}</span>
+                        </div>
+                        <div className="flex gap-4">
+                            <span>Actual Wt. : {totals.totalActualWeight.toFixed(2)} kg</span>
+                            <span>Available Wt: {Number(vehicleCapacity) > 0 ? (Number(vehicleCapacity) - totals.totalActualWeight).toFixed(2) : '--'} kg</span>
+                        </div>
                     </div>
-                     <div className="flex gap-4">
-                        <span>Actual Wt. : {totals.totalActualWeight.toFixed(2)} kg</span>
-                        <span>Available Wt: {Number(vehicleCapacity) - totals.totalActualWeight} kg</span>
-                    </div>
-                </div>
-                 <ScrollArea className="h-40 border rounded-md">
-                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className={thClass}>Sr.No</TableHead><TableHead className={thClass}>LR NO</TableHead><TableHead className={thClass}>LR TYPE</TableHead><TableHead className={thClass}>consignor</TableHead><TableHead className={thClass}>consignee</TableHead><TableHead className={thClass}>FromStation</TableHead><TableHead className={thClass}>ToStation</TableHead><TableHead className={thClass}>Item & Description</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Disp.Qty</TableHead><TableHead className={thClass}>Act.wt.</TableHead><TableHead className={thClass}>Total Freight</TableHead><TableHead className={thClass}>EWB no</TableHead><TableHead className={thClass}>Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                         <TableBody>
-                            {selectedBookings.map((b, i) => (
-                                <TableRow key={b.trackingId}>
-                                    <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.fromCity}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}><Input className="h-6 text-xs w-16" defaultValue={b.qty} /></TableCell><TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
-                                    <TableCell className={tdClass}><div className="flex items-center"><Button variant="ghost" size="icon" className="h-5 w-5 text-green-600"><Check /></Button><Button variant="ghost" size="icon" className="h-5 w-5 text-red-600" onClick={() => handleRemoveBookingFromConsignment(b.trackingId)}><X /></Button></div></TableCell>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-40 border rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className={thClass}>Sr.No</TableHead><TableHead className={thClass}>LR NO</TableHead><TableHead className={thClass}>LR TYPE</TableHead><TableHead className={thClass}>consignor</TableHead><TableHead className={thClass}>consignee</TableHead><TableHead className={thClass}>ToStation</TableHead><TableHead className={thClass}>Item & Description</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Disp.Qty</TableHead><TableHead className={thClass}>Act.wt.</TableHead><TableHead className={thClass}>Total Freight</TableHead><TableHead className={thClass}>EWB no</TableHead><TableHead className={thClass}>Action</TableHead>
                                 </TableRow>
-                            ))}
-                         </TableBody>
-                     </Table>
-                </ScrollArea>
-                <div className="flex justify-between items-center text-xs font-bold mt-1">
-                    <div><span>Paid Amt: {financialSummary.paidAmt.toFixed(2)}</span><span className="ml-4">ToPay Amt:{financialSummary.toPayAmt.toFixed(2)}</span><span className="ml-4">ToBeBilled Amt: {financialSummary.toBeBilledAmt.toFixed(2)}</span></div>
-                    <div>Total freight :{financialSummary.totalFreight.toFixed(2)}</div>
-                </div>
-            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {selectedBookings.map((b, i) => (
+                                    <TableRow key={b.trackingId}>
+                                        <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}><Input className="h-6 text-xs w-16" defaultValue={b.qty} /></TableCell><TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
+                                        <TableCell className={tdClass}><div className="flex items-center"><Button variant="ghost" size="icon" className="h-5 w-5 text-red-600" onClick={() => handleRemoveBookingFromConsignment(b.trackingId)}><X className="h-4 w-4" /></Button></div></TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
+                    <div className="flex justify-between items-center text-xs font-bold mt-1">
+                        <div><span>Paid Amt: {financialSummary.paidAmt.toFixed(2)}</span><span className="ml-4">ToPay Amt:{financialSummary.toPayAmt.toFixed(2)}</span><span className="ml-4">ToBeBilled Amt: {financialSummary.toBeBilledAmt.toFixed(2)}</span></div>
+                        <div>Total freight :{financialSummary.totalFreight.toFixed(2)}</div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Footer Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
@@ -443,7 +450,7 @@ export function PtlChallanForm() {
                 <Button variant="outline">Print Loading Copy</Button>
                 <Button onClick={handleFinalize} disabled={isSubmitting || selectedBookings.length === 0}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Finalize
+                    Save & Finalize
                 </Button>
             </div>
         </div>
