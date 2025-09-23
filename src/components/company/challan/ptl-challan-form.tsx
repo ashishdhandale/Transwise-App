@@ -322,10 +322,10 @@ export function PtlChallanForm() {
             
             {/* Header Section */}
             <Card>
-                <CardHeader>
+                <CardHeader className="p-2">
                     <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="p-2">
                      <div className="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
@@ -431,7 +431,7 @@ export function PtlChallanForm() {
                                     </Select>
                                 </div>
                                 <ScrollArea className="h-24 border rounded-md p-2">
-                                    <div className="space-y-1">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
                                         {bookingsByCity.map(([city, bookings]) => (
                                             <div key={city} className="flex items-center space-x-2">
                                                 <Checkbox id={`city-${city}`} onCheckedChange={(c) => handleCitySelectionChange(city, c)} checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} />
