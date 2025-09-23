@@ -400,37 +400,32 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
   if (!isClient) {
     return (
-        <Card>
-            <CardHeader><CardTitle>Item Details</CardTitle></CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto border rounded-md">
-                    <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
-                            {defaultColumns.filter(c => c.isVisible).map(col => (
-                                <TableHead key={col.id} className={cn(thClass, col.width)}>{col.label}</TableHead>
-                            ))}
-                            <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {Array.from({ length: DEFAULT_ROWS }, (_, index) => (
-                                <TableRow key={`skeleton-${index}`}>
-                                <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
-                                {defaultColumns.filter(c => c.isVisible).map(col => (
-                                    <TableCell key={`skeleton-${index}-${col.id}`} className={tdClass}>
-                                        <div className="h-8 bg-muted rounded-md animate-pulse"></div>
-                                    </TableCell>
-                                ))}
-                                <TableCell className={`${tdClass} text-center`}></TableCell>
-                            </TableRow>
+        <div className="overflow-x-auto border rounded-md">
+            <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
+                    {defaultColumns.filter(c => c.isVisible).map(col => (
+                        <TableHead key={col.id} className={cn(thClass, col.width)}>{col.label}</TableHead>
+                    ))}
+                    <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {Array.from({ length: DEFAULT_ROWS }, (_, index) => (
+                        <TableRow key={`skeleton-${index}`}>
+                        <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
+                        {defaultColumns.filter(c => c.isVisible).map(col => (
+                            <TableCell key={`skeleton-${index}-${col.id}`} className={tdClass}>
+                                <div className="h-8 bg-muted rounded-md animate-pulse"></div>
+                            </TableCell>
                         ))}
-                    </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
+                        <TableCell className={`${tdClass} text-center`}></TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </div>
     );
   }
 
@@ -455,87 +450,80 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   
   return (
     <>
-      <Card>
-        <CardHeader className="py-3">
-            <CardTitle className="text-base font-semibold">Item Details</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-            <div className="overflow-x-auto">
-                <Table className="min-w-max">
-                <TableHeader>
-                    <TableRow>
-                    <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
-                    {visibleColumns.map(col => (
-                        <TableHead key={col.id} className={cn(thClass, col.width)}>{col.label}</TableHead>
-                    ))}
-                    <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {rows.map((row, index) => (
-                    <TableRow key={row.id}>
-                        <TableCell className={`${tdClass} text-center font-semibold text-red-500 whitespace-nowrap`}>{index + 1}*</TableCell>
-                        {visibleColumns.map(col => (
-                        <TableCell key={`${row.id}-${col.id}`} className={tdClass}>
-                            {getInputForColumn(col.id, index)}
-                        </TableCell>
-                        ))}
-                        <TableCell className={`${tdClass} text-center`}>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the item row from the booking.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => removeRow(row.id)}>
-                                Delete
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                <TableFooter>
-                    <TableRow>
-                    <TableCell className={`${tfClass} text-right`} colSpan={getColSpan('qty')}>
-                        <span>TOTAL ITEM: {totals.itemCount}</span>
-                    </TableCell>
-                    
-                    {['qty', 'actWt', 'chgWt'].map(id => {
-                        if (visibleColIds.includes(id)) {
-                        switch(id) {
-                            case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
-                            case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
-                            case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
-                        }
-                        }
-                        return null;
-                    })}
+      <div className="overflow-x-auto border rounded-md">
+          <Table className="min-w-max">
+          <TableHeader>
+              <TableRow>
+              <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
+              {visibleColumns.map(col => (
+                  <TableHead key={col.id} className={cn(thClass, col.width)}>{col.label}</TableHead>
+              ))}
+              <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
+              </TableRow>
+          </TableHeader>
+          <TableBody>
+              {rows.map((row, index) => (
+              <TableRow key={row.id}>
+                  <TableCell className={`${tdClass} text-center font-semibold text-red-500 whitespace-nowrap`}>{index + 1}*</TableCell>
+                  {visibleColumns.map(col => (
+                  <TableCell key={`${row.id}-${col.id}`} className={tdClass}>
+                      {getInputForColumn(col.id, index)}
+                  </TableCell>
+                  ))}
+                  <TableCell className={`${tdClass} text-center`}>
+                  <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}>
+                          <Trash2 className="h-4 w-4" />
+                      </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the item row from the booking.
+                          </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removeRow(row.id)}>
+                          Delete
+                          </AlertDialogAction>
+                      </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
+                  </TableCell>
+              </TableRow>
+              ))}
+          </TableBody>
+          <TableFooter>
+              <TableRow>
+              <TableCell className={`${tfClass} text-right`} colSpan={getColSpan('qty')}>
+                  <span>TOTAL ITEM: {totals.itemCount}</span>
+              </TableCell>
+              
+              {['qty', 'actWt', 'chgWt'].map(id => {
+                  if (visibleColIds.includes(id)) {
+                  switch(id) {
+                      case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
+                      case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
+                      case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
+                  }
+                  }
+                  return null;
+              })}
 
-                    <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 2} className={tfClass}>
-                        <div className="flex justify-end">
-                            <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
-                            <PlusCircle className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </TableCell>
-                    </TableRow>
-                </TableFooter>
-                </Table>
-            </div>
-        </CardContent>
-      </Card>
+              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 2} className={tfClass}>
+                  <div className="flex justify-end">
+                      <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
+                      <PlusCircle className="h-5 w-5" />
+                      </Button>
+                  </div>
+              </TableCell>
+              </TableRow>
+          </TableFooter>
+          </Table>
+      </div>
       <AddItemDialog
         isOpen={isAddItemOpen}
         onOpenChange={setIsAddItemOpen}
