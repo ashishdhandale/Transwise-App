@@ -50,8 +50,8 @@ export function PtlChallanForm() {
     const [challanNo, setChallanNo] = useState('');
     const [challanDate, setChallanDate] = useState(new Date());
     const [lotDispatchDate, setLotDispatchDate] = useState(new Date());
-    const [fromStation, setFromStation] = useState<string | undefined>();
-    const [billTo, setBillTo] = useState('==========Branch Offices:============');
+    const [fromStation, setFromStation] = useState<string | undefined>('ALL');
+    const [dispatchTo, setDispatchTo] = useState('==========Branch Offices:============');
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
     const [vehicleSupplier, setVehicleSupplier] = useState<string | undefined>();
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
@@ -110,7 +110,8 @@ export function PtlChallanForm() {
                 const allBookings = getBookings();
                 const ptlStock = allBookings.filter(b => b.loadType === 'PTL' && b.status === 'In Stock');
                 setAllStockBookings(ptlStock);
-                if (profile?.city) setFromStation(profile.city);
+                // Default to showing all stations, not filtering by company city
+                // if (profile?.city) setFromStation(profile.city); 
                 setChallanNo(`TEMP-${Date.now().toString().slice(-6)}`);
             } catch (error) {
                 toast({ title: "Error", description: "Failed to load initial data.", variant: "destructive" });
@@ -127,7 +128,7 @@ export function PtlChallanForm() {
     }, [driverName, drivers]);
 
     const stockBookingsFromStation = useMemo(() => {
-        if (!fromStation) return allStockBookings;
+        if (!fromStation || fromStation === 'ALL') return allStockBookings;
         return allStockBookings.filter(b => b.fromCity === fromStation);
     }, [allStockBookings, fromStation]);
 
@@ -219,7 +220,7 @@ export function PtlChallanForm() {
                 challanId: challanNo,
                 status: 'Pending',
                 dispatchDate: format(lotDispatchDate, 'yyyy-MM-dd'),
-                dispatchToParty: billTo,
+                dispatchToParty: dispatchTo,
                 vehicleNo,
                 driverName,
                 fromStation,
@@ -273,7 +274,7 @@ export function PtlChallanForm() {
         }
     };
 
-    const cityOptions = useMemo(() => cities.map(c => ({ label: c.name, value: c.name })), [cities]);
+    const cityOptions = useMemo(() => [{ label: 'ALL', value: 'ALL' }, ...cities.map(c => ({ label: c.name, value: c.name }))], [cities]);
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
 
 
@@ -281,56 +282,59 @@ export function PtlChallanForm() {
     
     return (
         <div className="bg-gray-50 p-4 space-y-2">
-            <h1 className="text-xl font-bold text-center">New Dispatch</h1>
             
             {/* Header Section */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-base font-headline">Dispatch Section</CardTitle>
+                    <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-                     <div className="space-y-0.5">
-                        <Label>Challan No.</Label>
-                        <Input value={challanNo} readOnly className="h-7 text-xs font-bold text-red-600" />
+                <CardContent className="space-y-2">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
+                        <div className="space-y-0.5">
+                            <Label>From Station</Label>
+                            <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Dispatch To</Label>
+                            <Select value={dispatchTo} onValueChange={setDispatchTo}>
+                                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent><SelectItem value="==========Branch Offices:============">==========Branch Offices:============</SelectItem></SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Vehicle No.</Label>
+                            <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Driver Name</Label>
+                            <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                        </div>
+                         <div className="space-y-0.5">
+                            <Label>Veh.Capacity</Label>
+                            <Input className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
+                        </div>
                     </div>
-                    <div className="space-y-0.5">
-                        <Label>Challan Date</Label>
-                         <Popover><PopoverTrigger asChild><Button variant="outline" className="h-7 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
-                    </div>
-                    <div className="space-y-0.5">
-                        <Label>From Station</Label>
-                        <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
-                    </div>
-                    <div className="space-y-0.5">
-                        <Label>Dispatch To</Label>
-                        <Select value={billTo} onValueChange={setBillTo}>
-                            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="==========Branch Offices:============">==========Branch Offices:============</SelectItem></SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-0.5">
-                        <Label>Lot Dispatch Date</Label>
-                        <Popover><PopoverTrigger asChild><Button variant="outline" className="h-7 w-full justify-between text-xs px-2"><>{format(lotDispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lotDispatchDate} onSelect={(d) => d && setLotDispatchDate(d)}/></PopoverContent></Popover>
-                    </div>
-                    <div className="space-y-0.5">
-                        <Label>Vehicle No.</Label>
-                        <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                    </div>
-                    <div className="space-y-0.5">
-                        <Label>Driver Name</Label>
-                        <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                    </div>
-                     <div className="space-y-0.5">
-                        <Label>Veh.Hire Receipt No</Label>
-                        <Input className="h-7 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
-                    </div>
-                    <div className="space-y-0.5">
-                        <Label>Veh.Capacity</Label>
-                        <Input className="h-7 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
-                    </div>
-                    <div className="space-y-0.5">
-                        <Label>Vehicle Supplier</Label>
-                        <Combobox options={vehicleSupplierOptions} value={vehicleSupplier} onChange={setVehicleSupplier} placeholder="Select Supplier..." />
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
+                        <div className="space-y-0.5">
+                            <Label>Lot No.</Label>
+                            <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
+                        </div>
+                         <div className="space-y-0.5">
+                            <Label>Lot Date</Label>
+                             <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Lot Dispatch Date</Label>
+                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(lotDispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lotDispatchDate} onSelect={(d) => d && setLotDispatchDate(d)}/></PopoverContent></Popover>
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Veh.Hire Receipt No</Label>
+                            <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Vehicle Supplier</Label>
+                            <Combobox options={vehicleSupplierOptions} value={vehicleSupplier} onChange={setVehicleSupplier} placeholder="Select Supplier..." />
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -411,13 +415,13 @@ export function PtlChallanForm() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className={thClass}>Sr.No</TableHead><TableHead className={thClass}>LR NO</TableHead><TableHead className={thClass}>LR TYPE</TableHead><TableHead className={thClass}>consignor</TableHead><TableHead className={thClass}>consignee</TableHead><TableHead className={thClass}>ToStation</TableHead><TableHead className={thClass}>Item & Description</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Disp.Qty</TableHead><TableHead className={thClass}>Act.wt.</TableHead><TableHead className={thClass}>Total Freight</TableHead><TableHead className={thClass}>EWB no</TableHead><TableHead className={thClass}>Action</TableHead>
+                                    <TableHead className={thClass}>Sr.No</TableHead><TableHead className={thClass}>LR NO</TableHead><TableHead className={thClass}>To Station</TableHead><TableHead className={thClass}>LR TYPE</TableHead><TableHead className={thClass}>consignor</TableHead><TableHead className={thClass}>consignee</TableHead><TableHead className={thClass}>Item & Description</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Disp.Qty</TableHead><TableHead className={thClass}>Act.wt.</TableHead><TableHead className={thClass}>Total Freight</TableHead><TableHead className={thClass}>EWB no</TableHead><TableHead className={thClass}>Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {selectedBookings.map((b, i) => (
                                     <TableRow key={b.trackingId}>
-                                        <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}><Input className="h-6 text-xs w-16" defaultValue={b.qty} /></TableCell><TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
+                                        <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}><Input className="h-6 text-xs w-16" defaultValue={b.qty} /></TableCell><TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
                                         <TableCell className={tdClass}><div className="flex items-center"><Button variant="ghost" size="icon" className="h-5 w-5 text-red-600" onClick={() => handleRemoveBookingFromConsignment(b.trackingId)}><X className="h-4 w-4" /></Button></div></TableCell>
                                     </TableRow>
                                 ))}
