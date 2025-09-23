@@ -69,7 +69,7 @@ export function PtlChallanForm() {
     
     // Bookings Data
     const [allStockBookings, setAllStockBookings] = useState<Booking[]>([]);
-    const [selectedLrForSearch, setSelectedLrForSearch] = useState<string | undefined>();
+    const [grSearchTerm, setGrSearchTerm] = useState('');
     const [selectedBookings, setSelectedBookings] = useState<Booking[]>([]);
     const [cityWiseFilter, setCityWiseFilter] = useState<string>('all');
 
@@ -143,13 +143,6 @@ export function PtlChallanForm() {
         return bookings;
     }, [allStockBookings, fromStation]);
 
-    const availableBookingsForDropdown = useMemo(() => {
-        const selectedTrackingIds = new Set(selectedBookings.map(b => b.trackingId));
-        return availableStock
-            .filter(b => !selectedTrackingIds.has(b.trackingId))
-            .map(b => ({ label: `${b.lrNo} - ${b.toCity} - ${b.receiver}`, value: b.trackingId }));
-    }, [availableStock, selectedBookings]);
-
     const bookingsByCity = useMemo(() => {
         const grouped: { [city: string]: Booking[] } = {};
         availableStock.forEach(booking => {
@@ -177,16 +170,23 @@ export function PtlChallanForm() {
         return options;
     }, [availableStock]);
     
-
-    const handleAddBooking = () => {
-        if (!selectedLrForSearch) {
-            toast({ title: "No GR Selected", description: "Please select a GR number from the list to add.", variant: "destructive"});
+    const handleAddBookingByGr = () => {
+        if (!grSearchTerm.trim()) {
+            toast({ title: "No GR Number Entered", description: "Please type a GR number to add.", variant: "destructive"});
             return;
         }
-        const bookingToAdd = availableStock.find(b => b.trackingId === selectedLrForSearch);
+        const bookingToAdd = availableStock.find(b => b.lrNo.toLowerCase() === grSearchTerm.trim().toLowerCase());
+        
         if (bookingToAdd) {
-            setSelectedBookings(prev => [...prev, bookingToAdd]);
-            setSelectedLrForSearch(undefined);
+            if (selectedBookings.some(b => b.trackingId === bookingToAdd.trackingId)) {
+                toast({ title: "Already Added", description: `GR No. ${bookingToAdd.lrNo} is already in the consignment list.`, variant: "destructive"});
+            } else {
+                setSelectedBookings(prev => [...prev, bookingToAdd]);
+                toast({ title: "Success", description: `Added GR No. ${bookingToAdd.lrNo}.`});
+            }
+            setGrSearchTerm(''); // Clear input after adding
+        } else {
+            toast({ title: "Not Found", description: `No booking with GR No. "${grSearchTerm}" found in the available stock for this station.`, variant: "destructive"});
         }
     };
     
@@ -318,14 +318,11 @@ export function PtlChallanForm() {
     if (isLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     
     return (
-        <div className="bg-gray-50 p-4 space-y-2">
+        <div className="space-y-2">
             
             {/* Header Section */}
             <Card>
-                <CardHeader className="p-2">
-                    <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
-                </CardHeader>
-                <CardContent className="p-2">
+                 <CardContent className="p-2">
                      <div className="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
@@ -406,19 +403,19 @@ export function PtlChallanForm() {
                             </TabsList>
                             <TabsContent value="search" className="pt-2">
                                 <div className="flex items-center gap-2">
-                                    <Combobox 
-                                        options={availableBookingsForDropdown}
-                                        value={selectedLrForSearch}
-                                        onChange={setSelectedLrForSearch}
-                                        placeholder="Search & Select GR No..."
-                                        notFoundMessage="No available GRs for this station."
+                                    <Input
+                                        placeholder="Enter GR No. to add..."
+                                        value={grSearchTerm}
+                                        onChange={(e) => setGrSearchTerm(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleAddBookingByGr()}
+                                        className="h-8"
                                     />
-                                    <Button onClick={handleAddBooking} size="sm" className="h-8"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
+                                    <Button onClick={handleAddBookingByGr} size="sm" className="h-8"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                                 </div>
                             </TabsContent>
                             <TabsContent value="citywise" className="pt-2 space-y-2">
                                 <div className='flex items-center gap-2'>
-                                    <Label className="text-xs">To Station:</Label>
+                                    <Label className="text-xs">Filter by To Station:</Label>
                                     <Select value={cityWiseFilter} onValueChange={setCityWiseFilter}>
                                         <SelectTrigger className="h-7 text-xs w-48">
                                             <SelectValue />
@@ -431,7 +428,7 @@ export function PtlChallanForm() {
                                     </Select>
                                 </div>
                                 <ScrollArea className="h-24 border rounded-md p-2">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
+                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
                                         {bookingsByCity.map(([city, bookings]) => (
                                             <div key={city} className="flex items-center space-x-2">
                                                 <Checkbox id={`city-${city}`} onCheckedChange={(c) => handleCitySelectionChange(city, c)} checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} />
