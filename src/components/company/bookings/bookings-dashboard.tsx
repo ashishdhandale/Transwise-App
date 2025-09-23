@@ -530,7 +530,3 @@ export function BookingsDashboard() {
     </>
   );
 }
-
-    
-
-    
