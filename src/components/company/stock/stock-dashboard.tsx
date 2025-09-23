@@ -224,7 +224,7 @@ export function StockDashboard() {
                 <Table>
                     <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                        <TableHead className={cn(thClass, 'w-12')}>
+                        <TableHead className="w-12">
                              <Checkbox 
                                 onCheckedChange={handleSelectAll}
                                 checked={filteredStock.length > 0 && selectedLrs.size === filteredStock.length}
