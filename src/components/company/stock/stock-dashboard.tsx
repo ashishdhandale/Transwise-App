@@ -280,9 +280,17 @@ export function StockDashboard() {
                 </Table>
                 </div>
                 {filteredStock.length > 0 && (
-                 <div className="flex justify-end gap-6 font-bold text-sm mt-4 pr-4">
-                    <span>Total Quantity: <span className="text-primary">{totalQty}</span></span>
-                    <span>Total Weight: <span className="text-primary">{totalWeight.toLocaleString()} kg</span></span>
+                 <div className="flex justify-between items-center font-bold text-sm mt-4 pr-4">
+                     {selectedLrs.size > 0 && (
+                        <div className="text-primary">
+                            {selectedLrs.size} GR(s) Selected
+                        </div>
+                    )}
+                    <div className="flex justify-end gap-6 ml-auto">
+                        <span>Total GR: <span className="text-primary">{filteredStock.length}</span></span>
+                        <span>Total Quantity: <span className="text-primary">{totalQty}</span></span>
+                        <span>Total Weight: <span className="text-primary">{totalWeight.toLocaleString()} kg</span></span>
+                    </div>
                 </div>
                 )}
             </CardContent>
@@ -290,5 +298,3 @@ export function StockDashboard() {
     </main>
   );
 }
-
-    
