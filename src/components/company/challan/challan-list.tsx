@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, MoreHorizontal, Search, PlusCircle, Pencil, Trash2, CheckCircle, Eye } from 'lucide-react';
-import { getChallanData, type Challan, saveChallanData } from '@/lib/challan-data';
+import { getChallanData, type Challan, saveChallanData, getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
+import { addHistoryLog } from '@/lib/history-data';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 
@@ -75,10 +77,33 @@ export function ChallanList() {
     };
     
     const handleDelete = (challanId: string) => {
+        // Revert associated bookings to 'In Stock'
+        const allLrDetails = getLrDetailsData();
+        const lrsOnChallan = allLrDetails.filter(lr => lr.challanId === challanId);
+        const lrNumbersToRevert = lrsOnChallan.map(lr => lr.lrNo);
+
+        if (lrNumbersToRevert.length > 0) {
+            const allBookings = getBookings();
+            const updatedBookings = allBookings.map(booking => {
+                if (lrNumbersToRevert.includes(booking.lrNo)) {
+                    addHistoryLog(booking.lrNo, 'Booking Updated', 'System', `Removed from deleted challan ${challanId}. Status reverted to In Stock.`);
+                    return { ...booking, status: 'In Stock' as const };
+                }
+                return booking;
+            });
+            saveBookings(updatedBookings);
+        }
+
+        // Remove LR details associated with the challan
+        const remainingLrDetails = allLrDetails.filter(lr => lr.challanId !== challanId);
+        saveLrDetailsData(remainingLrDetails);
+        
+        // Remove the challan itself
         const updatedChallans = getChallanData().filter(c => c.challanId !== challanId);
         saveChallanData(updatedChallans);
+        
         setChallans(updatedChallans);
-        toast({ title: "Challan Deleted", variant: "destructive" });
+        toast({ title: "Challan Deleted", description: `Associated LRs have been returned to stock.`, variant: "destructive" });
     }
 
     const formatValue = (amount: number) => {
