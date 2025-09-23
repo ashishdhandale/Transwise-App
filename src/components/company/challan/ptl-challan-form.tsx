@@ -124,34 +124,40 @@ export function PtlChallanForm() {
         setDriverMobile(selectedDriver?.mobile || '');
     }, [driverName, drivers]);
 
-    const stockBookingsFromStation = useMemo(() => {
-        if (!fromStation || fromStation === 'ALL') return allStockBookings;
-        return allStockBookings.filter(b => b.fromCity === fromStation);
-    }, [allStockBookings, fromStation]);
+    const availableStock = useMemo(() => {
+        let bookings = allStockBookings;
+        if (fromStation && fromStation !== 'ALL') {
+            bookings = bookings.filter(b => b.fromCity.toLowerCase() === fromStation.toLowerCase());
+        }
+        if (dispatchTo) {
+            bookings = bookings.filter(b => b.toCity.toLowerCase() === dispatchTo.toLowerCase());
+        }
+        return bookings;
+    }, [allStockBookings, fromStation, dispatchTo]);
 
     const availableBookingsForDropdown = useMemo(() => {
         const selectedTrackingIds = new Set(selectedBookings.map(b => b.trackingId));
-        return stockBookingsFromStation
+        return availableStock
             .filter(b => !selectedTrackingIds.has(b.trackingId))
             .map(b => ({ label: `${b.lrNo} - ${b.toCity} - ${b.receiver}`, value: b.trackingId }));
-    }, [stockBookingsFromStation, selectedBookings]);
+    }, [availableStock, selectedBookings]);
 
     const bookingsByCity = useMemo(() => {
         const grouped: { [city: string]: Booking[] } = {};
-        stockBookingsFromStation.forEach(booking => {
+        availableStock.forEach(booking => {
             const cityKey = booking.toCity || 'Unknown';
             if (!grouped[cityKey]) grouped[cityKey] = [];
             grouped[cityKey].push(booking);
         });
         return Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0]));
-    }, [stockBookingsFromStation]);
+    }, [availableStock]);
 
     const handleAddBooking = () => {
         if (!selectedLrForSearch) {
             toast({ title: "No GR Selected", description: "Please select a GR number from the list to add.", variant: "destructive"});
             return;
         }
-        const bookingToAdd = stockBookingsFromStation.find(b => b.trackingId === selectedLrForSearch);
+        const bookingToAdd = availableStock.find(b => b.trackingId === selectedLrForSearch);
         if (bookingToAdd) {
             setSelectedBookings(prev => [...prev, bookingToAdd]);
             setSelectedLrForSearch(undefined);
@@ -160,7 +166,7 @@ export function PtlChallanForm() {
     
     const handleToggleBookingSelection = (trackingId: string, isSelected: boolean | string) => {
         if (isSelected) {
-            const bookingToAdd = stockBookingsFromStation.find(b => b.trackingId === trackingId);
+            const bookingToAdd = availableStock.find(b => b.trackingId === trackingId);
             if (bookingToAdd && !selectedBookings.some(b => b.trackingId === trackingId)) {
                 setSelectedBookings(prev => [...prev, bookingToAdd]);
             }
@@ -201,8 +207,8 @@ export function PtlChallanForm() {
 
 
     const handleFinalize = async () => {
-        if (!vehicleNo || !driverName || !fromStation || !dispatchTo || selectedBookings.length === 0) {
-            toast({ title: "Validation Error", description: "Vehicle, Driver, From Station, and Dispatch To are required, and at least one booking must be selected.", variant: "destructive" });
+        if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0) {
+            toast({ title: "Validation Error", description: "Vehicle, Driver, and From Station are required, and at least one booking must be selected.", variant: "destructive" });
             return;
         }
 
@@ -217,7 +223,7 @@ export function PtlChallanForm() {
                 challanId: challanNo,
                 status: 'Pending',
                 dispatchDate: format(lotDispatchDate, 'yyyy-MM-dd'),
-                dispatchToParty: dispatchTo,
+                dispatchToParty: dispatchTo || selectedBookings[0].toCity,
                 vehicleNo,
                 driverName,
                 fromStation,
@@ -280,8 +286,9 @@ export function PtlChallanForm() {
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
     
     const dispatchToOptions = useMemo(() => {
-        return cities.map(city => ({ label: city.name, value: city.name }));
-    }, [cities]);
+        const uniqueToCities = Array.from(new Set(allStockBookings.map(b => b.toCity)));
+        return uniqueToCities.map(city => ({ label: city, value: city }));
+    }, [allStockBookings]);
 
 
     if (isLoading) return <p>Loading form...</p>;
@@ -302,7 +309,7 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>Dispatch To</Label>
-                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select Dispatch To..." />
+                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Filter by Dispatch To..." />
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
@@ -396,7 +403,7 @@ export function PtlChallanForm() {
                                     <Table>
                                         <TableHeader><TableRow><TableHead className={thClass}>Select</TableHead><TableHead className={thClass}>LR No</TableHead><TableHead className={thClass}>To</TableHead><TableHead className={thClass}>Consignee</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Chg wt.</TableHead></TableRow></TableHeader>
                                         <TableBody>
-                                            {stockBookingsFromStation.map(b => (
+                                            {availableStock.map(b => (
                                                 <TableRow key={b.trackingId} className={cn(selectedBookings.some(sb => sb.trackingId === b.trackingId) && 'bg-blue-100/50')}>
                                                     <TableCell className={tdClass}><Checkbox onCheckedChange={(c) => handleToggleBookingSelection(b.trackingId, c)} checked={selectedBookings.some(sb => sb.trackingId === b.trackingId)} /></TableCell>
                                                     <TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}>{b.chgWt.toFixed(2)}</TableCell>
@@ -477,5 +484,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
-    
