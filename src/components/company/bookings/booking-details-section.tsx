@@ -88,7 +88,7 @@ export function BookingDetailsSection({
                 setAllCustomCities(parsedCities);
             }
         } catch (error) {
-            console.error("Failed to load city data", error);
+            console.error("Failed to load station data", error);
         }
     }, []);
 
@@ -140,7 +140,7 @@ export function BookingDetailsSection({
         if (cityListSource !== 'custom') {
             toast({
                 title: 'Default List in Use',
-                description: 'To add a new city, please switch to your "Custom List" in Master > City.',
+                description: 'To add a new station, please switch to your "Custom List" in Master > Stations.',
                 variant: 'destructive'
             });
             return;
@@ -155,11 +155,11 @@ export function BookingDetailsSection({
             const newCity: City = { id: newId, ...cityData };
             const updatedCities = [newCity, ...allCustomCities];
             localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
-            toast({ title: 'City Added', description: `"${cityData.name}" has been added to your custom list.` });
+            toast({ title: 'Station Added', description: `"${cityData.name}" has been added to your custom list.` });
             loadCityData(); // Refresh the city list
             return true;
         } catch (error) {
-            toast({ title: 'Error', description: 'Could not save new city.', variant: 'destructive'});
+            toast({ title: 'Error', description: 'Could not save new station.', variant: 'destructive'});
             return false;
         }
     };

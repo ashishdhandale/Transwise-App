@@ -13,7 +13,7 @@ function CityPage() {
         <header className="mb-4">
             <h1 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
                 <MapPin className="h-8 w-8" />
-                City Master
+                Station Master
             </h1>
         </header>
         <CityManagement />

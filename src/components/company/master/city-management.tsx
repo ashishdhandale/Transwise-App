@@ -60,7 +60,7 @@ export function CityManagement() {
         setCities(initialCities);
       }
     } catch (error) {
-      console.error("Failed to load city data from local storage", error);
+      console.error("Failed to load station data from local storage", error);
       setCities(initialCities);
     }
   }, []);
@@ -69,7 +69,7 @@ export function CityManagement() {
     setCityListSource(source);
     try {
         localStorage.setItem(LOCAL_STORAGE_KEY_SOURCE, source);
-        toast({ title: 'Setting Saved', description: `City list source set to "${source === 'default' ? 'Default List' : 'Custom List'}".` });
+        toast({ title: 'Setting Saved', description: `Station list source set to "${source === 'default' ? 'Default List' : 'Custom List'}".` });
     } catch (error) {
         toast({ title: 'Error', description: 'Could not save setting.', variant: 'destructive'});
     }
@@ -108,7 +108,7 @@ export function CityManagement() {
           localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
           setCities(updatedCities);
       } catch (error) {
-           toast({ title: 'Error', description: 'Could not save cities.', variant: 'destructive'});
+           toast({ title: 'Error', description: 'Could not save stations.', variant: 'destructive'});
       }
   }
 
@@ -116,8 +116,8 @@ export function CityManagement() {
     const updatedCities = cities.filter(city => city.id !== id);
     saveCities(updatedCities);
     toast({
-      title: 'City Deleted',
-      description: 'The city has been removed from your custom list.',
+      title: 'Station Deleted',
+      description: 'The station has been removed from your custom list.',
       variant: 'destructive',
     });
   };
@@ -127,7 +127,7 @@ export function CityManagement() {
     if (currentCity) {
       // Editing existing city
       updatedCities = cities.map(city => (city.id === currentCity.id ? { ...city, ...cityData } : city));
-      toast({ title: 'City Updated', description: `"${cityData.name}" has been updated successfully.` });
+      toast({ title: 'Station Updated', description: `"${cityData.name}" has been updated successfully.` });
     } else {
       // Adding new city
       const newCity: City = {
@@ -135,7 +135,7 @@ export function CityManagement() {
         ...cityData
       };
       updatedCities = [newCity, ...cities];
-      toast({ title: 'City Added', description: `"${cityData.name}" has been added to your custom list.` });
+      toast({ title: 'Station Added', description: `"${cityData.name}" has been added to your custom list.` });
     }
     saveCities(updatedCities);
     return true; // Indicate success
@@ -146,9 +146,9 @@ export function CityManagement() {
   return (
     <Card>
        <CardHeader>
-            <CardTitle className="font-headline">City List Settings</CardTitle>
+            <CardTitle className="font-headline">Station List Settings</CardTitle>
              <div className="pt-4">
-                <Label className="font-semibold">City List Source</Label>
+                <Label className="font-semibold">Station List Source</Label>
                 <RadioGroup value={cityListSource} onValueChange={handleSourceChange} className="flex items-center gap-6 mt-2">
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="default" id="defaultList" />
@@ -167,12 +167,12 @@ export function CityManagement() {
       <Separator />
       <CardContent className="pt-6">
         <div className="flex flex-row items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">{isCustom ? 'Manage Custom Cities' : 'Default City List'}</h3>
+            <h3 className="text-lg font-semibold">{isCustom ? 'Manage Custom Stations' : 'Default Station List'}</h3>
             <div className="flex items-center gap-4">
             <div className="relative w-full max-w-sm">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                placeholder="Search cities..."
+                placeholder="Search stations..."
                 className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -180,7 +180,7 @@ export function CityManagement() {
             </div>
             {isCustom && (
                 <Button onClick={handleAddNew}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New City
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Station
                 </Button>
             )}
             </div>
@@ -190,7 +190,7 @@ export function CityManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[80px]">#</TableHead>
-                <TableHead>City Name</TableHead>
+                <TableHead>Station Name</TableHead>
                 <TableHead>Alias Code</TableHead>
                 <TableHead>Pin Code</TableHead>
                 {isCustom && <TableHead className="w-[120px] text-right">Actions</TableHead>}
@@ -220,7 +220,7 @@ export function CityManagement() {
         </div>
         {filteredCities.length === 0 && (
           <div className="text-center p-8 text-muted-foreground">
-            No cities found.
+            No stations found.
           </div>
         )}
       </CardContent>

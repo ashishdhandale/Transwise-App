@@ -318,7 +318,7 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/master/city" size="sm" isActive={pathname === '/company/master/city'} tooltip="City"><MapPin />City</SidebarMenuButton>
+                <SidebarMenuButton href="/company/master/city" size="sm" isActive={pathname === '/company/master/city'} tooltip="Stations"><MapPin />Stations</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="/company/master/customer" size="sm" isActive={pathname === '/company/master/customer'} tooltip="Customer"><Users />Customer</SidebarMenuButton>

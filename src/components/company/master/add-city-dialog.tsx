@@ -63,14 +63,14 @@ export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDia
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{city && 'id' in city ? 'Edit City' : 'Add New City'}</DialogTitle>
+                    <DialogTitle>{city && 'id' in city ? 'Edit Station' : 'Add New Station'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 space-y-4">
                     <div>
-                        <Label htmlFor="city-name">City Name</Label>
+                        <Label htmlFor="city-name">Station Name</Label>
                         <Input
                             id="city-name"
-                            placeholder="Enter city name"
+                            placeholder="Enter station name"
                             value={cityName}
                             onChange={(e) => setCityName(e.target.value.toUpperCase())}
                             autoFocus
