@@ -40,7 +40,7 @@ import {
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle, Download, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle, Download, Loader2, Eye } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
@@ -50,6 +50,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
+import { ViewBookingDialog } from './view-booking-dialog';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import { BookingReceipt } from './booking-receipt';
@@ -76,6 +77,7 @@ export function BookingsDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
@@ -115,6 +117,16 @@ export function BookingsDashboard() {
     setIsEditDialogOpen(false);
     setSelectedBookingId(null);
     loadBookings(); // Refresh data after closing dialog
+  };
+
+  const handleViewOpen = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setIsViewDialogOpen(true);
+  };
+  
+  const handleViewDialogClose = () => {
+    setIsViewDialogOpen(false);
+    setSelectedBookingId(null);
   };
 
   const handlePrintOpen = (booking: Booking, copyType: 'Sender' | 'Receiver' | 'Driver' | 'Office') => {
@@ -316,6 +328,9 @@ export function BookingsDashboard() {
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleViewOpen(booking.trackingId)}>
+                                        <Eye className="mr-2 h-4 w-4" /> View
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleEditOpen(booking.trackingId)}>
                                         <Pencil className="mr-2 h-4 w-4" /> Edit
                                     </DropdownMenuItem>
@@ -394,6 +409,13 @@ export function BookingsDashboard() {
         <EditBookingDialog
           isOpen={isEditDialogOpen}
           onOpenChange={handleEditDialogClose}
+          bookingId={selectedBookingId}
+        />
+      )}
+       {selectedBookingId && (
+        <ViewBookingDialog
+          isOpen={isViewDialogOpen}
+          onOpenChange={handleViewDialogClose}
           bookingId={selectedBookingId}
         />
       )}

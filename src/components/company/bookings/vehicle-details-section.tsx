@@ -21,9 +21,10 @@ interface VehicleDetailsSectionProps {
     vendors: Vendor[];
     onMasterDataChange: () => void;
     loadType: 'PTL' | 'FTL';
+    isViewOnly?: boolean;
 }
 
-export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehicles, vendors, onMasterDataChange, loadType }: VehicleDetailsSectionProps) {
+export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehicles, vendors, onMasterDataChange, loadType, isViewOnly = false }: VehicleDetailsSectionProps) {
     const { toast } = useToast();
     const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
@@ -113,6 +114,7 @@ export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehic
                             notFoundMessage="No vehicle found."
                             addMessage="Add New Vehicle"
                             onAdd={handleOpenAddVehicle}
+                            disabled={isViewOnly}
                         />
                     </div>
                     <div className="space-y-1">
@@ -126,6 +128,7 @@ export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehic
                             notFoundMessage="No driver found."
                             addMessage="Add New Driver"
                             onAdd={handleOpenAddDriver}
+                            disabled={isViewOnly}
                         />
                     </div>
                     <div className="space-y-1">
@@ -139,23 +142,24 @@ export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehic
                             notFoundMessage="No supplier found."
                             addMessage="Add New Supplier"
                             onAdd={handleOpenAddVendor}
+                            disabled={isViewOnly}
                         />
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="truckFreight">Truck Freight</Label>
-                        <Input id="truckFreight" type="number" value={details.truckFreight} onChange={e => handleChange('truckFreight', parseFloat(e.target.value) || 0)} />
+                        <Input id="truckFreight" type="number" value={details.truckFreight} onChange={e => handleChange('truckFreight', parseFloat(e.target.value) || 0)} readOnly={isViewOnly} />
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="advance">Advance</Label>
-                        <Input id="advance" type="number" value={details.advance} onChange={e => handleChange('advance', parseFloat(e.target.value) || 0)} />
+                        <Input id="advance" type="number" value={details.advance} onChange={e => handleChange('advance', parseFloat(e.target.value) || 0)} readOnly={isViewOnly} />
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="commission">Deduction: Commission</Label>
-                        <Input id="commission" type="number" value={details.commission} onChange={e => handleChange('commission', parseFloat(e.target.value) || 0)} />
+                        <Input id="commission" type="number" value={details.commission} onChange={e => handleChange('commission', parseFloat(e.target.value) || 0)} readOnly={isViewOnly} />
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="otherDeductions">Deduction: Others</Label>
-                        <Input id="otherDeductions" type="number" value={details.otherDeductions} onChange={e => handleChange('otherDeductions', parseFloat(e.target.value) || 0)} />
+                        <Input id="otherDeductions" type="number" value={details.otherDeductions} onChange={e => handleChange('otherDeductions', parseFloat(e.target.value) || 0)} readOnly={isViewOnly} />
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="balance">Balance</Label>

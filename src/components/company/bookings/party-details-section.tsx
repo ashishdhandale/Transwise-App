@@ -22,9 +22,10 @@ interface PartyRowProps {
     onPartyChange: (party: Customer | null) => void;
     initialParty: Customer | null;
     hasError: boolean;
+    disabled: boolean;
 }
 
-const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError }: PartyRowProps) => {
+const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError, disabled }: PartyRowProps) => {
     const { toast } = useToast();
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [partyDetails, setPartyDetails] = useState<Customer | null>(initialParty);
@@ -103,6 +104,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                         notFoundMessage="No customer found."
                         addMessage="Add New Party"
                         onAdd={handleOpenAddCustomer}
+                        disabled={disabled}
                     />
                 </div>
                  <div className="space-y-1">
@@ -136,9 +138,10 @@ interface PartyDetailsSectionProps {
     onTaxPaidByChange: (value: string) => void;
     taxPaidBy: string;
     errors: { [key: string]: boolean };
+    isViewOnly?: boolean;
 }
 
-export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy, errors }: PartyDetailsSectionProps) {
+export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy, errors, isViewOnly = false }: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
     const [otherBillToParty, setOtherBillToParty] = useState<string | undefined>(undefined);
@@ -210,15 +213,15 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
 
     return (
         <div className="border rounded-md">
-            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} />
-            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} />
+            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} disabled={isViewOnly} />
+            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} disabled={isViewOnly} />
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
                  <div className="space-y-1">
                     <div className="flex items-center justify-between mb-1">
                         <Label className="font-semibold">Shipping Address</Label>
                          <div className="flex items-center space-x-2">
-                            <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} />
+                            <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} disabled={isViewOnly} />
                             <Label htmlFor="sameAsReceiver" className="text-xs font-normal cursor-pointer">Same as Receiver</Label>
                         </div>
                     </div>
@@ -227,13 +230,13 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                         rows={1} 
                         value={shippingAddress} 
                         onChange={(e) => setShippingAddress(e.target.value)}
-                        readOnly={isSameAsReceiver}
+                        readOnly={isSameAsReceiver || isViewOnly}
                         className="min-h-[40px]" 
                     />
                 </div>
                  <div className="space-y-1">
                     <Label htmlFor="bill-to" className="font-semibold mb-1 block">Bill To</Label>
-                    <Select onValueChange={setBillTo} value={billTo}>
+                    <Select onValueChange={setBillTo} value={billTo} disabled={isViewOnly}>
                         <SelectTrigger id="bill-to">
                             <SelectValue placeholder="Select party for billing..." />
                         </SelectTrigger>
@@ -254,13 +257,14 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                                 placeholder="Select billing party..."
                                 searchPlaceholder="Search customers..."
                                 notFoundMessage="No customer found."
+                                disabled={isViewOnly}
                             />
                         </div>
                     )}
                 </div>
                  <div className="space-y-1">
                     <Label htmlFor="tax-paid-by" className="font-semibold mb-1 block">Tax Paid By</Label>
-                     <Select onValueChange={onTaxPaidByChange} value={taxPaidBy}>
+                     <Select onValueChange={onTaxPaidByChange} value={taxPaidBy} disabled={isViewOnly}>
                         <SelectTrigger id="tax-paid-by">
                             <SelectValue placeholder="Select who pays tax..." />
                         </SelectTrigger>

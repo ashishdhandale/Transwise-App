@@ -26,9 +26,10 @@ interface ChargesSectionProps {
     onChargesChange: (charges: { [key: string]: number }) => void;
     initialCharges?: { [key: string]: number };
     profile: CompanyProfileFormValues | null;
+    isViewOnly?: boolean;
 }
 
-export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal, isGstApplicable, onChargesChange: notifyParentOfChanges, initialCharges, profile }: ChargesSectionProps) {
+export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal, isGstApplicable, onChargesChange: notifyParentOfChanges, initialCharges, profile, isViewOnly = false }: ChargesSectionProps) {
     const [chargeSettings, setChargeSettings] = useState<ChargeSetting[]>([]);
     const [bookingCharges, setBookingCharges] = useState<{ [key: string]: number }>({});
     const [gstValue, setGstValue] = useState(0);
@@ -115,7 +116,7 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
                     key={charge.id} 
                     label={charge.name} 
                     value={bookingCharges[charge.id] || 0}
-                    readOnly={!charge.isEditable}
+                    readOnly={!charge.isEditable || isViewOnly}
                     onChange={(e) => handleChargeChange(charge.id, e.target.value)}
                 />
             ))}
@@ -134,7 +135,7 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
                         value={gstValue} 
                         onChange={(e) => setGstValue(parseFloat(e.target.value) || 0)} 
                         className="h-7 text-sm pr-6" 
-                        disabled={!isGstApplicable}
+                        disabled={!isGstApplicable || isViewOnly}
                     />
                     <span className="absolute inset-y-0 right-2 flex items-center text-sm text-muted-foreground">%</span>
                 </div>

@@ -77,6 +77,7 @@ interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     onSaveSuccess?: () => void;
     onClose?: () => void;
+    isViewOnly?: boolean;
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string => {
@@ -150,10 +151,10 @@ const isRowPartiallyFilled = (row: ItemRow) => {
     return filledFields.length > 0 && filledFields.length < 4;
 };
 
-export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false }: BookingFormProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
-    const isEditMode = !!trackingId;
+    const isEditMode = !!trackingId && !isViewOnly;
     const isOfflineMode = mode === 'offline';
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
@@ -247,31 +248,31 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
             
             let keyCounter = 1;
 
-            if (isEditMode && trackingId) {
-                const bookingToEdit = parsedBookings.find(b => b.trackingId === trackingId);
-                if (bookingToEdit) {
+            if (trackingId) { // This covers both edit and view modes
+                const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId);
+                if (bookingToLoad) {
                     const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
                     
-                    const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.sender.toLowerCase()) || { id: 0, name: bookingToEdit.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
-                    const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToEdit.receiver.toLowerCase()) || { id: 0, name: bookingToEdit.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+                    const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+                    const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
 
-                    setCurrentGrNumber(bookingToEdit.lrNo);
-                    setBookingDate(new Date(bookingToEdit.bookingDate));
-                    setBookingType(bookingToEdit.lrType);
-                    setLoadType(bookingToEdit.loadType || 'PTL');
-                    setFromStation({ id: 0, name: bookingToEdit.fromCity, aliasCode: '', pinCode: '' });
-                    setToStation({ id: 0, name: bookingToEdit.toCity, aliasCode: '', pinCode: '' });
+                    setCurrentGrNumber(bookingToLoad.lrNo);
+                    setBookingDate(new Date(bookingToLoad.bookingDate));
+                    setBookingType(bookingToLoad.lrType);
+                    setLoadType(bookingToLoad.loadType || 'PTL');
+                    setFromStation({ id: 0, name: bookingToLoad.fromCity, aliasCode: '', pinCode: '' });
+                    setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
                     setSender(senderProfile);
                     setReceiver(receiverProfile);
-                    const itemRowsWithIds = bookingToEdit.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
+                    const itemRowsWithIds = bookingToLoad.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
                     setItemRows(itemRowsWithIds);
                     
-                    setGrandTotal(bookingToEdit.totalAmount);
-                    setAdditionalCharges(bookingToEdit.additionalCharges || {});
-                    setInitialChargesFromBooking(bookingToEdit.additionalCharges || {});
-                    setTaxPaidBy(bookingToEdit.taxPaidBy || 'Not Applicable');
-                    if (bookingToEdit.ftlDetails) {
-                        setFtlDetails(bookingToEdit.ftlDetails);
+                    setGrandTotal(bookingToLoad.totalAmount);
+                    setAdditionalCharges(bookingToLoad.additionalCharges || {});
+                    setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
+                    setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
+                    if (bookingToLoad.ftlDetails) {
+                        setFtlDetails(bookingToLoad.ftlDetails);
                     }
 
                 } else {
@@ -551,7 +552,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
     <ClientOnly>
         <div className="space-y-4">
             <h1 className="text-2xl font-bold text-primary">
-                {isEditMode ? `Edit Booking: ${currentGrNumber}` : (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking')}
+                {isEditMode ? `Edit Booking: ${currentGrNumber}` : (isViewOnly ? `View Booking: ${currentGrNumber}` : (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking'))}
             </h1>
             <Card className="border-2 border-green-200">
                 <CardContent className="p-4 space-y-4">
@@ -572,6 +573,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                         errors={errors}
                         loadType={loadType}
                         onLoadTypeChange={setLoadType}
+                        isViewOnly={isViewOnly}
                     />
                     <PartyDetailsSection 
                         onSenderChange={setSender}
@@ -581,6 +583,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                         onTaxPaidByChange={setTaxPaidBy}
                         taxPaidBy={taxPaidBy}
                         errors={errors}
+                        isViewOnly={isViewOnly}
                     />
                     {loadType === 'FTL' && (
                         <VehicleDetailsSection 
@@ -591,9 +594,10 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                             vendors={vendors}
                             onMasterDataChange={loadMasterData}
                             loadType={loadType}
+                            isViewOnly={isViewOnly}
                         />
                     )}
-                    <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
+                    <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} isViewOnly={isViewOnly} />
                     
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
                         <ChargesSection 
@@ -604,11 +608,13 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                             onChargesChange={setAdditionalCharges}
                             initialCharges={initialChargesFromBooking}
                             profile={companyProfile}
+                            isViewOnly={isViewOnly}
                         />
                         <div className="w-[300px]">
                             <DeliveryInstructionsSection 
                                 deliveryAt={deliveryAt}
                                 onDeliveryAtChange={setDeliveryAt}
+                                isViewOnly={isViewOnly}
                             />
                         </div>
                         <div className="flex flex-col gap-2">
@@ -624,6 +630,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                                 onClose={onClose} 
                                 onReset={handleReset}
                                 isSubmitting={isSubmitting}
+                                isViewOnly={isViewOnly}
                             />
                         </div>
                     </div>

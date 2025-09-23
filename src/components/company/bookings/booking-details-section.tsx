@@ -40,6 +40,7 @@ interface BookingDetailsSectionProps {
     isOfflineMode: boolean;
     companyProfile: CompanyProfileFormValues | null;
     errors: { [key: string]: boolean };
+    isViewOnly?: boolean;
 }
 
 
@@ -60,6 +61,7 @@ export function BookingDetailsSection({
     isOfflineMode,
     companyProfile,
     errors,
+    isViewOnly = false,
 }: BookingDetailsSectionProps) {
     const { toast } = useToast();
     const [cityListSource, setCityListSource] = useState<CityListSource>('default');
@@ -187,7 +189,7 @@ export function BookingDetailsSection({
                             isGrEditable && 'text-blue-600 border-blue-300',
                             errors.grNumber && errorClass
                         )}
-                        readOnly={!isGrEditable}
+                        readOnly={!isGrEditable || isViewOnly}
                         placeholder={isGrEditable ? "Enter Manual GRN" : ""}
                     />
                 </div>
@@ -203,6 +205,7 @@ export function BookingDetailsSection({
                                     !bookingDate && 'text-muted-foreground',
                                     errors.bookingDate && errorClass
                                 )}
+                                disabled={isViewOnly}
                             >
                                 {bookingDate ? format(bookingDate, 'dd/MM/yyyy') : <span>Pick a date</span>}
                                 <CalendarIcon className="h-4 w-4" />
@@ -213,13 +216,14 @@ export function BookingDetailsSection({
                                 mode="single"
                                 selected={bookingDate}
                                 onSelect={handleDateSelect}
+                                disabled={isViewOnly}
                             />
                         </PopoverContent>
                     </Popover>
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="loadType">Load Type</Label>
-                    <Select value={loadType} onValueChange={onLoadTypeChange}>
+                    <Select value={loadType} onValueChange={onLoadTypeChange} disabled={isViewOnly}>
                         <SelectTrigger id="loadType">
                             <SelectValue />
                         </SelectTrigger>
@@ -239,6 +243,7 @@ export function BookingDetailsSection({
                         notFoundMessage="No station found."
                         addMessage="Add New Station"
                         onAdd={handleOpenAddCity}
+                        disabled={isViewOnly}
                     />
                 </div>
                 <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
@@ -252,11 +257,12 @@ export function BookingDetailsSection({
                         notFoundMessage="No station found."
                         addMessage="Add New Station"
                         onAdd={handleOpenAddCity}
+                        disabled={isViewOnly}
                     />
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="bookingType">Booking Type</Label>
-                    <Select value={bookingType} onValueChange={onBookingTypeChange}>
+                    <Select value={bookingType} onValueChange={onBookingTypeChange} disabled={isViewOnly}>
                         <SelectTrigger id="bookingType">
                             <SelectValue />
                         </SelectTrigger>

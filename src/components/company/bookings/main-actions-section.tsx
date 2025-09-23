@@ -14,15 +14,31 @@ interface MainActionsSectionProps {
     onClose?: () => void;
     onReset?: () => void;
     isSubmitting: boolean;
+    isViewOnly?: boolean;
 }
 
-export function MainActionsSection({ onSave, isEditMode, onClose, onReset, isSubmitting }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, isEditMode, onClose, onReset, isSubmitting, isViewOnly }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
     const handleExit = () => {
-        router.push('/company/bookings');
+        if (onClose) {
+            onClose();
+        } else {
+            router.push('/company/bookings');
+        }
     };
+
+    if (isViewOnly) {
+        return (
+            <div className="flex flex-col gap-2">
+                <Button variant="outline" onClick={handleExit} className="w-full">
+                    <X className="mr-2 h-4 w-4" />
+                    Close
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-2">
@@ -42,7 +58,7 @@ export function MainActionsSection({ onSave, isEditMode, onClose, onReset, isSub
                         <RotateCcw className="mr-2 h-4 w-4" />
                         Reset Form
                     </Button>
-                    <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
+                    <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
                         <FileX className="mr-2 h-4 w-4" />
                         Exit Without Saving
                     </Button>
