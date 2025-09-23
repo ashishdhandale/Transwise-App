@@ -110,8 +110,9 @@ export function PtlChallanForm() {
     };
 
     const bookingsToDisplay = useMemo(() => {
-        return availableBookings.filter(b => b.fromCity === fromStation && b.toCity === toStation);
-    }, [availableBookings, fromStation, toStation]);
+        if (!fromStation) return [];
+        return availableBookings.filter(b => b.fromCity === fromStation);
+    }, [availableBookings, fromStation]);
     
     useEffect(() => {
         // When the 'To Station' changes, update the 'Dispatch To Party'
@@ -153,7 +154,7 @@ export function PtlChallanForm() {
                 vehicleNo,
                 driverName,
                 fromStation,
-                toStation,
+                toStation, // Primary destination
                 senderId: '', // PTL challan may not have a single sender
                 inwardId: '',
                 inwardDate: '',
@@ -228,34 +229,34 @@ export function PtlChallanForm() {
             <h1 className="text-2xl font-bold text-primary">Create PTL Challan</h1>
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Dispatch Section</CardTitle>
-                    <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                         <div className="space-y-1">
-                            <Label>From Station</Label>
-                            <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>To Station</Label>
-                            <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="Select To..." />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Vehicle No</Label>
-                            <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Driver Name</Label>
-                            <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                        </div>
-                         <div className="space-y-1">
-                            <Label>Dispatch To (Receiver)</Label>
-                            <Input 
-                                value={dispatchToParty} 
-                                onChange={(e) => setDispatchToParty(e.target.value)}
-                                placeholder="e.g., Branch, Agent, Party"
-                            />
-                        </div>
-                    </CardContent>
+                    <CardTitle className="font-headline">Dispatch Section (Challan Header)</CardTitle>
                 </CardHeader>
+                <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                     <div className="space-y-1">
+                        <Label>From Station</Label>
+                        <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Primary To Station</Label>
+                        <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="Select To..." />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Vehicle No</Label>
+                        <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Driver Name</Label>
+                        <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                    </div>
+                     <div className="space-y-1">
+                        <Label>Dispatch To (Receiver)</Label>
+                        <Input 
+                            value={dispatchToParty} 
+                            onChange={(e) => setDispatchToParty(e.target.value)}
+                            placeholder="e.g., Branch, Agent, Party"
+                        />
+                    </div>
+                </CardContent>
             </Card>
 
             <Card>
@@ -278,6 +279,7 @@ export function PtlChallanForm() {
                                      /></TableHead>
                                     <TableHead>LR No</TableHead>
                                     <TableHead>Date</TableHead>
+                                    <TableHead>To Station</TableHead>
                                     <TableHead>Sender</TableHead>
                                     <TableHead>Receiver</TableHead>
                                     <TableHead className="text-right">Qty</TableHead>
@@ -296,6 +298,7 @@ export function PtlChallanForm() {
                                         </TableCell>
                                         <TableCell className={cn(tdClass, "font-medium")}>{booking.lrNo}</TableCell>
                                         <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
+                                        <TableCell className={tdClass}>{booking.toCity}</TableCell>
                                         <TableCell className={tdClass}>{booking.sender}</TableCell>
                                         <TableCell className={tdClass}>{booking.receiver}</TableCell>
                                         <TableCell className={cn(tdClass, "text-right")}>{booking.qty}</TableCell>
@@ -303,8 +306,8 @@ export function PtlChallanForm() {
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                            No available PTL bookings for the selected route. Change stations to see bookings.
+                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                                            No available PTL bookings for the selected route. Change the "From Station" to see bookings.
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -312,7 +315,7 @@ export function PtlChallanForm() {
                             {selectedBookingDetails.length > 0 && (
                                 <TableFooter>
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-right font-bold">TOTALS</TableCell>
+                                        <TableCell colSpan={6} className="text-right font-bold">TOTALS</TableCell>
                                         <TableCell className="text-right font-bold">{totals.totalPackages}</TableCell>
                                         <TableCell className="text-right font-bold">{totals.totalWeight.toFixed(2)}</TableCell>
                                     </TableRow>
