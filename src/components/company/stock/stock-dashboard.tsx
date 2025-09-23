@@ -221,9 +221,9 @@ export function StockDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="overflow-x-auto border rounded-md max-h-[70vh]">
+                <div className="overflow-auto border rounded-md max-h-[70vh]">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                         <TableHead className={thClass}>
                              <Checkbox 
