@@ -233,10 +233,10 @@ export function StockDashboard() {
                             />
                         </TableHead>
                         <TableHead className={thClass}>LR No.</TableHead>
+                        <TableHead className={thClass}>Booking Type</TableHead>
                         <TableHead className={thClass}>Booking Date</TableHead>
                         <TableHead className={thClass}>From</TableHead>
                         <TableHead className={thClass}>To</TableHead>
-                        <TableHead className={thClass}>Booking Type</TableHead>
                         <TableHead className={thClass}>Sender</TableHead>
                         <TableHead className={thClass}>Receiver</TableHead>
                         <TableHead className={thClass}>Item</TableHead>
@@ -257,10 +257,10 @@ export function StockDashboard() {
                                 />
                             </TableCell>
                             <TableCell className={cn(tdClass, "font-medium")}>{item.lrNo}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.lrType}</TableCell>
                             <TableCell className={cn(tdClass)}>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.fromCity}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.toCity}</TableCell>
-                            <TableCell className={cn(tdClass)}>{item.lrType}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.sender}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.receiver}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.itemDescription}</TableCell>
