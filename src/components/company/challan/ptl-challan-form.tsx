@@ -748,7 +748,7 @@ export function PtlChallanForm() {
                      <div className="flex items-stretch gap-[1px] text-xs">
                         <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Extra/Short LR</div>
-                            <Select defaultValue="Extra"><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" /></Select>
+                            <Select defaultValue="Extra"><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" ><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Extra">Extra</SelectItem><SelectItem value="Short">Short</SelectItem></SelectContent></Select>
                         </div>
                         <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">LR NO</div>
@@ -852,4 +852,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
