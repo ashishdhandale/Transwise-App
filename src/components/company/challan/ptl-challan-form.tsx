@@ -286,11 +286,6 @@ export function PtlChallanForm() {
             setIsSubmitting(false);
         }
     };
-
-    const fromStationOptions = useMemo(() => {
-        const uniqueCities = Array.from(new Set(allStockBookings.map(b => b.fromCity)));
-        return uniqueCities.map(c => ({ label: c, value: c }));
-    }, [allStockBookings]);
     
     const toStationOptions = useMemo(() => {
         return cities.map(city => ({ label: city.name, value: city.name }));
@@ -315,7 +310,7 @@ export function PtlChallanForm() {
                     <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 text-xs items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-6 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
@@ -330,11 +325,17 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>From Station</Label>
-                            <Combobox options={fromStationOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
+                            <Input value={fromStation} readOnly className="h-9 text-xs" />
                         </div>
                         <div className="space-y-0.5">
                             <Label>To Station</Label>
-                            <Combobox options={toStationOptions} value={toStation} onChange={setToStation} placeholder="Filter by To Station..." />
+                            <Combobox
+                                options={toStationOptions}
+                                value={toStation}
+                                onChange={setToStation}
+                                placeholder="Search City"
+                                searchPlaceholder="Search City"
+                            />
                         </div>
                         <div className="space-y-0.5">
                             <Label>Dispatch To</Label>
