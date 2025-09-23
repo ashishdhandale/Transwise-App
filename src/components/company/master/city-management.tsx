@@ -118,6 +118,15 @@ export function CityManagement() {
   };
 
   const handleSave = (cityData: Omit<City, 'id'>) => {
+    const isDuplicate = cities.some(
+        c => c.name.toLowerCase() === cityData.name.toLowerCase() && c.id !== currentCity?.id
+    );
+
+    if (isDuplicate) {
+        toast({ title: 'Duplicate Station', description: `A station named "${cityData.name}" already exists.`, variant: 'destructive' });
+        return false;
+    }
+
     let updatedCities;
     if (currentCity) {
       // Editing existing city
@@ -153,7 +162,7 @@ export function CityManagement() {
     ]);
     
     const existingCustomCities = new Set(cities.map(c => c.name.trim().toUpperCase()));
-    const missingCities = Array.from(bookingCities).filter(bc => !existingCustomCities.has(bc));
+    const missingCities = Array.from(bookingCities).filter(bc => bc && !existingCustomCities.has(bc));
 
     if (missingCities.length === 0) {
       toast({ title: 'No New Stations', description: 'Your master station list is already up-to-date with all booking locations.' });

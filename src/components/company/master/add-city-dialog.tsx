@@ -49,7 +49,7 @@ export function AddCityDialog({ isOpen, onOpenChange, onSave, city }: AddCityDia
         }
 
         const success = onSave({
-            name: cityName.toUpperCase(),
+            name: cityName,
             aliasCode: aliasCode.toUpperCase(),
             pinCode,
         });
