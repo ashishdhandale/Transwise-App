@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
-import type { Driver, VehicleMaster, City, Vendor } from '@/lib/types';
+import type { Driver, VehicleMaster, City, Vendor, Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, Save, X, Trash2, Search, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +35,7 @@ const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
+const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 type CityListSource = 'default' | 'custom';
 
@@ -50,6 +51,7 @@ export function PtlChallanForm() {
     const [challanDate, setChallanDate] = useState(new Date());
     const [fromStation, setFromStation] = useState<string | undefined>(undefined);
     const [toStation, setToStation] = useState<string | undefined>();
+    const [dispatchTo, setDispatchTo] = useState<string | undefined>();
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
     const [vehicleSupplier, setVehicleSupplier] = useState<string | undefined>();
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
@@ -62,6 +64,7 @@ export function PtlChallanForm() {
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [cities, setCities] = useState<City[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
     
     // Bookings Data
     const [allStockBookings, setAllStockBookings] = useState<Booking[]>([]);
@@ -79,6 +82,9 @@ export function PtlChallanForm() {
             
             const savedVendors = localStorage.getItem(LOCAL_STORAGE_KEY_VENDORS);
             if (savedVendors) setVendors(JSON.parse(savedVendors));
+
+            const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
+            if (savedCustomers) setCustomers(JSON.parse(savedCustomers));
 
             const savedSource = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
             const source = savedSource || 'default';
@@ -106,8 +112,6 @@ export function PtlChallanForm() {
                 setCompanyProfile(profile);
                 if (profile.city) {
                     setFromStation(profile.city);
-                } else {
-                    setFromStation('ALL');
                 }
 
                 loadMasterData();
@@ -131,7 +135,7 @@ export function PtlChallanForm() {
 
     const availableStock = useMemo(() => {
         let bookings = allStockBookings;
-        if (fromStation && fromStation !== 'ALL') {
+        if (fromStation) {
             bookings = bookings.filter(b => b.fromCity.toLowerCase() === fromStation.toLowerCase());
         }
         if (toStation) {
@@ -228,7 +232,7 @@ export function PtlChallanForm() {
                 challanId: challanNo,
                 status: 'Pending',
                 dispatchDate: format(challanDate, 'yyyy-MM-dd'),
-                dispatchToParty: toStation || selectedBookings[0].toCity,
+                dispatchToParty: dispatchTo || toStation || selectedBookings[0].toCity,
                 vehicleNo,
                 driverName,
                 fromStation,
@@ -283,20 +287,24 @@ export function PtlChallanForm() {
     };
 
     const cityOptions = useMemo(() => {
-        const allCities = new Set(allStockBookings.map(b => b.fromCity));
-        const cityList = Array.from(allCities).map(c => ({ label: c, value: c }));
-        return [{ label: 'ALL', value: 'ALL' }, ...cityList.sort((a,b) => a.label.localeCompare(b.label))];
+        const uniqueCities = Array.from(new Set(allStockBookings.map(b => b.fromCity)));
+        return uniqueCities.map(c => ({ label: c, value: c }));
     }, [allStockBookings]);
 
-    const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
-    
     const toStationOptions = useMemo(() => {
         const uniqueToCities = Array.from(new Set(allStockBookings.map(b => b.toCity)));
         return uniqueToCities.map(city => ({ label: city, value: city }));
     }, [allStockBookings]);
 
-
-    if (isLoading) return <p>Loading form...</p>;
+    const dispatchToOptions = useMemo(() => {
+        const customerOptions = customers.map(c => ({ label: c.name, value: c.name }));
+        const agentOptions = vendors.filter(v => v.type === 'Delivery Agent').map(v => ({ label: v.name, value: v.name }));
+        return [...customerOptions, ...agentOptions];
+    }, [customers, vendors]);
+    
+    const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
+    
+    if (isLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     
     return (
         <div className="bg-gray-50 p-4 space-y-2">
@@ -323,6 +331,10 @@ export function PtlChallanForm() {
                         <div className="space-y-0.5">
                             <Label>To Station</Label>
                             <Combobox options={toStationOptions} value={toStation} onChange={setToStation} placeholder="Filter by To Station..." />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Dispatch To</Label>
+                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select destination..." searchPlaceholder="Search Party/Agent..." />
                         </div>
                     </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 text-xs items-end">
@@ -363,7 +375,7 @@ export function PtlChallanForm() {
                         <p><strong>Challan ID:</strong> <span className="text-red-600 font-bold">{challanNo}</span></p>
                         <p><strong>Challan Date:</strong> {format(challanDate, 'dd-MMM-yyyy')}</p>
                         <p><strong>Driver Name:</strong> {driverName || 'N/A'}</p>
-                        <p><strong>Receiver Party Name:</strong> {toStation || 'N/A'}</p>
+                        <p><strong>Receiver Party Name:</strong> {dispatchTo || toStation || 'N/A'}</p>
                     </CardContent>
                 </Card>
 
