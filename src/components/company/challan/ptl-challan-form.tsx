@@ -9,12 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
 import type { Driver, VehicleMaster, City } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Save, X } from 'lucide-react';
+import { Loader2, PlusCircle, Save, X, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { getChallanData, saveChallanData, type Challan, saveLrDetailsData, getLrDetailsData, LrDetail } from '@/lib/challan-data';
 import { addHistoryLog } from '@/lib/history-data';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -49,8 +48,10 @@ export function PtlChallanForm() {
     const [cities, setCities] = useState<City[]>([]);
     
     // Bookings Data
-    const [availableBookings, setAvailableBookings] = useState<Booking[]>([]);
-    const [selectedBookings, setSelectedBookings] = useState<Set<string>>(new Set());
+    const [allStockBookings, setAllStockBookings] = useState<Booking[]>([]);
+    const [selectedLr, setSelectedLr] = useState<string | undefined>();
+    const [selectedBookings, setSelectedBookings] = useState<Booking[]>([]);
+
 
     const loadMasterData = useCallback(() => {
         try {
@@ -86,7 +87,7 @@ export function PtlChallanForm() {
                 loadMasterData();
                 const allBookings = getBookings();
                 const ptlStock = allBookings.filter(b => b.loadType === 'PTL' && b.status === 'In Stock');
-                setAvailableBookings(ptlStock);
+                setAllStockBookings(ptlStock);
                 if (profile?.city) {
                     setFromStation(profile.city);
                 }
@@ -99,20 +100,6 @@ export function PtlChallanForm() {
         loadInitialData();
     }, [loadMasterData, toast]);
 
-    const handleBookingSelection = (lrNo: string, checked: boolean | string) => {
-        const newSelection = new Set(selectedBookings);
-        if (checked) {
-            newSelection.add(lrNo);
-        } else {
-            newSelection.delete(lrNo);
-        }
-        setSelectedBookings(newSelection);
-    };
-
-    const bookingsToDisplay = useMemo(() => {
-        if (!fromStation) return [];
-        return availableBookings.filter(b => b.fromCity === fromStation);
-    }, [availableBookings, fromStation]);
     
     useEffect(() => {
         // When the 'To Station' changes, update the 'Dispatch To Party'
@@ -123,18 +110,39 @@ export function PtlChallanForm() {
         }
     }, [toStation]);
 
-    const selectedBookingDetails = useMemo(() => {
-        return bookingsToDisplay.filter(b => selectedBookings.has(b.lrNo));
-    }, [bookingsToDisplay, selectedBookings]);
+    const availableBookingsForDropdown = useMemo(() => {
+        if (!fromStation) return [];
+        const selectedLrNos = new Set(selectedBookings.map(b => b.lrNo));
+        return allStockBookings
+            .filter(b => b.fromCity === fromStation && !selectedLrNos.has(b.lrNo))
+            .map(b => ({ label: `${b.lrNo} - ${b.toCity} - ${b.receiver}`, value: b.lrNo }));
+    }, [allStockBookings, fromStation, selectedBookings]);
+
+    const handleAddBooking = () => {
+        if (!selectedLr) {
+            toast({ title: "No GR Selected", description: "Please select a GR number from the list to add.", variant: "destructive"});
+            return;
+        }
+        const bookingToAdd = allStockBookings.find(b => b.lrNo === selectedLr);
+        if (bookingToAdd) {
+            setSelectedBookings(prev => [...prev, bookingToAdd]);
+            setSelectedLr(undefined); // Reset dropdown
+        }
+    }
+    
+    const handleRemoveBooking = (lrNoToRemove: string) => {
+        setSelectedBookings(prev => prev.filter(b => b.lrNo !== lrNoToRemove));
+    }
+
 
     const totals = useMemo(() => {
-        const totalPackages = selectedBookingDetails.reduce((sum, b) => sum + b.qty, 0);
-        const totalWeight = selectedBookingDetails.reduce((sum, b) => sum + b.chgWt, 0);
+        const totalPackages = selectedBookings.reduce((sum, b) => sum + b.qty, 0);
+        const totalWeight = selectedBookings.reduce((sum, b) => sum + b.chgWt, 0);
         return { totalPackages, totalWeight };
-    }, [selectedBookingDetails]);
+    }, [selectedBookings]);
     
     const handleSaveChallan = async () => {
-        if (!vehicleNo || !driverName || !fromStation || !toStation || !dispatchToParty || selectedBookings.size === 0) {
+        if (!vehicleNo || !driverName || !fromStation || !toStation || !dispatchToParty || selectedBookings.length === 0) {
             toast({ title: "Validation Error", description: "Please fill all fields and select at least one booking.", variant: "destructive" });
             return;
         }
@@ -163,21 +171,21 @@ export function PtlChallanForm() {
                 vehicleHireFreight: 0, // Not typically set for PTL manifest
                 advance: 0,
                 balance: 0,
-                totalLr: selectedBookings.size,
+                totalLr: selectedBookings.length,
                 totalPackages: totals.totalPackages,
-                totalItems: selectedBookingDetails.reduce((sum, b) => sum + b.itemRows.length, 0),
-                totalActualWeight: selectedBookingDetails.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
+                totalItems: selectedBookings.reduce((sum, b) => sum + b.itemRows.length, 0),
+                totalActualWeight: selectedBookings.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
                 totalChargeWeight: totals.totalWeight,
                 summary: { // Simplified for PTL
-                    grandTotal: selectedBookingDetails.reduce((sum, b) => sum + b.totalAmount, 0),
-                    totalTopayAmount: selectedBookingDetails.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
+                    grandTotal: selectedBookings.reduce((sum, b) => sum + b.totalAmount, 0),
+                    totalTopayAmount: selectedBookings.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
                     commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0,
                 }
             };
             
             saveChallanData([...allChallans, newChallan]);
             
-            const newLrDetailsForChallan: LrDetail[] = selectedBookingDetails.map(b => ({
+            const newLrDetailsForChallan: LrDetail[] = selectedBookings.map(b => ({
                 challanId: newChallan.challanId,
                 lrNo: b.lrNo,
                 lrType: b.lrType,
@@ -196,9 +204,10 @@ export function PtlChallanForm() {
             saveLrDetailsData([...allLrDetails, ...newLrDetailsForChallan]);
 
             // Update booking statuses
+            const selectedLrNos = new Set(selectedBookings.map(b => b.lrNo));
             const allBookings = getBookings();
             const updatedBookings = allBookings.map(b => {
-                if (selectedBookings.has(b.lrNo)) {
+                if (selectedLrNos.has(b.lrNo)) {
                     addHistoryLog(b.lrNo, 'Dispatched from Warehouse', companyProfile?.companyName || 'Admin', `Dispatched via vehicle ${vehicleNo} on Challan ${newChallan.challanId}`);
                     return { ...b, status: 'In Transit' as const };
                 }
@@ -263,20 +272,26 @@ export function PtlChallanForm() {
                 <CardHeader>
                     <CardTitle className="font-headline">Select Bookings for Challan</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                     <div className="flex items-end gap-2">
+                        <div className="flex-grow space-y-1">
+                            <Label>Available Bookings from {fromStation || '...'}</Label>
+                            <Combobox 
+                                options={availableBookingsForDropdown}
+                                value={selectedLr}
+                                onChange={setSelectedLr}
+                                placeholder="Search & Select GR No..."
+                                notFoundMessage="No available GRs for this station."
+                            />
+                        </div>
+                        <Button onClick={handleAddBooking}><PlusCircle className="mr-2 h-4 w-4" /> Add to Challan</Button>
+                    </div>
+
                     <div className="overflow-x-auto border rounded-md max-h-96">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-12"><Checkbox onCheckedChange={(checked) => {
-                                        const newSelection = new Set<string>();
-                                        if (checked) {
-                                            bookingsToDisplay.forEach(b => newSelection.add(b.lrNo));
-                                        }
-                                        setSelectedBookings(newSelection);
-                                    }}
-                                    checked={bookingsToDisplay.length > 0 && selectedBookings.size === bookingsToDisplay.length}
-                                     /></TableHead>
+                                    <TableHead className="w-12 text-center">Action</TableHead>
                                     <TableHead>LR No</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>To Station</TableHead>
@@ -287,14 +302,12 @@ export function PtlChallanForm() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {bookingsToDisplay.length > 0 ? bookingsToDisplay.map(booking => (
+                                {selectedBookings.length > 0 ? selectedBookings.map(booking => (
                                     <TableRow key={booking.trackingId}>
-                                        <TableCell>
-                                            <Checkbox 
-                                                id={`select-${booking.trackingId}`}
-                                                checked={selectedBookings.has(booking.lrNo)}
-                                                onCheckedChange={(checked) => handleBookingSelection(booking.lrNo, checked)}
-                                            />
+                                        <TableCell className="text-center">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemoveBooking(booking.lrNo)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </TableCell>
                                         <TableCell className={cn(tdClass, "font-medium")}>{booking.lrNo}</TableCell>
                                         <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
@@ -307,12 +320,12 @@ export function PtlChallanForm() {
                                 )) : (
                                     <TableRow>
                                         <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                            No available PTL bookings for the selected route. Change the "From Station" to see bookings.
+                                            No bookings selected. Add GRs from the dropdown above.
                                         </TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
-                            {selectedBookingDetails.length > 0 && (
+                            {selectedBookings.length > 0 && (
                                 <TableFooter>
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-right font-bold">TOTALS</TableCell>
@@ -327,7 +340,7 @@ export function PtlChallanForm() {
             </Card>
 
             <div className="flex gap-4">
-                <Button onClick={handleSaveChallan} disabled={isSubmitting || selectedBookings.size === 0}>
+                <Button onClick={handleSaveChallan} disabled={isSubmitting || selectedBookings.length === 0}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Create Challan
                 </Button>
