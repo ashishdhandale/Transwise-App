@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -40,12 +41,12 @@ export function PtlChallanForm() {
     const [driverName, setDriverName] = useState<string | undefined>();
     const [fromStation, setFromStation] = useState<string | undefined>();
     const [toStation, setToStation] = useState<string | undefined>();
+    const [dispatchToParty, setDispatchToParty] = useState('');
     
     // Master Data
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [cities, setCities] = useState<City[]>([]);
-    const [cityListSource, setCityListSource] = useState<CityListSource>('default');
     
     // Bookings Data
     const [availableBookings, setAvailableBookings] = useState<Booking[]>([]);
@@ -61,14 +62,12 @@ export function PtlChallanForm() {
             
             const savedSource = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
             const source = savedSource || 'default';
-            setCityListSource(source);
 
             if (source === 'custom') {
                 const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
                 const parsedCities: City[] = savedCities ? JSON.parse(savedCities) : [];
                 setCities(parsedCities);
             } else {
-                // In a real app, default cities would come from a server. Here we'll rely on what's been used in bookings.
                 const allBookings = getBookings();
                 const uniqueCities = [...new Set([...allBookings.map(b => b.fromCity), ...allBookings.map(b => b.toCity)])];
                 const cityObjects = uniqueCities.map((city, i) => ({ id: i, name: city, aliasCode: '', pinCode: '' }));
@@ -113,6 +112,15 @@ export function PtlChallanForm() {
     const bookingsToDisplay = useMemo(() => {
         return availableBookings.filter(b => b.fromCity === fromStation && b.toCity === toStation);
     }, [availableBookings, fromStation, toStation]);
+    
+    useEffect(() => {
+        // When the 'To Station' changes, update the 'Dispatch To Party'
+        if (toStation) {
+            setDispatchToParty(`${toStation} Branch`);
+        } else {
+            setDispatchToParty('');
+        }
+    }, [toStation]);
 
     const selectedBookingDetails = useMemo(() => {
         return bookingsToDisplay.filter(b => selectedBookings.has(b.lrNo));
@@ -125,7 +133,7 @@ export function PtlChallanForm() {
     }, [selectedBookingDetails]);
     
     const handleSaveChallan = async () => {
-        if (!vehicleNo || !driverName || !fromStation || !toStation || selectedBookings.size === 0) {
+        if (!vehicleNo || !driverName || !fromStation || !toStation || !dispatchToParty || selectedBookings.size === 0) {
             toast({ title: "Validation Error", description: "Please fill all fields and select at least one booking.", variant: "destructive" });
             return;
         }
@@ -141,7 +149,7 @@ export function PtlChallanForm() {
                 challanId: `TEMP-CHLN-${Date.now()}`,
                 status: 'Pending',
                 dispatchDate: format(new Date(), 'yyyy-MM-dd'),
-                dispatchToParty: toStation,
+                dispatchToParty: dispatchToParty,
                 vehicleNo,
                 driverName,
                 fromStation,
@@ -220,26 +228,34 @@ export function PtlChallanForm() {
             <h1 className="text-2xl font-bold text-primary">Create PTL Challan</h1>
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Dispatch Details</CardTitle>
+                    <CardTitle className="font-headline">Dispatch Section</CardTitle>
+                    <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                         <div className="space-y-1">
+                            <Label>From Station</Label>
+                            <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>To Station</Label>
+                            <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="Select To..." />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Vehicle No</Label>
+                            <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Driver Name</Label>
+                            <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                        </div>
+                         <div className="space-y-1">
+                            <Label>Dispatch To (Receiver)</Label>
+                            <Input 
+                                value={dispatchToParty} 
+                                onChange={(e) => setDispatchToParty(e.target.value)}
+                                placeholder="e.g., Branch, Agent, Party"
+                            />
+                        </div>
+                    </CardContent>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                        <Label>Vehicle No</Label>
-                        <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Driver Name</Label>
-                        <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>From Station</Label>
-                        <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>To Station</Label>
-                        <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="Select To..." />
-                    </div>
-                </CardContent>
             </Card>
 
             <Card>
