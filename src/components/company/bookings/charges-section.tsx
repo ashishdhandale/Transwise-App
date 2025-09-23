@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { ChargeSetting } from '@/components/company/settings/additional-charges-settings';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { ItemRow } from './item-details-table';
 
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
@@ -27,9 +28,20 @@ interface ChargesSectionProps {
     initialCharges?: { [key: string]: number };
     profile: CompanyProfileFormValues | null;
     isViewOnly?: boolean;
+    itemRows: ItemRow[];
 }
 
-export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandTotal, isGstApplicable, onChargesChange: notifyParentOfChanges, initialCharges, profile, isViewOnly = false }: ChargesSectionProps) {
+export function ChargesSection({ 
+    basicFreight, 
+    onGrandTotalChange, 
+    initialGrandTotal, 
+    isGstApplicable, 
+    onChargesChange: notifyParentOfChanges, 
+    initialCharges, 
+    profile, 
+    isViewOnly = false,
+    itemRows,
+}: ChargesSectionProps) {
     const [chargeSettings, setChargeSettings] = useState<ChargeSetting[]>([]);
     const [bookingCharges, setBookingCharges] = useState<{ [key: string]: number }>({});
     const [gstValue, setGstValue] = useState(0);
@@ -42,23 +54,47 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
                 const parsed = JSON.parse(savedSettings);
                 if (parsed.charges) {
                     setChargeSettings(parsed.charges);
-                    // Initialize booking charges from settings
-                    const initialChargesFromSettings = parsed.charges.reduce((acc: any, charge: ChargeSetting) => {
-                        acc[charge.id] = Number(charge.value) || 0;
-                        return acc;
-                    }, {});
-                    
-                    if (initialCharges) {
-                        setBookingCharges({...initialChargesFromSettings, ...initialCharges});
-                    } else {
-                        setBookingCharges(initialChargesFromSettings);
-                    }
                 }
+            } else {
+                setChargeSettings([]);
             }
         } catch (error) {
             console.error("Failed to load additional charges settings", error);
         }
-    }, [initialCharges]);
+    }, []);
+
+    const calculateCharge = useCallback((charge: ChargeSetting) => {
+        const rate = charge.value || 0;
+        switch (charge.calculationType) {
+            case 'fixed':
+                return rate;
+            case 'per_kg_actual':
+                const totalActWt = itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0);
+                return totalActWt * rate;
+            case 'per_kg_charge':
+                const totalChgWt = itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0);
+                return totalChgWt * rate;
+            case 'per_quantity':
+                 const totalQty = itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0);
+                return totalQty * rate;
+            default:
+                return 0;
+        }
+    }, [itemRows]);
+
+    useEffect(() => {
+        const newBookingCharges: { [key: string]: number } = {};
+        chargeSettings.forEach(charge => {
+            if (charge.isEditable && initialCharges && initialCharges[charge.id] !== undefined) {
+                 newBookingCharges[charge.id] = initialCharges[charge.id];
+            } else {
+                 newBookingCharges[charge.id] = calculateCharge(charge);
+            }
+        });
+        setBookingCharges(newBookingCharges);
+        notifyParentOfChanges(newBookingCharges);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chargeSettings, itemRows, calculateCharge, initialCharges]);
     
     const handleChargeChange = (chargeId: string, value: string) => {
         const newBookingCharges = { ...bookingCharges, [chargeId]: Number(value) || 0 };
@@ -67,10 +103,8 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
     };
     
     const additionalChargesTotal = useMemo(() => {
-        return chargeSettings
-            .filter(c => c.isVisible)
-            .reduce((sum, charge) => sum + (bookingCharges[charge.id] || 0), 0);
-    }, [chargeSettings, bookingCharges]);
+        return Object.values(bookingCharges).reduce((sum, charge) => sum + charge, 0);
+    }, [bookingCharges]);
 
     const total = useMemo(() => {
         return basicFreight + additionalChargesTotal;
@@ -90,20 +124,18 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
     }, [grandTotal, onGrandTotalChange]);
 
     useEffect(() => {
-        if (initialGrandTotal !== undefined) {
-            const subtotal = initialGrandTotal;
-            const chargesTotal = chargeSettings.filter(c => c.isVisible).reduce((sum, charge) => sum + (bookingCharges[charge.id] || 0), 0);
-            
-            if (subtotal > 0 && subtotal > basicFreight + chargesTotal) {
-                 const inferredGstAmount = subtotal - (basicFreight + chargesTotal);
-                 const inferredGstRate = (inferredGstAmount / (basicFreight + chargesTotal)) * 100;
-                 if (inferredGstRate > 0 && inferredGstRate < 100) {
+        if (initialGrandTotal !== undefined && isGstApplicable) {
+            const currentSubTotal = basicFreight + additionalChargesTotal;
+            if (initialGrandTotal > 0 && currentSubTotal > 0) {
+                 const inferredGstAmount = initialGrandTotal - currentSubTotal;
+                 const inferredGstRate = (inferredGstAmount / currentSubTotal) * 100;
+                 if (inferredGstRate > 0 && inferredGstRate < 100) { // Plausibility check
                      setGstValue(Math.round(inferredGstRate));
                  }
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialGrandTotal, basicFreight, chargeSettings]);
+    }, [initialGrandTotal, basicFreight, additionalChargesTotal, isGstApplicable]);
 
 
   return (
@@ -115,7 +147,7 @@ export function ChargesSection({ basicFreight, onGrandTotalChange, initialGrandT
                 <ChargeInput 
                     key={charge.id} 
                     label={charge.name} 
-                    value={bookingCharges[charge.id] || 0}
+                    value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
                     readOnly={!charge.isEditable || isViewOnly}
                     onChange={(e) => handleChargeChange(charge.id, e.target.value)}
                 />

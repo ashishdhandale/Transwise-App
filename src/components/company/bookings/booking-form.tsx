@@ -621,6 +621,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                             initialCharges={initialChargesFromBooking}
                             profile={companyProfile}
                             isViewOnly={isViewOnly}
+                            itemRows={itemRows}
                         />
                         <div className="w-[300px]">
                             <DeliveryInstructionsSection 
