@@ -354,7 +354,10 @@ export function BookingsDashboard() {
                                     <DropdownMenuItem onClick={() => handleViewOpen(booking.trackingId)}>
                                         <Eye className="mr-2 h-4 w-4" /> View
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleEditOpen(booking.trackingId)}>
+                                    <DropdownMenuItem 
+                                        onClick={() => handleEditOpen(booking.trackingId)}
+                                        disabled={booking.status === 'Cancelled'}
+                                    >
                                         <Pencil className="mr-2 h-4 w-4" /> Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuSub>
