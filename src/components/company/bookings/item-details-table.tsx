@@ -33,6 +33,7 @@ import { Combobox } from '@/components/ui/combobox';
 import type { Item } from '@/lib/types';
 import { AddItemDialog } from '../master/add-item-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '../ui/label';
 
 export interface ItemRow {
   id: number;
@@ -63,18 +64,18 @@ const DEFAULT_ROWS = 2;
 const DEFAULT_ITEM_NAME = 'Frm MAS';
 
 const defaultColumns: ColumnSetting[] = [
-    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
-    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[160px]' },
-    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
-    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[130px]' },
-    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[120px]' },
-    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
+    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[220px]' },
+    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[160px]' },
+    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[220px]' },
+    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[130px]' },
+    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[120px]' },
+    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
+    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
+    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
 ];
 
 let nextId = 1;
@@ -116,7 +117,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         if (savedItems) {
             setItemOptions(JSON.parse(savedItems));
         } else {
-            // If nothing in storage, you might want to set some defaults
             const defaultItems: Item[] = [
                 { id: 1, name: 'Frm MAS', hsnCode: '', description: '' },
                 { id: 2, name: 'Electronics', hsnCode: '', description: '' },
@@ -135,7 +135,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   }, [loadItems]);
 
   useEffect(() => {
-    if (!isClient || rows.length > 0) return; // Only run if rows are not already populated
+    if (!isClient || rows.length > 0) return;
 
     try {
       const savedBookingSettings = localStorage.getItem(BOOKING_SETTINGS_KEY);
@@ -187,8 +187,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'Chg.wt':
             return chgWt * rate;
         case 'Fixed':
-            // For 'Fixed', the lumpsum is manually entered, so we don't calculate it here.
-            // We just return what's already there.
             return parseFloat(row.lumpsum) || 0;
         default:
             return 0;
@@ -315,64 +313,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         label: i.name.toUpperCase(), value: i.name
     })), [itemOptions]);
 
-  const getInputForColumn = (columnId: string, index: number) => {
-    const row = rows[index];
-    if (!row) return null;
-    
-    const value = row[columnId] ?? '';
-    const isFixedFreight = row.freightOn === 'Fixed';
-
-    switch(columnId) {
-        case 'ewbNo':
-            return <Input type="text" className={inputClass} maxLength={12} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-        case 'itemName':
-            return (
-                 <Combobox
-                    options={uppercaseItemOptions}
-                    value={value}
-                    onChange={(val) => handleInputChange(index, columnId, val)}
-                    placeholder="Select item..."
-                    searchPlaceholder="Search items..."
-                    notFoundMessage="No item found."
-                    addMessage="Add New Item"
-                    onAdd={handleOpenAddItem}
-                />
-            );
-        case 'description':
-            return <Input type="text" placeholder="type description" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-        case 'freightOn':
-            return (
-                <Select value={value} onValueChange={(val) => handleInputChange(index, columnId, val)}>
-                    <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Act.wt">Act.wt</SelectItem>
-                        <SelectItem value="Chg.wt">Chg.wt</SelectItem>
-                        <SelectItem value="Fixed">Fixed</SelectItem>
-                        <SelectItem value="Quantity">Quantity</SelectItem>
-                    </SelectContent>
-                </Select>
-            );
-        case 'rate':
-            return <Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={isFixedFreight} />;
-        case 'lumpsum':
-             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} readOnly={!isFixedFreight} />;
-        case 'dValue':
-            return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-        case 'qty':
-             return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-        case 'actWt':
-            return <Input type="text" inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-        case 'chgWt':
-             return <Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} onBlur={() => handleChgWtBlur(index)} />;
-        case 'pvtMark':
-        case 'invoiceNo':
-            return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-        default: // For custom columns
-            return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-    }
-  }
-
-
   const addRow = () => {
     onRowsChange([...rows, createEmptyRow()]);
   };
@@ -395,126 +335,146 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
   if (!isClient) {
     return (
-        <div className="overflow-x-auto border rounded-md">
+        <div className="border rounded-md">
             <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
-                    {defaultColumns.filter(c => c.isVisible).map(col => (
-                        <TableHead key={col.id} className={cn(thClass, col.width)}>{col.label}</TableHead>
-                    ))}
-                    <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
-                </TableRow>
-            </TableHeader>
             <TableBody>
-                {Array.from({ length: DEFAULT_ROWS }, (_, index) => (
-                        <TableRow key={`skeleton-${index}`}>
-                        <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
-                        {defaultColumns.filter(c => c.isVisible).map(col => (
-                            <TableCell key={`skeleton-${index}-${col.id}`} className={tdClass}>
-                                <div className="h-8 bg-muted rounded-md animate-pulse"></div>
-                            </TableCell>
-                        ))}
-                        <TableCell className={`${tdClass} text-center`}></TableCell>
-                    </TableRow>
-                ))}
+                <TableRow>
+                    <TableCell>
+                        <div className="h-20 bg-muted rounded-md animate-pulse"></div>
+                    </TableCell>
+                </TableRow>
             </TableBody>
             </Table>
         </div>
     );
   }
 
-  const visibleColumns = columns.filter(c => c.isVisible);
-  
-  const visibleColIds = visibleColumns.map(c => c.id);
-
-  const getColSpan = (targetColId: string) => {
-    const targetIndex = visibleColIds.indexOf(targetColId);
-    if (targetIndex === -1) return 1;
-
-    let span = 1;
-    for (let i = targetIndex - 1; i >= 0; i--) {
-        const currentColId = visibleColIds[i];
-        if (['qty', 'actWt', 'chgWt'].includes(currentColId)) {
-            break;
-        }
-        span++;
-    }
-    return span;
-  }
-  
   return (
     <>
-      <div className="overflow-x-auto border rounded-md">
+      <div className="border rounded-md">
         <Table>
           <TableHeader>
               <TableRow>
-              <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
-              {visibleColumns.map(col => (
-                  <TableHead key={col.id} className={cn(thClass, col.width)}>{col.label}</TableHead>
-              ))}
-              <TableHead className={`${thClass} w-[50px] text-center`}>Del</TableHead>
+                <TableHead className={`${thClass} w-[5%]`}>#</TableHead>
+                <TableHead className={`${thClass} w-[15%]`}>Item Name*</TableHead>
+                <TableHead className={`${thClass} w-[20%]`}>Description*</TableHead>
+                <TableHead className={`${thClass} w-[10%]`}>Qty*</TableHead>
+                <TableHead className={`${thClass} w-[10%]`}>Act.wt*</TableHead>
+                <TableHead className={`${thClass} w-[10%]`}>Chg.wt*</TableHead>
+                <TableHead className={`${thClass} w-[10%]`}>Rate</TableHead>
+                <TableHead className={`${thClass} w-[15%]`}>Freight ON</TableHead>
+                <TableHead className={`${thClass} w-[10%]`}>Lumpsum</TableHead>
+                <TableHead className={`${thClass} w-[5%]`}>Del</TableHead>
               </TableRow>
           </TableHeader>
           <TableBody>
               {rows.map((row, index) => (
-              <TableRow key={row.id}>
-                  <TableCell className={`${tdClass} text-center font-semibold text-red-500 whitespace-nowrap`}>{index + 1}*</TableCell>
-                  {visibleColumns.map(col => (
-                  <TableCell key={`${row.id}-${col.id}`} className={tdClass}>
-                      {getInputForColumn(col.id, index)}
-                  </TableCell>
-                  ))}
-                  <TableCell className={`${tdClass} text-center`}>
-                  <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}>
-                          <Trash2 className="h-4 w-4" />
-                      </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                      <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the item row from the booking.
-                          </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => removeRow(row.id)}>
-                          Delete
-                          </AlertDialogAction>
-                      </AlertDialogFooter>
-                      </AlertDialogContent>
-                  </AlertDialog>
-                  </TableCell>
-              </TableRow>
+              <React.Fragment key={row.id}>
+                <TableRow>
+                    <TableCell className={`${tdClass} text-center font-semibold text-red-500`} rowSpan={2}>{index + 1}*</TableCell>
+                    <TableCell className={tdClass}>
+                        <Combobox
+                            options={uppercaseItemOptions}
+                            value={row.itemName}
+                            onChange={(val) => handleInputChange(index, 'itemName', val)}
+                            placeholder="Select item..."
+                            searchPlaceholder="Search items..."
+                            notFoundMessage="No item found."
+                            addMessage="Add New Item"
+                            onAdd={handleOpenAddItem}
+                        />
+                    </TableCell>
+                    <TableCell className={tdClass}>
+                        <Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} />
+                    </TableCell>
+                    <TableCell className={tdClass}>
+                        <Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} />
+                    </TableCell>
+                    <TableCell className={tdClass}>
+                        <Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} />
+                    </TableCell>
+                    <TableCell className={tdClass}>
+                        <Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} />
+                    </TableCell>
+                    <TableCell className={tdClass}>
+                        <Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed'} />
+                    </TableCell>
+                    <TableCell className={tdClass}>
+                       <Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)}>
+                            <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Act.wt">Act.wt</SelectItem>
+                                <SelectItem value="Chg.wt">Chg.wt</SelectItem>
+                                <SelectItem value="Fixed">Fixed</SelectItem>
+                                <SelectItem value="Quantity">Quantity</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </TableCell>
+                    <TableCell className={tdClass}>
+                         <Input type="text" inputMode="decimal" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed'} />
+                    </TableCell>
+                    <TableCell className={`${tdClass} text-center`} rowSpan={2}>
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}>
+                              <Trash2 className="h-4 w-4" />
+                          </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                          <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the item row from the booking.
+                              </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => removeRow(row.id)}>
+                              Delete
+                              </AlertDialogAction>
+                          </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell className={tdClass} colSpan={4}>
+                         <div className="flex items-center gap-2">
+                            <Label className="text-xs whitespace-nowrap">EWB No:</Label>
+                            <Input type="text" className={inputClass} maxLength={12} value={row.ewbNo} onChange={(e) => handleInputChange(index, 'ewbNo', e.target.value)} />
+                        </div>
+                    </TableCell>
+                    <TableCell className={tdClass} colSpan={2}>
+                        <div className="flex items-center gap-2">
+                            <Label className="text-xs whitespace-nowrap">Invoice No:</Label>
+                            <Input type="text" className={inputClass} value={row.invoiceNo} onChange={(e) => handleInputChange(index, 'invoiceNo', e.target.value)} />
+                        </div>
+                    </TableCell>
+                    <TableCell className={tdClass} colSpan={2}>
+                         <div className="flex items-center gap-2">
+                            <Label className="text-xs whitespace-nowrap">D.Value:</Label>
+                            <Input type="text" inputMode="decimal" className={inputClass} value={row.dValue} onChange={(e) => handleInputChange(index, 'dValue', e.target.value)} />
+                        </div>
+                    </TableCell>
+                </TableRow>
+              </React.Fragment>
               ))}
           </TableBody>
           <TableFooter>
               <TableRow>
-              <TableCell className={`${tfClass} text-right`} colSpan={getColSpan('qty')}>
-                  <span>TOTAL ITEM: {totals.itemCount}</span>
-              </TableCell>
-              
-              {['qty', 'actWt', 'chgWt'].map(id => {
-                  if (visibleColIds.includes(id)) {
-                  switch(id) {
-                      case 'qty': return <TableCell key="total-qty" className={`${tfClass} text-center`}>{totals.qty}</TableCell>;
-                      case 'actWt': return <TableCell key="total-actWt" className={`${tfClass} text-center`}>{totals.actWt}</TableCell>;
-                      case 'chgWt': return <TableCell key="total-chgWt" className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>;
-                  }
-                  }
-                  return null;
-              })}
-
-              <TableCell colSpan={visibleColIds.filter(id => !['qty', 'actWt', 'chgWt'].includes(id)).length - getColSpan('qty') + 2} className={tfClass}>
-                  <div className="flex justify-end">
-                      <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
-                      <PlusCircle className="h-5 w-5" />
-                      </Button>
-                  </div>
-              </TableCell>
+                <TableCell className={`${tfClass} text-right`} colSpan={3}>
+                    <span>TOTAL ITEM: {totals.itemCount}</span>
+                </TableCell>
+                <TableCell className={`${tfClass} text-center`}>{totals.qty}</TableCell>
+                <TableCell className={`${tfClass} text-center`}>{totals.actWt}</TableCell>
+                <TableCell className={`${tfClass} text-center`}>{totals.chgWt}</TableCell>
+                <TableCell colSpan={4} className={tfClass}>
+                    <div className="flex justify-end">
+                        <Button variant="ghost" size="icon" onClick={addRow} className="h-6 w-6 text-blue-600">
+                            <PlusCircle className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </TableCell>
               </TableRow>
           </TableFooter>
         </Table>
@@ -546,3 +506,4 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </>
   );
 }
+
