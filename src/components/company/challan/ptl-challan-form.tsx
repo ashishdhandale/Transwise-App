@@ -49,6 +49,7 @@ export function PtlChallanForm() {
     // Header Form State
     const [challanNo, setChallanNo] = useState('');
     const [challanDate, setChallanDate] = useState(new Date());
+    const [dispatchDate, setDispatchDate] = useState(new Date());
     const [fromStation, setFromStation] = useState<string | undefined>(undefined);
     const [toStation, setToStation] = useState<string | undefined>();
     const [dispatchTo, setDispatchTo] = useState<string | undefined>();
@@ -231,7 +232,7 @@ export function PtlChallanForm() {
             const newChallan: Challan = {
                 challanId: challanNo,
                 status: 'Pending',
-                dispatchDate: format(challanDate, 'yyyy-MM-dd'),
+                dispatchDate: format(dispatchDate, 'yyyy-MM-dd'),
                 dispatchToParty: dispatchTo || toStation || selectedBookings[0].toCity,
                 vehicleNo,
                 driverName,
@@ -324,17 +325,23 @@ export function PtlChallanForm() {
                             <Label>Challan Date</Label>
                             <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
                         </div>
+                         <div className="space-y-0.5">
+                            <Label>Dispatch Date</Label>
+                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(dispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dispatchDate} onSelect={(d) => d && setDispatchDate(d)}/></PopoverContent></Popover>
+                        </div>
                         <div className="space-y-0.5">
                             <Label>From Station</Label>
                             <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
                         </div>
-                        <div className="space-y-0.5">
-                            <Label>To Station</Label>
-                            <Combobox options={toStationOptions} value={toStation} onChange={setToStation} placeholder="Filter by To Station..." />
-                        </div>
-                         <div className="space-y-0.5">
-                            <Label>Dispatch To</Label>
-                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select destination..." searchPlaceholder="Search Party/Agent..." />
+                        <div className="grid grid-cols-2 gap-2 items-end">
+                            <div className="space-y-0.5">
+                                <Label>To Station</Label>
+                                <Combobox options={toStationOptions} value={toStation} onChange={setToStation} placeholder="Filter by To Station..." />
+                            </div>
+                             <div className="space-y-0.5">
+                                <Label>Dispatch To</Label>
+                                <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select destination..." searchPlaceholder="Search Party/Agent..." />
+                            </div>
                         </div>
                     </div>
                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 text-xs items-end">
