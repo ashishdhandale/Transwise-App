@@ -41,6 +41,11 @@ const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 type CityListSource = 'default' | 'custom';
 
+interface ShortExtraEntry {
+    lrNo: string;
+    message: string;
+}
+
 export function PtlChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
@@ -54,7 +59,6 @@ export function PtlChallanForm() {
     const [dispatchDate, setDispatchDate] = useState(new Date());
     const [fromStation, setFromStation] = useState<string | undefined>(undefined);
     const [toStation, setToStation] = useState<string | undefined>();
-    const [dispatchTo, setDispatchTo] = useState<string | undefined>();
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
     const [vehicleSupplier, setVehicleSupplier] = useState<string | undefined>();
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
@@ -75,11 +79,14 @@ export function PtlChallanForm() {
     const [selectedBookings, setSelectedBookings] = useState<Booking[]>([]);
     const [cityFilter, setCityFilter] = useState('all');
     
-    // Validation State
+    // Validation and Dispatch State
     const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
     const [isWeightAlertOpen, setIsWeightAlertOpen] = useState(false);
     const [isOverloaded, setIsOverloaded] = useState(false);
     const [overflowLrNos, setOverflowLrNos] = useState<Set<string>>(new Set());
+    const [dispatchQuantities, setDispatchQuantities] = useState<{ [trackingId: string]: number }>({});
+    const [modifiedQtyLrNos, setModifiedQtyLrNos] = useState<Set<string>>(new Set());
+    const [shortExtraEntries, setShortExtraEntries] = useState<ShortExtraEntry[]>([]);
 
 
     const loadMasterData = useCallback(() => {
@@ -181,10 +188,13 @@ export function PtlChallanForm() {
     
     const totals = useMemo(() => {
         const totalItems = selectedBookings.reduce((sum, b) => sum + b.itemRows.length, 0);
-        const totalPackages = selectedBookings.reduce((sum, b) => sum + b.qty, 0);
+        const totalPackages = selectedBookings.reduce((sum, b) => {
+            const dispatchQty = dispatchQuantities[b.trackingId] ?? b.qty;
+            return sum + dispatchQty;
+        }, 0);
         const totalActualWeight = selectedBookings.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0);
         return { totalItems, totalPackages, totalActualWeight };
-    }, [selectedBookings]);
+    }, [selectedBookings, dispatchQuantities]);
 
     const financialSummary = useMemo(() => {
         const paidAmt = selectedBookings.filter(b => b.lrType === 'PAID').reduce((sum, b) => sum + b.totalAmount, 0);
@@ -193,6 +203,58 @@ export function PtlChallanForm() {
         const totalFreight = paidAmt + toPayAmt + toBeBilledAmt;
         return { paidAmt, toPayAmt, toBeBilledAmt, totalFreight };
     }, [selectedBookings]);
+    
+    const updateShortExtraLog = (booking: Booking, newDispatchQty: number) => {
+        const originalQty = booking.qty;
+        const diff = newDispatchQty - originalQty;
+
+        setShortExtraEntries(prev => prev.filter(entry => entry.lrNo !== booking.lrNo));
+        setModifiedQtyLrNos(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(booking.lrNo);
+            return newSet;
+        });
+
+        if (diff !== 0) {
+            const message = diff < 0 
+                ? `LR no ${booking.lrNo} ${Math.abs(diff)} Qty is Short.`
+                : `LR no ${booking.lrNo} ${diff} Qty is Extra.`;
+            
+            setShortExtraEntries(prev => [...prev, { lrNo: booking.lrNo, message }]);
+            setModifiedQtyLrNos(prev => new Set(prev).add(booking.lrNo));
+        }
+    }
+
+    const handleDispatchQtyChange = (trackingId: string, value: string) => {
+        const newQty = Number(value);
+        if (isNaN(newQty)) return;
+
+        setDispatchQuantities(prev => ({...prev, [trackingId]: newQty}));
+        const booking = selectedBookings.find(b => b.trackingId === trackingId);
+        if (booking) {
+            updateShortExtraLog(booking, newQty);
+        }
+    };
+
+    const addSelectedBookings = (bookingsToAdd: Booking[]) => {
+        const newSelectedBookings = [...selectedBookings, ...bookingsToAdd];
+        setSelectedBookings(newSelectedBookings);
+
+        const newDispatchQuantities = { ...dispatchQuantities };
+        bookingsToAdd.forEach(b => {
+            if (newDispatchQuantities[b.trackingId] === undefined) {
+                newDispatchQuantities[b.trackingId] = b.qty;
+            }
+        });
+        setDispatchQuantities(newDispatchQuantities);
+        
+        if(isOverloaded) {
+            const newOverflowNos = new Set(overflowLrNos);
+            bookingsToAdd.forEach(b => newOverflowNos.add(b.lrNo));
+            setOverflowLrNos(newOverflowNos);
+        }
+    };
+
 
     const checkWeightAndAddBookings = useCallback((bookingsToAdd: Booking[]) => {
         if (!bookingsToAdd.length) return;
@@ -209,24 +271,14 @@ export function PtlChallanForm() {
                 return;
             }
         }
-        
-        // If no capacity limit, already overloaded, or within capacity, add directly
-        const newSelectedBookings = [...selectedBookings, ...bookingsToAdd];
-        setSelectedBookings(newSelectedBookings);
-        
-        if(isOverloaded) {
-            const newOverflowNos = new Set(overflowLrNos);
-            bookingsToAdd.forEach(b => newOverflowNos.add(b.lrNo));
-            setOverflowLrNos(newOverflowNos);
-        }
+        addSelectedBookings(bookingsToAdd);
         
     }, [vehicleCapacity, isOverloaded, totals.totalActualWeight, selectedBookings, overflowLrNos]);
 
     const handleConfirmOverload = () => {
         if (!pendingBookings.length) return;
         
-        const newSelectedBookings = [...selectedBookings, ...pendingBookings];
-        setSelectedBookings(newSelectedBookings);
+        addSelectedBookings(pendingBookings);
         
         const newOverflowNos = new Set(overflowLrNos);
         pendingBookings.forEach(b => newOverflowNos.add(b.lrNo));
@@ -276,7 +328,8 @@ export function PtlChallanForm() {
             checkWeightAndAddBookings(newBookingsToAdd);
         } else {
             const cityBookingIds = new Set(cityBookings.map(b => b.trackingId));
-            setSelectedBookings(prev => prev.filter(b => !cityBookingIds.has(b.trackingId)));
+            const bookingsToRemove = selectedBookings.filter(b => cityBookingIds.has(b.trackingId));
+            bookingsToRemove.forEach(b => handleRemoveBookingFromConsignment(b.trackingId));
         }
     };
     
@@ -285,10 +338,22 @@ export function PtlChallanForm() {
         const updatedSelection = selectedBookings.filter(b => b.trackingId !== trackingId);
         setSelectedBookings(updatedSelection);
 
+        setDispatchQuantities(prev => {
+            const newQuantities = {...prev};
+            delete newQuantities[trackingId];
+            return newQuantities;
+        });
+
         if (bookingToRemove) {
             const newOverflowNos = new Set(overflowLrNos);
             newOverflowNos.delete(bookingToRemove.lrNo);
             setOverflowLrNos(newOverflowNos);
+            
+            const newModifiedNos = new Set(modifiedQtyLrNos);
+            newModifiedNos.delete(bookingToRemove.lrNo);
+            setModifiedQtyLrNos(newModifiedNos);
+
+            setShortExtraEntries(prev => prev.filter(e => e.lrNo !== bookingToRemove.lrNo));
         }
 
         // Check if we are back under capacity
@@ -296,7 +361,7 @@ export function PtlChallanForm() {
         const vehicleCap = Number(vehicleCapacity) || 0;
         if (vehicleCap > 0 && remainingWeight <= vehicleCap) {
             setIsOverloaded(false);
-            setOverflowLrNos(new Set()); // Clear all red highlights if back to normal
+            setOverflowLrNos(new Set());
         }
     };
 
@@ -317,7 +382,7 @@ export function PtlChallanForm() {
                 challanId: challanNo,
                 status: 'Pending',
                 dispatchDate: format(dispatchDate, 'yyyy-MM-dd'),
-                dispatchToParty: dispatchTo || toStation || selectedBookings[0].toCity,
+                dispatchToParty: toStation || selectedBookings[0].toCity,
                 vehicleNo,
                 driverName,
                 fromStation,
@@ -342,7 +407,7 @@ export function PtlChallanForm() {
             const newLrDetailsForChallan: LrDetail[] = selectedBookings.map(b => ({
                 challanId: newChallan.challanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
                 from: b.fromCity, to: b.toCity, bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
-                itemDescription: b.itemDescription, quantity: b.qty,
+                itemDescription: b.itemDescription, quantity: dispatchQuantities[b.trackingId] ?? b.qty,
                 actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
                 chargeWeight: b.chgWt, grandTotal: b.totalAmount
             }));
@@ -374,12 +439,6 @@ export function PtlChallanForm() {
     const toStationOptions = useMemo(() => {
         return cities.map(city => ({ label: city.name, value: city.name }));
     }, [cities]);
-
-    const dispatchToOptions = useMemo(() => {
-        const customerOptions = customers.map(c => ({ label: c.name, value: c.name }));
-        const agentOptions = vendors.filter(v => v.type === 'Delivery Agent').map(v => ({ label: v.name, value: v.name }));
-        return [...customerOptions, ...agentOptions];
-    }, [customers, vendors]);
     
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
     
@@ -416,16 +475,6 @@ export function PtlChallanForm() {
                                 onChange={setToStation}
                                 placeholder="Search City"
                                 searchPlaceholder="Search City..."
-                            />
-                        </div>
-                         <div className="space-y-0.5">
-                            <Label>Dispatch To</Label>
-                            <Combobox
-                                options={dispatchToOptions}
-                                value={dispatchTo}
-                                onChange={setDispatchTo}
-                                placeholder="Select party/agent..."
-                                searchPlaceholder="Search Party/Agent..."
                             />
                         </div>
                          <div className="space-y-0.5">
@@ -554,8 +603,16 @@ export function PtlChallanForm() {
                             </TableHeader>
                             <TableBody>
                                 {selectedBookings.map((b, i) => (
-                                    <TableRow key={b.trackingId} className={cn(overflowLrNos.has(b.lrNo) && "bg-red-200/50")}>
-                                        <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}><Input className="h-6 text-xs w-16" defaultValue={b.qty} /></TableCell><TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
+                                    <TableRow key={b.trackingId} className={cn(overflowLrNos.has(b.lrNo) && "bg-red-200/50", modifiedQtyLrNos.has(b.lrNo) && "bg-yellow-200/50")}>
+                                        <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell>
+                                        <TableCell className={tdClass}>
+                                            <Input 
+                                                className="h-6 text-xs w-16" 
+                                                value={dispatchQuantities[b.trackingId] ?? ''} 
+                                                onChange={(e) => handleDispatchQtyChange(b.trackingId, e.target.value)} 
+                                            />
+                                        </TableCell>
+                                        <TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
                                         <TableCell className={tdClass}><div className="flex items-center"><Button variant="ghost" size="icon" className="h-5 w-5 text-red-600" onClick={() => handleRemoveBookingFromConsignment(b.trackingId)}><X className="h-4 w-4" /></Button></div></TableCell>
                                     </TableRow>
                                 ))}
@@ -571,8 +628,22 @@ export function PtlChallanForm() {
 
             {/* Footer Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-                <div className="space-y-1">
-                    <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Extra / Short Entries</CardTitle></CardHeader><CardContent className="p-1"><div className="h-24 border-dashed border-2 rounded-md flex items-center justify-center text-muted-foreground text-xs">Not Implemented</div></CardContent></Card>
+                 <div className="space-y-1">
+                    <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Extra / Short Entries</CardTitle></CardHeader>
+                        <CardContent className="p-1">
+                            <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
+                                {shortExtraEntries.length > 0 ? (
+                                    <ul className="text-xs space-y-1">
+                                        {shortExtraEntries.map(entry => (
+                                            <li key={entry.lrNo} className="text-destructive font-medium">{entry.message}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-muted-foreground text-xs">No short/extra quantities</div>
+                                )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
                 </div>
                  <div className="space-y-1">
                      <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader><CardContent className="p-1 grid grid-cols-2 gap-1"><Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" /><Textarea placeholder="Dispatch Summary" className="text-xs h-24" /></CardContent></Card>
