@@ -304,7 +304,7 @@ export function BookingsDashboard() {
                     <TableBody>
                       {filteredBookings.length > 0 ? (
                         filteredBookings.map((booking, index) => (
-                        <TableRow key={booking.trackingId} className={booking.status === 'Cancelled' ? 'bg-red-200' : ''}>
+                        <TableRow key={booking.trackingId} className={cn(booking.status === 'Cancelled' && 'bg-destructive/20 hover:bg-destructive/30')}>
                           <TableCell className="p-1 text-center whitespace-nowrap">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
