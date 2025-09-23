@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -55,6 +56,7 @@ import { BookingReceipt } from './booking-receipt';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PartialCancellationDialog } from './partial-cancellation-dialog';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -76,6 +78,7 @@ export function BookingsDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isPartialCancelDialogOpen, setIsPartialCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
@@ -192,8 +195,15 @@ export function BookingsDashboard() {
   const handlePartialCancel = () => {
       if (!bookingToCancel) return;
       setIsCancelOptionsOpen(false);
-      handleEditOpen(bookingToCancel.trackingId);
+      setSelectedBookingId(bookingToCancel.trackingId);
+      setIsPartialCancelDialogOpen(true);
   };
+
+  const handlePartialCancelDialogClose = () => {
+    setIsPartialCancelDialogOpen(false);
+    setSelectedBookingId(null);
+    loadBookings();
+  }
 
   const confirmCompleteCancellation = () => {
     if (!bookingToCancel) return;
@@ -428,6 +438,13 @@ export function BookingsDashboard() {
           onOpenChange={handleViewDialogClose}
           bookingId={selectedBookingId}
         />
+      )}
+      {selectedBookingId && (
+          <PartialCancellationDialog
+            isOpen={isPartialCancelDialogOpen}
+            onOpenChange={handlePartialCancelDialogClose}
+            bookingId={selectedBookingId}
+          />
       )}
        {bookingToPrint && copyTypeToPrint && companyProfile && (
         <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>

@@ -78,39 +78,46 @@ interface BookingFormProps {
     onSaveSuccess?: () => void;
     onClose?: () => void;
     isViewOnly?: boolean;
+    isPartialCancel?: boolean;
 }
 
-const generateChangeDetails = (oldBooking: Booking, newBooking: Booking): string => {
+const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
     const changes: string[] = [];
 
-    if (oldBooking.bookingDate && newBooking.bookingDate && format(new Date(oldBooking.bookingDate), 'yyyy-MM-dd') !== format(new Date(newBooking.bookingDate), 'yyyy-MM-dd')) {
-        changes.push(`- Booking Date changed from '${format(new Date(oldBooking.bookingDate), 'dd-MMM-yyyy')}' to '${format(new Date(newBooking.bookingDate), 'dd-MMM-yyyy')}'`);
+    if (isPartialCancel) {
+        // For partial cancel, only check item and financial changes
+        if (oldBooking.totalAmount !== newBooking.totalAmount) {
+            changes.push(`- Grand Total changed from '${oldBooking.totalAmount.toFixed(2)}' to '${newBooking.totalAmount.toFixed(2)}'`);
+        }
+    } else {
+        // Full edit mode checks
+        if (oldBooking.bookingDate && newBooking.bookingDate && format(new Date(oldBooking.bookingDate), 'yyyy-MM-dd') !== format(new Date(newBooking.bookingDate), 'yyyy-MM-dd')) {
+            changes.push(`- Booking Date changed from '${format(new Date(oldBooking.bookingDate), 'dd-MMM-yyyy')}' to '${format(new Date(newBooking.bookingDate), 'dd-MMM-yyyy')}'`);
+        }
+        if (oldBooking.lrNo !== newBooking.lrNo) {
+            changes.push(`- GR Number changed from '${oldBooking.lrNo}' to '${newBooking.lrNo}'`);
+        }
+        if (oldBooking.lrType !== newBooking.lrType) {
+            changes.push(`- Booking Type changed from '${oldBooking.lrType}' to '${newBooking.lrType}'`);
+        }
+        if (oldBooking.fromCity !== newBooking.fromCity) {
+            changes.push(`- From Station changed from '${oldBooking.fromCity}' to '${newBooking.fromCity}'`);
+        }
+        if (oldBooking.toCity !== newBooking.toCity) {
+            changes.push(`- To Station changed from '${oldBooking.toCity}' to '${newBooking.toCity}'`);
+        }
+        if (oldBooking.sender !== newBooking.sender) {
+            changes.push(`- Sender changed from '${oldBooking.sender}' to '${newBooking.sender}'`);
+        }
+        if (oldBooking.receiver !== newBooking.receiver) {
+            changes.push(`- Receiver changed from '${oldBooking.receiver}' to '${newBooking.receiver}'`);
+        }
+         if (oldBooking.totalAmount !== newBooking.totalAmount) {
+            changes.push(`- Grand Total changed from '${oldBooking.totalAmount.toFixed(2)}' to '${newBooking.totalAmount.toFixed(2)}'`);
+        }
     }
     
-    if (oldBooking.lrNo !== newBooking.lrNo) {
-        changes.push(`- GR Number changed from '${oldBooking.lrNo}' to '${newBooking.lrNo}'`);
-    }
-
-    if (oldBooking.lrType !== newBooking.lrType) {
-        changes.push(`- Booking Type changed from '${oldBooking.lrType}' to '${newBooking.lrType}'`);
-    }
-    if (oldBooking.fromCity !== newBooking.fromCity) {
-        changes.push(`- From Station changed from '${oldBooking.fromCity}' to '${newBooking.fromCity}'`);
-    }
-    if (oldBooking.toCity !== newBooking.toCity) {
-        changes.push(`- To Station changed from '${oldBooking.toCity}' to '${newBooking.toCity}'`);
-    }
-    if (oldBooking.sender !== newBooking.sender) {
-        changes.push(`- Sender changed from '${oldBooking.sender}' to '${newBooking.sender}'`);
-    }
-    if (oldBooking.receiver !== newBooking.receiver) {
-        changes.push(`- Receiver changed from '${oldBooking.receiver}' to '${newBooking.receiver}'`);
-    }
-     if (oldBooking.totalAmount !== newBooking.totalAmount) {
-        changes.push(`- Grand Total changed from '${oldBooking.totalAmount.toFixed(2)}' to '${newBooking.totalAmount.toFixed(2)}'`);
-    }
-    
-    // Deep compare item rows
+    // Deep compare item rows (always checked)
     const oldItems = oldBooking.itemRows || [];
     const newItems = newBooking.itemRows || [];
     const maxItems = Math.max(oldItems.length, newItems.length);
@@ -151,10 +158,10 @@ const isRowPartiallyFilled = (row: ItemRow) => {
     return filledFields.length > 0 && filledFields.length < 4;
 };
 
-export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false }: BookingFormProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
-    const isEditMode = !!trackingId && !isViewOnly;
+    const isEditMode = !!trackingId && !isViewOnly && !isPartialCancel;
     const isOfflineMode = mode === 'offline';
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
@@ -202,7 +209,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
 
     const generateGrNumber = (bookings: Booking[], prefix: string) => {
-        if (isOfflineMode || isEditMode) return '';
+        if (isOfflineMode || isEditMode || isPartialCancel) return '';
 
         const relevantGrNumbers = bookings
             .map(b => b.lrNo)
@@ -248,7 +255,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             
             let keyCounter = 1;
 
-            if (trackingId) { // This covers both edit and view modes
+            if (trackingId) { // This covers edit, view and partial cancel modes
                 const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId);
                 if (bookingToLoad) {
                     const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
@@ -290,7 +297,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [isEditMode, trackingId, toast, loadMasterData, isOfflineMode]);
+    }, [isEditMode, isPartialCancel, trackingId, toast, loadMasterData, isOfflineMode]);
 
     useEffect(() => {
         loadInitialData();
@@ -353,7 +360,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
         const currentStatus: Booking['status'] = 'In Stock';
-        const currentBooking = isEditMode ? allBookings.find(b => b.trackingId === trackingId) : undefined;
+        const currentBooking = (isEditMode || isPartialCancel) ? allBookings.find(b => b.trackingId === trackingId) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
@@ -378,18 +385,18 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         };
 
         try {
-            if (isEditMode && currentBooking) {
+            if ((isEditMode || isPartialCancel) && currentBooking) {
                 const updatedBooking = { ...currentBooking, ...newBookingData };
-                const changeDetails = generateChangeDetails(currentBooking, updatedBooking);
+                const changeDetails = generateChangeDetails(currentBooking, updatedBooking, isPartialCancel);
                 
                 const updatedBookings = allBookings.map(b => b.trackingId === trackingId ? updatedBooking : b);
                 saveBookings(updatedBookings);
                 
                 if (changeDetails !== 'No changes detected.') {
-                    addHistoryLog(currentGrNumber, 'Booking Updated', 'Admin', changeDetails);
+                    addHistoryLog(currentGrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
                 }
 
-                toast({ title: 'Booking Updated', description: `Successfully updated GR Number: ${currentGrNumber}` });
+                toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated GR Number: ${currentGrNumber}` });
                 if (onSaveSuccess) onSaveSuccess();
             } else {
                 const newBooking: Booking = { trackingId: `TRK-${Date.now()}`, ...newBookingData };
@@ -459,7 +466,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, allBookings, trackingId, itemRows, currentGrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast]);
+    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentGrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -469,7 +476,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         if (!sender?.name) newErrors.sender = true;
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
-        if ((isOfflineMode || isEditMode) && !currentGrNumber) newErrors.grNumber = true;
+        if ((isOfflineMode || isEditMode || isPartialCancel) && !currentGrNumber) newErrors.grNumber = true;
 
         setErrors(newErrors);
 
@@ -489,7 +496,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             return;
         }
         
-        if (bookingType === 'PAID' && !isEditMode && !paymentMode) {
+        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode) {
             setIsPaymentDialogOpen(true);
             return;
         }
@@ -547,12 +554,17 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
         setIsDownloading(false);
     };
+    
+    const readOnly = isViewOnly || isPartialCancel;
 
   return (
     <ClientOnly>
         <div className="space-y-4">
             <h1 className="text-2xl font-bold text-primary">
-                {isEditMode ? `Edit Booking: ${currentGrNumber}` : (isViewOnly ? `View Booking: ${currentGrNumber}` : (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking'))}
+                {isEditMode ? `Edit Booking: ${currentGrNumber}` : 
+                 isViewOnly ? `View Booking: ${currentGrNumber}` :
+                 isPartialCancel ? `Partial Cancellation: ${currentGrNumber}` :
+                 (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking')}
             </h1>
             <Card className="border-2 border-green-200">
                 <CardContent className="p-4 space-y-4">
@@ -573,7 +585,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         errors={errors}
                         loadType={loadType}
                         onLoadTypeChange={setLoadType}
-                        isViewOnly={isViewOnly}
+                        isViewOnly={readOnly}
                     />
                     <PartyDetailsSection 
                         onSenderChange={setSender}
@@ -583,7 +595,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         onTaxPaidByChange={setTaxPaidBy}
                         taxPaidBy={taxPaidBy}
                         errors={errors}
-                        isViewOnly={isViewOnly}
+                        isViewOnly={readOnly}
                     />
                     {loadType === 'FTL' && (
                         <VehicleDetailsSection 
@@ -594,7 +606,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                             vendors={vendors}
                             onMasterDataChange={loadMasterData}
                             loadType={loadType}
-                            isViewOnly={isViewOnly}
+                            isViewOnly={readOnly}
                         />
                     )}
                     <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} isViewOnly={isViewOnly} />
@@ -603,7 +615,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         <ChargesSection 
                             basicFreight={basicFreight} 
                             onGrandTotalChange={setGrandTotal} 
-                            initialGrandTotal={isEditMode ? grandTotal : undefined}
+                            initialGrandTotal={isEditMode || isPartialCancel ? grandTotal : undefined}
                             isGstApplicable={isGstApplicable}
                             onChargesChange={setAdditionalCharges}
                             initialCharges={initialChargesFromBooking}
@@ -614,7 +626,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                             <DeliveryInstructionsSection 
                                 deliveryAt={deliveryAt}
                                 onDeliveryAtChange={setDeliveryAt}
-                                isViewOnly={isViewOnly}
+                                isViewOnly={readOnly}
                             />
                         </div>
                         <div className="flex flex-col gap-2">
@@ -626,7 +638,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                             </Card>
                             <MainActionsSection 
                                 onSave={() => handleSaveOrUpdate()} 
-                                isEditMode={isEditMode} 
+                                isEditMode={isEditMode}
+                                isPartialCancel={isPartialCancel} 
                                 onClose={onClose} 
                                 onReset={handleReset}
                                 isSubmitting={isSubmitting}

@@ -11,13 +11,14 @@ import { useRouter } from 'next/navigation';
 interface MainActionsSectionProps {
     onSave: () => void;
     isEditMode: boolean;
+    isPartialCancel?: boolean;
     onClose?: () => void;
     onReset?: () => void;
     isSubmitting: boolean;
     isViewOnly?: boolean;
 }
 
-export function MainActionsSection({ onSave, isEditMode, onClose, onReset, isSubmitting, isViewOnly }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
@@ -39,16 +40,23 @@ export function MainActionsSection({ onSave, isEditMode, onClose, onReset, isSub
             </div>
         );
     }
+    
+    let saveButtonText = isEditMode ? 'Update Booking' : 'Save Booking';
+    if (isPartialCancel) saveButtonText = 'Confirm Cancellation';
+
+    let savingButtonText = isEditMode ? 'Updating...' : 'Saving...';
+    if (isPartialCancel) savingButtonText = 'Confirming...';
+
 
     return (
         <div className="flex flex-col gap-2">
             <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={onSave} disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditMode ? <RefreshCw className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-                {isSubmitting ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Booking' : 'Save Booking')}
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditMode || isPartialCancel ? <RefreshCw className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+                {isSubmitting ? savingButtonText : saveButtonText}
             </Button>
             
-            {isEditMode ? (
-                <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="w-full">
+            {isEditMode || isPartialCancel ? (
+                <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <X className="mr-2 h-4 w-4" />
                     Exit Without Saving
                 </Button>
