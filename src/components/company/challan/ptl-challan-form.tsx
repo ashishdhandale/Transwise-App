@@ -153,13 +153,9 @@ export function PtlChallanForm() {
         
         let sortedEntries = Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0]));
         
-        if (cityWiseFilter !== 'all') {
-            sortedEntries = sortedEntries.filter(([cityName]) => cityName === cityWiseFilter);
-        }
-
         return sortedEntries;
 
-    }, [availableStock, cityWiseFilter]);
+    }, [availableStock]);
     
     const cityWiseFilterOptions = useMemo(() => {
         const citiesFromStock = new Set(availableStock.map(b => b.toCity));
@@ -414,19 +410,6 @@ export function PtlChallanForm() {
                                 </div>
                             </TabsContent>
                             <TabsContent value="citywise" className="pt-2 space-y-2">
-                                <div className='flex items-center gap-2'>
-                                    <Label className="text-xs">Filter by To Station:</Label>
-                                    <Select value={cityWiseFilter} onValueChange={setCityWiseFilter}>
-                                        <SelectTrigger className="h-7 text-xs w-48">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {cityWiseFilterOptions.map(opt => (
-                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                                 <ScrollArea className="h-24 border rounded-md p-2">
                                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
                                         {bookingsByCity.map(([city, bookings]) => (
