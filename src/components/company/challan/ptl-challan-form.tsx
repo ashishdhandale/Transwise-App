@@ -73,6 +73,7 @@ export function PtlChallanForm() {
     const [allStockBookings, setAllStockBookings] = useState<Booking[]>([]);
     const [grSearchTerm, setGrSearchTerm] = useState('');
     const [selectedBookings, setSelectedBookings] = useState<Booking[]>([]);
+    const [cityFilter, setCityFilter] = useState('all');
     
     // Validation State
     const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
@@ -152,7 +153,12 @@ export function PtlChallanForm() {
 
     const bookingsByCity = useMemo(() => {
         const grouped: { [city: string]: Booking[] } = {};
-        availableStock.forEach(booking => {
+        let filteredStock = availableStock;
+        if (cityFilter !== 'all') {
+            filteredStock = filteredStock.filter(b => b.toCity === cityFilter);
+        }
+
+        filteredStock.forEach(booking => {
             const cityKey = booking.toCity || 'Unknown';
             if (!grouped[cityKey]) grouped[cityKey] = [];
             grouped[cityKey].push(booking);
@@ -162,7 +168,7 @@ export function PtlChallanForm() {
         
         return sortedEntries;
 
-    }, [availableStock]);
+    }, [availableStock, cityFilter]);
     
     const cityWiseFilterOptions = useMemo(() => {
         const citiesFromStock = new Set(availableStock.map(b => b.toCity));
@@ -476,6 +482,17 @@ export function PtlChallanForm() {
                                 </div>
                             </TabsContent>
                             <TabsContent value="citywise" className="pt-2 space-y-2">
+                                 <div className="flex items-center gap-2">
+                                    <Label className="text-xs">Filter by To Station:</Label>
+                                    <Select value={cityFilter} onValueChange={setCityFilter}>
+                                        <SelectTrigger className="h-7 text-xs w-48">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {cityWiseFilterOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                                 <ScrollArea className="h-24 border rounded-md p-2">
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
                                         {bookingsByCity.map(([city, cityBookings]) => (
@@ -577,7 +594,7 @@ export function PtlChallanForm() {
              <AlertDialog open={isWeightAlertOpen} onOpenChange={setIsWeightAlertOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Vehicle Capacity Exceeded</AlertDialogTitle>
+                        <AlertDialogTitle>Vehicle is Overloaded</AlertDialogTitle>
                         <AlertDialogDescription>
                             Adding these bookings will exceed the vehicle's capacity. Do you want to continue? Overflowed items will be marked in red.
                         </AlertDialogDescription>
