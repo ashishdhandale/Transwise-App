@@ -72,6 +72,8 @@ export function PtlChallanForm() {
     const [selectedLrForSearch, setSelectedLrForSearch] = useState<string | undefined>();
     const [selectedBookings, setSelectedBookings] = useState<Booking[]>([]);
 
+    const [cityWiseFilter, setCityWiseFilter] = useState<string | undefined>();
+
 
     const loadMasterData = useCallback(() => {
         try {
@@ -159,7 +161,19 @@ export function PtlChallanForm() {
             if (!grouped[cityKey]) grouped[cityKey] = [];
             grouped[cityKey].push(booking);
         });
-        return Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0]));
+        
+        let sortedEntries = Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0]));
+        if(cityWiseFilter) {
+            sortedEntries = sortedEntries.filter(([city]) => city === cityWiseFilter);
+        }
+
+        return sortedEntries;
+
+    }, [availableStock, cityWiseFilter]);
+    
+    const cityWiseOptions = useMemo(() => {
+        const citiesFromStock = new Set(availableStock.map(b => b.toCity));
+        return Array.from(citiesFromStock).map(city => ({ label: city, value: city }));
     }, [availableStock]);
 
     const handleAddBooking = () => {
@@ -310,7 +324,7 @@ export function PtlChallanForm() {
                     <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-6 gap-2 text-xs items-end">
+                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
@@ -327,7 +341,7 @@ export function PtlChallanForm() {
                             <Label>From Station</Label>
                             <Input value={fromStation} readOnly className="h-9 text-xs" />
                         </div>
-                        <div className="space-y-0.5">
+                         <div className="space-y-0.5">
                             <Label>To Station</Label>
                             <Combobox
                                 options={toStationOptions}
@@ -406,7 +420,16 @@ export function PtlChallanForm() {
                                     <Button onClick={handleAddBooking} size="sm" className="h-8"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                                 </div>
                             </TabsContent>
-                            <TabsContent value="citywise" className="pt-2">
+                            <TabsContent value="citywise" className="pt-2 space-y-2">
+                                <div className="w-1/2">
+                                    <Combobox
+                                        options={[{ label: 'All Stations', value: 'all' }, ...cityWiseOptions]}
+                                        value={cityWiseFilter}
+                                        onChange={(val) => setCityWiseFilter(val === 'all' ? undefined : val)}
+                                        placeholder="Filter by To Station..."
+                                        searchPlaceholder="Search city..."
+                                    />
+                                </div>
                                 <ScrollArea className="h-24 border rounded-md p-2">
                                     <div className="space-y-1">
                                         {bookingsByCity.map(([city, bookings]) => (
