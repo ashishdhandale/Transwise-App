@@ -64,7 +64,7 @@ export const initialBookings: Booking[] = [
       id: 1, ewbNo: '', itemName: 'Electronics', description: '1 Box', qty: '1', actWt: '50', chgWt: '50', rate: '24', freightOn: 'Act.wt', lumpsum: '1200', pvtMark: '', invoiceNo: 'INV001', dValue: '50000'
     }]
   },
-    {
+  {
     trackingId: 'TRK-1693892022234',
     lrNo: 'CONAG02',
     bookingDate: '2024-07-29T11:00:00.000Z',
@@ -82,6 +82,62 @@ export const initialBookings: Booking[] = [
     itemRows: [{
       id: 1, ewbNo: '', itemName: 'Textiles', description: '10 Rolls', qty: '10', actWt: '250', chgWt: '250', rate: '30', freightOn: 'Act.wt', lumpsum: '7500', pvtMark: '', invoiceNo: 'INV002', dValue: '150000'
     }]
+  },
+  {
+    trackingId: 'TRK-1693892033345',
+    lrNo: 'CONAG03',
+    bookingDate: '2024-07-30T09:00:00.000Z',
+    fromCity: 'Nagpur',
+    toCity: 'Bangalore',
+    lrType: 'TBB',
+    loadType: 'FTL',
+    sender: 'NOVA INDUSTERIES',
+    receiver: 'Jane Smith',
+    itemDescription: 'Machine Parts',
+    qty: 1,
+    chgWt: 5000,
+    totalAmount: 50000,
+    status: 'In Stock',
+    itemRows: [{
+        id: 1, ewbNo: '', itemName: 'Machine Parts', description: '1 Crate', qty: '1', actWt: '5000', chgWt: '5000', rate: '10', freightOn: 'Act.wt', lumpsum: '50000', pvtMark: '', invoiceNo: 'INV003', dValue: '250000'
+    }],
+    ftlDetails: {
+      vehicleNo: 'MH-31-CQ-1234',
+      driverName: 'Ram Singh',
+      lorrySupplier: 'Reliable Transports',
+      truckFreight: 45000,
+      advance: 10000,
+      commission: 1000,
+      otherDeductions: 500,
+    }
+  },
+  {
+    trackingId: 'TRK-1693892044456',
+    lrNo: 'CONAG04',
+    bookingDate: '2024-07-31T14:20:00.000Z',
+    fromCity: 'Pune',
+    toCity: 'Nagpur',
+    lrType: 'PAID',
+    loadType: 'FTL',
+    sender: 'PARTY NAME1',
+    receiver: 'NOVA INDUSTERIES',
+    itemDescription: 'Industrial Chemicals',
+    qty: 1,
+    chgWt: 8000,
+    totalAmount: 64000,
+    status: 'In Stock',
+    itemRows: [{
+        id: 1, ewbNo: '', itemName: 'Chemicals', description: '20 Barrels', qty: '20', actWt: '8000', chgWt: '8000', rate: '8', freightOn: 'Act.wt', lumpsum: '64000', pvtMark: '', invoiceNo: 'INV004', dValue: '400000'
+    }],
+     ftlDetails: {
+      vehicleNo: 'MH-49-AT-5678',
+      driverName: 'Shyam Kumar',
+      lorrySupplier: 'Reliable Transports',
+      truckFreight: 60000,
+      advance: 20000,
+      commission: 1500,
+      otherDeductions: 0,
+    }
   }
 ];
 
