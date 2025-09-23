@@ -450,7 +450,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   
   return (
     <>
-      <div className="relative w-full overflow-x-auto border rounded-md">
+      <div className="relative overflow-x-auto border rounded-md">
           <Table>
           <TableHeader>
               <TableRow>
