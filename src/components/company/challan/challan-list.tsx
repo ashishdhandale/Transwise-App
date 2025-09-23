@@ -97,16 +97,26 @@ export function ChallanList() {
         return { pendingChallans: pending, finalizedChallans: finalized };
     }, [challans, searchQuery, finalizedSearchQuery, dateRange]);
 
-    const handleFinalize = (challanId: string) => {
-        const updatedChallans = getChallanData().map(c => {
-            if (c.challanId === challanId) {
-                return { ...c, status: 'Finalized' as const, challanId: c.challanId.replace('TEMP-', '') };
+    const handleFinalize = (challanIdToFinalize: string) => {
+        const allChallans = getChallanData();
+        const challanExists = allChallans.some(c => c.challanId === challanIdToFinalize);
+        
+        if (!challanExists) {
+            toast({ title: "Error", description: `Challan ${challanIdToFinalize} not found.`, variant: "destructive" });
+            return;
+        }
+
+        const updatedChallans = allChallans.map(c => {
+            if (c.challanId === challanIdToFinalize) {
+                const newId = c.challanId.startsWith('TEMP-') ? c.challanId.replace('TEMP-', '') : c.challanId;
+                toast({ title: "Challan Finalized", description: `Challan ${newId} has been finalized.` });
+                return { ...c, status: 'Finalized' as const, challanId: newId };
             }
             return c;
         });
+        
         saveChallanData(updatedChallans);
         setChallans(updatedChallans);
-        toast({ title: "Challan Finalized", description: `Challan ${challanId} has been finalized.` });
     };
     
     const handleDelete = (challanId: string) => {
@@ -316,3 +326,5 @@ export function ChallanList() {
         </div>
     )
 }
+
+    
