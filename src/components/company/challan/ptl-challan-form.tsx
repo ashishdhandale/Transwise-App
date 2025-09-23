@@ -451,16 +451,56 @@ export function PtlChallanForm() {
             toast({ title: "Validation Error", description: "Vehicle, Driver, and From Station are required, and at least one booking must be selected.", variant: "destructive" });
             return;
         }
-
+    
         setIsSubmitting(true);
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+    
         try {
             const allChallans = getChallanData();
             const allLrDetails = getLrDetailsData();
-            
+            const allBookings = getBookings();
+    
+            const newChallanId = challanNo; // Use the temp challan number
+            const newBookings: Booking[] = [];
+    
+            // Process selected bookings
+            const updatedBookings = allBookings.map(booking => {
+                if (selectedLrs.has(booking.trackingId)) {
+                    const dispatchQty = dispatchQuantities[booking.trackingId] ?? booking.qty;
+                    const isShortDispatch = dispatchQty < booking.qty;
+    
+                    if (isShortDispatch) {
+                        const remainingQty = booking.qty - dispatchQty;
+                        const originalAmountPerUnit = booking.totalAmount / booking.qty;
+    
+                        // Create a new booking for the remaining stock
+                        const remainingBooking: Booking = {
+                            ...booking,
+                            trackingId: `TRK-${Date.now()}-${Math.random()}`,
+                            qty: remainingQty,
+                            totalAmount: originalAmountPerUnit * remainingQty,
+                            status: 'In Stock',
+                            itemDescription: `${booking.itemDescription} (Remaining from GRN ${booking.lrNo})`,
+                            dispatchStatus: 'Short Dispatched' // Flag this as remaining stock
+                        };
+                        newBookings.push(remainingBooking);
+                         addHistoryLog(booking.lrNo, 'Booking Updated', companyProfile?.companyName || 'Admin', `Partially dispatched (${dispatchQty}/${booking.qty}) on challan ${newChallanId}. Remaining stock in new booking.`);
+                    }
+                    
+                    // Update original booking status
+                     addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallanId}`);
+                    return { ...booking, status: 'In Transit' as const, dispatchStatus: isShortDispatch ? 'Short Dispatched' : undefined };
+                }
+                return booking;
+            });
+    
+            // Combine existing, updated, and new bookings
+            const finalBookings = [...updatedBookings.filter(b => !selectedLrs.has(b.trackingId)), ...updatedBookings.filter(b => selectedLrs.has(b.trackingId)), ...newBookings];
+            saveBookings(finalBookings);
+    
+            // Create Challan and LR Details
             const newChallan: Challan = {
-                challanId: challanNo,
+                challanId: newChallanId,
                 status: 'Pending',
                 dispatchDate: format(dispatchDate, 'yyyy-MM-dd'),
                 dispatchToParty: toStation || selectedBookings[0].toCity,
@@ -478,7 +518,7 @@ export function PtlChallanForm() {
                 totalItems: totals.totalItems,
                 totalActualWeight: totals.totalActualWeight,
                 totalChargeWeight: selectedBookings.reduce((s, b) => s + b.chgWt, 0),
-                summary: {
+                 summary: {
                     grandTotal: financialSummary.totalFreight,
                     totalTopayAmount: financialSummary.toPayAmt,
                     commission: additionalCharges.commission, 
@@ -489,71 +529,20 @@ export function PtlChallanForm() {
                     debitCreditAmount: financialSummary.totalCharges,
                 }
             };
-            
             saveChallanData([...allChallans, newChallan]);
-            
+    
             const newLrDetailsForChallan: LrDetail[] = selectedBookings.map(b => ({
-                challanId: newChallan.challanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
+                challanId: newChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
                 from: b.fromCity, to: b.toCity, bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
                 itemDescription: b.itemDescription, quantity: dispatchQuantities[b.trackingId] ?? b.qty,
                 actualWeight: calculateProportionalWeight(b, dispatchQuantities[b.trackingId] ?? b.qty),
                 chargeWeight: b.chgWt, grandTotal: b.totalAmount
             }));
-
             saveLrDetailsData([...allLrDetails, ...newLrDetailsForChallan]);
-
-            let allBookings = getBookings();
-            const bookingsToUpdate = new Map<string, Booking>();
-            const newBookingsToAdd: Booking[] = [];
-
-            for (const booking of selectedBookings) {
-                const dispatchQty = dispatchQuantities[booking.trackingId];
-                if (dispatchQty !== undefined && dispatchQty !== booking.qty) {
-                    const remainingQty = booking.qty - dispatchQty;
-                    
-                    if (remainingQty > 0) { // Short dispatch
-                        // Create a new booking for the remaining quantity
-                        const remainingBooking: Booking = {
-                            ...booking,
-                            trackingId: `TRK-${Date.now()}-${Math.random()}`,
-                            qty: remainingQty,
-                            totalAmount: (booking.totalAmount / booking.qty) * remainingQty, // Pro-rate amount
-                            status: 'In Stock',
-                            dispatchStatus: 'Short Dispatched'
-                        };
-                        newBookingsToAdd.push(remainingBooking);
-
-                        // Modify original booking to reflect dispatched quantity
-                        const dispatchedBooking = {
-                            ...booking,
-                            qty: dispatchQty,
-                            totalAmount: (booking.totalAmount / booking.qty) * dispatchQty,
-                            status: 'In Transit' as const,
-                            dispatchStatus: undefined,
-                        };
-                        bookingsToUpdate.set(booking.trackingId, dispatchedBooking);
-                        addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Partially dispatched (${dispatchQty}/${booking.qty}) on challan ${newChallan.challanId}. Remaining stock in new booking.`);
-
-                    } else { // Extra dispatch or just update status
-                        const updatedBooking = { ...booking, status: 'In Transit' as const, dispatchStatus: dispatchQty > booking.qty ? 'Extra Dispatched' : undefined };
-                        bookingsToUpdate.set(booking.trackingId, updatedBooking);
-                        addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallan.challanId}`);
-                    }
-                } else {
-                     const updatedBooking = { ...booking, status: 'In Transit' as const };
-                     bookingsToUpdate.set(booking.trackingId, updatedBooking);
-                     addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallan.challanId}`);
-                }
-            }
-
-            allBookings = allBookings.map(b => bookingsToUpdate.has(b.trackingId) ? bookingsToUpdate.get(b.trackingId)! : b);
-            allBookings.push(...newBookingsToAdd);
-
-            saveBookings(allBookings);
-
-            toast({ title: "Challan Created", description: `Temporary challan ${newChallan.challanId} is now pending.` });
+    
+            toast({ title: "Challan Created", description: `Temporary challan ${newChallanId} is now pending.` });
             router.push('/company/challan');
-
+    
         } catch (error) {
             console.error("Failed to save challan", error);
             toast({ title: "Error", description: "An unexpected error occurred while saving the challan.", variant: "destructive" });
@@ -825,7 +814,7 @@ export function PtlChallanForm() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                  <Card className="p-1 h-full">
                     <CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader>
-                    <CardContent className="p-1 grid grid-cols-2 gap-1">
+                     <CardContent className="p-1 grid grid-cols-2 gap-1">
                         <Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" />
                         <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
                             {shortExtraMessages.length > 0 ? (
