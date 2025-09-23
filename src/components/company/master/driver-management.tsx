@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -22,10 +23,7 @@ import { format, isBefore, startOfToday } from 'date-fns';
 
 const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 
-const initialDrivers: Driver[] = [
-    { id: 1, name: 'Ram Singh', licenseNumber: 'DL1234567890123', mobile: '9876543210', address: '123 Driver Colony, Nagpur', licenseValidity: '2025-12-31T00:00:00.000Z', bloodGroup: 'O+', monthlySalary: 25000, photo: 'https://picsum.photos/seed/driver1/80/80' },
-    { id: 2, name: 'Shyam Kumar', licenseNumber: 'MH0987654321321', mobile: '9876543211', address: '456 Trucker Lane, Mumbai', licenseValidity: '2024-06-30T00:00:00.000Z', bloodGroup: 'A+', monthlySalary: 28000, photo: 'https://picsum.photos/seed/driver2/80/80' },
-];
+const initialDrivers: Driver[] = [];
 
 const tdClass = "whitespace-nowrap";
 

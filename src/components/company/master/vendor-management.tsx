@@ -23,11 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 
-const initialVendors: Vendor[] = [
-    { id: 1, name: 'Reliable Transports', type: 'Vehicle Supplier', address: '123 Trucking Way, Nagpur', mobile: '9876501234', email: 'contact@reliable.com', openingBalance: 0 },
-    { id: 2, name: 'Speedy Delivery Co', type: 'Delivery Agent', address: '456 Express Lane, Pune', mobile: '9876512345', email: 'speedy@delivery.co', openingBalance: 0 },
-    { id: 3, name: 'Global Forwarders', type: 'Freight Forwarder', address: '789 Ocean Drive, Mumbai', mobile: '9876523456', email: 'info@global.fwd', openingBalance: 0 },
-];
+const initialVendors: Vendor[] = [];
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";

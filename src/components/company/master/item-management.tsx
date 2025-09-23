@@ -23,9 +23,6 @@ const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 
 const initialItems: Item[] = [
     { id: 1, name: 'Frm MAS', hsnCode: '996511', description: 'General Goods' },
-    { id: 2, name: 'Electronics', hsnCode: '854200', description: 'Electronic Components' },
-    { id: 3, name: 'Textiles', hsnCode: '520800', description: 'Woven Fabrics of Cotton' },
-    { id: 4, name: 'Machine Parts', hsnCode: '848790', description: 'Machinery Parts' },
 ];
 
 const tdClass = "whitespace-nowrap";

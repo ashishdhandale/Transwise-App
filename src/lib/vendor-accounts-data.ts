@@ -5,11 +5,7 @@ import type { Vendor } from './types';
 import type { LedgerEntry } from './accounts-data';
 
 // In a real application, this data would come from a database.
-const samplePaymentsToVendors: { [vendorName: string]: LedgerEntry[] } = {
-  'Reliable Transports': [
-    { date: '2024-07-20', particulars: 'Payment Made via NEFT', debit: 15000 },
-  ],
-};
+const samplePaymentsToVendors: { [vendorName: string]: LedgerEntry[] } = {};
 
 // This function generates the ledger for vendors (payables).
 export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {

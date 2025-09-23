@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -24,10 +25,7 @@ import { format, isBefore, startOfToday } from 'date-fns';
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 
-const initialVehicles: VehicleMaster[] = [
-    { id: 1, vehicleNo: 'MH-31-CQ-1234', vehicleType: 'Truck', ownerType: 'Own', rcNo: 'RC12345', capacity: 10000, insuranceValidity: '2025-05-20T00:00:00.000Z' },
-    { id: 2, vehicleNo: 'MH-49-AT-5678', vehicleType: 'Trailer', ownerType: 'Supplier', supplierName: 'Reliable Transports', rcNo: 'RC56789', capacity: 25000, insuranceValidity: '2024-07-15T00:00:00.000Z' },
-];
+const initialVehicles: VehicleMaster[] = [];
 
 const tdClass = "whitespace-nowrap";
 

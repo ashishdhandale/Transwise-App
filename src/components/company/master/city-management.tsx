@@ -28,13 +28,7 @@ type CityListSource = 'default' | 'custom';
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 
-const initialCities: City[] = [
-    { id: 1, name: 'Nagpur', aliasCode: 'NGP', pinCode: '440001' },
-    { id: 2, name: 'Pune', aliasCode: 'PUN', pinCode: '411001' },
-    { id: 3, name: 'Mumbai', aliasCode: 'BOM', pinCode: '400001' },
-    { id: 4, name: 'Delhi', aliasCode: 'DEL', pinCode: '110001' },
-    { id: 5, name: 'Bangalore', aliasCode: 'BLR', pinCode: '560001' },
-];
+const initialCities: City[] = [];
 
 const tdClass = "whitespace-nowrap";
 

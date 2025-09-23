@@ -12,21 +12,7 @@ export interface LedgerEntry {
 }
 
 // In a real application, this data would come from a database.
-const sampleCreditData: { [customerName: string]: LedgerEntry[] } = {
-  'NOVA INDUSTERIES': [
-    { date: '2024-04-15', particulars: 'Payment Received', credit: 30000 },
-    { date: '2024-05-20', particulars: 'Payment Received', credit: 50000 },
-    { date: '2024-06-05', particulars: 'Credit Note #CN-05', credit: 5000 },
-  ],
-  'MONIKA SALES': [
-    { date: '2024-04-05', particulars: 'Advance Payment', credit: 20000 },
-    { date: '2024-06-01', particulars: 'Payment Received', credit: 25000 },
-  ],
-  'PARTY NAME1': [
-    { date: '2024-06-20', particulars: 'Payment Received', credit: 100000 },
-  ],
-   'Madhav Enterprises': [],
-};
+const sampleCreditData: { [customerName: string]: LedgerEntry[] } = {};
 
 // This function now dynamically generates the ledger from bookings.
 export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
