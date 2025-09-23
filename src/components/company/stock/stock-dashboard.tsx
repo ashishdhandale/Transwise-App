@@ -221,7 +221,7 @@ export function StockDashboard() {
             </CardHeader>
             <CardContent>
                 <div className="overflow-y-auto border rounded-md max-h-[70vh]">
-                <Table className="relative">
+                <Table>
                     <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                         <TableHead className={cn(thClass, 'w-12')}>
