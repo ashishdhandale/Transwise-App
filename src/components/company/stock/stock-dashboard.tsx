@@ -224,24 +224,24 @@ export function StockDashboard() {
                 <Table className="relative">
                     <TableHeader className="sticky top-0 z-10">
                     <TableRow>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>
+                        <TableHead className={cn(thClass, 'bg-card')}>
                              <Checkbox 
                                 onCheckedChange={handleSelectAll}
                                 checked={filteredStock.length > 0 && selectedLrs.size === filteredStock.length}
                                 aria-label="Select all rows"
                             />
                         </TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>LR No.</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>Booking Type</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>Booking Date</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>From</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>To</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>Sender</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>Receiver</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>Item</TableHead>
-                        <TableHead className={cn(thClass, 'text-right', 'bg-primary/10')}>Qty</TableHead>
-                        <TableHead className={cn(thClass, 'text-right', 'bg-primary/10')}>Chg. Wt.</TableHead>
-                        <TableHead className={cn(thClass, 'bg-primary/10')}>Status</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>LR No.</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>Booking Type</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>Booking Date</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>From</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>To</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>Sender</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>Receiver</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>Item</TableHead>
+                        <TableHead className={cn(thClass, 'text-right', 'bg-card')}>Qty</TableHead>
+                        <TableHead className={cn(thClass, 'text-right', 'bg-card')}>Chg. Wt.</TableHead>
+                        <TableHead className={cn(thClass, 'bg-card')}>Status</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
