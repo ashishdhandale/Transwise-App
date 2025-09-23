@@ -25,6 +25,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -186,6 +196,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
     const receiptRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const [isStationAlertOpen, setIsStationAlertOpen] = useState(false);
 
 
     const generateGrNumber = (bookings: Booking[], prefix: string) => {
@@ -338,41 +349,11 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
         return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
 
-
-    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online') => {
-        const newErrors: { [key: string]: boolean } = {};
-        if (!fromStation) newErrors.fromStation = true;
-        if (!toStation) newErrors.toStation = true;
-        if (!sender?.name) newErrors.sender = true;
-        if (!receiver?.name) newErrors.receiver = true;
-        if (!bookingDate) newErrors.bookingDate = true;
-        if ((isOfflineMode || isEditMode) && !currentGrNumber) newErrors.grNumber = true;
-
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length > 0) {
-            toast({ title: 'Missing Information', description: 'Please fill all required fields.', variant: 'destructive' });
-            return;
-        }
-        
-        const validRows = itemRows.filter(row => !isRowEmpty(row));
-        if (validRows.some(isRowPartiallyFilled)) {
-             toast({ title: 'Incomplete Item Details', description: 'Please fill all required fields (*) for each item row, or clear the row.', variant: 'destructive' });
-             return;
-        }
-        
-        if (bookingType === 'PAID' && !isEditMode && !paymentMode) {
-            setIsPaymentDialogOpen(true);
-            return;
-        }
-
-        setIsSubmitting(true);
-        if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
-        await new Promise(resolve => setTimeout(resolve, 100)); // allow UI to update
-
+    const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
         const isFtlBooking = loadType === 'FTL';
         const currentStatus = isFtlBooking ? 'In Transit' : 'In Stock';
         const currentBooking = isEditMode ? allBookings.find(b => b.trackingId === trackingId) : undefined;
+        const validRows = itemRows.filter(row => !isRowEmpty(row));
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
             lrNo: currentGrNumber,
@@ -419,7 +400,6 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                 }
                 toast({ title: 'Booking Saved', description: `Successfully saved GR Number: ${currentGrNumber}` });
 
-                // If FTL, generate and save challan
                 if (newBooking.loadType === 'FTL' && newBooking.ftlDetails) {
                     const allChallans = getChallanData();
                     const newChallanId = `CHLN${String(allChallans.length + 1).padStart(3, '0')}`;
@@ -445,7 +425,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                         totalItems: newBooking.itemRows.length,
                         totalActualWeight: newBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
                         totalChargeWeight: newBooking.chgWt,
-                        summary: { // Simplified summary, adjust as needed
+                        summary: {
                             grandTotal: newBooking.totalAmount,
                             totalTopayAmount: newBooking.lrType === 'TOPAY' ? newBooking.totalAmount : 0,
                             commission: newBooking.ftlDetails.commission,
@@ -487,6 +467,46 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
         } finally {
             setIsSubmitting(false);
         }
+    }, [loadType, isEditMode, allBookings, trackingId, itemRows, currentGrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast]);
+
+
+    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
+        const newErrors: { [key: string]: boolean } = {};
+        if (!fromStation) newErrors.fromStation = true;
+        if (!toStation) newErrors.toStation = true;
+        if (!sender?.name) newErrors.sender = true;
+        if (!receiver?.name) newErrors.receiver = true;
+        if (!bookingDate) newErrors.bookingDate = true;
+        if ((isOfflineMode || isEditMode) && !currentGrNumber) newErrors.grNumber = true;
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) {
+            toast({ title: 'Missing Information', description: 'Please fill all required fields.', variant: 'destructive' });
+            return;
+        }
+        
+        const validRows = itemRows.filter(row => !isRowEmpty(row));
+        if (validRows.some(isRowPartiallyFilled)) {
+             toast({ title: 'Incomplete Item Details', description: 'Please fill all required fields (*) for each item row, or clear the row.', variant: 'destructive' });
+             return;
+        }
+
+        if (fromStation?.name === toStation?.name && !forceSave) {
+            setIsStationAlertOpen(true);
+            return;
+        }
+        
+        if (bookingType === 'PAID' && !isEditMode && !paymentMode) {
+            setIsPaymentDialogOpen(true);
+            return;
+        }
+
+        setIsSubmitting(true);
+        if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        await proceedWithSave(paymentMode);
     };
     
     const handleDownloadPdf = async () => {
@@ -582,9 +602,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                             loadType={loadType}
                         />
                     )}
-                    <div className="overflow-x-auto">
-                        <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
-                    </div>
+                    <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
                     
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
                         <ChargesSection 
@@ -620,11 +638,31 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                     </div>
                 </CardContent>
             </Card>
+
+            <AlertDialog open={isStationAlertOpen} onOpenChange={setIsStationAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Station Warning</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            The 'From' and 'To' stations are the same. Are you sure you want to continue with this booking?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                            setIsStationAlertOpen(false);
+                            handleSaveOrUpdate(undefined, true);
+                        }}>
+                            Continue Anyway
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             
             <PaymentDialog
                 isOpen={isPaymentDialogOpen}
                 onOpenChange={setIsPaymentDialogOpen}
-                onConfirm={handleSaveOrUpdate}
+                onConfirm={(paymentMode) => handleSaveOrUpdate(paymentMode)}
                 amount={grandTotal}
             />
 
