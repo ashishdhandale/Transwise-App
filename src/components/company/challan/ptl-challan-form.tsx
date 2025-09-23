@@ -271,9 +271,18 @@ export function PtlChallanForm() {
         }
     };
 
-    const cityOptions = useMemo(() => [{ label: 'ALL', value: 'ALL' }, ...cities.map(c => ({ label: c.name, value: c.name }))], [cities]);
+    const cityOptions = useMemo(() => {
+        const allCities = new Set(allStockBookings.map(b => b.fromCity));
+        const cityList = Array.from(allCities).map(c => ({ label: c, value: c }));
+        return [{ label: 'ALL', value: 'ALL' }, ...cityList.sort((a,b) => a.label.localeCompare(b.label))];
+    }, [allStockBookings]);
+
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
-    const dispatchToOptions = useMemo(() => cities.map(c => ({label: c.name, value: c.name})), [cities]);
+    
+    const dispatchToOptions = useMemo(() => {
+        const uniqueTos = new Set(selectedBookings.map(b => b.toCity));
+        return Array.from(uniqueTos).map(city => ({label: city, value: city}));
+    }, [selectedBookings]);
 
 
     if (isLoading) return <p>Loading form...</p>;
@@ -311,7 +320,7 @@ export function PtlChallanForm() {
                     </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
-                            <Label>Challan No.</Label>
+                            <Label>Lot No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
                         </div>
                          <div className="space-y-0.5">
@@ -334,65 +343,79 @@ export function PtlChallanForm() {
                 </CardContent>
             </Card>
 
-            {/* Search/Selection Section */}
-            <Card>
-                 <CardHeader>
-                    <CardTitle className="text-base font-headline">Select Bookings for Challan</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Tabs defaultValue="search">
-                        <TabsList className="h-8">
-                            <TabsTrigger value="search" className="text-xs h-7">Search &amp; Select GR</TabsTrigger>
-                            <TabsTrigger value="citywise" className="text-xs h-7">City-wise Bulk Select</TabsTrigger>
-                             <TabsTrigger value="list" className="text-xs h-7">Select From List</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="search" className="pt-2">
-                            <div className="flex items-center gap-2">
-                                <Combobox 
-                                    options={availableBookingsForDropdown}
-                                    value={selectedLrForSearch}
-                                    onChange={setSelectedLrForSearch}
-                                    placeholder="Search & Select GR No..."
-                                    notFoundMessage="No available GRs for this station."
-                                />
-                                <Button onClick={handleAddBooking} size="sm" className="h-8"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="citywise" className="pt-2">
-                            <ScrollArea className="h-32 border rounded-md p-2">
-                                <div className="space-y-1">
-                                    {bookingsByCity.map(([city, bookings]) => (
-                                        <div key={city} className="flex items-center space-x-2">
-                                            <Checkbox id={`city-${city}`} onCheckedChange={(c) => handleCitySelectionChange(city, c)} checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} />
-                                            <label htmlFor={`city-${city}`} className="text-xs font-medium">{city} ({bookings.length})</label>
-                                        </div>
-                                    ))}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                <Card>
+                    <CardHeader className="p-2">
+                        <CardTitle className="text-sm font-headline">Dispatch Section</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-2 text-xs space-y-1">
+                        <p><strong>Challan ID:</strong> <span className="text-red-600 font-bold">{challanNo}</span></p>
+                        <p><strong>Challan Date:</strong> {format(challanDate, 'dd-MMM-yyyy')}</p>
+                        <p><strong>Driver Name:</strong> {driverName || 'N/A'}</p>
+                        <p><strong>Receiver Party Name:</strong> {dispatchTo || 'N/A'}</p>
+                    </CardContent>
+                </Card>
+
+                {/* Search/Selection Section */}
+                <Card>
+                    <CardHeader className="p-2">
+                        <CardTitle className="text-sm font-headline">Select Bookings for Challan</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-2">
+                        <Tabs defaultValue="search">
+                            <TabsList className="h-8">
+                                <TabsTrigger value="search" className="text-xs h-7">Search &amp; Select GR</TabsTrigger>
+                                <TabsTrigger value="citywise" className="text-xs h-7">City-wise Bulk Select</TabsTrigger>
+                                <TabsTrigger value="list" className="text-xs h-7">Select From List</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="search" className="pt-2">
+                                <div className="flex items-center gap-2">
+                                    <Combobox 
+                                        options={availableBookingsForDropdown}
+                                        value={selectedLrForSearch}
+                                        onChange={setSelectedLrForSearch}
+                                        placeholder="Search & Select GR No..."
+                                        notFoundMessage="No available GRs for this station."
+                                    />
+                                    <Button onClick={handleAddBooking} size="sm" className="h-8"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                                 </div>
-                            </ScrollArea>
-                        </TabsContent>
-                        <TabsContent value="list" className="pt-2">
-                            <ScrollArea className="h-40 mt-2 border rounded-md">
-                                <Table>
-                                    <TableHeader><TableRow><TableHead className={thClass}>Select</TableHead><TableHead className={thClass}>LR No</TableHead><TableHead className={thClass}>To</TableHead><TableHead className={thClass}>Consignee</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Chg wt.</TableHead></TableRow></TableHeader>
-                                    <TableBody>
-                                        {stockBookingsFromStation.map(b => (
-                                            <TableRow key={b.trackingId} className={cn(selectedBookings.some(sb => sb.trackingId === b.trackingId) && 'bg-blue-100/50')}>
-                                                <TableCell className={tdClass}><Checkbox onCheckedChange={(c) => handleToggleBookingSelection(b.trackingId, c)} checked={selectedBookings.some(sb => sb.trackingId === b.trackingId)} /></TableCell>
-                                                <TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}>{b.chgWt.toFixed(2)}</TableCell>
-                                            </TableRow>
+                            </TabsContent>
+                            <TabsContent value="citywise" className="pt-2">
+                                <ScrollArea className="h-24 border rounded-md p-2">
+                                    <div className="space-y-1">
+                                        {bookingsByCity.map(([city, bookings]) => (
+                                            <div key={city} className="flex items-center space-x-2">
+                                                <Checkbox id={`city-${city}`} onCheckedChange={(c) => handleCitySelectionChange(city, c)} checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} />
+                                                <label htmlFor={`city-${city}`} className="text-xs font-medium">{city} ({bookings.length})</label>
+                                            </div>
                                         ))}
-                                    </TableBody>
-                                </Table>
-                            </ScrollArea>
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-            </Card>
+                                    </div>
+                                </ScrollArea>
+                            </TabsContent>
+                            <TabsContent value="list" className="pt-2">
+                                <ScrollArea className="h-40 mt-2 border rounded-md">
+                                    <Table>
+                                        <TableHeader><TableRow><TableHead className={thClass}>Select</TableHead><TableHead className={thClass}>LR No</TableHead><TableHead className={thClass}>To</TableHead><TableHead className={thClass}>Consignee</TableHead><TableHead className={thClass}>Qty</TableHead><TableHead className={thClass}>Chg wt.</TableHead></TableRow></TableHeader>
+                                        <TableBody>
+                                            {stockBookingsFromStation.map(b => (
+                                                <TableRow key={b.trackingId} className={cn(selectedBookings.some(sb => sb.trackingId === b.trackingId) && 'bg-blue-100/50')}>
+                                                    <TableCell className={tdClass}><Checkbox onCheckedChange={(c) => handleToggleBookingSelection(b.trackingId, c)} checked={selectedBookings.some(sb => sb.trackingId === b.trackingId)} /></TableCell>
+                                                    <TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}>{b.chgWt.toFixed(2)}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </ScrollArea>
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
+            </div>
             
             {/* Consignment Details */}
             <Card>
-                 <CardHeader>
-                    <CardTitle className="text-base font-headline">Consignment Details</CardTitle>
+                 <CardHeader className="p-2">
+                    <CardTitle className="text-sm font-headline">Consignment Details</CardTitle>
                     <div className="flex justify-between items-center text-xs font-bold text-red-600 pt-2">
                         <div className="flex gap-4">
                             <span>Total LR's : {selectedBookings.length}</span>
@@ -405,7 +428,7 @@ export function PtlChallanForm() {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-2">
                     <ScrollArea className="h-40 border rounded-md">
                         <Table>
                             <TableHeader>
