@@ -71,6 +71,7 @@ export function PtlChallanForm() {
     const [allStockBookings, setAllStockBookings] = useState<Booking[]>([]);
     const [selectedLrForSearch, setSelectedLrForSearch] = useState<string | undefined>();
     const [selectedBookings, setSelectedBookings] = useState<Booking[]>([]);
+    const [cityWiseFilter, setCityWiseFilter] = useState<string>('all');
 
 
     const loadMasterData = useCallback(() => {
@@ -139,11 +140,8 @@ export function PtlChallanForm() {
         if (fromStation) {
             bookings = bookings.filter(b => b.fromCity.toLowerCase() === fromStation.toLowerCase());
         }
-        if (toStation) {
-            bookings = bookings.filter(b => b.toCity.toLowerCase() === toStation.toLowerCase());
-        }
         return bookings;
-    }, [allStockBookings, fromStation, toStation]);
+    }, [allStockBookings, fromStation]);
 
     const availableBookingsForDropdown = useMemo(() => {
         const selectedTrackingIds = new Set(selectedBookings.map(b => b.trackingId));
@@ -162,8 +160,21 @@ export function PtlChallanForm() {
         
         let sortedEntries = Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0]));
         
+        if (cityWiseFilter !== 'all') {
+            sortedEntries = sortedEntries.filter(([cityName]) => cityName === cityWiseFilter);
+        }
+
         return sortedEntries;
 
+    }, [availableStock, cityWiseFilter]);
+    
+    const cityWiseFilterOptions = useMemo(() => {
+        const citiesFromStock = new Set(availableStock.map(b => b.toCity));
+        const options = [{ label: 'All Stations', value: 'all' }];
+        citiesFromStock.forEach(city => {
+            options.push({ label: city, value: city });
+        });
+        return options;
     }, [availableStock]);
     
 
@@ -315,7 +326,7 @@ export function PtlChallanForm() {
                     <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
+                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
@@ -342,11 +353,17 @@ export function PtlChallanForm() {
                                 searchPlaceholder="Search City..."
                             />
                         </div>
-                        <div className="space-y-0.5">
-                            <Label>Dispatch To</Label>
-                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select party/agent..." searchPlaceholder="Search Party/Agent..." />
-                        </div>
                          <div className="space-y-0.5">
+                            <Label>Dispatch To</Label>
+                            <Combobox
+                                options={dispatchToOptions}
+                                value={dispatchTo}
+                                onChange={setDispatchTo}
+                                placeholder="Select party/agent..."
+                                searchPlaceholder="Search Party/Agent..."
+                            />
+                        </div>
+                        <div className="space-y-0.5">
                             <Label>Veh.Hire Receipt No</Label>
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
@@ -374,19 +391,7 @@ export function PtlChallanForm() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                <Card>
-                    <CardHeader className="p-2">
-                        <CardTitle className="text-sm font-headline">Dispatch Section</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-2 text-xs space-y-1">
-                        <p><strong>Challan ID:</strong> <span className="text-red-600 font-bold">{challanNo}</span></p>
-                        <p><strong>Challan Date:</strong> {format(challanDate, 'dd-MMM-yyyy')}</p>
-                        <p><strong>Driver Name:</strong> {driverName || 'N/A'}</p>
-                        <p><strong>Receiver Party Name:</strong> {dispatchTo || toStation || 'N/A'}</p>
-                    </CardContent>
-                </Card>
-
+            <div className="grid grid-cols-1 gap-2">
                 {/* Search/Selection Section */}
                 <Card>
                     <CardHeader className="p-2">
@@ -412,6 +417,19 @@ export function PtlChallanForm() {
                                 </div>
                             </TabsContent>
                             <TabsContent value="citywise" className="pt-2 space-y-2">
+                                <div className='flex items-center gap-2'>
+                                    <Label className="text-xs">To Station:</Label>
+                                    <Select value={cityWiseFilter} onValueChange={setCityWiseFilter}>
+                                        <SelectTrigger className="h-7 text-xs w-48">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {cityWiseFilterOptions.map(opt => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                                 <ScrollArea className="h-24 border rounded-md p-2">
                                     <div className="space-y-1">
                                         {bookingsByCity.map(([city, bookings]) => (
