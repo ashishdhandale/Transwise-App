@@ -581,6 +581,10 @@ export function PtlChallanForm() {
         setManualLoadWt('');
     };
 
+    const handleRemoveManualEntry = (idToRemove: number) => {
+        setManualShortExtraEntries(prev => prev.filter(entry => entry.id !== idToRemove));
+    };
+
     const toStationOptions = useMemo(() => {
         return cities.map(city => ({ label: city.name, value: city.name }));
     }, [cities]);
@@ -890,6 +894,7 @@ export function PtlChallanForm() {
                                     <TableHead className={thClass}>Wt/Unit</TableHead>
                                     <TableHead className={thClass}>Act.Wt.</TableHead>
                                     <TableHead className={thClass}>Load Wt.</TableHead>
+                                    <TableHead className={thClass}>Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -905,11 +910,16 @@ export function PtlChallanForm() {
                                         <TableCell className={tdClass}>{entry.wtPerUnit}</TableCell>
                                         <TableCell className={tdClass}>{entry.actualWt}</TableCell>
                                         <TableCell className={tdClass}>{entry.loadWt}</TableCell>
+                                        <TableCell className={tdClass}>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleRemoveManualEntry(entry.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                                 {manualShortExtraEntries.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center h-16 text-muted-foreground text-xs">No manual entries added.</TableCell>
+                                        <TableCell colSpan={11} className="text-center h-16 text-muted-foreground text-xs">No manual entries added.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
