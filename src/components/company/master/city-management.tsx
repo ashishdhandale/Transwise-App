@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { bookingOptions } from '@/lib/booking-data';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { AddCityDialog } from './add-city-dialog';
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { getBookings } from '@/lib/bookings-dashboard-data';
 
 type CityListSource = 'default' | 'custom';
 
@@ -135,6 +136,48 @@ export function CityManagement() {
     return true; // Indicate success
   };
 
+  const handleSyncWithBookings = () => {
+    if (cityListSource !== 'custom') {
+      toast({
+        title: 'Action Required',
+        description: 'Please switch to "Use My Custom List" to sync booking cities.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const allBookings = getBookings();
+    const bookingCities = new Set([
+      ...allBookings.map(b => b.fromCity.trim().toUpperCase()),
+      ...allBookings.map(b => b.toCity.trim().toUpperCase()),
+    ]);
+    
+    const existingCustomCities = new Set(cities.map(c => c.name.trim().toUpperCase()));
+    const missingCities = Array.from(bookingCities).filter(bc => !existingCustomCities.has(bc));
+
+    if (missingCities.length === 0) {
+      toast({ title: 'No New Stations', description: 'Your master station list is already up-to-date with all booking locations.' });
+      return;
+    }
+
+    let nextId = cities.length > 0 ? Math.max(...cities.map(c => c.id)) + 1 : 1;
+    const newCityObjects: City[] = missingCities.map(name => ({
+      id: nextId++,
+      name,
+      aliasCode: name.substring(0, 3), // Simple alias generation
+      pinCode: '', // Pin code needs to be added manually
+    }));
+
+    const updatedCities = [...cities, ...newCityObjects];
+    saveCities(updatedCities);
+    
+    toast({
+      title: 'Sync Complete',
+      description: `${newCityObjects.length} new station(s) have been added to your custom list. Please review and update their alias and pin codes.`,
+    });
+  };
+
+
   const isCustom = cityListSource === 'custom';
 
   return (
@@ -173,9 +216,14 @@ export function CityManagement() {
                 />
             </div>
             {isCustom && (
+              <>
+                <Button onClick={handleSyncWithBookings} variant="outline">
+                  <RefreshCw className="mr-2 h-4 w-4" /> Sync with Bookings
+                </Button>
                 <Button onClick={handleAddNew}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add New Station
                 </Button>
+              </>
             )}
             </div>
         </div>
