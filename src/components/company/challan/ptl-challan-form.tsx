@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -547,6 +548,39 @@ export function PtlChallanForm() {
         }
     }
     
+    const handleAddManualEntry = () => {
+        if (!manualSelectedLr || manualLoadQty === '' || manualLoadWt === '') {
+            toast({ title: "Incomplete Entry", description: "Please fill all fields for the manual entry.", variant: "destructive" });
+            return;
+        }
+
+        const newEntry: ManualShortExtraEntry = {
+            id: Date.now(),
+            type: manualEntryType,
+            lrNoInput: manualLrNoInput,
+            selectedLr: manualSelectedLr,
+            selectedItem: manualSelectedItem || '',
+            originalQty: manualOriginalQty,
+            loadQty: manualLoadQty,
+            wtPerUnit: manualWtPerUnit,
+            actualWt: manualActualWt,
+            loadWt: manualLoadWt,
+        };
+
+        setManualShortExtraEntries(prev => [...prev, newEntry]);
+
+        // Reset fields
+        setManualLrNoInput('');
+        setSearchedLr(null);
+        setManualSelectedLr(undefined);
+        setManualSelectedItem(undefined);
+        setManualOriginalQty(0);
+        setManualLoadQty('');
+        setManualWtPerUnit(0);
+        setManualActualWt(0);
+        setManualLoadWt('');
+    };
+
     const toStationOptions = useMemo(() => {
         return cities.map(city => ({ label: city.name, value: city.name }));
     }, [cities]);
@@ -840,7 +874,7 @@ export function PtlChallanForm() {
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Load Wt.</div>
                             <Input value={manualLoadWt} onChange={e => setManualLoadWt(Number(e.target.value))} className="w-20 h-8 text-xs rounded-none border-t-0" />
                         </div>
-                        <Button size="sm" className="h-16 self-end bg-green-500 hover:bg-green-600 rounded-l-none">Add More</Button>
+                        <Button size="sm" className="h-16 self-end bg-green-500 hover:bg-green-600 rounded-l-none" onClick={handleAddManualEntry}>Add More</Button>
                     </div>
                     <div className="border rounded-md overflow-x-auto">
                         <Table>
