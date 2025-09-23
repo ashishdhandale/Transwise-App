@@ -186,15 +186,28 @@ export function PtlChallanForm() {
         return options;
     }, [availableStock]);
     
+    const calculateProportionalWeight = useCallback((booking: Booking, dispatchQty: number): number => {
+        const originalQty = booking.qty;
+        const originalWeight = booking.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
+        if (originalQty === 0 || originalWeight === 0) return 0;
+        return (dispatchQty / originalQty) * originalWeight;
+    }, []);
+    
     const totals = useMemo(() => {
         const totalItems = selectedBookings.reduce((sum, b) => sum + b.itemRows.length, 0);
         const totalPackages = selectedBookings.reduce((sum, b) => {
             const dispatchQty = dispatchQuantities[b.trackingId] ?? b.qty;
             return sum + dispatchQty;
         }, 0);
-        const totalActualWeight = selectedBookings.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0);
+        const totalActualWeight = selectedBookings.reduce((sum, b) => {
+            const dispatchQty = dispatchQuantities[b.trackingId];
+            if (dispatchQty !== undefined && dispatchQty !== b.qty) {
+                return sum + calculateProportionalWeight(b, dispatchQty);
+            }
+            return sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0);
+        }, 0);
         return { totalItems, totalPackages, totalActualWeight };
-    }, [selectedBookings, dispatchQuantities]);
+    }, [selectedBookings, dispatchQuantities, calculateProportionalWeight]);
 
     const financialSummary = useMemo(() => {
         const paidAmt = selectedBookings.filter(b => b.lrType === 'PAID').reduce((sum, b) => sum + b.totalAmount, 0);
@@ -273,7 +286,7 @@ export function PtlChallanForm() {
         }
         addSelectedBookings(bookingsToAdd);
         
-    }, [vehicleCapacity, isOverloaded, totals.totalActualWeight, selectedBookings, overflowLrNos]);
+    }, [vehicleCapacity, isOverloaded, totals.totalActualWeight, addSelectedBookings]);
 
     const handleConfirmOverload = () => {
         if (!pendingBookings.length) return;
@@ -357,7 +370,14 @@ export function PtlChallanForm() {
         }
 
         // Check if we are back under capacity
-        const remainingWeight = updatedSelection.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0);
+        const remainingWeight = updatedSelection.reduce((sum, b) => {
+            const dispatchQty = dispatchQuantities[b.trackingId];
+            if (dispatchQty !== undefined && dispatchQty !== b.qty) {
+                return sum + calculateProportionalWeight(b, dispatchQty);
+            }
+            return sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0);
+        }, 0);
+
         const vehicleCap = Number(vehicleCapacity) || 0;
         if (vehicleCap > 0 && remainingWeight <= vehicleCap) {
             setIsOverloaded(false);
@@ -408,7 +428,7 @@ export function PtlChallanForm() {
                 challanId: newChallan.challanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
                 from: b.fromCity, to: b.toCity, bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
                 itemDescription: b.itemDescription, quantity: dispatchQuantities[b.trackingId] ?? b.qty,
-                actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                actualWeight: calculateProportionalWeight(b, dispatchQuantities[b.trackingId] ?? b.qty),
                 chargeWeight: b.chgWt, grandTotal: b.totalAmount
             }));
 
@@ -602,20 +622,28 @@ export function PtlChallanForm() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {selectedBookings.map((b, i) => (
-                                    <TableRow key={b.trackingId} className={cn(overflowLrNos.has(b.lrNo) && "bg-red-200/50", modifiedQtyLrNos.has(b.lrNo) && "bg-yellow-200/50")}>
-                                        <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell>
-                                        <TableCell className={tdClass}>
-                                            <Input 
-                                                className="h-6 text-xs w-16" 
-                                                value={dispatchQuantities[b.trackingId] ?? ''} 
-                                                onChange={(e) => handleDispatchQtyChange(b.trackingId, e.target.value)} 
-                                            />
-                                        </TableCell>
-                                        <TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
-                                        <TableCell className={tdClass}><div className="flex items-center"><Button variant="ghost" size="icon" className="h-5 w-5 text-red-600" onClick={() => handleRemoveBookingFromConsignment(b.trackingId)}><X className="h-4 w-4" /></Button></div></TableCell>
-                                    </TableRow>
-                                ))}
+                                {selectedBookings.map((b, i) => {
+                                    const isModified = modifiedQtyLrNos.has(b.lrNo);
+                                    const dispatchQty = dispatchQuantities[b.trackingId];
+                                    const currentWeight = (isModified && dispatchQty !== undefined)
+                                        ? calculateProportionalWeight(b, dispatchQty)
+                                        : b.itemRows.reduce((s,i) => s+Number(i.actWt),0);
+
+                                    return (
+                                        <TableRow key={b.trackingId} className={cn(overflowLrNos.has(b.lrNo) && "bg-red-200/50", isModified && "bg-yellow-200/50")}>
+                                            <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell>
+                                            <TableCell className={tdClass}>
+                                                <Input 
+                                                    className="h-6 text-xs w-16" 
+                                                    value={dispatchQty ?? ''} 
+                                                    onChange={(e) => handleDispatchQtyChange(b.trackingId, e.target.value)} 
+                                                />
+                                            </TableCell>
+                                            <TableCell className={tdClass}>{currentWeight.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
+                                            <TableCell className={tdClass}><div className="flex items-center"><Button variant="ghost" size="icon" className="h-5 w-5 text-red-600" onClick={() => handleRemoveBookingFromConsignment(b.trackingId)}><X className="h-4 w-4" /></Button></div></TableCell>
+                                        </TableRow>
+                                    )
+                                })}
                             </TableBody>
                         </Table>
                     </ScrollArea>
@@ -679,3 +707,4 @@ export function PtlChallanForm() {
         </div>
     );
 }
+
