@@ -316,7 +316,7 @@ export function PtlChallanForm() {
                     <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-6 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
@@ -344,7 +344,7 @@ export function PtlChallanForm() {
                             </div>
                         </div>
                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 text-xs items-end">
+                     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Veh.Hire Receipt No</Label>
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
