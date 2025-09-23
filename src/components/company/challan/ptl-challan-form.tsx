@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -744,17 +745,44 @@ export function PtlChallanForm() {
                     <CardTitle className="text-sm font-headline">Extra / Short Entries</CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 space-y-2">
-                     <div className="flex items-center gap-2 text-xs border p-2 rounded-md">
-                        <Select defaultValue="Extra"><SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Extra">Extra</SelectItem><SelectItem value="Short">Short</SelectItem></SelectContent></Select>
-                        <Input placeholder="LR NO" className="w-24 h-8 text-xs" />
-                        <Select><SelectTrigger className="w-24 h-8 text-xs"><SelectValue placeholder="SELECT LR" /></SelectTrigger><SelectContent>{selectedBookings.map(b => <SelectItem key={b.trackingId} value={b.lrNo}>{b.lrNo}</SelectItem>)}</SelectContent></Select>
-                        <Select><SelectTrigger className="w-24 h-8 text-xs"><SelectValue placeholder="Select Item" /></SelectTrigger><SelectContent>{items.map(i => <SelectItem key={i.id} value={i.name}>{i.name}</SelectItem>)}</SelectContent></Select>
-                        <Input placeholder="QTY" className="w-16 h-8 text-xs" />
-                        <Input placeholder="LOAD QTY" className="w-20 h-8 text-xs" />
-                        <Input placeholder="Wt/Unit" className="w-20 h-8 text-xs" />
-                        <Input placeholder="Act.Wt" className="w-20 h-8 text-xs" />
-                        <Input placeholder="Load Wt." className="w-20 h-8 text-xs" />
-                        <Button size="sm" className="h-8 bg-green-500 hover:bg-green-600">Add More</Button>
+                     <div className="flex items-stretch gap-[1px] text-xs">
+                        <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Extra/Short LR</div>
+                            <Select defaultValue="Extra"><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" /></Select>
+                        </div>
+                        <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">LR NO</div>
+                            <Input placeholder="LR NO" className="w-24 h-8 text-xs rounded-none border-t-0" />
+                        </div>
+                        <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">SELECT LR</div>
+                            <Select><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" /></Select>
+                        </div>
+                        <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Select Item</div>
+                             <Select><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" /></Select>
+                        </div>
+                         <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">QTY</div>
+                            <Input readOnly className="w-14 h-8 text-xs rounded-none border-t-0 text-center" />
+                        </div>
+                         <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">LOAD QTY</div>
+                            <Input className="w-20 h-8 text-xs rounded-none border-t-0" />
+                        </div>
+                         <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Wt/Unit</div>
+                            <Input readOnly className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
+                        </div>
+                         <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Act.Wt.</div>
+                            <Input readOnly className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
+                        </div>
+                         <div className="flex flex-col">
+                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Load Wt.</div>
+                            <Input className="w-20 h-8 text-xs rounded-none border-t-0" />
+                        </div>
+                        <Button size="sm" className="h-16 self-end bg-green-500 hover:bg-green-600 rounded-l-none">Add More</Button>
                     </div>
                     <div className="border rounded-md overflow-x-auto">
                         <Table>
