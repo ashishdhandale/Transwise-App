@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, MoreHorizontal, Search, PlusCircle, Pencil, Trash2, CheckCircle, Eye } from 'lucide-react';
+import { FileText, MoreHorizontal, Search, PlusCircle, Pencil, Trash2, CheckCircle, Eye, Calendar as CalendarIcon } from 'lucide-react';
 import { getChallanData, type Challan, saveChallanData, getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
@@ -32,6 +32,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { addHistoryLog } from '@/lib/history-data';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format, parseISO, isWithinInterval } from 'date-fns';
+import type { DateRange } from 'react-day-picker';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 
@@ -39,6 +43,8 @@ export function ChallanList() {
     const [challans, setChallans] = useState<Challan[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [finalizedSearchQuery, setFinalizedSearchQuery] = useState('');
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -57,12 +63,39 @@ export function ChallanList() {
 
     const { pendingChallans, finalizedChallans } = useMemo(() => {
         const all = getChallanData();
-        const pending = all.filter(c => c.status === 'Pending')
+        const pending = all.filter(c => c.status === 'Pending' && (
+                c.challanId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.vehicleNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.toStation.toLowerCase().includes(searchQuery.toLowerCase())
+            ))
             .sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
-        const finalized = all.filter(c => c.status === 'Finalized')
-            .sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
+            
+        let finalized = all.filter(c => c.status === 'Finalized');
+
+        if (dateRange?.from && dateRange?.to) {
+            finalized = finalized.filter(c => {
+                try {
+                    const dispatchDate = parseISO(c.dispatchDate);
+                    return isWithinInterval(dispatchDate, { start: dateRange.from!, end: dateRange.to! });
+                } catch (e) {
+                    return false;
+                }
+            });
+        }
+        
+        if (finalizedSearchQuery) {
+            const lowerQuery = finalizedSearchQuery.toLowerCase();
+            finalized = finalized.filter(c => 
+                c.challanId.toLowerCase().includes(lowerQuery) ||
+                c.vehicleNo.toLowerCase().includes(lowerQuery) ||
+                c.toStation.toLowerCase().includes(lowerQuery)
+            );
+        }
+
+        finalized.sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
+
         return { pendingChallans: pending, finalizedChallans: finalized };
-    }, [challans]);
+    }, [challans, searchQuery, finalizedSearchQuery, dateRange]);
 
     const handleFinalize = (challanId: string) => {
         const updatedChallans = getChallanData().map(c => {
@@ -113,10 +146,62 @@ export function ChallanList() {
 
     const tdClass = "p-2 whitespace-nowrap";
 
-    const ChallanTable = ({ title, data, isPending = false }: { title: string, data: Challan[], isPending?: boolean }) => (
+    const ChallanTable = ({ title, data, isPending = false, onSearchChange, searchValue }: { title: string, data: Challan[], isPending?: boolean, onSearchChange?: (val: string) => void, searchValue?: string }) => (
         <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between">
                 <CardTitle className="font-headline">{title}</CardTitle>
+                 {onSearchChange && (
+                     <div className="relative w-full max-w-sm">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search by ID, Vehicle, Station..."
+                            className="pl-8"
+                            value={searchValue}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                        />
+                    </div>
+                 )}
+                 {!isPending && (
+                    <div className="flex items-center gap-2">
+                        <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            id="date"
+                            variant={"outline"}
+                            className={cn(
+                              "w-[260px] justify-start text-left font-normal",
+                              !dateRange && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateRange?.from ? (
+                              dateRange.to ? (
+                                <>
+                                  {format(dateRange.from, "LLL dd, y")} -{" "}
+                                  {format(dateRange.to, "LLL dd, y")}
+                                </>
+                              ) : (
+                                format(dateRange.from, "LLL dd, y")
+                              )
+                            ) : (
+                              <span>Pick a date range</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                          <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={setDateRange}
+                            numberOfMonths={2}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                 )}
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto border rounded-md max-h-[75vh]">
@@ -205,16 +290,6 @@ export function ChallanList() {
                     Challan List
                 </h1>
                 <div className="flex items-center gap-4">
-                     <div className="relative w-full max-w-sm">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search challans..."
-                            className="pl-8"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
                     <Button asChild>
                         <Link href="/company/challan/new">
                             <PlusCircle className="mr-2 h-4 w-4" /> New PTL Challan
@@ -224,8 +299,19 @@ export function ChallanList() {
             </header>
             
             <div className="space-y-6">
-                <ChallanTable title="Pending Challans" data={pendingChallans} isPending />
-                <ChallanTable title="Finalized Challans" data={finalizedChallans} />
+                <ChallanTable 
+                    title="Pending Challans" 
+                    data={pendingChallans} 
+                    isPending 
+                    onSearchChange={setSearchQuery} 
+                    searchValue={searchQuery}
+                />
+                <ChallanTable 
+                    title="Finalized Challans" 
+                    data={finalizedChallans} 
+                    onSearchChange={setFinalizedSearchQuery}
+                    searchValue={finalizedSearchQuery}
+                />
             </div>
         </div>
     )
