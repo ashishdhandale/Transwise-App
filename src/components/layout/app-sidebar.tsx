@@ -23,6 +23,7 @@ import {
   Database,
   FileSignature,
   FileText,
+  FileX,
   Handshake,
   History,
   Home,
@@ -368,6 +369,11 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                     <SidebarMenuButton href="/company/reports/booking-type" size="sm" isActive={pathname === '/company/reports/booking-type'} tooltip="Booking Type Wise Report">
                         <List /> Booking Type Wise
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton href="/company/reports/cancellation" size="sm" isActive={pathname === '/company/reports/cancellation'} tooltip="Cancellation Report">
+                        <FileX /> Cancellation Report
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
