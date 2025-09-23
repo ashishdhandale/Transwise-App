@@ -120,6 +120,18 @@ export function PtlChallanForm() {
         vehFreight: 0, vehAdvance: 0, fuelLtr: 0, fuelAmt: 0
     });
 
+    // Manual Short/Extra State
+    const [manualEntryType, setManualEntryType] = useState<'Extra' | 'Short'>('Extra');
+    const [manualLrNoInput, setManualLrNoInput] = useState('');
+    const [searchedLr, setSearchedLr] = useState<Booking | null>(null);
+    const [manualSelectedLr, setManualSelectedLr] = useState<string | undefined>();
+    const [manualSelectedItem, setManualSelectedItem] = useState<string | undefined>();
+    const [manualOriginalQty, setManualOriginalQty] = useState(0);
+    const [manualLoadQty, setManualLoadQty] = useState<number | ''>('');
+    const [manualWtPerUnit, setManualWtPerUnit] = useState(0);
+    const [manualActualWt, setManualActualWt] = useState(0);
+    const [manualLoadWt, setManualLoadWt] = useState<number | ''>('');
+
 
     const loadMasterData = useCallback(() => {
         try {
@@ -504,6 +516,30 @@ export function PtlChallanForm() {
         }
     };
     
+    const handleManualLrSearch = () => {
+        if (!manualLrNoInput.trim()) return;
+        const allBookings = getBookings();
+        const found = allBookings.find(b => b.lrNo.toLowerCase() === manualLrNoInput.trim().toLowerCase());
+        if (found) {
+            setSearchedLr(found);
+            setManualSelectedLr(found.lrNo);
+            if (found.itemRows.length > 0) {
+                // Pre-select the first item
+                const firstItem = found.itemRows[0];
+                setManualSelectedItem(firstItem.itemName);
+                setManualOriginalQty(firstItem.qty ? parseInt(firstItem.qty, 10) : 0);
+                const actWt = firstItem.actWt ? parseFloat(firstItem.actWt) : 0;
+                const qty = firstItem.qty ? parseInt(firstItem.qty, 10) : 0;
+                setManualWtPerUnit(qty > 0 ? actWt / qty : 0);
+                setManualActualWt(actWt);
+            }
+        } else {
+            toast({ title: "Not Found", description: `GR No. ${manualLrNoInput} not found.`, variant: "destructive"});
+            setSearchedLr(null);
+            setManualSelectedLr(undefined);
+        }
+    }
+    
     const toStationOptions = useMemo(() => {
         return cities.map(city => ({ label: city.name, value: city.name }));
     }, [cities]);
@@ -747,39 +783,55 @@ export function PtlChallanForm() {
                      <div className="flex items-stretch gap-[1px] text-xs">
                         <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Extra/Short LR</div>
-                            <Select defaultValue="Extra"><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" ><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Extra">Extra</SelectItem><SelectItem value="Short">Short</SelectItem></SelectContent></Select>
+                            <Select value={manualEntryType} onValueChange={(v) => setManualEntryType(v as any)}><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" ><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Extra">Extra</SelectItem><SelectItem value="Short">Short</SelectItem></SelectContent></Select>
                         </div>
                         <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">LR NO</div>
-                            <Input placeholder="LR NO" className="w-24 h-8 text-xs rounded-none border-t-0" />
+                            <Input
+                                placeholder="LR NO"
+                                className="w-24 h-8 text-xs rounded-none border-t-0"
+                                value={manualLrNoInput}
+                                onChange={e => setManualLrNoInput(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleManualLrSearch()}
+                            />
                         </div>
                         <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">SELECT LR</div>
-                            <Select><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" /></Select>
+                            <Select value={manualSelectedLr} onValueChange={setManualSelectedLr} disabled={!searchedLr}>
+                                <SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" />
+                                <SelectContent>
+                                    {searchedLr && <SelectItem value={searchedLr.lrNo}>{searchedLr.lrNo}</SelectItem>}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Select Item</div>
-                             <Select><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" /></Select>
+                             <Select value={manualSelectedItem} onValueChange={setManualSelectedItem} disabled={!searchedLr}>
+                                 <SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" />
+                                 <SelectContent>
+                                     {searchedLr?.itemRows.map(item => <SelectItem key={item.id} value={item.itemName}>{item.itemName}</SelectItem>)}
+                                 </SelectContent>
+                             </Select>
                         </div>
                          <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">QTY</div>
-                            <Input readOnly className="w-14 h-8 text-xs rounded-none border-t-0 text-center" />
+                            <Input readOnly value={manualOriginalQty} className="w-14 h-8 text-xs rounded-none border-t-0 text-center" />
                         </div>
                          <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">LOAD QTY</div>
-                            <Input className="w-20 h-8 text-xs rounded-none border-t-0" />
+                            <Input value={manualLoadQty} onChange={e => setManualLoadQty(Number(e.target.value))} className="w-20 h-8 text-xs rounded-none border-t-0" />
                         </div>
                          <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Wt/Unit</div>
-                            <Input readOnly className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
+                            <Input readOnly value={manualWtPerUnit.toFixed(2)} className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
                         </div>
                          <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Act.Wt.</div>
-                            <Input readOnly className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
+                            <Input readOnly value={manualActualWt} className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
                         </div>
                          <div className="flex flex-col">
                             <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Load Wt.</div>
-                            <Input className="w-20 h-8 text-xs rounded-none border-t-0" />
+                            <Input value={manualLoadWt} onChange={e => setManualLoadWt(Number(e.target.value))} className="w-20 h-8 text-xs rounded-none border-t-0" />
                         </div>
                         <Button size="sm" className="h-16 self-end bg-green-500 hover:bg-green-600 rounded-l-none">Add More</Button>
                     </div>
@@ -851,5 +903,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
-    
