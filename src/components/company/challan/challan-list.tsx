@@ -12,7 +12,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, MoreHorizontal, Search, PlusCircle, Pencil, Trash2, CheckCircle, Eye, Calendar as CalendarIcon } from 'lucide-react';
 import { getChallanData, type Challan, saveChallanData, getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
@@ -36,14 +35,19 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, parseISO, isWithinInterval } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
-const thClass = "bg-primary/10 text-primary font-semibold";
+const thClassPending = "bg-white text-black font-semibold border";
+const tdClass = "p-2 whitespace-nowrap";
+
+const thClassFinalized = "bg-cyan-600 text-white font-semibold";
+
 
 export function ChallanList() {
     const [challans, setChallans] = useState<Challan[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [finalizedSearchQuery, setFinalizedSearchQuery] = useState('');
+    const [finalizedFilter, setFinalizedFilter] = useState<'Both' | 'Dispatch' | 'Inward'>('Both');
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const { toast } = useToast();
     const router = useRouter();
@@ -63,14 +67,14 @@ export function ChallanList() {
 
     const { pendingChallans, finalizedChallans } = useMemo(() => {
         const all = getChallanData();
-        const pending = all.filter(c => c.status === 'Pending' && (
-                c.challanId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                c.vehicleNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                c.toStation.toLowerCase().includes(searchQuery.toLowerCase())
-            ))
+        const pending = all.filter(c => c.status === 'Pending')
             .sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
             
         let finalized = all.filter(c => c.status === 'Finalized');
+        
+        if (finalizedFilter !== 'Both') {
+            finalized = finalized.filter(c => c.challanType === finalizedFilter);
+        }
 
         if (dateRange?.from && dateRange?.to) {
             finalized = finalized.filter(c => {
@@ -83,19 +87,10 @@ export function ChallanList() {
             });
         }
         
-        if (finalizedSearchQuery) {
-            const lowerQuery = finalizedSearchQuery.toLowerCase();
-            finalized = finalized.filter(c => 
-                c.challanId.toLowerCase().includes(lowerQuery) ||
-                c.vehicleNo.toLowerCase().includes(lowerQuery) ||
-                c.toStation.toLowerCase().includes(lowerQuery)
-            );
-        }
-
         finalized.sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
 
         return { pendingChallans: pending, finalizedChallans: finalized };
-    }, [challans, searchQuery, finalizedSearchQuery, dateRange]);
+    }, [challans, finalizedFilter, dateRange]);
 
     const handleFinalize = (challanIdToFinalize: string) => {
         const allChallans = getChallanData();
@@ -120,7 +115,6 @@ export function ChallanList() {
     };
     
     const handleDelete = (challanId: string) => {
-        // Revert associated bookings to 'In Stock'
         const allLrDetails = getLrDetailsData();
         const lrsOnChallan = allLrDetails.filter(lr => lr.challanId === challanId);
         const lrNumbersToRevert = lrsOnChallan.map(lr => lr.lrNo);
@@ -137,11 +131,9 @@ export function ChallanList() {
             saveBookings(updatedBookings);
         }
 
-        // Remove LR details associated with the challan
         const remainingLrDetails = allLrDetails.filter(lr => lr.challanId !== challanId);
         saveLrDetailsData(remainingLrDetails);
         
-        // Remove the challan itself
         const updatedChallans = getChallanData().filter(c => c.challanId !== challanId);
         saveChallanData(updatedChallans);
         
@@ -154,177 +146,159 @@ export function ChallanList() {
         return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     }
 
-    const tdClass = "p-2 whitespace-nowrap";
-
-    const ChallanTable = ({ title, data, isPending = false, onSearchChange, searchValue }: { title: string, data: Challan[], isPending?: boolean, onSearchChange?: (val: string) => void, searchValue?: string }) => (
-        <Card>
-            <CardHeader className="flex-row items-center justify-between">
-                <CardTitle className="font-headline">{title}</CardTitle>
-                 {onSearchChange && (
-                     <div className="relative w-full max-w-sm">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search by ID, Vehicle, Station..."
-                            className="pl-8"
-                            value={searchValue}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                        />
-                    </div>
-                 )}
-                 {!isPending && (
-                    <div className="flex items-center gap-2">
-                        <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            id="date"
-                            variant={"outline"}
-                            className={cn(
-                              "w-[260px] justify-start text-left font-normal",
-                              !dateRange && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange?.from ? (
-                              dateRange.to ? (
-                                <>
-                                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                                  {format(dateRange.to, "LLL dd, y")}
-                                </>
-                              ) : (
-                                format(dateRange.from, "LLL dd, y")
-                              )
-                            ) : (
-                              <span>Pick a date range</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
-                          <Calendar
-                            initialFocus
-                            mode="range"
-                            defaultMonth={dateRange?.from}
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            numberOfMonths={2}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                 )}
-            </CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto border rounded-md max-h-[75vh]">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className={`${thClass} w-[80px]`}>ACTION</TableHead>
-                                <TableHead className={thClass}>Challan ID</TableHead>
-                                <TableHead className={thClass}>Status</TableHead>
-                                <TableHead className={thClass}>Date</TableHead>
-                                <TableHead className={thClass}>From</TableHead>
-                                <TableHead className={thClass}>To</TableHead>
-                                <TableHead className={thClass}>Vehicle No</TableHead>
-                                <TableHead className={`${thClass} text-right`}>Total Pkgs</TableHead>
-                                <TableHead className={`${thClass} text-right`}>Total Weight</TableHead>
-                                <TableHead className={`${thClass} text-right`}>Hire Freight</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {data.length > 0 ? (
-                                data.map((challan) => (
-                                    <TableRow key={challan.challanId}>
-                                        <TableCell className="p-1 text-center whitespace-nowrap">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>
-                                                        <Eye className="mr-2 h-4 w-4" />View/Print
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-                                                    {isPending && (
-                                                        <>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem className="text-green-600" onClick={() => handleFinalize(challan.challanId)}>
-                                                                <CheckCircle className="mr-2 h-4 w-4" />Finalize
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(challan.challanId)}>
-                                                                <Trash2 className="mr-2 h-4 w-4" />Delete
-                                                            </DropdownMenuItem>
-                                                        </>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                        <TableCell className={`${tdClass} font-medium`}>
-                                            <Link href={`/company/challan-tracking?challanId=${challan.challanId}`} className="text-primary hover:underline">
-                                                {challan.challanId}
-                                            </Link>
-                                        </TableCell>
-                                        <TableCell className={tdClass}>
-                                            <Badge variant={challan.status === 'Pending' ? 'destructive' : 'default'}>{challan.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className={tdClass}>{challan.dispatchDate}</TableCell>
-                                        <TableCell className={tdClass}>{challan.fromStation}</TableCell>
-                                        <TableCell className={tdClass}>{challan.toStation}</TableCell>
-                                        <TableCell className={tdClass}>{challan.vehicleNo}</TableCell>
-                                        <TableCell className={`${tdClass} text-right`}>{challan.totalPackages}</TableCell>
-                                        <TableCell className={`${tdClass} text-right`}>{challan.totalChargeWeight.toFixed(2)} kg</TableCell>
-                                        <TableCell className={`${tdClass} text-right`}>{formatValue(challan.vehicleHireFreight)}</TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={10} className="text-center h-24">
-                                        No {isPending ? 'pending' : 'finalized'} challans found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
-    );
-
     return (
         <div className="space-y-4">
             <header className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-                    <FileText className="h-8 w-8" />
-                    Challan List
-                </h1>
                 <div className="flex items-center gap-4">
-                    <Button asChild>
+                     <Button asChild className="bg-green-500 hover:bg-green-600 text-white">
                         <Link href="/company/challan/new">
-                            <PlusCircle className="mr-2 h-4 w-4" /> New PTL Challan
+                            Dispatch Challan
                         </Link>
                     </Button>
+                     <Button className="bg-orange-400 hover:bg-orange-500 text-white">
+                        Inward Challan
+                    </Button>
+                     <Button className="bg-purple-500 hover:bg-purple-600 text-white">
+                        Import Challan
+                    </Button>
                 </div>
+                <h1 className="text-2xl font-bold text-cyan-700">
+                    Lot information
+                </h1>
             </header>
             
             <div className="space-y-6">
-                <ChallanTable 
-                    title="Pending Challans" 
-                    data={pendingChallans} 
-                    isPending 
-                    onSearchChange={setSearchQuery} 
-                    searchValue={searchQuery}
-                />
-                <ChallanTable 
-                    title="Finalized Challans" 
-                    data={finalizedChallans} 
-                    onSearchChange={setFinalizedSearchQuery}
-                    searchValue={finalizedSearchQuery}
-                />
+                 {/* Pending Challan Table */}
+                <div>
+                    <h3 className="font-semibold text-gray-600 mb-1 border-b-2 pb-1">Pending Challan</h3>
+                    <div className="overflow-x-auto border-2 border-gray-400">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className={thClassPending}>Vehicle No.</TableHead>
+                                    <TableHead className={thClassPending}>Challan ID</TableHead>
+                                    <TableHead className={thClassPending}>Challan Type</TableHead>
+                                    <TableHead className={thClassPending}>Destination</TableHead>
+                                    <TableHead className={thClassPending}>Creation Date</TableHead>
+                                    <TableHead className={thClassPending}>Total Weight</TableHead>
+                                    <TableHead className={thClassPending}>Driver</TableHead>
+                                    <TableHead className={thClassPending}>Bill To Party</TableHead>
+                                    <TableHead className={thClassPending}>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {pendingChallans.map(challan => (
+                                    <TableRow key={challan.challanId} className="odd:bg-white even:bg-gray-100">
+                                        <TableCell className={`${tdClass} border`}>{challan.vehicleNo}</TableCell>
+                                        <TableCell className={`${tdClass} border`}>{challan.challanId}</TableCell>
+                                        <TableCell className={`${tdClass} border`}>
+                                            <span className={cn('font-bold', challan.challanType === 'Dispatch' ? 'text-blue-600' : 'text-purple-600')}>
+                                                {challan.challanType.toUpperCase()}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className={`${tdClass} border`}>{challan.toStation}</TableCell>
+                                        <TableCell className={`${tdClass} border`}>{format(parseISO(challan.dispatchDate), 'MM/dd/yy')}</TableCell>
+                                        <TableCell className={`${tdClass} border`}>{challan.totalChargeWeight.toFixed(0)} out of {challan.totalActualWeight.toFixed(0)}</TableCell>
+                                        <TableCell className={`${tdClass} border`}>{challan.driverName}</TableCell>
+                                        <TableCell className={`${tdClass} border`}>{challan.dispatchToParty}</TableCell>
+                                        <TableCell className={`${tdClass} border`}>
+                                            <div className="flex items-center gap-2">
+                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>Modify</Button>
+                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>view</Button>
+                                                <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleFinalize(challan.challanId)}>Finalise</Button>
+                                                <Button variant="link" className="p-0 h-auto text-red-600" onClick={() => handleDelete(challan.challanId)}>Delete</Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                         {pendingChallans.length === 0 && (
+                            <p className="text-center p-4 text-muted-foreground">No pending challans.</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Dispatch / Inward Challan List Table */}
+                <div>
+                    <div className="flex items-center justify-between mb-1 border-b-2 pb-1">
+                        <h3 className="font-semibold text-gray-600">Dispatch / Inward Challan List</h3>
+                         <div className="flex items-center gap-4">
+                            <RadioGroup value={finalizedFilter} onValueChange={(v) => setFinalizedFilter(v as any)} className="flex items-center">
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="Both" id="both" /><Label htmlFor="both">Both</Label></div>
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="Dispatch" id="dispatch" /><Label htmlFor="dispatch">Dispatch</Label></div>
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="Inward" id="inward" /><Label htmlFor="inward">Inward</Label></div>
+                            </RadioGroup>
+                            <div className="flex items-center gap-2">
+                                <Label>From Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" size="sm" className="w-32 justify-between font-normal"><>{dateRange?.from ? format(dateRange.from, "dd/MM/yy") : <span>Pick date</span>} <CalendarIcon className="h-4 w-4" /></></Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} /></PopoverContent>
+                                </Popover>
+                                <Label>To Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                         <Button variant="outline" size="sm" className="w-32 justify-between font-normal"><>{dateRange?.to ? format(dateRange.to, "dd/MM/yy") : <span>Pick date</span>} <CalendarIcon className="h-4 w-4" /></></Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} /></PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto border-2 border-cyan-500">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className={thClassFinalized}>Action</TableHead>
+                                    <TableHead className={thClassFinalized}>Lot TYPE</TableHead>
+                                    <TableHead className={thClassFinalized}>Vehicle No.</TableHead>
+                                    <TableHead className={thClassFinalized}>Dispatch ID</TableHead>
+                                    <TableHead className={thClassFinalized}>Dispatch Date</TableHead>
+                                    <TableHead className={thClassFinalized}>From Station</TableHead>
+                                    <TableHead className={thClassFinalized}>To Station</TableHead>
+                                    <TableHead className={thClassFinalized}>Inward ID</TableHead>
+                                    <TableHead className={thClassFinalized}>Inward Challan No</TableHead>
+                                    <TableHead className={thClassFinalized}>Inward Date</TableHead>
+                                    <TableHead className={thClassFinalized}>Total Weight</TableHead>
+                                    <TableHead className={thClassFinalized}>Driver</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {finalizedChallans.map(challan => (
+                                     <TableRow key={challan.challanId} className="odd:bg-white even:bg-cyan-50/50">
+                                        <TableCell className={`${tdClass}`}>
+                                             <div className="flex items-center gap-2">
+                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>Modify</Button>
+                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>view</Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className={`${tdClass}`}>
+                                             <span className={cn('font-bold', challan.challanType === 'Dispatch' ? 'text-blue-600' : 'text-purple-600')}>
+                                                {challan.challanType.toUpperCase()}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.vehicleNo}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.challanId}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{format(parseISO(challan.dispatchDate), 'MM/dd/yy')}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.fromStation}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.toStation}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.inwardId}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{/* Inward Challan No */}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.inwardDate ? format(parseISO(challan.inwardDate), 'MM/dd/yy') : ''}</TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.totalChargeWeight.toFixed(2)} in kg</TableCell>
+                                        <TableCell className={`${tdClass}`}>{challan.driverName}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        {finalizedChallans.length === 0 && (
+                            <p className="text-center p-4 text-muted-foreground">No challans found for the selected filters.</p>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
-    )
+    );
 }
-
-    
