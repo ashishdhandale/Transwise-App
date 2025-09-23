@@ -57,6 +57,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PartialCancellationDialog } from './partial-cancellation-dialog';
+import { Label } from '../ui/label';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -91,6 +92,7 @@ export function BookingsDashboard() {
   const [isCancelConfirmationOpen, setIsCancelConfirmationOpen] = useState(false);
   const [isCancelOptionsOpen, setIsCancelOptionsOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [cancelConfirmationInput, setCancelConfirmationInput] = useState('');
 
   const router = useRouter();
   const { toast } = useToast();
@@ -219,6 +221,7 @@ export function BookingsDashboard() {
       description: `LR No: ${bookingToCancel.lrNo} has been successfully cancelled.`,
     });
     setIsCancelConfirmationOpen(false);
+    setCancelConfirmationInput('');
     setBookingToCancel(null);
   };
 
@@ -497,11 +500,24 @@ export function BookingsDashboard() {
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action will completely cancel the booking for LR No: <span className="font-bold">{bookingToCancel?.lrNo}</span>. This cannot be undone.
+              <div className="mt-4">
+                <Label htmlFor="cancel-confirm-input" className="text-foreground">Please type <span className="font-bold text-destructive">CANCEL</span> to confirm.</Label>
+                <Input 
+                  id="cancel-confirm-input" 
+                  value={cancelConfirmationInput}
+                  onChange={(e) => setCancelConfirmationInput(e.target.value)}
+                  className="mt-1"
+                  autoFocus
+                />
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Back</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmCompleteCancellation} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogCancel onClick={() => setCancelConfirmationInput('')}>Back</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmCompleteCancellation} 
+              disabled={cancelConfirmationInput !== 'CANCEL'}
+              className="bg-destructive hover:bg-destructive/90">
               Confirm Cancellation
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -510,5 +526,3 @@ export function BookingsDashboard() {
     </>
   );
 }
-
-    
