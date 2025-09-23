@@ -287,15 +287,14 @@ export function PtlChallanForm() {
         }
     };
 
-    const cityOptions = useMemo(() => {
+    const fromStationOptions = useMemo(() => {
         const uniqueCities = Array.from(new Set(allStockBookings.map(b => b.fromCity)));
         return uniqueCities.map(c => ({ label: c, value: c }));
     }, [allStockBookings]);
-
+    
     const toStationOptions = useMemo(() => {
-        const uniqueToCities = Array.from(new Set(allStockBookings.map(b => b.toCity)));
-        return uniqueToCities.map(city => ({ label: city, value: city }));
-    }, [allStockBookings]);
+        return cities.map(city => ({ label: city.name, value: city.name }));
+    }, [cities]);
 
     const dispatchToOptions = useMemo(() => {
         const customerOptions = customers.map(c => ({ label: c.name, value: c.name }));
@@ -325,13 +324,13 @@ export function PtlChallanForm() {
                             <Label>Challan Date</Label>
                             <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
                         </div>
-                         <div className="space-y-0.5">
+                        <div className="space-y-0.5">
                             <Label>Dispatch Date</Label>
                             <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(dispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dispatchDate} onSelect={(d) => d && setDispatchDate(d)}/></PopoverContent></Popover>
                         </div>
                         <div className="space-y-0.5">
                             <Label>From Station</Label>
-                            <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
+                            <Combobox options={fromStationOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
                         </div>
                         <div className="space-y-0.5">
                             <Label>To Station</Label>
@@ -339,7 +338,7 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>Dispatch To</Label>
-                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select destination..." searchPlaceholder="Search Party/Agent..." />
+                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select party/agent..." searchPlaceholder="Search Party/Agent..." />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Veh.Hire Receipt No</Label>
