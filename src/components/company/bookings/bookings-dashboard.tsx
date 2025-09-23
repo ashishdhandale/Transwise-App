@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -361,7 +362,7 @@ export function BookingsDashboard() {
                                         <Pencil className="mr-2 h-4 w-4" /> Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuSub>
-                                      <DropdownMenuSubTrigger>
+                                      <DropdownMenuSubTrigger disabled={booking.status === 'Cancelled'}>
                                         <Printer className="mr-2 h-4 w-4" />
                                         Print
                                       </DropdownMenuSubTrigger>
