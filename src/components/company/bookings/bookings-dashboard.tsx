@@ -362,15 +362,15 @@ export function BookingsDashboard() {
                                         <Pencil className="mr-2 h-4 w-4" /> Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuSub>
-                                      <DropdownMenuSubTrigger disabled={booking.status === 'Cancelled'}>
+                                      <DropdownMenuSubTrigger>
                                         <Printer className="mr-2 h-4 w-4" />
                                         Print
                                       </DropdownMenuSubTrigger>
                                       <DropdownMenuPortal>
                                         <DropdownMenuSubContent>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')}>Sender Copy</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')}>Receiver Copy</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')}>Driver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')} disabled={booking.status === 'Cancelled'}>Sender Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')} disabled={booking.status === 'Cancelled'}>Receiver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')} disabled={booking.status === 'Cancelled'}>Driver Copy</DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Office')}>Office Copy</DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                       </DropdownMenuPortal>
