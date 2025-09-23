@@ -49,8 +49,8 @@ export function PtlChallanForm() {
     const [challanNo, setChallanNo] = useState('');
     const [challanDate, setChallanDate] = useState(new Date());
     const [lotDispatchDate, setLotDispatchDate] = useState(new Date());
-    const [fromStation, setFromStation] = useState<string | undefined>('ALL');
-    const [dispatchTo, setDispatchTo] = useState<string | undefined>();
+    const [fromStation, setFromStation] = useState<string | undefined>(undefined);
+    const [toStation, setToStation] = useState<string | undefined>();
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
     const [vehicleSupplier, setVehicleSupplier] = useState<string | undefined>();
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
@@ -105,6 +105,12 @@ export function PtlChallanForm() {
             try {
                 const profile = await getCompanyProfile();
                 setCompanyProfile(profile);
+                if (profile.city) {
+                    setFromStation(profile.city);
+                } else {
+                    setFromStation('ALL');
+                }
+
                 loadMasterData();
                 const allBookings = getBookings();
                 const ptlStock = allBookings.filter(b => b.loadType === 'PTL' && b.status === 'In Stock');
@@ -129,11 +135,11 @@ export function PtlChallanForm() {
         if (fromStation && fromStation !== 'ALL') {
             bookings = bookings.filter(b => b.fromCity.toLowerCase() === fromStation.toLowerCase());
         }
-        if (dispatchTo) {
-            bookings = bookings.filter(b => b.toCity.toLowerCase() === dispatchTo.toLowerCase());
+        if (toStation) {
+            bookings = bookings.filter(b => b.toCity.toLowerCase() === toStation.toLowerCase());
         }
         return bookings;
-    }, [allStockBookings, fromStation, dispatchTo]);
+    }, [allStockBookings, fromStation, toStation]);
 
     const availableBookingsForDropdown = useMemo(() => {
         const selectedTrackingIds = new Set(selectedBookings.map(b => b.trackingId));
@@ -223,11 +229,11 @@ export function PtlChallanForm() {
                 challanId: challanNo,
                 status: 'Pending',
                 dispatchDate: format(lotDispatchDate, 'yyyy-MM-dd'),
-                dispatchToParty: dispatchTo || selectedBookings[0].toCity,
+                dispatchToParty: toStation || selectedBookings[0].toCity,
                 vehicleNo,
                 driverName,
                 fromStation,
-                toStation: selectedBookings.map(b => b.toCity).join(', '),
+                toStation: toStation || selectedBookings.map(b => b.toCity).join(', '),
                 senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
                 challanType: 'Dispatch',
                 vehicleHireFreight: 0, advance: 0, balance: 0,
@@ -285,7 +291,7 @@ export function PtlChallanForm() {
 
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
     
-    const dispatchToOptions = useMemo(() => {
+    const toStationOptions = useMemo(() => {
         const uniqueToCities = Array.from(new Set(allStockBookings.map(b => b.toCity)));
         return uniqueToCities.map(city => ({ label: city, value: city }));
     }, [allStockBookings]);
@@ -304,34 +310,34 @@ export function PtlChallanForm() {
                 <CardContent className="space-y-2">
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
+                            <Label>Challan No.</Label>
+                            <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Challan Date</Label>
+                             <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
+                        </div>
+                        <div className="space-y-0.5">
                             <Label>From Station</Label>
                             <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="Select From..." />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Dispatch To</Label>
-                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Filter by Dispatch To..." />
+                            <Label>To Station</Label>
+                            <Combobox options={toStationOptions} value={toStation} onChange={setToStation} placeholder="Filter by To Station..." />
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
                             <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
                         </div>
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Driver Name</Label>
                             <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
                         </div>
-                         <div className="space-y-0.5">
+                        <div className="space-y-0.5">
                             <Label>Veh.Capacity</Label>
                             <Input className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
-                        </div>
-                    </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
-                        <div className="space-y-0.5">
-                            <Label>Lot No.</Label>
-                            <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
-                        </div>
-                         <div className="space-y-0.5">
-                            <Label>Challan Date</Label>
-                             <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
                         </div>
                         <div className="space-y-0.5">
                             <Label>Lot Dispatch Date</Label>
@@ -358,7 +364,7 @@ export function PtlChallanForm() {
                         <p><strong>Challan ID:</strong> <span className="text-red-600 font-bold">{challanNo}</span></p>
                         <p><strong>Challan Date:</strong> {format(challanDate, 'dd-MMM-yyyy')}</p>
                         <p><strong>Driver Name:</strong> {driverName || 'N/A'}</p>
-                        <p><strong>Receiver Party Name:</strong> {dispatchTo || 'N/A'}</p>
+                        <p><strong>Receiver Party Name:</strong> {toStation || 'N/A'}</p>
                     </CardContent>
                 </Card>
 
