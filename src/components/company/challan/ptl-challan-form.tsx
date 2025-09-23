@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
-import type { Driver, VehicleMaster, City, Vendor, Customer } from '@/lib/types';
+import type { Driver, VehicleMaster, City, Vendor, Customer, Item } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, Save, X, Trash2, Search, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +38,7 @@ const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
+const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 type CityListSource = 'default' | 'custom';
 
 interface ShortExtraEntry {
@@ -55,6 +56,19 @@ interface AdditionalCharges {
     vehAdvance: number;
     fuelLtr: number;
     fuelAmt: number;
+}
+
+interface ManualShortExtraEntry {
+    id: number;
+    type: 'Extra' | 'Short';
+    lrNoInput: string;
+    selectedLr: string;
+    selectedItem: string;
+    originalQty: number;
+    loadQty: number;
+    wtPerUnit: number;
+    actualWt: number;
+    loadWt: number;
 }
 
 export function PtlChallanForm() {
@@ -83,6 +97,7 @@ export function PtlChallanForm() {
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [items, setItems] = useState<Item[]>([]);
     
     // Bookings Data
     const [allStockBookings, setAllStockBookings] = useState<Booking[]>([]);
@@ -97,7 +112,9 @@ export function PtlChallanForm() {
     const [overflowLrNos, setOverflowLrNos] = useState<Set<string>>(new Set());
     const [dispatchQuantities, setDispatchQuantities] = useState<{ [trackingId: string]: number }>({});
     const [modifiedQtyLrNos, setModifiedQtyLrNos] = useState<Set<string>>(new Set());
-    const [shortExtraEntries, setShortExtraEntries] = useState<ShortExtraEntry[]>([]);
+    const [shortExtraMessages, setShortExtraMessages] = useState<ShortExtraEntry[]>([]);
+    const [manualShortExtraEntries, setManualShortExtraEntries] = useState<ManualShortExtraEntry[]>([]);
+
     const [additionalCharges, setAdditionalCharges] = useState<AdditionalCharges>({
         commission: 0, labour: 0, crossing: 0, carting: 0, otherCharges: 0,
         vehFreight: 0, vehAdvance: 0, fuelLtr: 0, fuelAmt: 0
@@ -117,6 +134,9 @@ export function PtlChallanForm() {
 
             const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
             if (savedCustomers) setCustomers(JSON.parse(savedCustomers));
+            
+            const savedItems = localStorage.getItem(LOCAL_STORAGE_KEY_ITEMS);
+            if (savedItems) setItems(JSON.parse(savedItems));
 
             const savedSource = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
             const source = savedSource || 'default';
@@ -242,7 +262,7 @@ export function PtlChallanForm() {
         const originalQty = booking.qty;
         const diff = newDispatchQty - originalQty;
 
-        setShortExtraEntries(prev => prev.filter(entry => entry.lrNo !== booking.lrNo));
+        setShortExtraMessages(prev => prev.filter(entry => entry.lrNo !== booking.lrNo));
         setModifiedQtyLrNos(prev => {
             const newSet = new Set(prev);
             newSet.delete(booking.lrNo);
@@ -254,7 +274,7 @@ export function PtlChallanForm() {
                 ? `LR no ${booking.lrNo} ${Math.abs(diff)} Qty is Short.`
                 : `LR no ${booking.lrNo} ${diff} Qty is Extra.`;
             
-            setShortExtraEntries(prev => [...prev, { lrNo: booking.lrNo, message }]);
+            setShortExtraMessages(prev => [...prev, { lrNo: booking.lrNo, message }]);
             setModifiedQtyLrNos(prev => new Set(prev).add(booking.lrNo));
         }
     }
@@ -387,7 +407,7 @@ export function PtlChallanForm() {
             newModifiedNos.delete(bookingToRemove.lrNo);
             setModifiedQtyLrNos(newModifiedNos);
 
-            setShortExtraEntries(prev => prev.filter(e => e.lrNo !== bookingToRemove.lrNo));
+            setShortExtraMessages(prev => prev.filter(e => e.lrNo !== bookingToRemove.lrNo));
         }
 
         // Check if we are back under capacity
@@ -684,43 +704,99 @@ export function PtlChallanForm() {
 
             {/* Footer Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                 <div className="space-y-1">
-                     <Card className="p-1 h-full">
-                        <CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader>
-                        <CardContent className="p-1 grid grid-cols-2 gap-1">
-                            <Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" />
-                             <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
-                                {shortExtraEntries.length > 0 ? (
-                                    <ul className="text-xs space-y-1">
-                                        {shortExtraEntries.map(entry => (
-                                            <li key={entry.lrNo} className="text-destructive font-medium">{entry.message}</li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-muted-foreground text-xs">No short/extra quantities</div>
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </div>
-                 <div className="space-y-1">
-                     <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader>
-                        <CardContent className="p-1 space-y-1 text-xs">
-                            <div className="flex justify-between font-bold"><span>Total TOPAY:</span><span>{financialSummary.toPayAmt.toFixed(2)}</span></div>
-                            <div className="flex justify-between"><span>Comission</span><Input className="h-6 w-24 text-xs" value={additionalCharges.commission} onChange={e => handleChargeChange('commission', e.target.value)} /></div>
-                            <div className="flex justify-between"><span>Labor</span><Input className="h-6 w-24 text-xs" value={additionalCharges.labour} onChange={e => handleChargeChange('labour', e.target.value)} /></div>
-                            <div className="flex justify-between"><span>Crossing</span><Input className="h-6 w-24 text-xs" value={additionalCharges.crossing} onChange={e => handleChargeChange('crossing', e.target.value)} /></div>
-                            <div className="flex justify-between"><span>Carting</span><Input className="h-6 w-24 text-xs" value={additionalCharges.carting} onChange={e => handleChargeChange('carting', e.target.value)} /></div>
-                            <div className="flex justify-between"><span>Other Charges</span><Input className="h-6 w-24 text-xs" value={additionalCharges.otherCharges} onChange={e => handleChargeChange('otherCharges', e.target.value)} /></div>
-                            <div className="flex justify-between"><span>Veh.Freight</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehFreight} onChange={e => handleChargeChange('vehFreight', e.target.value)} /></div>
-                            <div className="flex justify-between"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehAdvance} onChange={e => handleChargeChange('vehAdvance', e.target.value)} /></div>
-                            <div className="flex justify-between items-center"><a>+Add Fuel</a><span><Input className="h-6 w-12 text-xs inline-block" placeholder="Ltr" value={additionalCharges.fuelLtr || ''} onChange={e => handleChargeChange('fuelLtr', e.target.value)} /><Input className="h-6 w-16 text-xs inline-block ml-1" placeholder="Amt" value={additionalCharges.fuelAmt || ''} onChange={e => handleChargeChange('fuelAmt', e.target.value)} /></span></div>
-                            <div className="flex justify-between"><span>Balance Truck Hire</span><Input readOnly value={financialSummary.balanceTruckHire.toFixed(2)} className="h-6 w-24 text-xs" /></div>
-                            <div className="flex justify-between font-bold text-red-600"><span>Total</span><span>Rs. {financialSummary.totalCharges.toFixed(2)}</span></div>
-                        </CardContent>
-                     </Card>
-                </div>
+                 <Card className="p-1 h-full">
+                    <CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader>
+                    <CardContent className="p-1 grid grid-cols-2 gap-1">
+                        <Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" />
+                        <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
+                            {shortExtraMessages.length > 0 ? (
+                                <ul className="text-xs space-y-1">
+                                    {shortExtraMessages.map(entry => (
+                                        <li key={entry.lrNo} className="text-destructive font-medium">{entry.message}</li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-muted-foreground text-xs">No short/extra quantities</div>
+                            )}
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+                 <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader>
+                    <CardContent className="p-1 space-y-1 text-xs">
+                        <div className="flex justify-between font-bold"><span>Total TOPAY:</span><span>{financialSummary.toPayAmt.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span>Comission</span><Input className="h-6 w-24 text-xs" value={additionalCharges.commission} onChange={e => handleChargeChange('commission', e.target.value)} /></div>
+                        <div className="flex justify-between"><span>Labor</span><Input className="h-6 w-24 text-xs" value={additionalCharges.labour} onChange={e => handleChargeChange('labour', e.target.value)} /></div>
+                        <div className="flex justify-between"><span>Crossing</span><Input className="h-6 w-24 text-xs" value={additionalCharges.crossing} onChange={e => handleChargeChange('crossing', e.target.value)} /></div>
+                        <div className="flex justify-between"><span>Carting</span><Input className="h-6 w-24 text-xs" value={additionalCharges.carting} onChange={e => handleChargeChange('carting', e.target.value)} /></div>
+                        <div className="flex justify-between"><span>Other Charges</span><Input className="h-6 w-24 text-xs" value={additionalCharges.otherCharges} onChange={e => handleChargeChange('otherCharges', e.target.value)} /></div>
+                        <div className="flex justify-between"><span>Veh.Freight</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehFreight} onChange={e => handleChargeChange('vehFreight', e.target.value)} /></div>
+                        <div className="flex justify-between"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehAdvance} onChange={e => handleChargeChange('vehAdvance', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><a>+Add Fuel</a><span><Input className="h-6 w-12 text-xs inline-block" placeholder="Ltr" value={additionalCharges.fuelLtr || ''} onChange={e => handleChargeChange('fuelLtr', e.target.value)} /><Input className="h-6 w-16 text-xs inline-block ml-1" placeholder="Amt" value={additionalCharges.fuelAmt || ''} onChange={e => handleChargeChange('fuelAmt', e.target.value)} /></span></div>
+                        <div className="flex justify-between"><span>Balance Truck Hire</span><Input readOnly value={financialSummary.balanceTruckHire.toFixed(2)} className="h-6 w-24 text-xs" /></div>
+                        <div className="flex justify-between font-bold text-red-600"><span>Total</span><span>Rs. {financialSummary.totalCharges.toFixed(2)}</span></div>
+                    </CardContent>
+                 </Card>
             </div>
+            
+            {/* Extra / Short Entries Section */}
+            <Card>
+                <CardHeader className="p-2">
+                    <CardTitle className="text-sm font-headline">Extra / Short Entries</CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 space-y-2">
+                     <div className="flex items-center gap-2 text-xs border p-2 rounded-md">
+                        <Select defaultValue="Extra"><SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Extra">Extra</SelectItem><SelectItem value="Short">Short</SelectItem></SelectContent></Select>
+                        <Input placeholder="LR NO" className="w-24 h-8 text-xs" />
+                        <Select><SelectTrigger className="w-24 h-8 text-xs"><SelectValue placeholder="SELECT LR" /></SelectTrigger><SelectContent>{selectedBookings.map(b => <SelectItem key={b.trackingId} value={b.lrNo}>{b.lrNo}</SelectItem>)}</SelectContent></Select>
+                        <Select><SelectTrigger className="w-24 h-8 text-xs"><SelectValue placeholder="Select Item" /></SelectTrigger><SelectContent>{items.map(i => <SelectItem key={i.id} value={i.name}>{i.name}</SelectItem>)}</SelectContent></Select>
+                        <Input placeholder="QTY" className="w-16 h-8 text-xs" />
+                        <Input placeholder="LOAD QTY" className="w-20 h-8 text-xs" />
+                        <Input placeholder="Wt/Unit" className="w-20 h-8 text-xs" />
+                        <Input placeholder="Act.Wt" className="w-20 h-8 text-xs" />
+                        <Input placeholder="Load Wt." className="w-20 h-8 text-xs" />
+                        <Button size="sm" className="h-8 bg-green-500 hover:bg-green-600">Add More</Button>
+                    </div>
+                    <div className="border rounded-md overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className={thClass}>#</TableHead>
+                                    <TableHead className={thClass}>Extra/Short LR</TableHead>
+                                    <TableHead className={thClass}>LR NO</TableHead>
+                                    <TableHead className={thClass}>SELECT LR</TableHead>
+                                    <TableHead className={thClass}>Select Item</TableHead>
+                                    <TableHead className={thClass}>QTY</TableHead>
+                                    <TableHead className={thClass}>Load Qty</TableHead>
+                                    <TableHead className={thClass}>Wt/Unit</TableHead>
+                                    <TableHead className={thClass}>Act.Wt.</TableHead>
+                                    <TableHead className={thClass}>Load Wt.</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {manualShortExtraEntries.map((entry, index) => (
+                                    <TableRow key={entry.id}>
+                                        <TableCell className={tdClass}>{index + 1}</TableCell>
+                                        <TableCell className={tdClass}>{entry.type}</TableCell>
+                                        <TableCell className={tdClass}>{entry.lrNoInput}</TableCell>
+                                        <TableCell className={tdClass}>{entry.selectedLr}</TableCell>
+                                        <TableCell className={tdClass}>{entry.selectedItem}</TableCell>
+                                        <TableCell className={tdClass}>{entry.originalQty}</TableCell>
+                                        <TableCell className={tdClass}>{entry.loadQty}</TableCell>
+                                        <TableCell className={tdClass}>{entry.wtPerUnit}</TableCell>
+                                        <TableCell className={tdClass}>{entry.actualWt}</TableCell>
+                                        <TableCell className={tdClass}>{entry.loadWt}</TableCell>
+                                    </TableRow>
+                                ))}
+                                {manualShortExtraEntries.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={10} className="text-center h-16 text-muted-foreground text-xs">No manual entries added.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Actions */}
             <div className="flex justify-center gap-4">
@@ -748,5 +824,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
-    
