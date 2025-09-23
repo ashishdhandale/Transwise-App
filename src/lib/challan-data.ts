@@ -13,7 +13,7 @@ export interface Challan {
   inwardDate: string;
   receivedFromParty: string;
   challanType: 'Dispatch' | 'Inward';
-  status?: 'Pending' | 'Finalized';
+  status: 'Pending' | 'Finalized';
   vehicleHireFreight: number;
   advance: number;
   balance: number;
