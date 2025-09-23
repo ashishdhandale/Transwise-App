@@ -2,6 +2,7 @@
 
 import type { ItemRow } from "@/components/company/bookings/item-details-table";
 import { initialBookings } from "./sample-data";
+import { getChallanData, getLrDetailsData } from "./challan-data";
 
 export interface FtlDetails {
   vehicleNo: string;
@@ -45,16 +46,33 @@ export const getBookings = (): Booking[] => {
     try {
         const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
         if (savedBookings) {
-            // Check if data needs migration
-            const parsedBookings = JSON.parse(savedBookings);
-            if (parsedBookings.length > 0 && !parsedBookings[0].trackingId) {
-                const migratedBookings = parsedBookings.map((b: any) => ({
-                    ...b,
-                    trackingId: b.id || `TRK-${Date.now()}-${Math.random()}`
-                }));
-                saveBookings(migratedBookings);
-                return migratedBookings;
+            const parsedBookings: Booking[] = JSON.parse(savedBookings);
+
+            // --- DATA MIGRATION & CORRECTION LOGIC ---
+            const lrDetails = getLrDetailsData();
+            const lrsOnChallan = new Set(lrDetails.map(lr => lr.lrNo));
+            let dataWasCorrected = false;
+
+            const correctedBookings = parsedBookings.map(booking => {
+                // If a booking is "In Transit" but isn't on any challan, its status is wrong. Correct it.
+                if (booking.status === 'In Transit' && !lrsOnChallan.has(booking.lrNo)) {
+                    dataWasCorrected = true;
+                    return { ...booking, status: 'In Stock' as const };
+                }
+                // Also handle migration for old data structures if needed
+                if (!booking.trackingId) {
+                    dataWasCorrected = true;
+                    return { ...booking, trackingId: `TRK-${Date.now()}-${Math.random()}` };
+                }
+                return booking;
+            });
+
+            if (dataWasCorrected) {
+                saveBookings(correctedBookings);
+                return correctedBookings;
             }
+            // --- END of MIGRATION LOGIC ---
+
             return parsedBookings;
         }
         // If no data, initialize with sample data
