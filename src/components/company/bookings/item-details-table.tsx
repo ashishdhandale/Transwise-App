@@ -63,19 +63,19 @@ const DEFAULT_ROWS = 2;
 const DEFAULT_ITEM_NAME = 'Frm MAS';
 
 const defaultColumns: ColumnSetting[] = [
-    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
-    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[160px]' },
-    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
-    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
-    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[130px]' },
-    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[120px]' },
-    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-    { id: 'invoiceDate', label: 'Invoice Date', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
-    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
+    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[220px]' },
+    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[160px]' },
+    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[220px]' },
+    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
+    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[130px]' },
+    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[120px]' },
+    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
+    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
+    { id: 'invoiceDate', label: 'Invoice Date', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
+    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
 ];
 
 let nextId = 1;
