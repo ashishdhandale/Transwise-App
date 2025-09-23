@@ -17,6 +17,7 @@ import { Calendar } from '@/components/ui/calendar';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { AddCityDialog } from '../master/add-city-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { getBookings } from '@/lib/bookings-dashboard-data';
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
@@ -85,14 +86,44 @@ export function BookingDetailsSection({
             setCityListSource(source);
 
             if (source === 'custom') {
-                const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-                const parsedCities: City[] = savedCities ? JSON.parse(savedCities) : [];
-                setAllCustomCities(parsedCities);
+                const savedCitiesJSON = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
+                let savedCities: City[] = savedCitiesJSON ? JSON.parse(savedCitiesJSON) : [];
+                
+                // Auto-sync logic
+                const allBookings = getBookings();
+                const bookingCities = new Set([
+                    ...allBookings.map(b => b.fromCity.trim().toUpperCase()),
+                    ...allBookings.map(b => b.toCity.trim().toUpperCase()),
+                ]);
+
+                const existingCustomCities = new Set(savedCities.map(c => c.name.trim().toUpperCase()));
+                const missingCities = Array.from(bookingCities).filter(bc => bc && !existingCustomCities.has(bc));
+
+                if (missingCities.length > 0) {
+                    let nextId = savedCities.length > 0 ? Math.max(...savedCities.map(c => c.id)) + 1 : 1;
+                    const newCityObjects: City[] = missingCities.map(name => ({
+                        id: nextId++,
+                        name,
+                        aliasCode: name.substring(0, 3),
+                        pinCode: '',
+                    }));
+
+                    const updatedCities = [...savedCities, ...newCityObjects];
+                    localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
+                    savedCities = updatedCities; // Use the updated list immediately
+
+                    toast({
+                        title: 'Stations Synced',
+                        description: `${newCityObjects.length} new station(s) were automatically added to your master list.`,
+                    });
+                }
+
+                setAllCustomCities(savedCities);
             }
         } catch (error) {
-            console.error("Failed to load station data", error);
+            console.error("Failed to load or sync station data", error);
         }
-    }, []);
+    }, [toast]);
 
     useEffect(() => {
         loadCityData();
