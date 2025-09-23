@@ -48,7 +48,6 @@ export function PtlChallanForm() {
     // Header Form State
     const [challanNo, setChallanNo] = useState('');
     const [challanDate, setChallanDate] = useState(new Date());
-    const [lotDispatchDate, setLotDispatchDate] = useState(new Date());
     const [fromStation, setFromStation] = useState<string | undefined>(undefined);
     const [toStation, setToStation] = useState<string | undefined>();
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
@@ -228,7 +227,7 @@ export function PtlChallanForm() {
             const newChallan: Challan = {
                 challanId: challanNo,
                 status: 'Pending',
-                dispatchDate: format(lotDispatchDate, 'yyyy-MM-dd'),
+                dispatchDate: format(challanDate, 'yyyy-MM-dd'),
                 dispatchToParty: toStation || selectedBookings[0].toCity,
                 vehicleNo,
                 driverName,
@@ -308,7 +307,7 @@ export function PtlChallanForm() {
                     <CardTitle className="text-base font-headline">New Dispatch</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
@@ -325,24 +324,8 @@ export function PtlChallanForm() {
                             <Label>To Station</Label>
                             <Combobox options={toStationOptions} value={toStation} onChange={setToStation} placeholder="Filter by To Station..." />
                         </div>
-                        <div className="space-y-0.5">
-                            <Label>Vehicle No.</Label>
-                            <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                        </div>
                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
-                        <div className="space-y-0.5">
-                            <Label>Driver Name</Label>
-                            <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                        </div>
-                        <div className="space-y-0.5">
-                            <Label>Veh.Capacity</Label>
-                            <Input className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
-                        </div>
-                        <div className="space-y-0.5">
-                            <Label>Lot Dispatch Date</Label>
-                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(lotDispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lotDispatchDate} onSelect={(d) => d && setLotDispatchDate(d)}/></PopoverContent></Popover>
-                        </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Veh.Hire Receipt No</Label>
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
@@ -350,6 +333,22 @@ export function PtlChallanForm() {
                         <div className="space-y-0.5">
                             <Label>Vehicle Supplier</Label>
                             <Combobox options={vehicleSupplierOptions} value={vehicleSupplier} onChange={setVehicleSupplier} placeholder="Select Supplier..." />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Vehicle No.</Label>
+                            <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                        </div>
+                         <div className="space-y-0.5">
+                            <Label>Veh.Capacity</Label>
+                            <Input className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Driver Name</Label>
+                            <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                        </div>
+                         <div className="space-y-0.5">
+                            <Label>Driver Contact No</Label>
+                            <Input readOnly value={driverMobile} className="h-9 text-xs" />
                         </div>
                     </div>
                 </CardContent>
