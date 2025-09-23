@@ -450,8 +450,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
   
   return (
     <>
-      <div className="overflow-x-auto border rounded-md">
-          <Table className="min-w-max">
+      <div className="relative w-full overflow-x-auto border rounded-md">
+          <Table>
           <TableHeader>
               <TableRow>
               <TableHead className={`${thClass} w-[40px]`}>#</TableHead>
