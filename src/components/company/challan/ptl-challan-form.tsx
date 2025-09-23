@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -348,7 +347,7 @@ export function PtlChallanForm() {
     const handleToggleBookingSelection = (trackingId: string, isSelected: boolean | string) => {
         if (isSelected) {
             const bookingToAdd = availableStock.find(b => b.trackingId === trackingId);
-            if (bookingToAdd && !selectedBookings.some(b => b.trackingId === trackingId)) {
+            if (bookingToAdd && !selectedBookings.some(b => b.trackingId === bookingToAdd.trackingId)) {
                 checkWeightAndAddBookings([bookingToAdd]);
             }
         } else {
@@ -684,11 +683,13 @@ export function PtlChallanForm() {
             </Card>
 
             {/* Footer Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                  <div className="space-y-1">
-                    <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Extra / Short Entries</CardTitle></CardHeader>
-                        <CardContent className="p-1">
-                            <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
+                     <Card className="p-1 h-full">
+                        <CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader>
+                        <CardContent className="p-1 grid grid-cols-2 gap-1">
+                            <Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" />
+                             <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
                                 {shortExtraEntries.length > 0 ? (
                                     <ul className="text-xs space-y-1">
                                         {shortExtraEntries.map(entry => (
@@ -701,9 +702,6 @@ export function PtlChallanForm() {
                             </ScrollArea>
                         </CardContent>
                     </Card>
-                </div>
-                 <div className="space-y-1">
-                     <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader><CardContent className="p-1 grid grid-cols-2 gap-1"><Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" /><Textarea placeholder="Dispatch Summary" className="text-xs h-24" /></CardContent></Card>
                 </div>
                  <div className="space-y-1">
                      <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader>
@@ -751,3 +749,4 @@ export function PtlChallanForm() {
     );
 }
 
+    
