@@ -30,6 +30,7 @@ export interface Booking {
   chgWt: number;
   totalAmount: number;
   status: 'In Stock' | 'In Transit' | 'Cancelled' | 'In HOLD' | 'Delivered';
+  dispatchStatus?: 'Short Dispatched' | 'Extra Dispatched';
   itemRows: ItemRow[];
   additionalCharges?: { [key: string]: number };
   taxPaidBy?: string;

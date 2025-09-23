@@ -502,16 +502,54 @@ export function PtlChallanForm() {
 
             saveLrDetailsData([...allLrDetails, ...newLrDetailsForChallan]);
 
-            const selectedTrackingIds = new Set(selectedBookings.map(b => b.trackingId));
-            const allBookings = getBookings();
-            const updatedBookings = allBookings.map(b => {
-                if (selectedTrackingIds.has(b.trackingId)) {
-                    addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Added to loading challan ${newChallan.challanId}`);
-                    return { ...b, status: 'In Transit' as const };
+            let allBookings = getBookings();
+            const bookingsToUpdate = new Map<string, Booking>();
+            const newBookingsToAdd: Booking[] = [];
+
+            for (const booking of selectedBookings) {
+                const dispatchQty = dispatchQuantities[booking.trackingId];
+                if (dispatchQty !== undefined && dispatchQty !== booking.qty) {
+                    const remainingQty = booking.qty - dispatchQty;
+                    
+                    if (remainingQty > 0) { // Short dispatch
+                        // Create a new booking for the remaining quantity
+                        const remainingBooking: Booking = {
+                            ...booking,
+                            trackingId: `TRK-${Date.now()}-${Math.random()}`,
+                            qty: remainingQty,
+                            totalAmount: (booking.totalAmount / booking.qty) * remainingQty, // Pro-rate amount
+                            status: 'In Stock',
+                            dispatchStatus: 'Short Dispatched'
+                        };
+                        newBookingsToAdd.push(remainingBooking);
+
+                        // Modify original booking to reflect dispatched quantity
+                        const dispatchedBooking = {
+                            ...booking,
+                            qty: dispatchQty,
+                            totalAmount: (booking.totalAmount / booking.qty) * dispatchQty,
+                            status: 'In Transit' as const,
+                            dispatchStatus: undefined,
+                        };
+                        bookingsToUpdate.set(booking.trackingId, dispatchedBooking);
+                        addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Partially dispatched (${dispatchQty}/${booking.qty}) on challan ${newChallan.challanId}. Remaining stock in new booking.`);
+
+                    } else { // Extra dispatch or just update status
+                        const updatedBooking = { ...booking, status: 'In Transit' as const, dispatchStatus: dispatchQty > booking.qty ? 'Extra Dispatched' : undefined };
+                        bookingsToUpdate.set(booking.trackingId, updatedBooking);
+                        addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallan.challanId}`);
+                    }
+                } else {
+                     const updatedBooking = { ...booking, status: 'In Transit' as const };
+                     bookingsToUpdate.set(booking.trackingId, updatedBooking);
+                     addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallan.challanId}`);
                 }
-                return b;
-            });
-            saveBookings(updatedBookings);
+            }
+
+            allBookings = allBookings.map(b => bookingsToUpdate.has(b.trackingId) ? bookingsToUpdate.get(b.trackingId)! : b);
+            allBookings.push(...newBookingsToAdd);
+
+            saveBookings(allBookings);
 
             toast({ title: "Challan Created", description: `Temporary challan ${newChallan.challanId} is now pending.` });
             router.push('/company/challan');

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -41,6 +42,12 @@ const statusColors: { [key: string]: string } = {
   'Cancelled': 'text-red-600 border-red-600/40',
   'In HOLD': 'text-yellow-600 border-yellow-600/40',
 };
+
+const dispatchStatusColors: { [key: string]: string } = {
+  'Short Dispatched': 'bg-yellow-200/50 hover:bg-yellow-200/80',
+  'Extra Dispatched': 'bg-green-200/50 hover:bg-green-200/80',
+};
+
 
 export function StockDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -247,7 +254,11 @@ export function StockDashboard() {
                     <TableBody>
                     {filteredStock.length > 0 ? (
                       filteredStock.map((item) => (
-                        <TableRow key={item.trackingId} data-state={selectedLrs.has(item.trackingId) && "selected"}>
+                        <TableRow 
+                          key={item.trackingId} 
+                          data-state={selectedLrs.has(item.trackingId) && "selected"}
+                          className={cn(item.dispatchStatus && dispatchStatusColors[item.dispatchStatus])}
+                        >
                             <TableCell>
                                 <Checkbox
                                     checked={selectedLrs.has(item.trackingId)}
@@ -266,8 +277,8 @@ export function StockDashboard() {
                             <TableCell className={cn(tdClass, "text-right")}>{item.qty}</TableCell>
                             <TableCell className={cn(tdClass, "text-right")}>{item.chgWt} kg</TableCell>
                             <TableCell className={cn(tdClass)}>
-                                <Badge variant="outline" className={cn('font-semibold', statusColors[item.status])}>
-                                    {item.status}
+                                 <Badge variant="outline" className={cn('font-semibold', statusColors[item.status])}>
+                                    {item.dispatchStatus || item.status}
                                 </Badge>
                             </TableCell>
                         </TableRow>
