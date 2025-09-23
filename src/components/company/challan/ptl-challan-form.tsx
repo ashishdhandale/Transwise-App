@@ -19,6 +19,9 @@ import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const tdClass = "p-2 whitespace-nowrap";
 
@@ -109,24 +112,52 @@ export function PtlChallanForm() {
             setDispatchToParty('');
         }
     }, [toStation]);
+    
+    const stockBookingsFromStation = useMemo(() => {
+        if (!fromStation) return [];
+        return allStockBookings.filter(b => b.fromCity === fromStation);
+    }, [allStockBookings, fromStation]);
 
     const availableBookingsForDropdown = useMemo(() => {
-        if (!fromStation) return [];
         const selectedLrNos = new Set(selectedBookings.map(b => b.lrNo));
-        return allStockBookings
-            .filter(b => b.fromCity === fromStation && !selectedLrNos.has(b.lrNo))
+        return stockBookingsFromStation
+            .filter(b => !selectedLrNos.has(b.lrNo))
             .map(b => ({ label: `${b.lrNo} - ${b.toCity} - ${b.receiver}`, value: b.lrNo }));
-    }, [allStockBookings, fromStation, selectedBookings]);
+    }, [stockBookingsFromStation, selectedBookings]);
+
+    const bookingsByCity = useMemo(() => {
+        const grouped: { [city: string]: Booking[] } = {};
+        stockBookingsFromStation.forEach(booking => {
+            if (!grouped[booking.toCity]) {
+                grouped[booking.toCity] = [];
+            }
+            grouped[booking.toCity].push(booking);
+        });
+        return Object.entries(grouped).sort((a,b) => a[0].localeCompare(b[0]));
+    }, [stockBookingsFromStation]);
 
     const handleAddBooking = () => {
         if (!selectedLr) {
             toast({ title: "No GR Selected", description: "Please select a GR number from the list to add.", variant: "destructive"});
             return;
         }
-        const bookingToAdd = allStockBookings.find(b => b.lrNo === selectedLr);
+        const bookingToAdd = stockBookingsFromStation.find(b => b.lrNo === selectedLr);
         if (bookingToAdd) {
             setSelectedBookings(prev => [...prev, bookingToAdd]);
             setSelectedLr(undefined); // Reset dropdown
+        }
+    }
+
+    const handleCitySelectionChange = (city: string, isChecked: boolean | string) => {
+        const cityBookings = bookingsByCity.find(([cityName]) => cityName === city)?.[1] || [];
+        if (isChecked) {
+            // Add bookings from this city that aren't already selected
+            const newBookingsToAdd = cityBookings.filter(b => !selectedBookings.some(sb => sb.trackingId === b.trackingId));
+            setSelectedBookings(prev => [...prev, ...newBookingsToAdd]);
+        } else {
+            // Remove all bookings from this city
+            const cityBookingIds = new Set(cityBookings.map(b => b.trackingId));
+            setSelectedBookings(prev => prev.filter(b => !cityBookingIds.has(b.trackingId)));
         }
     }
     
@@ -272,22 +303,52 @@ export function PtlChallanForm() {
                 <CardHeader>
                     <CardTitle className="font-headline">Select Bookings for Challan</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                     <div className="flex items-end gap-2">
-                        <div className="flex-grow space-y-1">
-                            <Label>Available Bookings from {fromStation || '...'}</Label>
-                            <Combobox 
-                                options={availableBookingsForDropdown}
-                                value={selectedLr}
-                                onChange={setSelectedLr}
-                                placeholder="Search & Select GR No..."
-                                notFoundMessage="No available GRs for this station."
-                            />
-                        </div>
-                        <Button onClick={handleAddBooking}><PlusCircle className="mr-2 h-4 w-4" /> Add to Challan</Button>
-                    </div>
-
-                    <div className="overflow-x-auto border rounded-md max-h-96">
+                <CardContent>
+                    <Tabs defaultValue="search">
+                        <TabsList>
+                            <TabsTrigger value="search">Search & Select</TabsTrigger>
+                            <TabsTrigger value="citywise">City-wise</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="search" className="pt-4">
+                             <div className="flex items-end gap-2">
+                                <div className="flex-grow space-y-1">
+                                    <Label>Available Bookings from {fromStation || '...'}</Label>
+                                    <Combobox 
+                                        options={availableBookingsForDropdown}
+                                        value={selectedLr}
+                                        onChange={setSelectedLr}
+                                        placeholder="Search & Select GR No..."
+                                        notFoundMessage="No available GRs for this station."
+                                    />
+                                </div>
+                                <Button onClick={handleAddBooking}><PlusCircle className="mr-2 h-4 w-4" /> Add to Challan</Button>
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="citywise" className="pt-4">
+                             <Label>Select all bookings for a destination city:</Label>
+                             <ScrollArea className="h-48 mt-2 border rounded-md p-4">
+                                <div className="space-y-2">
+                                    {bookingsByCity.map(([city, bookings]) => (
+                                        <div key={city} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`city-${city}`}
+                                                onCheckedChange={(checked) => handleCitySelectionChange(city, checked)}
+                                                checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))}
+                                            />
+                                            <label
+                                                htmlFor={`city-${city}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                {city} ({bookings.length} GRs)
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                             </ScrollArea>
+                        </TabsContent>
+                    </Tabs>
+                    
+                    <div className="mt-4 overflow-x-auto border rounded-md max-h-96">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -320,7 +381,7 @@ export function PtlChallanForm() {
                                 )) : (
                                     <TableRow>
                                         <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                            No bookings selected. Add GRs from the dropdown above.
+                                            No bookings selected. Add GRs to include them in the challan.
                                         </TableCell>
                                     </TableRow>
                                 )}
