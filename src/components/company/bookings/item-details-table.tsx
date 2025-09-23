@@ -2,6 +2,7 @@
 
 'use client';
 
+import * as React from 'react';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Table,
@@ -33,7 +34,8 @@ import { Combobox } from '@/components/ui/combobox';
 import type { Item } from '@/lib/types';
 import { AddItemDialog } from '../master/add-item-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Label } from '../ui/label';
+import { Label } from '@/components/ui/label';
+
 
 export interface ItemRow {
   id: number;
@@ -351,7 +353,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
 
   return (
     <>
-      <div className="border rounded-md">
+      <div className="overflow-x-auto border rounded-md">
         <Table>
           <TableHeader>
               <TableRow>
@@ -506,4 +508,3 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </>
   );
 }
-
