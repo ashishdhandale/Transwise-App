@@ -263,6 +263,13 @@ export function PtlChallanForm() {
 
         return { paidAmt, toPayAmt, toBeBilledAmt, totalFreight, balanceTruckHire, totalCharges };
     }, [selectedBookings, additionalCharges]);
+    
+    useEffect(() => {
+        if (typeof manualLoadQty === 'number' && manualWtPerUnit > 0) {
+            setManualLoadWt(manualLoadQty * manualWtPerUnit);
+        }
+    }, [manualLoadQty, manualWtPerUnit]);
+
 
     const handleChargeChange = (field: keyof AdditionalCharges, value: string) => {
         const numValue = Number(value);
@@ -353,7 +360,7 @@ export function PtlChallanForm() {
         setIsOverloaded(true);
         setPendingBookings([]);
         setIsWeightAlertOpen(false);
-        toast({ title: "Overload Confirmed", description: "Bookings added despite exceeding vehicle capacity.", variant: "destructive" });
+        toast({ title: "Vehicle is Overloaded", description: "Bookings added despite exceeding vehicle capacity.", variant: "destructive" });
     };
 
     const handleAddBookingByGr = () => {
