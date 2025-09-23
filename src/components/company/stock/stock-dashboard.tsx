@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getChallanData, saveChallanData, type Challan, getLrDetailsData, saveLrDetailsData, LrDetail } from '@/lib/challan-data';
 import { addHistoryLog } from '@/lib/history-data';
 
-const thClass = "bg-primary/10 text-primary font-bold";
+const thClass = "text-primary font-bold";
 const tdClass = "whitespace-nowrap";
 
 const statusColors: { [key: string]: string } = {
@@ -220,28 +220,28 @@ export function StockDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="overflow-auto border rounded-md max-h-[70vh]">
+                <div className="overflow-y-auto border rounded-md max-h-[70vh]">
                 <Table className="relative">
-                    <TableHeader className="sticky top-0 z-10">
+                    <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                        <TableHead className={cn(thClass, 'bg-card')}>
+                        <TableHead className={cn(thClass, 'w-12')}>
                              <Checkbox 
                                 onCheckedChange={handleSelectAll}
                                 checked={filteredStock.length > 0 && selectedLrs.size === filteredStock.length}
                                 aria-label="Select all rows"
                             />
                         </TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>LR No.</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>Booking Type</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>Booking Date</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>From</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>To</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>Sender</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>Receiver</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>Item</TableHead>
-                        <TableHead className={cn(thClass, 'text-right', 'bg-card')}>Qty</TableHead>
-                        <TableHead className={cn(thClass, 'text-right', 'bg-card')}>Chg. Wt.</TableHead>
-                        <TableHead className={cn(thClass, 'bg-card')}>Status</TableHead>
+                        <TableHead className={cn(thClass)}>LR No.</TableHead>
+                        <TableHead className={cn(thClass)}>Booking Type</TableHead>
+                        <TableHead className={cn(thClass)}>Booking Date</TableHead>
+                        <TableHead className={cn(thClass)}>From</TableHead>
+                        <TableHead className={cn(thClass)}>To</TableHead>
+                        <TableHead className={cn(thClass)}>Sender</TableHead>
+                        <TableHead className={cn(thClass)}>Receiver</TableHead>
+                        <TableHead className={cn(thClass)}>Item</TableHead>
+                        <TableHead className={cn(thClass, 'text-right')}>Qty</TableHead>
+                        <TableHead className={cn(thClass, 'text-right')}>Chg. Wt.</TableHead>
+                        <TableHead className={cn(thClass)}>Status</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
