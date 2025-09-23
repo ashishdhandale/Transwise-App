@@ -305,50 +305,42 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         <Table className="table-fixed">
           <TableHeader>
               <TableRow>
-                <TableHead className={cn(thClass, 'w-[40px]')}>#</TableHead>
+                <TableHead className={cn(thClass, 'w-[30px]')}>#</TableHead>
                 <TableHead className={cn(thClass, 'w-[160px]')}>Item Name*</TableHead>
-                <TableHead className={cn(thClass, 'w-[200px]')}>Description*</TableHead>
-                <TableHead className={cn(thClass, 'w-[80px]')}>Qty*</TableHead>
-                <TableHead className={cn(thClass, 'w-[80px]')}>Act.wt*</TableHead>
-                <TableHead className={cn(thClass, 'w-[80px]')}>Chg.wt*</TableHead>
-                <TableHead className={cn(thClass, 'w-[80px]')}>Rate</TableHead>
-                <TableHead className={cn(thClass, 'w-[120px]')}>Freight ON</TableHead>
+                <TableHead className={cn(thClass, 'w-[160px]')}>Description*</TableHead>
+                <TableHead className={cn(thClass, 'w-[60px]')}>Qty*</TableHead>
+                <TableHead className={cn(thClass, 'w-[60px]')}>Act.wt*</TableHead>
+                <TableHead className={cn(thClass, 'w-[60px]')}>Chg.wt*</TableHead>
+                <TableHead className={cn(thClass, 'w-[60px]')}>Rate</TableHead>
+                <TableHead className={cn(thClass, 'w-[100px]')}>Freight ON</TableHead>
                 <TableHead className={cn(thClass, 'w-[100px]')}>Lumpsum</TableHead>
-                <TableHead className={cn(thClass, 'w-[50px]')}>Del</TableHead>
+                <TableHead className={cn(thClass, 'w-[40px]')}>Del</TableHead>
               </TableRow>
           </TableHeader>
           <TableBody>
               {rows.map((row, index) => (
-                <React.Fragment key={row.id}>
-                    <TableRow>
-                        <TableCell className={`${tdClass} text-center font-semibold text-red-500`} rowSpan={2}>{index + 1}*</TableCell>
-                        <TableCell className={tdClass}>
-                            <Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Select item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} />
-                        </TableCell>
-                        <TableCell className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} /></TableCell>
-                        <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} /></TableCell>
-                        <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} /></TableCell>
-                        <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} /></TableCell>
-                        <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed'} /></TableCell>
-                        <TableCell className={tdClass}><Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)}><SelectTrigger className={inputClass}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Act.wt">Act.wt</SelectItem><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Fixed">Fixed</SelectItem><SelectItem value="Quantity">Quantity</SelectItem></SelectContent></Select></TableCell>
-                        <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed'} /></TableCell>
-                        <TableCell className={`${tdClass} text-center`} rowSpan={2}>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this item row.</AlertDialogDescription></AlertDialogHeader>
-                                    <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => removeRow(row.id)}>Delete</AlertDialogAction></AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell className={tdClass}><Input type="text" placeholder="EWB No." className={inputClass} maxLength={12} value={row.ewbNo} onChange={(e) => handleInputChange(index, 'ewbNo', e.target.value)} /></TableCell>
-                        <TableCell className={tdClass}><Input type="text" placeholder="Private Mark" className={inputClass} value={row.pvtMark} onChange={(e) => handleInputChange(index, 'pvtMark', e.target.value)} /></TableCell>
-                        <TableCell className={tdClass} colSpan={3}><Input type="text" placeholder="Invoice No." className={inputClass} value={row.invoiceNo} onChange={(e) => handleInputChange(index, 'invoiceNo', e.target.value)} /></TableCell>
-                        <TableCell className={tdClass} colSpan={3}><Input type="text" placeholder="D.Value" inputMode="decimal" className={inputClass} value={row.dValue} onChange={(e) => handleInputChange(index, 'dValue', e.target.value)} /></TableCell>
-                    </TableRow>
-                </React.Fragment>
+                <TableRow key={row.id}>
+                    <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
+                    <TableCell className={tdClass}>
+                        <Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Select item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} />
+                    </TableCell>
+                    <TableCell className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} /></TableCell>
+                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} /></TableCell>
+                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} /></TableCell>
+                    <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} /></TableCell>
+                    <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed'} /></TableCell>
+                    <TableCell className={tdClass}><Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)}><SelectTrigger className={inputClass}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Act.wt">Act.wt</SelectItem><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Fixed">Fixed</SelectItem><SelectItem value="Quantity">Quantity</SelectItem></SelectContent></Select></TableCell>
+                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed'} /></TableCell>
+                    <TableCell className={`${tdClass} text-center`}>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete this item row.</AlertDialogDescription></AlertDialogHeader>
+                                <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => removeRow(row.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </TableCell>
+                </TableRow>
               ))}
           </TableBody>
           <TableFooter>
@@ -397,4 +389,3 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     </>
   );
 }
-
