@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -26,6 +27,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { bookingOptions } from '@/lib/booking-data';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
 const tdClass = "p-1 whitespace-nowrap text-xs";
@@ -71,7 +73,12 @@ export function PtlChallanForm() {
     const [allStockBookings, setAllStockBookings] = useState<Booking[]>([]);
     const [grSearchTerm, setGrSearchTerm] = useState('');
     const [selectedBookings, setSelectedBookings] = useState<Booking[]>([]);
-    const [cityWiseFilter, setCityWiseFilter] = useState<string>('all');
+    
+    // Validation State
+    const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
+    const [isWeightAlertOpen, setIsWeightAlertOpen] = useState(false);
+    const [isOverloaded, setIsOverloaded] = useState(false);
+    const [overflowLrNos, setOverflowLrNos] = useState<Set<string>>(new Set());
 
 
     const loadMasterData = useCallback(() => {
@@ -166,52 +173,6 @@ export function PtlChallanForm() {
         return options;
     }, [availableStock]);
     
-    const handleAddBookingByGr = () => {
-        if (!grSearchTerm.trim()) {
-            toast({ title: "No GR Number Entered", description: "Please type a GR number to add.", variant: "destructive"});
-            return;
-        }
-        const bookingToAdd = availableStock.find(b => b.lrNo.toLowerCase() === grSearchTerm.trim().toLowerCase());
-        
-        if (bookingToAdd) {
-            if (selectedBookings.some(b => b.trackingId === bookingToAdd.trackingId)) {
-                toast({ title: "Already Added", description: `GR No. ${bookingToAdd.lrNo} is already in the consignment list.`, variant: "destructive"});
-            } else {
-                setSelectedBookings(prev => [...prev, bookingToAdd]);
-                toast({ title: "Success", description: `Added GR No. ${bookingToAdd.lrNo}.`});
-            }
-            setGrSearchTerm(''); // Clear input after adding
-        } else {
-            toast({ title: "Not Found", description: `No booking with GR No. "${grSearchTerm}" found in the available stock for this station.`, variant: "destructive"});
-        }
-    };
-    
-    const handleToggleBookingSelection = (trackingId: string, isSelected: boolean | string) => {
-        if (isSelected) {
-            const bookingToAdd = availableStock.find(b => b.trackingId === trackingId);
-            if (bookingToAdd && !selectedBookings.some(b => b.trackingId === trackingId)) {
-                setSelectedBookings(prev => [...prev, bookingToAdd]);
-            }
-        } else {
-            setSelectedBookings(prev => prev.filter(b => b.trackingId !== trackingId));
-        }
-    };
-
-    const handleCitySelectionChange = (city: string, isChecked: boolean | string) => {
-        const cityBookings = bookingsByCity.find(([cityName]) => cityName === city)?.[1] || [];
-        if (isChecked) {
-            const newBookingsToAdd = cityBookings.filter(b => !selectedBookings.some(sb => sb.trackingId === b.trackingId));
-            setSelectedBookings(prev => [...prev, ...newBookingsToAdd]);
-        } else {
-            const cityBookingIds = new Set(cityBookings.map(b => b.trackingId));
-            setSelectedBookings(prev => prev.filter(b => !cityBookingIds.has(b.trackingId)));
-        }
-    };
-    
-    const handleRemoveBookingFromConsignment = (trackingId: string) => {
-        setSelectedBookings(prev => prev.filter(b => b.trackingId !== trackingId));
-    };
-
     const totals = useMemo(() => {
         const totalItems = selectedBookings.reduce((sum, b) => sum + b.itemRows.length, 0);
         const totalPackages = selectedBookings.reduce((sum, b) => sum + b.qty, 0);
@@ -227,6 +188,111 @@ export function PtlChallanForm() {
         return { paidAmt, toPayAmt, toBeBilledAmt, totalFreight };
     }, [selectedBookings]);
 
+    const checkWeightAndAddBookings = useCallback((bookingsToAdd: Booking[]) => {
+        if (!bookingsToAdd.length) return;
+
+        const vehicleCap = Number(vehicleCapacity) || 0;
+
+        if (vehicleCap > 0 && !isOverloaded) {
+            const currentWeight = totals.totalActualWeight;
+            const additionalWeight = bookingsToAdd.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0);
+            
+            if (currentWeight + additionalWeight > vehicleCap) {
+                setPendingBookings(bookingsToAdd);
+                setIsWeightAlertOpen(true);
+                return;
+            }
+        }
+        
+        // If no capacity limit, already overloaded, or within capacity, add directly
+        const newSelectedBookings = [...selectedBookings, ...bookingsToAdd];
+        setSelectedBookings(newSelectedBookings);
+        
+        if(isOverloaded) {
+            const newOverflowNos = new Set(overflowLrNos);
+            bookingsToAdd.forEach(b => newOverflowNos.add(b.lrNo));
+            setOverflowLrNos(newOverflowNos);
+        }
+        
+    }, [vehicleCapacity, isOverloaded, totals.totalActualWeight, selectedBookings, overflowLrNos]);
+
+    const handleConfirmOverload = () => {
+        if (!pendingBookings.length) return;
+        
+        const newSelectedBookings = [...selectedBookings, ...pendingBookings];
+        setSelectedBookings(newSelectedBookings);
+        
+        const newOverflowNos = new Set(overflowLrNos);
+        pendingBookings.forEach(b => newOverflowNos.add(b.lrNo));
+        setOverflowLrNos(newOverflowNos);
+
+        setIsOverloaded(true);
+        setPendingBookings([]);
+        setIsWeightAlertOpen(false);
+        toast({ title: "Overload Confirmed", description: "Bookings added despite exceeding vehicle capacity.", variant: "destructive" });
+    };
+
+    const handleAddBookingByGr = () => {
+        if (!grSearchTerm.trim()) {
+            toast({ title: "No GR Number Entered", description: "Please type a GR number to add.", variant: "destructive"});
+            return;
+        }
+        const bookingToAdd = availableStock.find(b => b.lrNo.toLowerCase() === grSearchTerm.trim().toLowerCase());
+        
+        if (bookingToAdd) {
+            if (selectedBookings.some(b => b.trackingId === bookingToAdd.trackingId)) {
+                toast({ title: "Already Added", description: `GR No. ${bookingToAdd.lrNo} is already in the consignment list.`, variant: "destructive"});
+            } else {
+                checkWeightAndAddBookings([bookingToAdd]);
+                toast({ title: "Success", description: `Added GR No. ${bookingToAdd.lrNo}.`});
+            }
+            setGrSearchTerm(''); // Clear input after adding
+        } else {
+            toast({ title: "Not Found", description: `No booking with GR No. "${grSearchTerm}" found in the available stock for this station.`, variant: "destructive"});
+        }
+    };
+    
+    const handleToggleBookingSelection = (trackingId: string, isSelected: boolean | string) => {
+        if (isSelected) {
+            const bookingToAdd = availableStock.find(b => b.trackingId === trackingId);
+            if (bookingToAdd && !selectedBookings.some(b => b.trackingId === trackingId)) {
+                checkWeightAndAddBookings([bookingToAdd]);
+            }
+        } else {
+            handleRemoveBookingFromConsignment(trackingId);
+        }
+    };
+
+    const handleCitySelectionChange = (city: string, isChecked: boolean | string) => {
+        const cityBookings = bookingsByCity.find(([cityName]) => cityName === city)?.[1] || [];
+        if (isChecked) {
+            const newBookingsToAdd = cityBookings.filter(b => !selectedBookings.some(sb => sb.trackingId === b.trackingId));
+            checkWeightAndAddBookings(newBookingsToAdd);
+        } else {
+            const cityBookingIds = new Set(cityBookings.map(b => b.trackingId));
+            setSelectedBookings(prev => prev.filter(b => !cityBookingIds.has(b.trackingId)));
+        }
+    };
+    
+    const handleRemoveBookingFromConsignment = (trackingId: string) => {
+        const bookingToRemove = selectedBookings.find(b => b.trackingId === trackingId);
+        const updatedSelection = selectedBookings.filter(b => b.trackingId !== trackingId);
+        setSelectedBookings(updatedSelection);
+
+        if (bookingToRemove) {
+            const newOverflowNos = new Set(overflowLrNos);
+            newOverflowNos.delete(bookingToRemove.lrNo);
+            setOverflowLrNos(newOverflowNos);
+        }
+
+        // Check if we are back under capacity
+        const remainingWeight = updatedSelection.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0);
+        const vehicleCap = Number(vehicleCapacity) || 0;
+        if (vehicleCap > 0 && remainingWeight <= vehicleCap) {
+            setIsOverloaded(false);
+            setOverflowLrNos(new Set()); // Clear all red highlights if back to normal
+        }
+    };
 
     const handleFinalize = async () => {
         if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0) {
@@ -411,11 +477,15 @@ export function PtlChallanForm() {
                             </TabsContent>
                             <TabsContent value="citywise" className="pt-2 space-y-2">
                                 <ScrollArea className="h-24 border rounded-md p-2">
-                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
-                                        {bookingsByCity.map(([city, bookings]) => (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
+                                        {bookingsByCity.map(([city, cityBookings]) => (
                                             <div key={city} className="flex items-center space-x-2">
-                                                <Checkbox id={`city-${city}`} onCheckedChange={(c) => handleCitySelectionChange(city, c)} checked={bookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} />
-                                                <label htmlFor={`city-${city}`} className="text-xs font-medium">{city} ({bookings.length})</label>
+                                                <Checkbox 
+                                                    id={`city-${city}`} 
+                                                    onCheckedChange={(c) => handleCitySelectionChange(city, c)} 
+                                                    checked={cityBookings.length > 0 && cityBookings.every(b => selectedBookings.some(sb => sb.trackingId === b.trackingId))} 
+                                                />
+                                                <label htmlFor={`city-${city}`} className="text-xs font-medium">{city} ({cityBookings.length})</label>
                                             </div>
                                         ))}
                                     </div>
@@ -467,7 +537,7 @@ export function PtlChallanForm() {
                             </TableHeader>
                             <TableBody>
                                 {selectedBookings.map((b, i) => (
-                                    <TableRow key={b.trackingId}>
+                                    <TableRow key={b.trackingId} className={cn(overflowLrNos.has(b.lrNo) && "bg-red-200/50")}>
                                         <TableCell className={tdClass}>{i+1}</TableCell><TableCell className={tdClass}>{b.lrNo}</TableCell><TableCell className={tdClass}>{b.toCity}</TableCell><TableCell className={tdClass}>{b.lrType}</TableCell><TableCell className={tdClass}>{b.sender}</TableCell><TableCell className={tdClass}>{b.receiver}</TableCell><TableCell className={tdClass}>{b.itemDescription}</TableCell><TableCell className={tdClass}>{b.qty}</TableCell><TableCell className={tdClass}><Input className="h-6 text-xs w-16" defaultValue={b.qty} /></TableCell><TableCell className={tdClass}>{b.itemRows.reduce((s,i) => s+Number(i.actWt),0)}</TableCell><TableCell className={tdClass}>{b.totalAmount.toFixed(2)}</TableCell><TableCell className={tdClass}>{b.itemRows[0]?.ewbNo || ''}</TableCell>
                                         <TableCell className={tdClass}><div className="flex items-center"><Button variant="ghost" size="icon" className="h-5 w-5 text-red-600" onClick={() => handleRemoveBookingFromConsignment(b.trackingId)}><X className="h-4 w-4" /></Button></div></TableCell>
                                     </TableRow>
@@ -504,6 +574,20 @@ export function PtlChallanForm() {
                     Save &amp; Finalize
                 </Button>
             </div>
+             <AlertDialog open={isWeightAlertOpen} onOpenChange={setIsWeightAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Vehicle Capacity Exceeded</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Adding these bookings will exceed the vehicle's capacity. Do you want to continue? Overflowed items will be marked in red.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setPendingBookings([])}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmOverload}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
