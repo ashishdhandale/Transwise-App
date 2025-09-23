@@ -334,6 +334,7 @@ export function BookingsDashboard() {
                       <TableHead className={`${thClass} text-right`}>Chg Wt</TableHead>
                       <TableHead className={`${thClass} text-right`}>Total Amount</TableHead>
                       <TableHead className={thClass}>Status</TableHead>
+                      <TableHead className={thClass}>Load Type</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TooltipProvider>
@@ -362,15 +363,15 @@ export function BookingsDashboard() {
                                         <Pencil className="mr-2 h-4 w-4" /> Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuSub>
-                                      <DropdownMenuSubTrigger>
+                                      <DropdownMenuSubTrigger disabled={booking.status === 'Cancelled'}>
                                         <Printer className="mr-2 h-4 w-4" />
                                         Print
                                       </DropdownMenuSubTrigger>
                                       <DropdownMenuPortal>
                                         <DropdownMenuSubContent>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')} disabled={booking.status === 'Cancelled'}>Sender Copy</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')} disabled={booking.status === 'Cancelled'}>Receiver Copy</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')} disabled={booking.status === 'Cancelled'}>Driver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')}>Sender Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')}>Receiver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')}>Driver Copy</DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Office')}>Office Copy</DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                       </DropdownMenuPortal>
@@ -417,11 +418,12 @@ export function BookingsDashboard() {
                                 {booking.status}
                             </Badge>
                           </TableCell>
+                          <TableCell className={tdClass}>{booking.loadType}</TableCell>
                         </TableRow>
                       ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={14} className="text-center h-24">No bookings found.</TableCell>
+                          <TableCell colSpan={15} className="text-center h-24">No bookings found.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
