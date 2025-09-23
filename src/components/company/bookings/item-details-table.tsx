@@ -33,7 +33,6 @@ import { Combobox } from '@/components/ui/combobox';
 import type { Item } from '@/lib/types';
 import { AddItemDialog } from '../master/add-item-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export interface ItemRow {
   id: number;
@@ -48,7 +47,6 @@ export interface ItemRow {
   lumpsum: string;
   pvtMark: string;
   invoiceNo: string;
-  invoiceDate: string;
   dValue: string;
   [key: string]: any;
 }
@@ -65,19 +63,18 @@ const DEFAULT_ROWS = 2;
 const DEFAULT_ITEM_NAME = 'Frm MAS';
 
 const defaultColumns: ColumnSetting[] = [
-    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[220px]' },
-    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[160px]' },
-    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[220px]' },
-    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
-    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
-    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
-    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[100px]' },
-    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[130px]' },
-    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[120px]' },
-    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
-    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
-    { id: 'invoiceDate', label: 'Invoice Date', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
-    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'min-w-[140px]' },
+    { id: 'ewbNo', label: 'EWB no.', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
+    { id: 'itemName', label: 'Item Name*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[160px]' },
+    { id: 'description', label: 'Description*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[220px]' },
+    { id: 'qty', label: 'Qty*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
+    { id: 'actWt', label: 'Act.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
+    { id: 'chgWt', label: 'Chg.wt*', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
+    { id: 'rate', label: 'Rate', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[100px]' },
+    { id: 'freightOn', label: 'Freight ON', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[130px]' },
+    { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[120px]' },
+    { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
+    { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
+    { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
 ];
 
 let nextId = 1;
@@ -94,7 +91,6 @@ const createEmptyRow = (): ItemRow => ({
     lumpsum: '',
     pvtMark: '',
     invoiceNo: '',
-    invoiceDate: '',
     dValue: '',
 });
 
@@ -371,8 +367,6 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
-        case 'invoiceDate':
-            return <Input type="date" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         default: // For custom columns
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
     }
