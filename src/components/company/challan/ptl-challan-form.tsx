@@ -242,9 +242,9 @@ export function PtlChallanForm() {
     }, [selectedBookings, dispatchQuantities, calculateProportionalWeight]);
 
     const financialSummary = useMemo(() => {
-        const paidAmt = selectedBookings.filter(b => b.lrType === 'PAID').reduce((sum, b) => sum + b.totalAmount, 0);
-        const toPayAmt = selectedBookings.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0);
-        const toBeBilledAmt = selectedBookings.filter(b => b.lrType === 'TBB').reduce((sum, b) => sum + b.totalAmount, 0);
+        const paidAmt = selectedBookings.reduce((sum, b) => b.lrType === 'PAID' ? sum + b.totalAmount : sum, 0);
+        const toPayAmt = selectedBookings.reduce((sum, b) => b.lrType === 'TOPAY' ? sum + b.totalAmount : sum, 0);
+        const toBeBilledAmt = selectedBookings.reduce((sum, b) => b.lrType === 'TBB' ? sum + b.totalAmount : sum, 0);
         const totalFreight = paidAmt + toPayAmt + toBeBilledAmt;
         const balanceTruckHire = additionalCharges.vehFreight - additionalCharges.vehAdvance;
         const totalCharges = toPayAmt + additionalCharges.commission + additionalCharges.labour + additionalCharges.crossing + additionalCharges.carting + additionalCharges.otherCharges - balanceTruckHire;
@@ -733,7 +733,7 @@ export function PtlChallanForm() {
                         <div className="flex justify-between"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehAdvance} onChange={e => handleChargeChange('vehAdvance', e.target.value)} /></div>
                         <div className="flex justify-between items-center"><a>+Add Fuel</a><span><Input className="h-6 w-12 text-xs inline-block" placeholder="Ltr" value={additionalCharges.fuelLtr || ''} onChange={e => handleChargeChange('fuelLtr', e.target.value)} /><Input className="h-6 w-16 text-xs inline-block ml-1" placeholder="Amt" value={additionalCharges.fuelAmt || ''} onChange={e => handleChargeChange('fuelAmt', e.target.value)} /></span></div>
                         <div className="flex justify-between"><span>Balance Truck Hire</span><Input readOnly value={financialSummary.balanceTruckHire.toFixed(2)} className="h-6 w-24 text-xs" /></div>
-                        <div className="flex justify-between font-bold text-red-600"><span>Total</span><span>Rs. {financialSummary.totalCharges.toFixed(2)}</span></div>
+                        <div className="flex justify-between font-bold text-red-600"><span>Total:</span><span>Rs. {financialSummary.totalCharges.toFixed(2)}</span></div>
                     </CardContent>
                  </Card>
             </div>
