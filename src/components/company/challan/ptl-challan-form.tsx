@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -51,7 +50,7 @@ export function PtlChallanForm() {
     const [challanDate, setChallanDate] = useState(new Date());
     const [lotDispatchDate, setLotDispatchDate] = useState(new Date());
     const [fromStation, setFromStation] = useState<string | undefined>('ALL');
-    const [dispatchTo, setDispatchTo] = useState('==========Branch Offices:============');
+    const [dispatchTo, setDispatchTo] = useState<string | undefined>();
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
     const [vehicleSupplier, setVehicleSupplier] = useState<string | undefined>();
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
@@ -110,8 +109,6 @@ export function PtlChallanForm() {
                 const allBookings = getBookings();
                 const ptlStock = allBookings.filter(b => b.loadType === 'PTL' && b.status === 'In Stock');
                 setAllStockBookings(ptlStock);
-                // Default to showing all stations, not filtering by company city
-                // if (profile?.city) setFromStation(profile.city); 
                 setChallanNo(`TEMP-${Date.now().toString().slice(-6)}`);
             } catch (error) {
                 toast({ title: "Error", description: "Failed to load initial data.", variant: "destructive" });
@@ -204,8 +201,8 @@ export function PtlChallanForm() {
 
 
     const handleFinalize = async () => {
-        if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0) {
-            toast({ title: "Validation Error", description: "Vehicle, Driver, and From Station are required, and at least one booking must be selected.", variant: "destructive" });
+        if (!vehicleNo || !driverName || !fromStation || !dispatchTo || selectedBookings.length === 0) {
+            toast({ title: "Validation Error", description: "Vehicle, Driver, From Station, and Dispatch To are required, and at least one booking must be selected.", variant: "destructive" });
             return;
         }
 
@@ -276,6 +273,7 @@ export function PtlChallanForm() {
 
     const cityOptions = useMemo(() => [{ label: 'ALL', value: 'ALL' }, ...cities.map(c => ({ label: c.name, value: c.name }))], [cities]);
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
+    const dispatchToOptions = useMemo(() => cities.map(c => ({label: c.name, value: c.name})), [cities]);
 
 
     if (isLoading) return <p>Loading form...</p>;
@@ -296,10 +294,7 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>Dispatch To</Label>
-                            <Select value={dispatchTo} onValueChange={setDispatchTo}>
-                                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-                                <SelectContent><SelectItem value="==========Branch Offices:============">==========Branch Offices:============</SelectItem></SelectContent>
-                            </Select>
+                            <Combobox options={dispatchToOptions} value={dispatchTo} onChange={setDispatchTo} placeholder="Select Dispatch To..." />
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
@@ -316,11 +311,11 @@ export function PtlChallanForm() {
                     </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-xs items-end">
                         <div className="space-y-0.5">
-                            <Label>Lot No.</Label>
+                            <Label>Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
                         </div>
                          <div className="space-y-0.5">
-                            <Label>Lot Date</Label>
+                            <Label>Challan Date</Label>
                              <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
                         </div>
                         <div className="space-y-0.5">
@@ -347,8 +342,8 @@ export function PtlChallanForm() {
                 <CardContent>
                     <Tabs defaultValue="search">
                         <TabsList className="h-8">
-                            <TabsTrigger value="search" className="text-xs h-7">Search By LR</TabsTrigger>
-                            <TabsTrigger value="citywise" className="text-xs h-7">Citywise Bulk Select</TabsTrigger>
+                            <TabsTrigger value="search" className="text-xs h-7">Search &amp; Select GR</TabsTrigger>
+                            <TabsTrigger value="citywise" className="text-xs h-7">City-wise Bulk Select</TabsTrigger>
                              <TabsTrigger value="list" className="text-xs h-7">Select From List</TabsTrigger>
                         </TabsList>
                         <TabsContent value="search" className="pt-2">
