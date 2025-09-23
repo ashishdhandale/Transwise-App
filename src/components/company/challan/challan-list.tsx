@@ -149,6 +149,10 @@ export function ChallanList() {
     return (
         <div className="space-y-4">
             <header className="flex items-center justify-between">
+                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
+                    <FileText className="h-8 w-8" />
+                    Challan Management
+                </h1>
                 <div className="flex items-center gap-4">
                      <Button asChild className="bg-green-500 hover:bg-green-600 text-white">
                         <Link href="/company/challan/new">
@@ -162,9 +166,6 @@ export function ChallanList() {
                         Import Challan
                     </Button>
                 </div>
-                <h1 className="text-2xl font-bold text-cyan-700">
-                    Lot information
-                </h1>
             </header>
             
             <div className="space-y-6">
