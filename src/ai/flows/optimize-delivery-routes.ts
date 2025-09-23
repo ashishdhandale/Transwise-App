@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { getEwayBillDetails } from '../tools/get-eway-bill-details';
 
 const OptimizeDeliveryRoutesInputSchema = z.object({
   deliveries: z
@@ -23,6 +25,7 @@ const OptimizeDeliveryRoutesInputSchema = z.object({
           .enum(['high', 'medium', 'low'])
           .describe('The urgency of the delivery.'),
         size: z.number().describe('The size of the delivery (e.g., in cubic meters).'),
+        ewbNumber: z.string().optional().describe('The E-way Bill number associated with this delivery.'),
       })
     )
     .describe('A list of deliveries to be routed.'),
@@ -47,6 +50,7 @@ const OptimizeDeliveryRoutesOutputSchema = z.object({
         arrivalTime: z.string().describe('The estimated arrival time (ISO format).'),
         travelTime: z.number().describe('The estimated travel time in minutes.'),
         distance: z.number().describe('The distance to the delivery location in kilometers.'),
+        notes: z.string().optional().describe('Any specific notes or warnings about this delivery, especially regarding E-way Bill status.'),
       })
     )
     .describe('The optimized delivery route.'),
@@ -71,11 +75,15 @@ const optimizeDeliveryRoutesPrompt = ai.definePrompt({
   name: 'optimizeDeliveryRoutesPrompt',
   input: {schema: OptimizeDeliveryRoutesInputSchema},
   output: {schema: OptimizeDeliveryRoutesOutputSchema},
+  tools: [getEwayBillDetails],
   prompt: `You are a route optimization expert. Given the following deliveries, vehicle capacity, current location, and traffic conditions, suggest the most efficient delivery routes to minimize delays and fuel consumption.
+
+For each delivery that has an E-way Bill number, you MUST use the 'getEwayBillDetails' tool to check its status. 
+If an E-way Bill is 'EXPIRED' or 'CANCELLED', you MUST add a note to the delivery route indicating a warning and the status. Prioritize deliveries with active E-way Bills.
 
 Deliveries:
 {{#each deliveries}}
-  - ID: {{this.id}}, Location: {{this.location}}, Time Window: {{this.timeWindowStart}} - {{this.timeWindowEnd}}, Urgency: {{this.urgency}}, Size: {{this.size}}
+  - ID: {{this.id}}, Location: {{this.location}}, Time Window: {{this.timeWindowStart}} - {{this.timeWindowEnd}}, Urgency: {{this.urgency}}, Size: {{this.size}}, EWB: {{this.ewbNumber}}
 {{/each}}
 
 Vehicle Capacity: {{vehicleCapacity}}
@@ -83,7 +91,7 @@ Current Location: {{currentLocation}}
 Traffic Conditions: {{trafficConditions}}
 Fuel Price: {{fuelPrice}}
 
-Optimize the routes considering urgency, capacity and fuel savings. Return the optimized routes with estimated arrival times, travel times, and distances. Also, estimate total fuel consumption and total travel time.
+Optimize the routes considering urgency, capacity, E-way Bill validity, and fuel savings. Return the optimized routes with estimated arrival times, travel times, and distances. Also, estimate total fuel consumption and total travel time.
 
 Format the output as a JSON object with 'optimizedRoutes', 'totalFuelConsumption', and 'totalTravelTime' fields.
 `,
