@@ -40,7 +40,7 @@ import {
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle, Download, Loader2, Eye } from 'lucide-react';
+import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Trash2, XCircle, Download, Loader2, Eye, FileWarning } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
@@ -87,7 +87,8 @@ export function BookingsDashboard() {
   const [isDownloading, setIsDownloading] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isCancelConfirmationOpen, setIsCancelConfirmationOpen] = useState(false);
+  const [isCancelOptionsOpen, setIsCancelOptionsOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
 
   const router = useRouter();
@@ -182,10 +183,21 @@ export function BookingsDashboard() {
       return;
     }
     setBookingToCancel(booking);
-    setIsCancelDialogOpen(true);
+    setIsCancelOptionsOpen(true);
+  };
+  
+  const handleCompleteCancel = () => {
+      setIsCancelOptionsOpen(false);
+      setIsCancelConfirmationOpen(true);
   };
 
-  const confirmCancellation = () => {
+  const handlePartialCancel = () => {
+      if (!bookingToCancel) return;
+      setIsCancelOptionsOpen(false);
+      handleEditOpen(bookingToCancel.trackingId);
+  };
+
+  const confirmCompleteCancellation = () => {
     if (!bookingToCancel) return;
 
     const updatedBookings = bookings.map(b => 
@@ -198,7 +210,7 @@ export function BookingsDashboard() {
       title: 'Booking Cancelled',
       description: `LR No: ${bookingToCancel.lrNo} has been successfully cancelled.`,
     });
-    setIsCancelDialogOpen(false);
+    setIsCancelConfirmationOpen(false);
     setBookingToCancel(null);
   };
 
@@ -440,7 +452,31 @@ export function BookingsDashboard() {
             </DialogContent>
         </Dialog>
       )}
-      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+
+      {/* Cancellation Options Dialog */}
+      <Dialog open={isCancelOptionsOpen} onOpenChange={setIsCancelOptionsOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Cancel Booking: {bookingToCancel?.lrNo}</DialogTitle>
+                <DialogDescription>
+                    How would you like to cancel this booking? You can cancel the entire booking or make a partial cancellation by editing quantities.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+                <Button variant="destructive" onClick={handleCompleteCancel}>
+                    <XCircle className="mr-2 h-4 w-4"/>
+                    Complete Cancellation
+                </Button>
+                <Button variant="outline" onClick={handlePartialCancel}>
+                    <Pencil className="mr-2 h-4 w-4"/>
+                    Partial Cancellation (Edit)
+                </Button>
+            </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Final Confirmation for Complete Cancellation */}
+      <AlertDialog open={isCancelConfirmationOpen} onOpenChange={setIsCancelConfirmationOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -450,7 +486,7 @@ export function BookingsDashboard() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Back</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmCancellation} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction onClick={confirmCompleteCancellation} className="bg-destructive hover:bg-destructive/90">
               Confirm Cancellation
             </AlertDialogAction>
           </AlertDialogFooter>
