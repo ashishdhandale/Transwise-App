@@ -34,6 +34,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
@@ -350,8 +351,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
     }, [itemRows]);
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
-        const isFtlBooking = loadType === 'FTL';
-        const currentStatus = isFtlBooking ? 'In Transit' : 'In Stock';
+        const currentStatus: Booking['status'] = 'In Stock';
         const currentBooking = isEditMode ? allBookings.find(b => b.trackingId === trackingId) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
 
@@ -395,51 +395,42 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                 const updatedBookings = [...allBookings, newBooking];
                 saveBookings(updatedBookings);
                 addHistoryLog(currentGrNumber, 'Booking Created', 'Admin');
-                if (isFtlBooking) {
-                    addHistoryLog(currentGrNumber, 'Dispatched from Warehouse', 'Admin', `Dispatched via vehicle ${ftlDetails.vehicleNo}`);
-                }
-                toast({ title: 'Booking Saved', description: `Successfully saved GR Number: ${currentGrNumber}` });
-
-                if (newBooking.loadType === 'FTL' && newBooking.ftlDetails) {
+                
+                if (newBooking.loadType === 'FTL') {
+                    // For FTL, we create a pending challan immediately.
                     const allChallans = getChallanData();
-                    const newChallanId = `CHLN${String(allChallans.length + 1).padStart(3, '0')}`;
                     const challan: Challan = {
-                        challanId: newChallanId,
+                        challanId: `TEMP-CHLN-${Date.now()}`,
                         dispatchDate: format(new Date(newBooking.bookingDate), 'yyyy-MM-dd'),
-                        dispatchToParty: newBooking.toCity,
-                        vehicleNo: newBooking.ftlDetails.vehicleNo,
-                        driverName: newBooking.ftlDetails.driverName,
+                        challanType: 'Dispatch',
+                        status: 'Pending',
+                        vehicleNo: newBooking.ftlDetails!.vehicleNo,
+                        driverName: newBooking.ftlDetails!.driverName,
                         fromStation: newBooking.fromCity,
                         toStation: newBooking.toCity,
-                        senderId: newBooking.sender,
-                        inwardId: '',
-                        inwardDate: '',
-                        receivedFromParty: '',
-                        challanType: 'Dispatch',
-                        status: 'Finalized',
-                        vehicleHireFreight: newBooking.ftlDetails.truckFreight,
-                        advance: newBooking.ftlDetails.advance,
-                        balance: newBooking.ftlDetails.truckFreight - newBooking.ftlDetails.advance,
+                        dispatchToParty: newBooking.receiver,
                         totalLr: 1,
                         totalPackages: newBooking.qty,
                         totalItems: newBooking.itemRows.length,
                         totalActualWeight: newBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
                         totalChargeWeight: newBooking.chgWt,
+                        vehicleHireFreight: newBooking.ftlDetails!.truckFreight,
+                        advance: newBooking.ftlDetails!.advance,
+                        balance: newBooking.ftlDetails!.truckFreight - newBooking.ftlDetails!.advance,
+                        senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
                         summary: {
                             grandTotal: newBooking.totalAmount,
                             totalTopayAmount: newBooking.lrType === 'TOPAY' ? newBooking.totalAmount : 0,
-                            commission: newBooking.ftlDetails.commission,
-                            labour: 0,
-                            crossing: 0,
-                            carting: 0,
-                            balanceTruckHire: newBooking.ftlDetails.truckFreight - newBooking.ftlDetails.advance,
+                            commission: newBooking.ftlDetails!.commission,
+                            labour: 0, crossing: 0, carting: 0, 
+                            balanceTruckHire: newBooking.ftlDetails!.truckFreight - newBooking.ftlDetails!.advance,
                             debitCreditAmount: 0
                         }
                     };
                     saveChallanData([...allChallans, challan]);
 
                     const lrDetail: LrDetail = {
-                        challanId: newChallanId,
+                        challanId: challan.challanId,
                         lrNo: newBooking.lrNo,
                         lrType: newBooking.lrType,
                         sender: newBooking.sender,
