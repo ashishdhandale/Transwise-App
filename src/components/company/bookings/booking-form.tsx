@@ -58,6 +58,7 @@ const createEmptyRow = (id: number): ItemRow => ({
   lumpsum: '',
   pvtMark: '',
   invoiceNo: '',
+  invoiceDate: '',
   dValue: '',
 });
 
@@ -581,8 +582,9 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose }: B
                             loadType={loadType}
                         />
                     )}
-
-                    <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
+                    <div className="overflow-x-auto">
+                        <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} />
+                    </div>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
                         <ChargesSection 
