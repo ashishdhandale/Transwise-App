@@ -46,6 +46,7 @@ export interface ItemRow {
   lumpsum: string;
   pvtMark: string;
   invoiceNo: string;
+  invoiceDate: string;
   dValue: string;
   [key: string]: any;
 }
@@ -73,6 +74,7 @@ const defaultColumns: ColumnSetting[] = [
     { id: 'lumpsum', label: 'Lumpsum', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[120px]' },
     { id: 'pvtMark', label: 'Pvt.Mark', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
     { id: 'invoiceNo', label: 'Invoice No', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
+    { id: 'invoiceDate', label: 'Invoice Date', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
     { id: 'dValue', label: 'D.Value', isVisible: true, isCustom: false, isRemovable: false, width: 'w-[140px]' },
 ];
 
@@ -90,6 +92,7 @@ const createEmptyRow = (): ItemRow => ({
     lumpsum: '',
     pvtMark: '',
     invoiceNo: '',
+    invoiceDate: '',
     dValue: '',
 });
 
@@ -311,7 +314,7 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
     };
     
     const uppercaseItemOptions = useMemo(() => itemOptions.map(i => ({
-        label: i.name.toUpperCase(), value: i.name.toUpperCase()
+        label: i.name.toUpperCase(), value: i.name
     })), [itemOptions]);
 
   const getInputForColumn = (columnId: string, index: number) => {
@@ -366,6 +369,8 @@ export function ItemDetailsTable({ rows, onRowsChange }: ItemDetailsTableProps) 
         case 'pvtMark':
         case 'invoiceNo':
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
+        case 'invoiceDate':
+            return <Input type="date" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
         default: // For custom columns
             return <Input type="text" className={inputClass} value={value} onChange={(e) => handleInputChange(index, columnId, e.target.value)} />;
     }
