@@ -46,6 +46,18 @@ interface ShortExtraEntry {
     message: string;
 }
 
+interface AdditionalCharges {
+    commission: number;
+    labour: number;
+    crossing: number;
+    carting: number;
+    otherCharges: number;
+    vehFreight: number;
+    vehAdvance: number;
+    fuelLtr: number;
+    fuelAmt: number;
+}
+
 export function PtlChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
@@ -87,6 +99,10 @@ export function PtlChallanForm() {
     const [dispatchQuantities, setDispatchQuantities] = useState<{ [trackingId: string]: number }>({});
     const [modifiedQtyLrNos, setModifiedQtyLrNos] = useState<Set<string>>(new Set());
     const [shortExtraEntries, setShortExtraEntries] = useState<ShortExtraEntry[]>([]);
+    const [additionalCharges, setAdditionalCharges] = useState<AdditionalCharges>({
+        commission: 0, labour: 0, crossing: 0, carting: 0, otherCharges: 0,
+        vehFreight: 0, vehAdvance: 0, fuelLtr: 0, fuelAmt: 0
+    });
 
 
     const loadMasterData = useCallback(() => {
@@ -161,10 +177,7 @@ export function PtlChallanForm() {
     const bookingsByCity = useMemo(() => {
         const grouped: { [city: string]: Booking[] } = {};
         let filteredStock = availableStock;
-        if (cityFilter !== 'all') {
-            filteredStock = filteredStock.filter(b => b.toCity === cityFilter);
-        }
-
+        
         filteredStock.forEach(booking => {
             const cityKey = booking.toCity || 'Unknown';
             if (!grouped[cityKey]) grouped[cityKey] = [];
@@ -175,7 +188,7 @@ export function PtlChallanForm() {
         
         return sortedEntries;
 
-    }, [availableStock, cityFilter]);
+    }, [availableStock]);
     
     const cityWiseFilterOptions = useMemo(() => {
         const citiesFromStock = new Set(availableStock.map(b => b.toCity));
@@ -214,8 +227,17 @@ export function PtlChallanForm() {
         const toPayAmt = selectedBookings.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0);
         const toBeBilledAmt = selectedBookings.filter(b => b.lrType === 'TBB').reduce((sum, b) => sum + b.totalAmount, 0);
         const totalFreight = paidAmt + toPayAmt + toBeBilledAmt;
-        return { paidAmt, toPayAmt, toBeBilledAmt, totalFreight };
-    }, [selectedBookings]);
+        const balanceTruckHire = additionalCharges.vehFreight - additionalCharges.vehAdvance;
+        const totalCharges = toPayAmt + additionalCharges.commission + additionalCharges.labour + additionalCharges.crossing + additionalCharges.carting + additionalCharges.otherCharges - balanceTruckHire;
+
+        return { paidAmt, toPayAmt, toBeBilledAmt, totalFreight, balanceTruckHire, totalCharges };
+    }, [selectedBookings, additionalCharges]);
+
+    const handleChargeChange = (field: keyof AdditionalCharges, value: string) => {
+        const numValue = Number(value);
+        if (isNaN(numValue)) return;
+        setAdditionalCharges(prev => ({ ...prev, [field]: numValue }));
+    };
     
     const updateShortExtraLog = (booking: Booking, newDispatchQty: number) => {
         const originalQty = booking.qty;
@@ -409,7 +431,9 @@ export function PtlChallanForm() {
                 toStation: toStation || selectedBookings.map(b => b.toCity).join(', '),
                 senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
                 challanType: 'Dispatch',
-                vehicleHireFreight: 0, advance: 0, balance: 0,
+                vehicleHireFreight: additionalCharges.vehFreight, 
+                advance: additionalCharges.vehAdvance, 
+                balance: financialSummary.balanceTruckHire,
                 totalLr: selectedBookings.length,
                 totalPackages: totals.totalPackages,
                 totalItems: totals.totalItems,
@@ -418,7 +442,12 @@ export function PtlChallanForm() {
                 summary: {
                     grandTotal: financialSummary.totalFreight,
                     totalTopayAmount: financialSummary.toPayAmt,
-                    commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0,
+                    commission: additionalCharges.commission, 
+                    labour: additionalCharges.labour, 
+                    crossing: additionalCharges.crossing, 
+                    carting: additionalCharges.carting, 
+                    balanceTruckHire: financialSummary.balanceTruckHire,
+                    debitCreditAmount: financialSummary.totalCharges,
                 }
             };
             
@@ -564,7 +593,7 @@ export function PtlChallanForm() {
                                 </div>
                                 <ScrollArea className="h-24 border rounded-md p-2">
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-1">
-                                        {bookingsByCity.map(([city, cityBookings]) => (
+                                        {bookingsByCity.filter(([cityName]) => cityFilter === 'all' || cityName === cityFilter).map(([city, cityBookings]) => (
                                             <div key={city} className="flex items-center space-x-2">
                                                 <Checkbox 
                                                     id={`city-${city}`} 
@@ -677,7 +706,21 @@ export function PtlChallanForm() {
                      <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader><CardContent className="p-1 grid grid-cols-2 gap-1"><Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" /><Textarea placeholder="Dispatch Summary" className="text-xs h-24" /></CardContent></Card>
                 </div>
                  <div className="space-y-1">
-                     <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader><CardContent className="p-1 space-y-1 text-xs"><div className="flex justify-between font-bold"><span>Total TOPAY:</span><span>{financialSummary.toPayAmt.toFixed(2)}</span></div><div className="flex justify-between"><span>Comission</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Labor</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Crossing</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Carting</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Other Charges</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Veh.Freight</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between items-center"><a>+Add Fuel</a><span><Input className="h-6 w-12 text-xs inline-block" placeholder="Ltr"/><Input className="h-6 w-16 text-xs inline-block ml-1" placeholder="Amt"/></span></div><div className="flex justify-between"><span>Balance Truck Hire</span><Input className="h-6 w-24 text-xs" /></div><div className="flex justify-between font-bold text-red-600"><span>Total</span><span>Rs. 12346546</span></div></CardContent></Card>
+                     <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader>
+                        <CardContent className="p-1 space-y-1 text-xs">
+                            <div className="flex justify-between font-bold"><span>Total TOPAY:</span><span>{financialSummary.toPayAmt.toFixed(2)}</span></div>
+                            <div className="flex justify-between"><span>Comission</span><Input className="h-6 w-24 text-xs" value={additionalCharges.commission} onChange={e => handleChargeChange('commission', e.target.value)} /></div>
+                            <div className="flex justify-between"><span>Labor</span><Input className="h-6 w-24 text-xs" value={additionalCharges.labour} onChange={e => handleChargeChange('labour', e.target.value)} /></div>
+                            <div className="flex justify-between"><span>Crossing</span><Input className="h-6 w-24 text-xs" value={additionalCharges.crossing} onChange={e => handleChargeChange('crossing', e.target.value)} /></div>
+                            <div className="flex justify-between"><span>Carting</span><Input className="h-6 w-24 text-xs" value={additionalCharges.carting} onChange={e => handleChargeChange('carting', e.target.value)} /></div>
+                            <div className="flex justify-between"><span>Other Charges</span><Input className="h-6 w-24 text-xs" value={additionalCharges.otherCharges} onChange={e => handleChargeChange('otherCharges', e.target.value)} /></div>
+                            <div className="flex justify-between"><span>Veh.Freight</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehFreight} onChange={e => handleChargeChange('vehFreight', e.target.value)} /></div>
+                            <div className="flex justify-between"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehAdvance} onChange={e => handleChargeChange('vehAdvance', e.target.value)} /></div>
+                            <div className="flex justify-between items-center"><a>+Add Fuel</a><span><Input className="h-6 w-12 text-xs inline-block" placeholder="Ltr" value={additionalCharges.fuelLtr || ''} onChange={e => handleChargeChange('fuelLtr', e.target.value)} /><Input className="h-6 w-16 text-xs inline-block ml-1" placeholder="Amt" value={additionalCharges.fuelAmt || ''} onChange={e => handleChargeChange('fuelAmt', e.target.value)} /></span></div>
+                            <div className="flex justify-between"><span>Balance Truck Hire</span><Input readOnly value={financialSummary.balanceTruckHire.toFixed(2)} className="h-6 w-24 text-xs" /></div>
+                            <div className="flex justify-between font-bold text-red-600"><span>Total</span><span>Rs. {financialSummary.totalCharges.toFixed(2)}</span></div>
+                        </CardContent>
+                     </Card>
                 </div>
             </div>
 
