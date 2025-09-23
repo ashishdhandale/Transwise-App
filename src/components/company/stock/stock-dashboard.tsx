@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -222,27 +221,27 @@ export function StockDashboard() {
             </CardHeader>
             <CardContent>
                 <div className="overflow-auto border rounded-md max-h-[70vh]">
-                <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-card">
+                <Table className="relative">
+                    <TableHeader className="sticky top-0 z-10">
                     <TableRow>
-                        <TableHead className={thClass}>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>
                              <Checkbox 
                                 onCheckedChange={handleSelectAll}
                                 checked={filteredStock.length > 0 && selectedLrs.size === filteredStock.length}
                                 aria-label="Select all rows"
                             />
                         </TableHead>
-                        <TableHead className={thClass}>LR No.</TableHead>
-                        <TableHead className={thClass}>Booking Type</TableHead>
-                        <TableHead className={thClass}>Booking Date</TableHead>
-                        <TableHead className={thClass}>From</TableHead>
-                        <TableHead className={thClass}>To</TableHead>
-                        <TableHead className={thClass}>Sender</TableHead>
-                        <TableHead className={thClass}>Receiver</TableHead>
-                        <TableHead className={thClass}>Item</TableHead>
-                        <TableHead className={`${thClass} text-right`}>Qty</TableHead>
-                        <TableHead className={`${thClass} text-right`}>Chg. Wt.</TableHead>
-                        <TableHead className={thClass}>Status</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>LR No.</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>Booking Type</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>Booking Date</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>From</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>To</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>Sender</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>Receiver</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>Item</TableHead>
+                        <TableHead className={cn(thClass, 'text-right', 'bg-primary/10')}>Qty</TableHead>
+                        <TableHead className={cn(thClass, 'text-right', 'bg-primary/10')}>Chg. Wt.</TableHead>
+                        <TableHead className={cn(thClass, 'bg-primary/10')}>Status</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
