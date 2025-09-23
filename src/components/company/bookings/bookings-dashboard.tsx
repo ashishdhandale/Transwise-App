@@ -18,6 +18,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -34,6 +44,9 @@ import { Calendar as CalendarIcon, MoreHorizontal, Pencil, Printer, Search, Tras
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
+import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
+import { addHistoryLog } from '@/lib/history-data';
+import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
@@ -72,16 +85,17 @@ export function BookingsDashboard() {
   const [isDownloading, setIsDownloading] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+
   const router = useRouter();
+  const { toast } = useToast();
 
   const loadBookings = async () => {
     try {
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
-        const savedBookings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKINGS);
-        if (savedBookings) {
-            setBookings(JSON.parse(savedBookings));
-        }
+        setBookings(getBookings());
     } catch (error) {
         console.error("Failed to load bookings from localStorage", error);
     }
@@ -145,6 +159,37 @@ export function BookingsDashboard() {
     setIsDownloading(false);
     setIsPrintDialogOpen(false);
   };
+  
+  const handleCancelClick = (booking: Booking) => {
+    if (booking.status !== 'In Stock') {
+      toast({
+        title: 'Cancellation Failed',
+        description: 'Only bookings with "In Stock" status can be cancelled.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setBookingToCancel(booking);
+    setIsCancelDialogOpen(true);
+  };
+
+  const confirmCancellation = () => {
+    if (!bookingToCancel) return;
+
+    const updatedBookings = bookings.map(b => 
+      b.trackingId === bookingToCancel.trackingId ? { ...b, status: 'Cancelled' as const } : b
+    );
+    saveBookings(updatedBookings);
+    setBookings(updatedBookings);
+    addHistoryLog(bookingToCancel.lrNo, 'Booking Cancelled', 'Admin', 'Booking status set to Cancelled.');
+    toast({
+      title: 'Booking Cancelled',
+      description: `LR No: ${bookingToCancel.lrNo} has been successfully cancelled.`,
+    });
+    setIsCancelDialogOpen(false);
+    setBookingToCancel(null);
+  };
+
 
   const filteredBookings = useMemo(() => {
     const sortedBookings = [...bookings].sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
@@ -289,7 +334,9 @@ export function BookingsDashboard() {
                                       </DropdownMenuPortal>
                                     </DropdownMenuSub>
                                     {booking.status !== 'Cancelled' && (
-                                        <DropdownMenuItem className="text-red-500"><XCircle className="mr-2 h-4 w-4" /> Cancel</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-red-500" onClick={() => handleCancelClick(booking)}>
+                                            <XCircle className="mr-2 h-4 w-4" /> Cancel
+                                        </DropdownMenuItem>
                                     )}
                                     {booking.status === 'Cancelled' && (
                                         <DropdownMenuItem className="text-red-500"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
@@ -371,6 +418,22 @@ export function BookingsDashboard() {
             </DialogContent>
         </Dialog>
       )}
+      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will completely cancel the booking for LR No: <span className="font-bold">{bookingToCancel?.lrNo}</span>. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Back</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCancellation} className="bg-destructive hover:bg-destructive/90">
+              Confirm Cancellation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

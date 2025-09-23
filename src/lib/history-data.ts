@@ -1,9 +1,11 @@
 
+
 export interface LogEntry {
   timestamp: string;
   action:
     | 'Booking Created'
     | 'Booking Updated'
+    | 'Booking Cancelled'
     | 'Dispatched from Warehouse'
     | 'In Transit'
     | 'Arrived at Hub'
