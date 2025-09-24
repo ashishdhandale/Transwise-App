@@ -725,17 +725,6 @@ export function PtlChallanForm() {
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Vehicle Supplier</Label>
-                            <Combobox 
-                                options={vehicleSupplierOptions} 
-                                value={vehicleSupplier} 
-                                onChange={setVehicleSupplier} 
-                                placeholder="Select Supplier..." 
-                                onAdd={handleOpenAddVendor}
-                                addMessage='Add New Supplier'
-                            />
-                        </div>
-                        <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
                             <Combobox 
                                 options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} 
@@ -764,6 +753,17 @@ export function PtlChallanForm() {
                          <div className="space-y-0.5">
                             <Label>Driver Contact No</Label>
                             <Input readOnly value={driverMobile} className="h-9 text-xs" />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Vehicle Supplier</Label>
+                            <Combobox 
+                                options={vehicleSupplierOptions} 
+                                value={vehicleSupplier} 
+                                onChange={setVehicleSupplier} 
+                                placeholder="Select Supplier..." 
+                                onAdd={handleOpenAddVendor}
+                                addMessage='Add New Supplier'
+                            />
                         </div>
                     </div>
                 </CardContent>
