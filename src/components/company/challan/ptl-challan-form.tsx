@@ -74,8 +74,6 @@ interface ManualShortExtraEntry {
     loadWt: number;
 }
 
-type VehicleOwnershipType = 'Owned' | 'Hired';
-
 export function PtlChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
@@ -91,7 +89,6 @@ export function PtlChallanForm() {
     const [destinationStation, setDestinationStation] = useState<string | undefined>();
     const [dispatchTo, setDispatchTo] = useState<string | undefined>();
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
-    const [vehicleOwnership, setVehicleOwnership] = useState<VehicleOwnershipType>('Owned');
     const [lorrySupplier, setLorrySupplier] = useState<string | undefined>();
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
     const [vehicleCapacity, setVehicleCapacity] = useState('');
@@ -676,21 +673,20 @@ export function PtlChallanForm() {
         if (result.success) setDriverName(result.newData.name);
         return result.success;
     };
-
-    const handleVehicleOwnershipChange = (value: VehicleOwnershipType) => {
-        setVehicleOwnership(value);
-        setVehicleNo(undefined); // Reset vehicle no when ownership type changes
-        setLorrySupplier(undefined);
-    }
-
-    const handleHiredVehicleBlur = () => {
+    
+    const handleVehicleNoBlur = () => {
         if (!vehicleNo) return;
-        const validFormat = /^[A-Z]{2}-?[0-9]{1,2}-?[A-Z]{1,2}-?[0-9]{1,4}$/;
-        if (validFormat.test(vehicleNo)) {
-            toast({ title: "Hired Vehicle", description: "Vehicle number recorded."});
-            vehicleCapacityRef.current?.focus();
+        const inMaster = vehicles.some(v => v.vehicleNo === vehicleNo);
+        if (!inMaster) {
+            const validFormat = /^[A-Z]{2}-?[0-9]{1,2}-?[A-Z]{1,2}-?[0-9]{1,4}$/;
+            if (validFormat.test(vehicleNo)) {
+                toast({ title: "Hired Vehicle", description: "Vehicle number recorded."});
+                vehicleCapacityRef.current?.focus();
+            } else {
+                 toast({ title: "Invalid Format", description: "Please use a valid vehicle number format (e.g., MH-31-CQ-1234).", variant: "destructive" });
+            }
         } else {
-             toast({ title: "Invalid Format", description: "Please use a valid vehicle number format (e.g., MH-31-CQ-1234).", variant: "destructive" });
+            vehicleCapacityRef.current?.focus();
         }
     };
 
@@ -745,52 +741,31 @@ export function PtlChallanForm() {
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
                         <div className="space-y-0.5">
-                             <Label>Vehicle Ownership</Label>
-                             <Select onValueChange={(v: VehicleOwnershipType) => handleVehicleOwnershipChange(v)} value={vehicleOwnership}>
-                                 <SelectTrigger className="h-9 text-xs">
-                                     <SelectValue />
-                                 </SelectTrigger>
-                                 <SelectContent>
-                                     <SelectItem value="Owned">Owned Vehicle</SelectItem>
-                                     <SelectItem value="Hired">Hired Vehicle</SelectItem>
-                                 </SelectContent>
-                             </Select>
-                         </div>
-                        {vehicleOwnership === 'Hired' && (
-                            <div className="space-y-0.5">
-                                <Label>Lorry Supplier</Label>
-                                <Combobox
-                                    options={lorrySupplierOptions}
-                                    value={lorrySupplier}
-                                    onChange={setLorrySupplier}
-                                    placeholder="Select Supplier..."
-                                    searchPlaceholder="Search suppliers..."
-                                    notFoundMessage="No suppliers found."
-                                    addMessage="Add New Supplier"
-                                    onAdd={handleOpenAddVendor}
-                                />
-                            </div>
-                        )}
+                            <Label>Lorry Supplier</Label>
+                            <Combobox
+                                options={lorrySupplierOptions}
+                                value={lorrySupplier}
+                                onChange={setLorrySupplier}
+                                placeholder="Select Supplier..."
+                                searchPlaceholder="Search suppliers..."
+                                notFoundMessage="No suppliers found."
+                                addMessage="Add New Supplier"
+                                onAdd={handleOpenAddVendor}
+                            />
+                        </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
-                            {vehicleOwnership === 'Owned' ? (
-                                <Combobox
-                                    options={ownedVehicleOptions}
-                                    value={vehicleNo}
-                                    onChange={setVehicleNo}
-                                    placeholder="Select Owned Vehicle..."
-                                    searchPlaceholder="Search vehicle..."
-                                    autoOpenOnFocus
-                                />
-                            ) : (
-                                <Input
-                                    placeholder="Enter Hired Vehicle No."
-                                    className="h-9 text-xs"
-                                    value={vehicleNo || ''}
-                                    onChange={(e) => setVehicleNo(e.target.value)}
-                                    onBlur={handleHiredVehicleBlur}
-                                />
-                            )}
+                             <Combobox
+                                options={ownedVehicleOptions}
+                                value={vehicleNo}
+                                onChange={setVehicleNo}
+                                placeholder="Search or Type Vehicle No..."
+                                searchPlaceholder="Search vehicle..."
+                                allowFreeform
+                                onFreeformChange={setVehicleNo}
+                                onBlur={handleVehicleNoBlur}
+                                autoOpenOnFocus
+                            />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Veh.Capacity</Label>
@@ -798,8 +773,7 @@ export function PtlChallanForm() {
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Name</Label>
-                             <Input
-                                ref={driverNameRef}
+                            <Input
                                 className="h-9 text-xs"
                                 placeholder="Enter driver name"
                                 value={driverName || ''}
@@ -1127,3 +1101,5 @@ export function PtlChallanForm() {
         </div>
     );
 }
+
+    
