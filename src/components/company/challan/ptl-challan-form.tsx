@@ -739,8 +739,6 @@ export function PtlChallanForm() {
                                 options={vehicles.map(v => ({label: v.vehicleNo, value: v.vehicleNo}))} 
                                 value={vehicleNo}
                                 onChange={setVehicleNo}
-                                onAdd={handleOpenAddVehicle}
-                                addMessage="Add New Vehicle"
                                 allowFreeform={true}
                                 onFreeformChange={handleVehicleNoChange}
                                 placeholder="Type or Select Vehicle..."
