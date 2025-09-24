@@ -776,6 +776,7 @@ export function PtlChallanForm() {
                                     onChange={handleOwnedVehicleSelect}
                                     placeholder="Select Owned Vehicle..."
                                     searchPlaceholder="Search vehicle..."
+                                    autoOpenOnFocus={true}
                                 />
                             ) : (
                                 <Input 
@@ -793,17 +794,27 @@ export function PtlChallanForm() {
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Name</Label>
-                             <Combobox
-                                options={drivers.map(d => ({ label: d.name, value: d.name }))}
-                                value={driverName}
-                                onChange={setDriverName}
-                                placeholder="Search or Type Driver..."
-                                searchPlaceholder="Search driver..."
-                                addMessage="Add New Driver"
-                                onAdd={handleOpenAddDriver}
-                                allowFreeform
-                                onFreeformChange={setDriverName}
-                            />
+                             {lorrySupplier === 'Own Vehicle' ? (
+                                 <Combobox
+                                    options={drivers.map(d => ({ label: d.name, value: d.name }))}
+                                    value={driverName}
+                                    onChange={setDriverName}
+                                    placeholder="Search or Type Driver..."
+                                    searchPlaceholder="Search driver..."
+                                    addMessage="Add New Driver"
+                                    onAdd={handleOpenAddDriver}
+                                    allowFreeform
+                                    onFreeformChange={setDriverName}
+                                />
+                             ) : (
+                                 <Input 
+                                    ref={driverNameRef}
+                                    className="h-9 text-xs"
+                                    placeholder="Enter Driver Name"
+                                    value={driverName || ''}
+                                    onChange={(e) => setDriverName(e.target.value)}
+                                />
+                             )}
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Contact No</Label>
