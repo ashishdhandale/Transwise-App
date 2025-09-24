@@ -28,6 +28,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { bookingOptions } from '@/lib/booking-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AddVehicleDialog } from '../master/add-vehicle-dialog';
+import { AddDriverDialog } from '../master/add-driver-dialog';
+import { AddVendorDialog } from '../master/add-vendor-dialog';
 
 
 const tdClass = "p-1 whitespace-nowrap text-xs";
@@ -133,6 +136,13 @@ export function PtlChallanForm() {
     const [manualActualWt, setManualActualWt] = useState(0);
     const [manualLoadWt, setManualLoadWt] = useState<number | ''>('');
 
+    // Dialog states
+    const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
+    const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
+    const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+    const [initialVehicleData, setInitialVehicleData] = useState<Partial<VehicleMaster> | null>(null);
+    const [initialDriverData, setInitialDriverData] = useState<Partial<Driver> | null>(null);
+    const [initialVendorData, setInitialVendorData] = useState<Partial<Vendor> | null>(null);
 
     const loadMasterData = useCallback(() => {
         try {
@@ -459,11 +469,11 @@ export function PtlChallanForm() {
             const allChallans = getChallanData();
             const allLrDetails = getLrDetailsData();
             const allBookings = getBookings();
+            const selectedLrs = new Set(selectedBookings.map(b => b.trackingId));
     
             const newChallanId = challanNo; // Use the temp challan number
             const newBookings: Booking[] = [];
     
-            // Process selected bookings
             const updatedBookings = allBookings.map(booking => {
                 if (selectedLrs.has(booking.trackingId)) {
                     const dispatchQty = dispatchQuantities[booking.trackingId] ?? booking.qty;
@@ -473,32 +483,28 @@ export function PtlChallanForm() {
                         const remainingQty = booking.qty - dispatchQty;
                         const originalAmountPerUnit = booking.totalAmount / booking.qty;
     
-                        // Create a new booking for the remaining stock
                         const remainingBooking: Booking = {
                             ...booking,
                             trackingId: `TRK-${Date.now()}-${Math.random()}`,
+                            lrNo: `${booking.lrNo}-R`, // Append -R for remaining
                             qty: remainingQty,
                             totalAmount: originalAmountPerUnit * remainingQty,
                             status: 'In Stock',
                             itemDescription: `${booking.itemDescription} (Remaining from GRN ${booking.lrNo})`,
-                            dispatchStatus: 'Short Dispatched' // Flag this as remaining stock
+                            dispatchStatus: 'Short Dispatched'
                         };
                         newBookings.push(remainingBooking);
-                         addHistoryLog(booking.lrNo, 'Booking Updated', companyProfile?.companyName || 'Admin', `Partially dispatched (${dispatchQty}/${booking.qty}) on challan ${newChallanId}. Remaining stock in new booking.`);
+                         addHistoryLog(booking.lrNo, 'Booking Updated', companyProfile?.companyName || 'Admin', `Partially dispatched (${dispatchQty}/${booking.qty}) on challan ${newChallanId}. Remaining stock in new booking ${remainingBooking.lrNo}.`);
                     }
                     
-                    // Update original booking status
                      addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallanId}`);
                     return { ...booking, status: 'In Transit' as const, dispatchStatus: isShortDispatch ? 'Short Dispatched' : undefined };
                 }
                 return booking;
             });
     
-            // Combine existing, updated, and new bookings
-            const finalBookings = [...updatedBookings.filter(b => !selectedLrs.has(b.trackingId)), ...updatedBookings.filter(b => selectedLrs.has(b.trackingId)), ...newBookings];
-            saveBookings(finalBookings);
+            saveBookings([...updatedBookings, ...newBookings]);
     
-            // Create Challan and LR Details
             const newChallan: Challan = {
                 challanId: newChallanId,
                 status: 'Pending',
@@ -618,6 +624,44 @@ export function PtlChallanForm() {
     
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
     
+    const handleOpenAddVehicle = (query?: string) => { setInitialVehicleData(query ? { vehicleNo: query.toUpperCase() } : null); setIsAddVehicleOpen(true); };
+    const handleOpenAddDriver = (query?: string) => { setInitialDriverData(query ? { name: query } : null); setIsAddDriverOpen(true); };
+    const handleOpenAddVendor = (query?: string) => { setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null); setIsAddVendorOpen(true); };
+
+    const handleSave = (saveFunction: (data: any, key: string) => boolean, data: any, storageKey: string, successMessage: string) => {
+        try {
+            const savedData = localStorage.getItem(storageKey);
+            const currentData = savedData ? JSON.parse(savedData) : [];
+            const newId = currentData.length > 0 ? Math.max(...currentData.map((d: any) => d.id)) + 1 : 1;
+            const newData = { ...data, id: newId };
+            const updatedData = [newData, ...currentData];
+            localStorage.setItem(storageKey, JSON.stringify(updatedData));
+            toast({ title: 'Success', description: successMessage });
+            loadMasterData();
+            return true;
+        } catch (error) {
+            toast({ title: 'Error', description: 'Failed to save data.', variant: 'destructive' });
+            return false;
+        }
+    };
+    
+    const handleSaveVehicle = (data: Omit<VehicleMaster, 'id'>) => {
+        const success = handleSave(() => true, data, 'transwise_vehicles_master', `Vehicle "${data.vehicleNo}" added.`);
+        if (success) setVehicleNo(data.vehicleNo);
+        return success;
+    };
+    const handleSaveDriver = (data: Omit<Driver, 'id'>) => {
+        const success = handleSave(() => true, data, 'transwise_drivers', `Driver "${data.name}" added.`);
+        if (success) setDriverName(data.name);
+        return success;
+    };
+    const handleSaveVendor = (data: Omit<Vendor, 'id'>) => {
+        const success = handleSave(() => true, data, 'transwise_vendors', `Vendor "${data.name}" added.`);
+        if (success) setVehicleSupplier(data.name);
+        return success;
+    };
+
+
     if (isLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     
     return (
@@ -659,11 +703,25 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle Supplier</Label>
-                            <Combobox options={vehicleSupplierOptions} value={vehicleSupplier} onChange={setVehicleSupplier} placeholder="Select Supplier..." />
+                            <Combobox 
+                                options={vehicleSupplierOptions} 
+                                value={vehicleSupplier} 
+                                onChange={setVehicleSupplier} 
+                                placeholder="Select Supplier..." 
+                                onAdd={handleOpenAddVendor}
+                                addMessage='Add New Supplier'
+                            />
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
-                            <Combobox options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                            <Combobox 
+                                options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} 
+                                value={vehicleNo} 
+                                onChange={setVehicleNo} 
+                                placeholder="Select Vehicle..." 
+                                onAdd={handleOpenAddVehicle}
+                                addMessage='Add New Vehicle'
+                            />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Veh.Capacity</Label>
@@ -671,7 +729,14 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>Driver Name</Label>
-                            <Combobox options={drivers.map(d => ({ label: d.name, value: d.name }))} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                            <Combobox 
+                                options={drivers.map(d => ({ label: d.name, value: d.name }))} 
+                                value={driverName} 
+                                onChange={setDriverName} 
+                                placeholder="Select Driver..." 
+                                onAdd={handleOpenAddDriver}
+                                addMessage='Add New Driver'
+                            />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Contact No</Label>
@@ -978,6 +1043,26 @@ export function PtlChallanForm() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+             <AddVehicleDialog 
+                isOpen={isAddVehicleOpen} 
+                onOpenChange={setIsAddVehicleOpen} 
+                onSave={handleSaveVehicle} 
+                vendors={vendors}
+                vehicle={initialVehicleData}
+            />
+            <AddDriverDialog 
+                isOpen={isAddDriverOpen} 
+                onOpenChange={setIsAddDriverOpen} 
+                onSave={handleSaveDriver}
+                driver={initialDriverData}
+            />
+            <AddVendorDialog 
+                isOpen={isAddVendorOpen} 
+                onOpenChange={setIsAddVendorOpen} 
+                onSave={handleSaveVendor} 
+                vendor={initialVendorData}
+            />
         </div>
     );
 }
