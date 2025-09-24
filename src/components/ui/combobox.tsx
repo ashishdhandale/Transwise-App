@@ -25,6 +25,7 @@ interface ComboboxProps {
     options: { label: string; value: string }[];
     value?: string;
     onChange: (value: string) => void;
+    onBlur?: () => void;
     placeholder?: string;
     searchPlaceholder?: string;
     notFoundMessage?: string;
@@ -33,12 +34,14 @@ interface ComboboxProps {
     disabled?: boolean;
     allowFreeform?: boolean;
     onFreeformChange?: (value: string) => void;
+    autoOpenOnFocus?: boolean;
 }
 
 export function Combobox({ 
     options, 
     value, 
     onChange, 
+    onBlur,
     placeholder = "Select an option...", 
     searchPlaceholder = "Search...",
     notFoundMessage = "No option found.",
@@ -47,10 +50,13 @@ export function Combobox({
     disabled = false,
     allowFreeform = false,
     onFreeformChange,
+    autoOpenOnFocus = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+
 
   const handleSelect = (currentValue: string) => {
     onChange(currentValue === value ? "" : currentValue);
@@ -73,17 +79,32 @@ export function Combobox({
   }
   
   const displayValue = options.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value;
+  
+  const handleOpenChange = (isOpen: boolean) => {
+      setOpen(isOpen);
+      if (!isOpen && onBlur) {
+          onBlur();
+      }
+  }
+
+  const handleTriggerFocus = () => {
+      if (autoOpenOnFocus) {
+          setOpen(true);
+      }
+  }
 
   return (
     <ClientOnly>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
+            ref={triggerRef}
             variant="outline"
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
             disabled={disabled}
+            onFocus={handleTriggerFocus}
           >
             <span className="truncate">
               {displayValue || placeholder}

@@ -738,16 +738,18 @@ export function PtlChallanForm() {
                             <Label>Veh.Hire Receipt No</Label>
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
-                         <div className="space-y-0.5">
+                        <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
-                             <Combobox 
-                                options={vehicles.map(v => ({label: v.vehicleNo, value: v.vehicleNo}))} 
+                            <Combobox
+                                options={vehicles.map(v => ({label: v.vehicleNo, value: v.vehicleNo}))}
                                 value={vehicleNo}
                                 onChange={setVehicleNo}
-                                allowFreeform={true}
                                 onFreeformChange={handleVehicleNoChange}
                                 onBlur={handleVehicleNoBlur}
+                                allowFreeform={true}
                                 placeholder="Type or Select Vehicle..."
+                                searchPlaceholder="Search or type..."
+                                autoOpenOnFocus={true}
                             />
                         </div>
                          <div className="space-y-0.5">
@@ -1095,4 +1097,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
