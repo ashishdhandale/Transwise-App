@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -625,10 +626,8 @@ export function PtlChallanForm() {
     }, [cities]);
     
     const dispatchToOptions = useMemo(() => {
-        const customerOptions = customers.map(c => ({ label: `${c.name} (Customer)`, value: c.name }));
-        const vendorOptions = vendors
-            .filter(v => v.type === 'Delivery Agent' || v.type === 'Freight Forwarder')
-            .map(v => ({ label: `${v.name} (${v.type})`, value: v.name }));
+        const customerOptions = customers.map(c => ({ label: `${c.name}`, value: c.name }));
+        const vendorOptions = vendors.map(v => ({ label: `${v.name}`, value: v.name }));
 
         return [...customerOptions, ...vendorOptions];
     }, [customers, vendors]);
@@ -684,17 +683,25 @@ export function PtlChallanForm() {
     const handleVehicleNoBlur = () => {
         if (!vehicleNo) return;
         
-        // This validation is for market/hired vehicles, not owned ones from the list.
         if (lorrySupplier !== 'Own Vehicle') {
             const validFormat = /^[A-Z]{2}-?[0-9]{1,2}-?[A-Z]{1,2}-?[0-9]{1,4}$/;
             if (validFormat.test(vehicleNo)) {
-                toast({ title: "Hired Vehicle", description: "Vehicle number recorded."});
                 vehicleCapacityRef.current?.focus();
             } else {
                  toast({ title: "Invalid Format", description: "Please use a valid vehicle number format (e.g., MH-31-CQ-1234).", variant: "destructive" });
             }
         } else {
             vehicleCapacityRef.current?.focus();
+        }
+    };
+
+    const handleOwnedVehicleSelect = (selectedVehicleNo: string) => {
+        setVehicleNo(selectedVehicleNo);
+        const vehicle = vehicles.find(v => v.vehicleNo === selectedVehicleNo);
+        if (vehicle && vehicle.capacity) {
+            setVehicleCapacity(String(vehicle.capacity));
+        } else {
+            setVehicleCapacity('');
         }
     };
 
@@ -753,7 +760,7 @@ export function PtlChallanForm() {
                             <Combobox
                                 options={lorrySupplierOptions}
                                 value={lorrySupplier}
-                                onChange={(val) => { setLorrySupplier(val); setVehicleNo(undefined); }} // Reset vehicle on change
+                                onChange={(val) => { setLorrySupplier(val); setVehicleNo(undefined); setVehicleCapacity('') }}
                                 placeholder="Select Supplier..."
                                 searchPlaceholder="Search suppliers..."
                                 addMessage="Add New Supplier"
@@ -766,7 +773,7 @@ export function PtlChallanForm() {
                                 <Combobox
                                     options={ownedVehicleOptions}
                                     value={vehicleNo}
-                                    onChange={setVehicleNo}
+                                    onChange={handleOwnedVehicleSelect}
                                     placeholder="Select Owned Vehicle..."
                                     searchPlaceholder="Search vehicle..."
                                 />
