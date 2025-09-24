@@ -58,7 +58,7 @@ export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehic
     };
 
     const handleOpenAddVendor = (query?: string) => {
-        setInitialVendorData(query ? { name: query } : null);
+        setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null);
         setIsAddVendorOpen(true);
     };
 
@@ -79,20 +79,32 @@ export function VehicleDetailsSection({ details, onDetailsChange, drivers, vehic
         }
     };
     
-    const handleSaveVehicle = (data: Omit<VehicleMaster, 'id'>) => handleSave(
-        () => true, data, 'transwise_vehicles_master', `Vehicle "${data.vehicleNo}" added.`
-    );
-    const handleSaveDriver = (data: Omit<Driver, 'id'>) => handleSave(
-        () => true, data, 'transwise_drivers', `Driver "${data.name}" added.`
-    );
-    const handleSaveVendor = (data: Omit<Vendor, 'id'>) => handleSave(
-        () => true, data, 'transwise_vendors', `Vendor "${data.name}" added.`
-    );
+    const handleSaveVehicle = (data: Omit<VehicleMaster, 'id'>) => {
+        const success = handleSave(() => true, data, 'transwise_vehicles_master', `Vehicle "${data.vehicleNo}" added.`);
+        if (success) {
+            handleChange('vehicleNo', data.vehicleNo);
+        }
+        return success;
+    };
+    const handleSaveDriver = (data: Omit<Driver, 'id'>) => {
+        const success = handleSave(() => true, data, 'transwise_drivers', `Driver "${data.name}" added.`);
+        if (success) {
+             handleChange('driverName', data.name);
+        }
+        return success;
+    };
+    const handleSaveVendor = (data: Omit<Vendor, 'id'>) => {
+        const success = handleSave(() => true, data, 'transwise_vendors', `Vendor "${data.name}" added.`);
+        if (success) {
+             handleChange('lorrySupplier', data.name);
+        }
+        return success;
+    };
 
 
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo.toUpperCase(), value: v.vehicleNo.toUpperCase() })), [vehicles]);
-    const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name.toUpperCase(), value: d.name.toUpperCase() })), [drivers]);
-    const supplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name.toUpperCase(), value: v.name.toUpperCase() })), [vendors]);
+    const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name.toUpperCase(), value: d.name })), [drivers]);
+    const supplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name, value: v.name })), [vendors]);
     
     const cardTitle = loadType === 'FTL' ? 'FTL (Full Truck Load) Details' : 'Vehicle & Driver Details';
 

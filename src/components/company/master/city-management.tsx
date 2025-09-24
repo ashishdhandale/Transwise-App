@@ -23,6 +23,16 @@ import { AddCityDialog } from './add-city-dialog';
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { getBookings } from '@/lib/bookings-dashboard-data';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type CityListSource = 'default' | 'custom';
 
@@ -129,11 +139,9 @@ export function CityManagement() {
 
     let updatedCities;
     if (currentCity) {
-      // Editing existing city
       updatedCities = cities.map(city => (city.id === currentCity.id ? { ...city, ...cityData } : city));
       toast({ title: 'Station Updated', description: `"${cityData.name}" has been updated successfully.` });
     } else {
-      // Adding new city
       const newCity: City = {
         id: cities.length > 0 ? Math.max(...cities.map(c => c.id)) + 1 : 1,
         ...cityData
@@ -142,7 +150,7 @@ export function CityManagement() {
       toast({ title: 'Station Added', description: `"${cityData.name}" has been added to your custom list.` });
     }
     saveCities(updatedCities);
-    return true; // Indicate success
+    return true;
   };
 
   const handleSyncWithBookings = () => {
@@ -259,9 +267,25 @@ export function CityManagement() {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(city)}>
                         <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(city.id)}>
-                        <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                             <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete this station from your custom list.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(city.id)}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </TableCell>
                   )}
                 </TableRow>

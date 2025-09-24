@@ -69,10 +69,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
             
             toast({ title: 'Customer Added', description: `"${customerData.name}" has been added to your master list.` });
             
-            // This reloads the customer list in the parent component
             onPartyAdded(); 
-            
-            // This sets the newly created customer as the selected one for the current booking
             setPartyDetails(newCustomer);
 
             return true;
@@ -87,7 +84,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
 
     const customerOptions = useMemo(() => customers.map(c => ({
         label: c.name.toUpperCase(),
-        value: c.name.toUpperCase()
+        value: c.name
     })), [customers]);
 
     return (
@@ -208,7 +205,7 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
 
     const customerOptions = useMemo(() => customers.map(c => ({
         label: c.name.toUpperCase(),
-        value: c.name.toUpperCase()
+        value: c.name
     })), [customers]);
 
     return (

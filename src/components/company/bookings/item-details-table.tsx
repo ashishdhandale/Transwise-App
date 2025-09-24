@@ -24,7 +24,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -32,6 +31,7 @@ import { Combobox } from '@/components/ui/combobox';
 import type { Item } from '@/lib/types';
 import { AddItemDialog } from '../master/add-item-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ClientOnly } from '@/components/ui/client-only';
 
 
 export interface ItemRow {
@@ -83,7 +83,6 @@ interface ItemDetailsTableProps {
 }
 
 export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: ItemDetailsTableProps) {
-  const [isClient, setIsClient] = useState(false);
   const [itemOptions, setItemOptions] = useState<Item[]>([]);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [initialItemData, setInitialItemData] = useState<Partial<Item> | null>(null);
@@ -111,7 +110,6 @@ export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: Ite
   }, []);
   
   useEffect(() => {
-    setIsClient(true);
     loadItems();
   }, [loadItems]);
 
@@ -283,24 +281,8 @@ export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: Ite
       }
   }, [rows]);
 
-  if (!isClient) {
-    return (
-        <div className="border rounded-md">
-            <Table>
-            <TableBody>
-                <TableRow>
-                    <TableCell>
-                        <div className="h-20 bg-muted rounded-md animate-pulse"></div>
-                    </TableCell>
-                </TableRow>
-            </TableBody>
-            </Table>
-        </div>
-    );
-  }
-
   return (
-    <>
+    <ClientOnly fallback={<div className="h-24 bg-muted rounded-md animate-pulse"></div>}>
       <div className="overflow-x-auto relative border rounded-md">
         <Table className="table-auto w-full">
           <TableHeader>
@@ -394,6 +376,6 @@ export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: Ite
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </ClientOnly>
   );
 }

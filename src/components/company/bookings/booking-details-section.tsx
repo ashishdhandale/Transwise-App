@@ -18,6 +18,7 @@ import type { CompanyProfileFormValues } from '../settings/company-profile-setti
 import { AddCityDialog } from '../master/add-city-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { getBookings } from '@/lib/bookings-dashboard-data';
+import { ClientOnly } from '@/components/ui/client-only';
 
 const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
@@ -74,9 +75,9 @@ export function BookingDetailsSection({
 
     const stationOptions = useMemo(() => {
         if (cityListSource === 'custom') {
-            return allCustomCities.map(c => ({ label: c.name.toUpperCase(), value: c.name.toUpperCase() }));
+            return allCustomCities.map(c => ({ label: c.name.toUpperCase(), value: c.name }));
         }
-        return bookingOptions.stations.map(name => ({ label: name.toUpperCase(), value: name.toUpperCase() }));
+        return bookingOptions.stations.map(name => ({ label: name.toUpperCase(), value: name }));
     }, [cityListSource, allCustomCities]);
 
     const loadCityData = useCallback(() => {
@@ -133,20 +134,18 @@ export function BookingDetailsSection({
         if (isEditMode || !companyProfile) return;
         
         if (companyProfile.city && !fromStation) {
-            const defaultStation = stationOptions.find(s => s.value.toLowerCase() === companyProfile.city.toLowerCase());
+            const defaultStation = allCustomCities.find(c => c.name.toLowerCase() === companyProfile.city.toLowerCase());
             if (defaultStation) {
-                const cityObj = cityListSource === 'custom' 
-                    ? allCustomCities.find(c => c.name === defaultStation.value)
-                    : { id: 0, name: defaultStation.value, aliasCode: '', pinCode: '' };
-                onFromStationChange(cityObj || null);
+                onFromStationChange(defaultStation);
+            } else if (bookingOptions.stations.includes(companyProfile.city)) {
+                 onFromStationChange({ id: 0, name: companyProfile.city, aliasCode: '', pinCode: '' });
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fromStation, isEditMode, companyProfile, stationOptions, allCustomCities, cityListSource]);
+    }, [fromStation, isEditMode, companyProfile, allCustomCities]);
 
     useEffect(() => {
         if (!isEditMode) {
-            // We need a small timeout to allow the UI to render before focusing.
             const timer = setTimeout(() => {
                 datePickerRef.current?.focus();
             }, 0);
@@ -199,7 +198,7 @@ export function BookingDetailsSection({
     
     const handleDateSelect = (date?: Date) => {
         onBookingDateChange(date);
-        setIsDatePickerOpen(false); // Close the popover on selection
+        setIsDatePickerOpen(false);
     };
 
     const errorClass = 'border-red-500 ring-2 ring-red-500/50';
@@ -226,31 +225,34 @@ export function BookingDetailsSection({
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="bookingDate">Booking Date</Label>
-                    <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                ref={datePickerRef}
-                                variant={'outline'}
-                                className={cn(
-                                    'w-full justify-between text-left font-normal',
-                                    !bookingDate && 'text-muted-foreground',
-                                    errors.bookingDate && errorClass
-                                )}
-                                disabled={isViewOnly}
-                            >
-                                {bookingDate ? format(bookingDate, 'dd/MM/yyyy') : <span>Pick a date</span>}
-                                <CalendarIcon className="h-4 w-4" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={bookingDate}
-                                onSelect={handleDateSelect}
-                                disabled={isViewOnly}
-                            />
-                        </PopoverContent>
-                    </Popover>
+                     <ClientOnly>
+                        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    ref={datePickerRef}
+                                    variant={'outline'}
+                                    className={cn(
+                                        'w-full justify-between text-left font-normal',
+                                        !bookingDate && 'text-muted-foreground',
+                                        errors.bookingDate && errorClass
+                                    )}
+                                    disabled={isViewOnly}
+                                >
+                                    {bookingDate ? format(bookingDate, 'dd/MM/yyyy') : <span>Pick a date</span>}
+                                    <CalendarIcon className="h-4 w-4" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={bookingDate}
+                                    onSelect={handleDateSelect}
+                                    disabled={isViewOnly}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </ClientOnly>
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="loadType">Load Type</Label>
