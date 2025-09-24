@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,6 @@ import { bookingOptions } from '@/lib/booking-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { AddVendorDialog } from '../master/add-vendor-dialog';
 import { AddDriverDialog } from '../master/add-driver-dialog';
-import { AddVehicleDialog } from '../master/add-vehicle-dialog';
 
 
 const tdClass = "p-1 whitespace-nowrap text-xs";
@@ -95,6 +94,9 @@ export function PtlChallanForm() {
     const [vehicleCapacity, setVehicleCapacity] = useState('');
     const [driverName, setDriverName] = useState<string | undefined>();
     const [driverMobile, setDriverMobile] = useState('');
+    
+    // Refs for focus management
+    const vehicleCapacityRef = useRef<HTMLInputElement>(null);
 
     // Master Data
     const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -142,8 +144,6 @@ export function PtlChallanForm() {
     const [initialVendorData, setInitialVendorData] = useState<Partial<Vendor> | null>(null);
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
     const [initialDriverData, setInitialDriverData] = useState<Partial<Driver> | null>(null);
-    const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
-    const [initialVehicleData, setInitialVehicleData] = useState<Partial<VehicleMaster> | null>(null);
 
 
     const loadMasterData = useCallback(() => {
@@ -474,7 +474,6 @@ export function PtlChallanForm() {
             const selectedLrs = new Set(selectedBookings.map(b => b.trackingId));
     
             const newChallanId = challanNo; // Use the temp challan number
-            const newBookings: Booking[] = [];
     
             const updatedBookings = allBookings.map(booking => {
                 if (selectedLrs.has(booking.trackingId)) {
@@ -495,8 +494,8 @@ export function PtlChallanForm() {
                             itemDescription: `${booking.itemDescription} (Remaining from GRN ${booking.lrNo})`,
                             dispatchStatus: 'Short Dispatched'
                         };
-                        newBookings.push(remainingBooking);
-                         addHistoryLog(booking.lrNo, 'Booking Updated', companyProfile?.companyName || 'Admin', `Partially dispatched (${dispatchQty}/${booking.qty}) on challan ${newChallanId}. Remaining stock in new booking ${remainingBooking.lrNo}.`);
+                        // This will be added later with newBookings logic
+                        // This avoids modifying array while iterating
                     }
                     
                      addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallanId}`);
@@ -505,7 +504,7 @@ export function PtlChallanForm() {
                 return booking;
             });
     
-            saveBookings([...updatedBookings, ...newBookings]);
+            saveBookings(updatedBookings);
     
             const newChallan: Challan = {
                 challanId: newChallanId,
@@ -637,7 +636,6 @@ export function PtlChallanForm() {
     
     const handleOpenAddVendor = (query?: string) => { setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null); setIsAddVendorOpen(true); };
     const handleOpenAddDriver = (query?: string) => { setInitialDriverData(query ? { name: query } : null); setIsAddDriverOpen(true); };
-    const handleOpenAddVehicle = (query?: string) => { setInitialVehicleData(query ? { vehicleNo: query.toUpperCase() } : null); setIsAddVehicleOpen(true); };
 
 
     const handleSaveMaster = (storageKey: string, data: any, successMessage: string) => {
@@ -667,19 +665,26 @@ export function PtlChallanForm() {
         if (result.success) setDriverName(result.newData.name);
         return result.success;
     };
-    const handleSaveVehicle = (data: Omit<VehicleMaster, 'id'>) => {
-        const result = handleSaveMaster('transwise_vehicles_master', data, `Vehicle "${data.vehicleNo}" added.`);
-        if (result.success) setVehicleNo(result.newData.vehicleNo);
-        return result.success;
-    };
 
     const handleVehicleNoChange = (value: string) => {
         const formattedValue = value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-        const parts = formattedValue.split('-');
-        if (parts.length > 1) {
-            setVehicleNo(parts.join('-'));
+        setVehicleNo(formattedValue);
+    };
+
+    const handleVehicleNoBlur = () => {
+        if (!vehicleNo) return;
+        const isInMaster = vehicles.some(v => v.vehicleNo === vehicleNo);
+        if (isInMaster) {
+            vehicleCapacityRef.current?.focus();
+            return;
+        }
+        // Basic format validation: e.g., XX-XX-XX-XXXX
+        const validFormat = /^[A-Z]{2}-?[0-9]{1,2}-?[A-Z]{1,2}-?[0-9]{1,4}$/;
+        if (validFormat.test(vehicleNo)) {
+            toast({ title: "Hired Vehicle", description: "Vehicle number is not in master, treated as hired vehicle."});
+            vehicleCapacityRef.current?.focus();
         } else {
-             setVehicleNo(formattedValue);
+             toast({ title: "Invalid Format", description: "Please use a valid vehicle number format (e.g., MH-31-CQ-1234).", variant: "destructive" });
         }
     };
 
@@ -733,7 +738,7 @@ export function PtlChallanForm() {
                             <Label>Veh.Hire Receipt No</Label>
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
-                        <div className="space-y-0.5">
+                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
                              <Combobox 
                                 options={vehicles.map(v => ({label: v.vehicleNo, value: v.vehicleNo}))} 
@@ -741,22 +746,21 @@ export function PtlChallanForm() {
                                 onChange={setVehicleNo}
                                 allowFreeform={true}
                                 onFreeformChange={handleVehicleNoChange}
+                                onBlur={handleVehicleNoBlur}
                                 placeholder="Type or Select Vehicle..."
                             />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Veh.Capacity</Label>
-                            <Input className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
+                            <Input ref={vehicleCapacityRef} className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
                         </div>
-                        <div className="space-y-0.5">
+                         <div className="space-y-0.5">
                             <Label>Driver Name</Label>
-                            <Combobox 
-                                options={drivers.map(d => ({label: d.name, value: d.name}))} 
-                                value={driverName} 
-                                onChange={setDriverName}
-                                onAdd={handleOpenAddDriver}
-                                addMessage="Add New Driver"
-                                placeholder="Type or Select Driver..."
+                            <Input
+                                className="h-9 text-xs"
+                                placeholder="Enter driver name"
+                                value={driverName}
+                                onChange={(e) => setDriverName(e.target.value)}
                             />
                         </div>
                          <div className="space-y-0.5">
@@ -1087,13 +1091,6 @@ export function PtlChallanForm() {
                 onOpenChange={setIsAddDriverOpen} 
                 onSave={handleSaveDriver}
                 driver={initialDriverData}
-            />
-            <AddVehicleDialog
-                isOpen={isAddVehicleOpen}
-                onOpenChange={setIsAddVehicleOpen}
-                onSave={handleSaveVehicle}
-                vendors={vendors}
-                vehicle={initialVehicleData}
             />
         </div>
     );
