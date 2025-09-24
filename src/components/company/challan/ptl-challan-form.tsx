@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -635,8 +634,16 @@ export function PtlChallanForm() {
     }, [customers, vendors]);
     
     const lorrySupplierOptions = useMemo(() => {
-        return vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name, value: v.name }));
+        const baseOptions = [
+            { label: 'Own Vehicle', value: 'Own Vehicle' },
+            { label: 'Market Vehicle', value: 'Market Vehicle' }
+        ];
+        const supplierVendors = vendors
+            .filter(v => v.type === 'Vehicle Supplier')
+            .map(v => ({ label: v.name, value: v.name }));
+        return [...baseOptions, ...supplierVendors];
     }, [vendors]);
+
 
     const ownedVehicleOptions = useMemo(() => {
         return vehicles.filter(v => v.ownerType === 'Own').map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
@@ -676,8 +683,9 @@ export function PtlChallanForm() {
     
     const handleVehicleNoBlur = () => {
         if (!vehicleNo) return;
-        const inMaster = vehicles.some(v => v.vehicleNo === vehicleNo);
-        if (!inMaster) {
+        
+        // This validation is for market/hired vehicles, not owned ones from the list.
+        if (lorrySupplier !== 'Own Vehicle') {
             const validFormat = /^[A-Z]{2}-?[0-9]{1,2}-?[A-Z]{1,2}-?[0-9]{1,4}$/;
             if (validFormat.test(vehicleNo)) {
                 toast({ title: "Hired Vehicle", description: "Vehicle number recorded."});
@@ -741,31 +749,36 @@ export function PtlChallanForm() {
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Lorry Supplier</Label>
+                            <Label>Vehicle Supplier</Label>
                             <Combobox
                                 options={lorrySupplierOptions}
                                 value={lorrySupplier}
-                                onChange={setLorrySupplier}
+                                onChange={(val) => { setLorrySupplier(val); setVehicleNo(undefined); }} // Reset vehicle on change
                                 placeholder="Select Supplier..."
                                 searchPlaceholder="Search suppliers..."
-                                notFoundMessage="No suppliers found."
                                 addMessage="Add New Supplier"
                                 onAdd={handleOpenAddVendor}
                             />
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
-                             <Combobox
-                                options={ownedVehicleOptions}
-                                value={vehicleNo}
-                                onChange={setVehicleNo}
-                                placeholder="Search or Type Vehicle No..."
-                                searchPlaceholder="Search vehicle..."
-                                allowFreeform
-                                onFreeformChange={setVehicleNo}
-                                onBlur={handleVehicleNoBlur}
-                                autoOpenOnFocus
-                            />
+                            {lorrySupplier === 'Own Vehicle' ? (
+                                <Combobox
+                                    options={ownedVehicleOptions}
+                                    value={vehicleNo}
+                                    onChange={setVehicleNo}
+                                    placeholder="Select Owned Vehicle..."
+                                    searchPlaceholder="Search vehicle..."
+                                />
+                            ) : (
+                                <Input 
+                                    className="h-9 text-xs" 
+                                    placeholder="Enter Market Vehicle No."
+                                    value={vehicleNo || ''}
+                                    onChange={(e) => setVehicleNo(e.target.value.toUpperCase())}
+                                    onBlur={handleVehicleNoBlur}
+                                />
+                            )}
                         </div>
                          <div className="space-y-0.5">
                             <Label>Veh.Capacity</Label>
@@ -773,11 +786,16 @@ export function PtlChallanForm() {
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Name</Label>
-                            <Input
-                                className="h-9 text-xs"
-                                placeholder="Enter driver name"
-                                value={driverName || ''}
-                                onChange={(e) => setDriverName(e.target.value)}
+                             <Combobox
+                                options={drivers.map(d => ({ label: d.name, value: d.name }))}
+                                value={driverName}
+                                onChange={setDriverName}
+                                placeholder="Search or Type Driver..."
+                                searchPlaceholder="Search driver..."
+                                addMessage="Add New Driver"
+                                onAdd={handleOpenAddDriver}
+                                allowFreeform
+                                onFreeformChange={setDriverName}
                             />
                         </div>
                          <div className="space-y-0.5">
@@ -1101,5 +1119,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
-    
