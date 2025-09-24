@@ -97,6 +97,8 @@ export function PtlChallanForm() {
     
     // Refs for focus management
     const vehicleCapacityRef = useRef<HTMLInputElement>(null);
+    const driverNameRef = useRef<HTMLInputElement>(null);
+
 
     // Master Data
     const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -631,8 +633,15 @@ export function PtlChallanForm() {
 
         return [...customerOptions, ...vendorOptions];
     }, [customers, vendors]);
+    
+    const vehicleSupplierOptions = useMemo(() => {
+        const supplierVendors = vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name, value: v.name }));
+        return [{ label: 'Own Vehicle', value: 'Own Vehicle' }, ...supplierVendors];
+    }, [vendors]);
 
-    const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
+    const ownedVehicleOptions = useMemo(() => {
+        return vehicles.filter(v => v.ownerType === 'Own').map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
+    }, [vehicles]);
     
     const handleOpenAddVendor = (query?: string) => { setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null); setIsAddVendorOpen(true); };
     const handleOpenAddDriver = (query?: string) => { setInitialDriverData(query ? { name: query } : null); setIsAddDriverOpen(true); };
@@ -671,22 +680,23 @@ export function PtlChallanForm() {
         setVehicleNo(formattedValue);
     };
 
-    const handleVehicleNoBlur = () => {
+    const handleHiredVehicleBlur = () => {
         if (!vehicleNo) return;
-        const isInMaster = vehicles.some(v => v.vehicleNo === vehicleNo);
-        if (isInMaster) {
-            vehicleCapacityRef.current?.focus();
-            return;
-        }
+        
         // Basic format validation: e.g., XX-XX-XX-XXXX
         const validFormat = /^[A-Z]{2}-?[0-9]{1,2}-?[A-Z]{1,2}-?[0-9]{1,4}$/;
         if (validFormat.test(vehicleNo)) {
-            toast({ title: "Hired Vehicle", description: "Vehicle number is not in master, treated as hired vehicle."});
+            toast({ title: "Hired Vehicle", description: "Vehicle number recorded."});
             vehicleCapacityRef.current?.focus();
         } else {
              toast({ title: "Invalid Format", description: "Please use a valid vehicle number format (e.g., MH-31-CQ-1234).", variant: "destructive" });
         }
     };
+    
+    const handleSupplierChange = (value: string) => {
+        setVehicleSupplier(value);
+        setVehicleNo(undefined); // Reset vehicle no when supplier changes
+    }
 
 
     if (isLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -739,18 +749,35 @@ export function PtlChallanForm() {
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Vehicle No.</Label>
-                            <Combobox
-                                options={vehicles.map(v => ({label: v.vehicleNo, value: v.vehicleNo}))}
-                                value={vehicleNo}
-                                onChange={setVehicleNo}
-                                onFreeformChange={handleVehicleNoChange}
-                                onBlur={handleVehicleNoBlur}
-                                allowFreeform={true}
-                                placeholder="Type or Select Vehicle..."
-                                searchPlaceholder="Search or type..."
-                                autoOpenOnFocus={true}
+                            <Label>Vehicle Supplier</Label>
+                            <Combobox 
+                                options={vehicleSupplierOptions} 
+                                value={vehicleSupplier} 
+                                onChange={handleSupplierChange} 
+                                placeholder="Select Supplier..." 
+                                onAdd={handleOpenAddVendor}
+                                addMessage='Add New Supplier'
                             />
+                        </div>
+                        <div className="space-y-0.5">
+                            <Label>Vehicle No.</Label>
+                            {vehicleSupplier === 'Own Vehicle' ? (
+                                <Combobox
+                                    options={ownedVehicleOptions}
+                                    value={vehicleNo}
+                                    onChange={setVehicleNo}
+                                    placeholder="Select Owned Vehicle..."
+                                    searchPlaceholder="Search vehicle..."
+                                />
+                            ) : (
+                                <Input
+                                    placeholder="Enter Hired Vehicle No."
+                                    className="h-9 text-xs"
+                                    value={vehicleNo || ''}
+                                    onChange={(e) => setVehicleNo(e.target.value)}
+                                    onBlur={handleHiredVehicleBlur}
+                                />
+                            )}
                         </div>
                          <div className="space-y-0.5">
                             <Label>Veh.Capacity</Label>
@@ -758,27 +785,17 @@ export function PtlChallanForm() {
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Name</Label>
-                            <Input
+                             <Input
+                                ref={driverNameRef}
                                 className="h-9 text-xs"
                                 placeholder="Enter driver name"
-                                value={driverName}
+                                value={driverName || ''}
                                 onChange={(e) => setDriverName(e.target.value)}
                             />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Contact No</Label>
                             <Input value={driverMobile} onChange={e => setDriverMobile(e.target.value)} className="h-9 text-xs" />
-                        </div>
-                        <div className="space-y-0.5">
-                            <Label>Vehicle Supplier</Label>
-                            <Combobox 
-                                options={vehicleSupplierOptions} 
-                                value={vehicleSupplier} 
-                                onChange={setVehicleSupplier} 
-                                placeholder="Select Supplier..." 
-                                onAdd={handleOpenAddVendor}
-                                addMessage='Add New Supplier'
-                            />
                         </div>
                     </div>
                 </CardContent>
