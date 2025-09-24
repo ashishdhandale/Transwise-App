@@ -87,7 +87,8 @@ export function PtlChallanForm() {
     const [challanDate, setChallanDate] = useState(new Date());
     const [dispatchDate, setDispatchDate] = useState(new Date());
     const [fromStation, setFromStation] = useState<string | undefined>(undefined);
-    const [toStation, setToStation] = useState<string | undefined>();
+    const [destinationStation, setDestinationStation] = useState<string | undefined>();
+    const [dispatchTo, setDispatchTo] = useState<string | undefined>();
     const [vehHireReceiptNo, setVehHireReceiptNo] = useState('');
     const [vehicleSupplier, setVehicleSupplier] = useState<string | undefined>();
     const [vehicleNo, setVehicleNo] = useState<string | undefined>();
@@ -457,8 +458,8 @@ export function PtlChallanForm() {
     };
 
     const handleFinalize = async () => {
-        if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0) {
-            toast({ title: "Validation Error", description: "Vehicle, Driver, and From Station are required, and at least one booking must be selected.", variant: "destructive" });
+        if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0 || !dispatchTo) {
+            toast({ title: "Validation Error", description: "Vehicle, Driver, From Station, Dispatch To, and at least one booking are required.", variant: "destructive" });
             return;
         }
     
@@ -509,11 +510,11 @@ export function PtlChallanForm() {
                 challanId: newChallanId,
                 status: 'Pending',
                 dispatchDate: format(dispatchDate, 'yyyy-MM-dd'),
-                dispatchToParty: toStation || selectedBookings[0].toCity,
+                dispatchToParty: dispatchTo,
                 vehicleNo,
                 driverName,
                 fromStation,
-                toStation: toStation || selectedBookings.map(b => b.toCity).join(', '),
+                toStation: destinationStation || selectedBookings.map(b => b.toCity).join(', '),
                 senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
                 challanType: 'Dispatch',
                 vehicleHireFreight: additionalCharges.vehFreight, 
@@ -622,6 +623,18 @@ export function PtlChallanForm() {
         return cities.map(city => ({ label: city.name, value: city.name }));
     }, [cities]);
     
+    const dispatchToOptions = useMemo(() => {
+        const customerOptions = customers.map(c => ({ label: `${c.name} (Customer)`, value: c.name }));
+        const vendorOptions = vendors
+            .filter(v => v.type === 'Delivery Agent' || v.type === 'Freight Forwarder')
+            .map(v => ({ label: `${v.name} (${v.type})`, value: v.name }));
+
+        // You would also add branches here if they were loaded
+        // const branchOptions = branches.map(b => ({ label: `${b.name} (Branch)`, value: b.name}));
+
+        return [...customerOptions, ...vendorOptions];
+    }, [customers, vendors]);
+
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
     
     const handleOpenAddVehicle = (query?: string) => { setInitialVehicleData(query ? { vehicleNo: query.toUpperCase() } : null); setIsAddVehicleOpen(true); };
@@ -670,7 +683,7 @@ export function PtlChallanForm() {
             {/* Header Section */}
             <Card>
                  <CardContent className="p-2">
-                     <div className="grid grid-cols-2 md:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
+                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
                         <div className="space-y-0.5">
                             <Label>Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
@@ -688,16 +701,26 @@ export function PtlChallanForm() {
                             <Input value={fromStation} readOnly className="h-9 text-xs" />
                         </div>
                          <div className="space-y-0.5">
-                            <Label>To Station</Label>
+                            <Label>Dispatch To (Party)</Label>
+                            <Combobox
+                                options={dispatchToOptions}
+                                value={dispatchTo}
+                                onChange={setDispatchTo}
+                                placeholder="Search Party..."
+                                searchPlaceholder="Search..."
+                            />
+                        </div>
+                         <div className="space-y-0.5">
+                            <Label>Destination Station</Label>
                             <Combobox
                                 options={toStationOptions}
-                                value={toStation}
-                                onChange={setToStation}
+                                value={destinationStation}
+                                onChange={setDestinationStation}
                                 placeholder="Search City"
                                 searchPlaceholder="Search City..."
                             />
                         </div>
-                         <div className="space-y-0.5">
+                        <div className="space-y-0.5">
                             <Label>Veh.Hire Receipt No</Label>
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
