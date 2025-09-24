@@ -31,6 +31,8 @@ interface ComboboxProps {
     addMessage?: string;
     onAdd?: (query?: string) => void;
     disabled?: boolean;
+    allowFreeform?: boolean;
+    onFreeformChange?: (value: string) => void;
 }
 
 export function Combobox({ 
@@ -43,9 +45,22 @@ export function Combobox({
     addMessage = "Add new",
     onAdd,
     disabled = false,
+    allowFreeform = false,
+    onFreeformChange,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleValueChange = (currentValue: string) => {
+    if (allowFreeform && onFreeformChange) {
+      onFreeformChange(currentValue);
+    } else {
+      onChange(currentValue);
+    }
+    setSearchQuery('');
+    setOpen(false);
+  }
 
   const handleAdd = () => {
     if (onAdd) {
@@ -72,20 +87,24 @@ export function Combobox({
             disabled={disabled}
           >
             <span className="truncate">
-              {selectedOption ? selectedOption.label : placeholder}
+              {value || placeholder}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
           className="w-[var(--radix-popover-trigger-width)] p-0"
-          onOpenAutoFocus={(e) => e.preventDefault()}
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            inputRef.current?.focus();
+          }}
         >
           <Command>
             <CommandInput
+              ref={inputRef}
               placeholder={searchPlaceholder}
               value={searchQuery}
-              onValueChange={setSearchQuery}
+              onValueChange={allowFreeform ? onFreeformChange : setSearchQuery}
             />
             <CommandList>
               <CommandEmpty>
@@ -104,11 +123,7 @@ export function Combobox({
                   <CommandItem
                     key={option.value}
                     value={option.label}
-                    onSelect={() => {
-                      onChange(option.value);
-                      setSearchQuery('');
-                      setOpen(false);
-                    }}
+                    onSelect={() => handleValueChange(option.value)}
                   >
                     <Check
                       className={cn(
