@@ -674,9 +674,13 @@ export function PtlChallanForm() {
     };
 
     const handleVehicleNoChange = (value: string) => {
-        let formattedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        // Further formatting logic can be complex, for now we just uppercase and remove special chars
-        setVehicleNo(formattedValue);
+        const formattedValue = value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        const parts = formattedValue.split('-');
+        if (parts.length > 1) {
+            setVehicleNo(parts.join('-'));
+        } else {
+             setVehicleNo(formattedValue);
+        }
     };
 
 

@@ -52,14 +52,17 @@ export function Combobox({
   const [searchQuery, setSearchQuery] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleValueChange = (currentValue: string) => {
-    if (allowFreeform && onFreeformChange) {
-      onFreeformChange(currentValue);
-    } else {
-      onChange(currentValue);
-    }
+  const handleSelect = (currentValue: string) => {
+    onChange(currentValue === value ? "" : currentValue);
     setSearchQuery('');
     setOpen(false);
+  }
+  
+  const handleInputChange = (query: string) => {
+      setSearchQuery(query);
+      if (allowFreeform && onFreeformChange) {
+          onFreeformChange(query);
+      }
   }
 
   const handleAdd = () => {
@@ -69,11 +72,7 @@ export function Combobox({
     }
   }
   
-  const filteredOptions = options.filter(option => 
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const selectedOption = options.find(option => option.value.toLowerCase() === value?.toLowerCase());
+  const displayValue = options.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value;
 
   return (
     <ClientOnly>
@@ -87,7 +86,7 @@ export function Combobox({
             disabled={disabled}
           >
             <span className="truncate">
-              {value || placeholder}
+              {displayValue || placeholder}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -103,8 +102,8 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
-              value={searchQuery}
-              onValueChange={allowFreeform ? onFreeformChange : setSearchQuery}
+              value={allowFreeform ? value : searchQuery}
+              onValueChange={handleInputChange}
             />
             <CommandList>
               <CommandEmpty>
@@ -113,17 +112,17 @@ export function Combobox({
                       {onAdd && (
                           <Button variant="link" size="sm" className="mt-2" onClick={handleAdd}>
                               <PlusCircle className="mr-2 h-4 w-4"/>
-                              {addMessage}
+                              {addMessage} "{searchQuery}"
                           </Button>
                       )}
                   </div>
               </CommandEmpty>
               <CommandGroup>
-                {filteredOptions.map((option) => (
+                {options.map((option) => (
                   <CommandItem
                     key={option.value}
                     value={option.label}
-                    onSelect={() => handleValueChange(option.value)}
+                    onSelect={() => handleSelect(option.value)}
                   >
                     <Check
                       className={cn(
