@@ -28,8 +28,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { bookingOptions } from '@/lib/booking-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { AddVehicleDialog } from '../master/add-vehicle-dialog';
-import { AddDriverDialog } from '../master/add-driver-dialog';
 import { AddVendorDialog } from '../master/add-vendor-dialog';
 
 
@@ -138,11 +136,7 @@ export function PtlChallanForm() {
     const [manualLoadWt, setManualLoadWt] = useState<number | ''>('');
 
     // Dialog states
-    const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
-    const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
     const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
-    const [initialVehicleData, setInitialVehicleData] = useState<Partial<VehicleMaster> | null>(null);
-    const [initialDriverData, setInitialDriverData] = useState<Partial<Driver> | null>(null);
     const [initialVendorData, setInitialVendorData] = useState<Partial<Vendor> | null>(null);
 
     const loadMasterData = useCallback(() => {
@@ -637,8 +631,6 @@ export function PtlChallanForm() {
 
     const vehicleSupplierOptions = useMemo(() => vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({label: v.name, value: v.name})), [vendors]);
     
-    const handleOpenAddVehicle = (query?: string) => { setInitialVehicleData(query ? { vehicleNo: query.toUpperCase() } : null); setIsAddVehicleOpen(true); };
-    const handleOpenAddDriver = (query?: string) => { setInitialDriverData(query ? { name: query } : null); setIsAddDriverOpen(true); };
     const handleOpenAddVendor = (query?: string) => { setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null); setIsAddVendorOpen(true); };
 
     const handleSave = (saveFunction: (data: any, key: string) => boolean, data: any, storageKey: string, successMessage: string) => {
@@ -658,16 +650,6 @@ export function PtlChallanForm() {
         }
     };
     
-    const handleSaveVehicle = (data: Omit<VehicleMaster, 'id'>) => {
-        const success = handleSave(() => true, data, 'transwise_vehicles_master', `Vehicle "${data.vehicleNo}" added.`);
-        if (success) setVehicleNo(data.vehicleNo);
-        return success;
-    };
-    const handleSaveDriver = (data: Omit<Driver, 'id'>) => {
-        const success = handleSave(() => true, data, 'transwise_drivers', `Driver "${data.name}" added.`);
-        if (success) setDriverName(data.name);
-        return success;
-    };
     const handleSaveVendor = (data: Omit<Vendor, 'id'>) => {
         const success = handleSave(() => true, data, 'transwise_vendors', `Vendor "${data.name}" added.`);
         if (success) setVehicleSupplier(data.name);
@@ -726,14 +708,7 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle No.</Label>
-                            <Combobox 
-                                options={vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }))} 
-                                value={vehicleNo} 
-                                onChange={setVehicleNo} 
-                                placeholder="Select Vehicle..." 
-                                onAdd={handleOpenAddVehicle}
-                                addMessage='Add New Vehicle'
-                            />
+                            <Input className="h-9 text-xs" value={vehicleNo || ''} onChange={e => setVehicleNo(e.target.value.toUpperCase())} />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Veh.Capacity</Label>
@@ -741,18 +716,11 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label>Driver Name</Label>
-                            <Combobox 
-                                options={drivers.map(d => ({ label: d.name, value: d.name }))} 
-                                value={driverName} 
-                                onChange={setDriverName} 
-                                placeholder="Select Driver..." 
-                                onAdd={handleOpenAddDriver}
-                                addMessage='Add New Driver'
-                            />
+                            <Input className="h-9 text-xs" value={driverName || ''} onChange={e => setDriverName(e.target.value)} />
                         </div>
                          <div className="space-y-0.5">
                             <Label>Driver Contact No</Label>
-                            <Input readOnly value={driverMobile} className="h-9 text-xs" />
+                            <Input value={driverMobile} onChange={e => setDriverMobile(e.target.value)} className="h-9 text-xs" />
                         </div>
                         <div className="space-y-0.5">
                             <Label>Vehicle Supplier</Label>
@@ -1067,19 +1035,6 @@ export function PtlChallanForm() {
                 </AlertDialogContent>
             </AlertDialog>
 
-             <AddVehicleDialog 
-                isOpen={isAddVehicleOpen} 
-                onOpenChange={setIsAddVehicleOpen} 
-                onSave={handleSaveVehicle} 
-                vendors={vendors}
-                vehicle={initialVehicleData}
-            />
-            <AddDriverDialog 
-                isOpen={isAddDriverOpen} 
-                onOpenChange={setIsAddDriverOpen} 
-                onSave={handleSaveDriver}
-                driver={initialDriverData}
-            />
             <AddVendorDialog 
                 isOpen={isAddVendorOpen} 
                 onOpenChange={setIsAddVendorOpen} 
