@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -79,6 +80,7 @@ interface ManualShortExtraEntry {
 interface SlipData {
     challan: Challan;
     lrDetails: LrDetail[];
+    driverMobile?: string;
 }
 
 export function PtlChallanForm() {
@@ -592,7 +594,7 @@ export function PtlChallanForm() {
             }));
             saveLrDetailsData([...otherLrDetails, ...newLrDetailsForChallan]);
     
-            return { challan: challanPayload, lrDetails: newLrDetailsForChallan };
+            return { challan: challanPayload, lrDetails: newLrDetailsForChallan, driverMobile };
     
         } catch (error) {
             console.error("Failed to save challan", error);
@@ -1237,6 +1239,7 @@ export function PtlChallanForm() {
                                     challan={slipData.challan} 
                                     lrDetails={slipData.lrDetails}
                                     profile={companyProfile}
+                                    driverMobile={slipData.driverMobile}
                                 />
                             )}
                         </div>
@@ -1263,4 +1266,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-

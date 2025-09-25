@@ -9,15 +9,17 @@ interface LoadingSlipProps {
     challan: Challan;
     lrDetails: LrDetail[];
     profile: CompanyProfileFormValues;
+    driverMobile?: string;
 }
 
 const thClass = "text-left text-xs font-bold text-black border border-black";
 const tdClass = "text-xs border border-black";
 
-export function LoadingSlip({ challan, lrDetails, profile }: LoadingSlipProps) {
+export function LoadingSlip({ challan, lrDetails, profile, driverMobile }: LoadingSlipProps) {
 
     const totalPackages = lrDetails.reduce((sum, lr) => sum + lr.quantity, 0);
     const totalWeight = lrDetails.reduce((sum, lr) => sum + lr.actualWeight, 0);
+    const totalItems = lrDetails.length;
 
     return (
         <div className="p-4 font-sans text-black bg-white">
@@ -36,7 +38,7 @@ export function LoadingSlip({ challan, lrDetails, profile }: LoadingSlipProps) {
                 <div>
                     <p><span className="font-semibold">Date:</span> {challan.dispatchDate}</p>
                     <p><span className="font-semibold">Vehicle No:</span> {challan.vehicleNo}</p>
-                    <p><span className="font-semibold">Driver:</span> {challan.driverName}</p>
+                    <p><span className="font-semibold">Driver:</span> {challan.driverName} {driverMobile && `(${driverMobile})`}</p>
                 </div>
             </div>
 
@@ -48,6 +50,7 @@ export function LoadingSlip({ challan, lrDetails, profile }: LoadingSlipProps) {
                             <TableHead className={thClass}>LR No</TableHead>
                             <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Consignee</TableHead>
+                            <TableHead className={thClass}>Item & Description</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
                         </TableRow>
@@ -59,6 +62,7 @@ export function LoadingSlip({ challan, lrDetails, profile }: LoadingSlipProps) {
                                 <TableCell className={tdClass}>{lr.lrNo}</TableCell>
                                 <TableCell className={tdClass}>{lr.to}</TableCell>
                                 <TableCell className={tdClass}>{lr.receiver}</TableCell>
+                                <TableCell className={tdClass}>{lr.itemDescription}</TableCell>
                                 <TableCell className={`${tdClass} text-center`}>{lr.quantity}</TableCell>
                                 <TableCell className={`${tdClass} text-right`}>{lr.actualWeight.toFixed(2)}</TableCell>
                             </TableRow>
@@ -66,8 +70,8 @@ export function LoadingSlip({ challan, lrDetails, profile }: LoadingSlipProps) {
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell colSpan={3} className={`${tdClass} text-right`}>TOTAL:</TableCell>
-                            <TableCell className={`${tdClass} text-center`}>{lrDetails.length} LRs</TableCell>
+                            <TableCell colSpan={4} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell className={`${tdClass} text-center`}>{totalItems} Items</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                         </TableRow>
@@ -86,4 +90,3 @@ export function LoadingSlip({ challan, lrDetails, profile }: LoadingSlipProps) {
         </div>
     );
 }
-
