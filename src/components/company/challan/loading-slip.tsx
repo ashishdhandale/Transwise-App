@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Challan, LrDetail } from '@/lib/challan-data';
@@ -89,7 +90,7 @@ export function LoadingSlip({ challan, lrDetails, profile, driverMobile, remark,
                 </div>
                  <div className="border border-black p-2 space-y-1">
                     <h3 className="font-bold underline text-xs mb-1">Short / Extra Loading</h3>
-                     {shortExtraMessages.length > 0 ? (
+                     {shortExtraMessages?.length > 0 ? (
                         <ul className="text-xs list-disc list-inside">
                             {shortExtraMessages.map(entry => (
                                 <li key={entry.lrNo} className="text-destructive font-medium">{entry.message}</li>
@@ -112,3 +113,5 @@ export function LoadingSlip({ challan, lrDetails, profile, driverMobile, remark,
         </div>
     );
 }
+
+    

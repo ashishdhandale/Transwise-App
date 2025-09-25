@@ -47,7 +47,7 @@ const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 type CityListSource = 'default' | 'custom';
 
-interface ShortExtraEntry {
+export interface ShortExtraEntry {
     lrNo: string;
     message: string;
 }
@@ -81,6 +81,8 @@ interface SlipData {
     challan: Challan;
     lrDetails: LrDetail[];
     driverMobile?: string;
+    remark: string;
+    shortExtraMessages: ShortExtraEntry[];
 }
 
 export function PtlChallanForm() {
@@ -597,7 +599,7 @@ export function PtlChallanForm() {
             }));
             saveLrDetailsData([...otherLrDetails, ...newLrDetailsForChallan]);
     
-            return { challan: challanPayload, lrDetails: newLrDetailsForChallan, driverMobile };
+            return { challan: challanPayload, lrDetails: newLrDetailsForChallan, driverMobile, remark, shortExtraMessages };
     
         } catch (error) {
             console.error("Failed to save challan", error);
@@ -1243,6 +1245,8 @@ export function PtlChallanForm() {
                                     lrDetails={slipData.lrDetails}
                                     profile={companyProfile}
                                     driverMobile={slipData.driverMobile}
+                                    remark={slipData.remark}
+                                    shortExtraMessages={slipData.shortExtraMessages}
                                 />
                             )}
                         </div>
@@ -1269,3 +1273,5 @@ export function PtlChallanForm() {
         </div>
     );
 }
+
+    
