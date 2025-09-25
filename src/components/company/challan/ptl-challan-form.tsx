@@ -120,8 +120,6 @@ export function PtlChallanForm() {
     const [isOverloaded, setIsOverloaded] = useState(false);
     const [overflowLrNos, setOverflowLrNos] = useState<Set<string>>(new Set());
     const [dispatchQuantities, setDispatchQuantities] = useState<{ [trackingId: string]: number }>({});
-    const [modifiedQtyLrNos, setModifiedQtyLrNos] = useState<Set<string>>(new Set());
-    const [shortExtraMessages, setShortExtraMessages] = useState<ShortExtraEntry[]>([]);
 
     const [additionalCharges, setAdditionalCharges] = useState<AdditionalCharges>({
         commission: 0, labour: 0, crossing: 0, carting: 0, otherCharges: 0,
@@ -318,40 +316,14 @@ export function PtlChallanForm() {
         if (isNaN(numValue)) return;
         setAdditionalCharges(prev => ({ ...prev, [field]: numValue }));
     };
-    
-    const updateShortExtraLog = (booking: Booking, newDispatchQty: number) => {
-        const originalQty = booking.qty;
-        const diff = newDispatchQty - originalQty;
-
-        setShortExtraMessages(prev => prev.filter(entry => entry.lrNo !== booking.lrNo));
-        setModifiedQtyLrNos(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(booking.lrNo);
-            return newSet;
-        });
-
-        if (diff !== 0) {
-            const message = diff < 0 
-                ? `LR no ${booking.lrNo} ${Math.abs(diff)} Qty is Short.`
-                : `LR no ${booking.lrNo} ${diff} Qty is Extra.`;
-            
-            setShortExtraMessages(prev => [...prev, { lrNo: booking.lrNo, message }]);
-            setModifiedQtyLrNos(prev => new Set(prev).add(booking.lrNo));
-        }
-    }
 
     const handleDispatchQtyChange = (trackingId: string, value: string) => {
         const newQty = Number(value);
         if (isNaN(newQty)) return;
-
         setDispatchQuantities(prev => ({...prev, [trackingId]: newQty}));
-        const booking = selectedBookings.find(b => b.trackingId === trackingId);
-        if (booking) {
-            updateShortExtraLog(booking, newQty);
-        }
     };
 
-    const addSelectedBookings = (bookingsToAdd: Booking[]) => {
+    const addSelectedBookings = useCallback((bookingsToAdd: Booking[]) => {
         const newSelectedBookings = [...selectedBookings, ...bookingsToAdd];
         setSelectedBookings(newSelectedBookings);
 
@@ -368,7 +340,7 @@ export function PtlChallanForm() {
             bookingsToAdd.forEach(b => newOverflowNos.add(b.lrNo));
             setOverflowLrNos(newOverflowNos);
         }
-    };
+    }, [selectedBookings, dispatchQuantities, isOverloaded, overflowLrNos]);
 
 
     const checkWeightAndAddBookings = useCallback((bookingsToAdd: Booking[]) => {
@@ -463,12 +435,6 @@ export function PtlChallanForm() {
             const newOverflowNos = new Set(overflowLrNos);
             newOverflowNos.delete(bookingToRemove.lrNo);
             setOverflowLrNos(newOverflowNos);
-            
-            const newModifiedNos = new Set(modifiedQtyLrNos);
-            newModifiedNos.delete(bookingToRemove.lrNo);
-            setModifiedQtyLrNos(newModifiedNos);
-
-            setShortExtraMessages(prev => prev.filter(e => e.lrNo !== bookingToRemove.lrNo));
         }
 
         // Check if we are back under capacity
@@ -567,7 +533,7 @@ export function PtlChallanForm() {
             }));
             saveLrDetailsData([...otherLrDetails, ...newLrDetailsForChallan]);
     
-            return { challan: challanPayload, lrDetails: newLrDetailsForChallan, driverMobile, remark, shortExtraMessages };
+            return { challan: challanPayload, lrDetails: newLrDetailsForChallan, driverMobile, remark, shortExtraMessages: [] };
     
         } catch (error) {
             console.error("Failed to save challan", error);
@@ -713,23 +679,23 @@ export function PtlChallanForm() {
                  <CardContent className="p-2">
                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
                         <div className="space-y-0.5">
-                            <Label>Challan No.</Label>
+                            <Label className="text-xs">Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Challan Date</Label>
-                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
+                            <Label className="text-xs">Challan Date</Label>
+                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Dispatch Date</Label>
-                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(dispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dispatchDate} onSelect={(d) => d && setDispatchDate(d)}/></PopoverContent></Popover>
+                            <Label className="text-xs">Dispatch Date</Label>
+                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(dispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dispatchDate} onSelect={(d) => d && setDispatchDate(d)}/></PopoverContent></Popover>
                         </div>
                         <div className="space-y-0.5">
-                            <Label>From Station</Label>
+                            <Label className="text-xs">From Station</Label>
                             <Input value={fromStation} readOnly className="h-9 text-xs" />
                         </div>
                          <div className="space-y-0.5">
-                            <Label>Dispatch To (Party)</Label>
+                            <Label className="text-xs">Dispatch To (Party)</Label>
                             <Combobox
                                 options={dispatchToOptions}
                                 value={dispatchTo}
@@ -739,7 +705,7 @@ export function PtlChallanForm() {
                             />
                         </div>
                          <div className="space-y-0.5">
-                            <Label>Destination Station</Label>
+                            <Label className="text-xs">Destination Station</Label>
                             <Combobox
                                 options={toStationOptions}
                                 value={destinationStation}
@@ -749,11 +715,11 @@ export function PtlChallanForm() {
                             />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Veh.Hire Receipt No</Label>
+                            <Label className="text-xs">Veh.Hire Receipt No</Label>
                             <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Vehicle Supplier</Label>
+                            <Label className="text-xs">Vehicle Supplier</Label>
                             <Combobox
                                 options={lorrySupplierOptions}
                                 value={lorrySupplier}
@@ -766,7 +732,7 @@ export function PtlChallanForm() {
                             />
                         </div>
                         <div className="space-y-0.5">
-                            <Label>Vehicle No.</Label>
+                            <Label className="text-xs">Vehicle No.</Label>
                             {lorrySupplier === 'Own Vehicle' ? (
                                 <Combobox
                                     options={ownedVehicleOptions}
@@ -786,11 +752,11 @@ export function PtlChallanForm() {
                             )}
                         </div>
                          <div className="space-y-0.5">
-                            <Label>Veh.Capacity</Label>
+                            <Label className="text-xs">Veh.Capacity</Label>
                             <Input ref={vehicleCapacityRef} className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
                         </div>
                          <div className="space-y-0.5">
-                            <Label>Driver Name</Label>
+                            <Label className="text-xs">Driver Name</Label>
                              {lorrySupplier === 'Own Vehicle' ? (
                                  <Combobox
                                     options={drivers.map(d => ({ label: d.name, value: d.name }))}
@@ -811,7 +777,7 @@ export function PtlChallanForm() {
                              )}
                         </div>
                          <div className="space-y-0.5">
-                            <Label>Driver Contact No</Label>
+                            <Label className="text-xs">Driver Contact No</Label>
                             <Input value={driverMobile} onChange={e => setDriverMobile(e.target.value)} className="h-9 text-xs" />
                         </div>
                     </div>
@@ -916,8 +882,8 @@ export function PtlChallanForm() {
                             </TableHeader>
                             <TableBody>
                                 {selectedBookings.map((b, i) => {
-                                    const isModified = modifiedQtyLrNos.has(b.lrNo);
                                     const dispatchQty = dispatchQuantities[b.trackingId];
+                                    const isModified = dispatchQty !== b.qty;
                                     const currentWeight = (isModified && dispatchQty !== undefined)
                                         ? calculateProportionalWeight(b, dispatchQty)
                                         : b.itemRows.reduce((s,i) => s+Number(i.actWt),0);
@@ -950,20 +916,9 @@ export function PtlChallanForm() {
             {/* Footer Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                  <Card className="p-1 h-full">
-                    <CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader>
-                     <CardContent className="p-1 grid grid-cols-2 gap-1">
+                    <CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks</CardTitle></CardHeader>
+                     <CardContent className="p-1">
                         <Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" value={remark} onChange={(e) => setRemark(e.target.value)} />
-                        <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
-                            {shortExtraMessages.length > 0 ? (
-                                <ul className="text-xs space-y-1">
-                                    {shortExtraMessages.map(entry => (
-                                        <li key={entry.lrNo} className="text-destructive font-medium">{entry.message}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-muted-foreground text-xs">No short/extra quantities</div>
-                            )}
-                        </ScrollArea>
                     </CardContent>
                 </Card>
                  <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader>
@@ -1072,4 +1027,5 @@ export function PtlChallanForm() {
     );
 }
 
+    
     
