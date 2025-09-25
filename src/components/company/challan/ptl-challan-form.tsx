@@ -482,29 +482,18 @@ export function PtlChallanForm() {
             toast({ title: "Validation Error", description: "Vehicle, Driver, From Station, Dispatch To, and at least one booking are required.", variant: "destructive" });
             return null;
         }
-
+    
         setIsSubmitting(true);
         await new Promise(resolve => setTimeout(resolve, 500));
     
         try {
-            const allChallans = getChallanData();
+            let allChallans = getChallanData();
             const allLrDetails = getLrDetailsData();
             const allBookings = getBookings();
-            const selectedLrs = new Set(selectedBookings.map(b => b.trackingId));
     
             const newChallanId = challanNo;
     
-            const updatedBookings = allBookings.map(booking => {
-                if (selectedLrs.has(booking.trackingId)) {
-                    addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallanId}`);
-                    return { ...booking, status: 'In Transit' as const };
-                }
-                return booking;
-            });
-    
-            saveBookings(updatedBookings);
-    
-            const newChallan: Challan = {
+            const challanPayload: Challan = {
                 challanId: newChallanId,
                 status: 'Pending',
                 dispatchDate: format(dispatchDate, 'yyyy-MM-dd'),
@@ -515,27 +504,49 @@ export function PtlChallanForm() {
                 toStation: destinationStation || selectedBookings.map(b => b.toCity).join(', '),
                 senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
                 challanType: 'Dispatch',
-                vehicleHireFreight: additionalCharges.vehFreight, 
-                advance: additionalCharges.vehAdvance, 
+                vehicleHireFreight: additionalCharges.vehFreight,
+                advance: additionalCharges.vehAdvance,
                 balance: financialSummary.balanceTruckHire,
                 totalLr: selectedBookings.length,
                 totalPackages: totals.totalPackages,
                 totalItems: totals.totalItems,
                 totalActualWeight: totals.totalActualWeight,
                 totalChargeWeight: selectedBookings.reduce((s, b) => s + b.chgWt, 0),
-                 summary: {
+                summary: {
                     grandTotal: financialSummary.totalFreight,
                     totalTopayAmount: financialSummary.toPayAmt,
-                    commission: additionalCharges.commission, 
-                    labour: additionalCharges.labour, 
-                    crossing: additionalCharges.crossing, 
-                    carting: additionalCharges.carting, 
+                    commission: additionalCharges.commission,
+                    labour: additionalCharges.labour,
+                    crossing: additionalCharges.crossing,
+                    carting: additionalCharges.carting,
                     balanceTruckHire: financialSummary.balanceTruckHire,
                     debitCreditAmount: financialSummary.totalCharges,
                 }
             };
-            saveChallanData([...allChallans, newChallan]);
     
+            const existingChallanIndex = allChallans.findIndex(c => c.challanId === newChallanId);
+            if (existingChallanIndex > -1) {
+                // Update existing challan
+                allChallans[existingChallanIndex] = challanPayload;
+            } else {
+                // Add new challan
+                allChallans.push(challanPayload);
+            }
+            saveChallanData(allChallans);
+    
+            const updatedBookings = allBookings.map(booking => {
+                if (selectedBookings.some(sb => sb.trackingId === booking.trackingId)) {
+                    if (booking.status !== 'In Transit') {
+                         addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallanId}`);
+                    }
+                    return { ...booking, status: 'In Transit' as const };
+                }
+                return booking;
+            });
+            saveBookings(updatedBookings);
+    
+            // Update LR details - remove old ones for this challan and add new ones
+            const otherLrDetails = allLrDetails.filter(d => d.challanId !== newChallanId);
             const newLrDetailsForChallan: LrDetail[] = selectedBookings.map(b => ({
                 challanId: newChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
                 from: b.fromCity, to: b.toCity, bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
@@ -543,9 +554,10 @@ export function PtlChallanForm() {
                 actualWeight: calculateProportionalWeight(b, dispatchQuantities[b.trackingId] ?? b.qty),
                 chargeWeight: b.chgWt, grandTotal: b.totalAmount
             }));
-            saveLrDetailsData([...allLrDetails, ...newLrDetailsForChallan]);
-
-            return { challan: newChallan, lrDetails: newLrDetailsForChallan };
+            saveLrDetailsData([...otherLrDetails, ...newLrDetailsForChallan]);
+    
+            return { challan: challanPayload, lrDetails: newLrDetailsForChallan };
+    
         } catch (error) {
             console.error("Failed to save challan", error);
             toast({ title: "Error", description: "An unexpected error occurred while saving the challan.", variant: "destructive" });
