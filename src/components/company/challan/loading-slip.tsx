@@ -4,33 +4,25 @@
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import type { ShortExtraEntry } from './ptl-challan-form';
 
 interface LoadingSlipProps {
     challan: Challan;
     lrDetails: LrDetail[];
     profile: CompanyProfileFormValues;
     driverMobile?: string;
+    remark: string;
+    shortExtraMessages: ShortExtraEntry[];
 }
 
 const thClass = "text-left text-xs font-bold text-black border border-black";
 const tdClass = "text-xs border border-black";
 
-const SummaryItem = ({ label, value, isCurrency = true, profile }: { label: string; value: string | number; isCurrency?: boolean; profile: CompanyProfileFormValues | null }) => (
-    <div className="flex justify-between text-xs">
-        <span className="text-gray-700">{label}:</span>
-        <span className="font-semibold">
-            {isCurrency && profile ? (Number(value)).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
-        </span>
-    </div>
-);
-
-
-export function LoadingSlip({ challan, lrDetails, profile, driverMobile }: LoadingSlipProps) {
+export function LoadingSlip({ challan, lrDetails, profile, driverMobile, remark, shortExtraMessages }: LoadingSlipProps) {
 
     const totalPackages = lrDetails.reduce((sum, lr) => sum + lr.quantity, 0);
     const totalWeight = lrDetails.reduce((sum, lr) => sum + lr.actualWeight, 0);
     const totalItems = lrDetails.length;
-    const { grandTotal, totalTopayAmount, commission, labour, crossing, carting, balanceTruckHire, debitCreditAmount } = challan.summary;
 
     return (
         <div className="p-4 font-sans text-black bg-white">
@@ -92,19 +84,20 @@ export function LoadingSlip({ challan, lrDetails, profile, driverMobile }: Loadi
             
             <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="border border-black p-2">
-                    <h3 className="font-bold underline text-xs mb-1">Remarks</h3>
-                    <p className="text-xs min-h-[60px]">{challan.remark || 'No remarks.'}</p>
+                    <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
+                    <p className="text-xs min-h-[60px] whitespace-pre-line">{remark || 'No remarks.'}</p>
                 </div>
                  <div className="border border-black p-2 space-y-1">
-                    <h3 className="font-bold underline text-xs mb-1 text-center">Summary</h3>
-                    <SummaryItem label="Total Topay Amount" value={totalTopayAmount} profile={profile} />
-                    <SummaryItem label="Commission" value={commission} profile={profile} />
-                    <SummaryItem label="Labour" value={labour} profile={profile} />
-                    <SummaryItem label="Balance Truck Hire" value={balanceTruckHire} profile={profile} />
-                    <div className="flex justify-between font-bold border-t border-black pt-1 mt-1">
-                        <span>Total:</span>
-                        <span>{profile ? debitCreditAmount.toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : debitCreditAmount}</span>
-                    </div>
+                    <h3 className="font-bold underline text-xs mb-1">Short / Extra Loading</h3>
+                     {shortExtraMessages.length > 0 ? (
+                        <ul className="text-xs list-disc list-inside">
+                            {shortExtraMessages.map(entry => (
+                                <li key={entry.lrNo} className="text-destructive font-medium">{entry.message}</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-xs text-center text-gray-500 min-h-[60px] flex items-center justify-center">No short/extra quantities noted.</p>
+                    )}
                 </div>
             </div>
 
