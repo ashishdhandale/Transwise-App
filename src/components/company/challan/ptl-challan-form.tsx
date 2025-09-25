@@ -104,6 +104,7 @@ export function PtlChallanForm() {
     const [vehicleCapacity, setVehicleCapacity] = useState('');
     const [driverName, setDriverName] = useState<string | undefined>();
     const [driverMobile, setDriverMobile] = useState('');
+    const [remark, setRemark] = useState('');
     
     // Refs for focus management
     const vehicleCapacityRef = useRef<HTMLInputElement>(null);
@@ -232,6 +233,7 @@ export function PtlChallanForm() {
                         setLorrySupplier(challanToLoad.summary.grandTotal > 0 ? 'Market Vehicle' : 'Own Vehicle'); // Heuristic
                         setVehicleNo(challanToLoad.vehicleNo);
                         setDriverName(challanToLoad.driverName);
+                        setRemark(challanToLoad.remark || '');
                         // setVehicleCapacity...
                         
                         const lrNosToLoad = new Set(lrDetails.map(lr => lr.lrNo));
@@ -550,6 +552,7 @@ export function PtlChallanForm() {
                 totalItems: totals.totalItems,
                 totalActualWeight: totals.totalActualWeight,
                 totalChargeWeight: selectedBookings.reduce((s, b) => s + b.chgWt, 0),
+                remark: remark,
                 summary: {
                     grandTotal: financialSummary.totalFreight,
                     totalTopayAmount: financialSummary.toPayAmt,
@@ -1040,7 +1043,7 @@ export function PtlChallanForm() {
                  <Card className="p-1 h-full">
                     <CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Remarks &amp; Summary</CardTitle></CardHeader>
                      <CardContent className="p-1 grid grid-cols-2 gap-1">
-                        <Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" />
+                        <Textarea placeholder="Remark/Dispatch Note" className="text-xs h-24" value={remark} onChange={(e) => setRemark(e.target.value)} />
                         <ScrollArea className="h-24 border-dashed border-2 rounded-md p-2">
                             {shortExtraMessages.length > 0 ? (
                                 <ul className="text-xs space-y-1">

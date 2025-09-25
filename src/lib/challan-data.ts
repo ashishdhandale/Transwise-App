@@ -1,5 +1,4 @@
 
-
 export interface Challan {
   challanId: string;
   dispatchDate: string;
@@ -22,6 +21,7 @@ export interface Challan {
   totalItems: number;
   totalActualWeight: number;
   totalChargeWeight: number;
+  remark?: string;
   summary: {
     grandTotal: number;
     totalTopayAmount: number;

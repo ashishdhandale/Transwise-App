@@ -15,11 +15,22 @@ interface LoadingSlipProps {
 const thClass = "text-left text-xs font-bold text-black border border-black";
 const tdClass = "text-xs border border-black";
 
+const SummaryItem = ({ label, value, isCurrency = true, profile }: { label: string; value: string | number; isCurrency?: boolean; profile: CompanyProfileFormValues | null }) => (
+    <div className="flex justify-between text-xs">
+        <span className="text-gray-700">{label}:</span>
+        <span className="font-semibold">
+            {isCurrency && profile ? (Number(value)).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
+        </span>
+    </div>
+);
+
+
 export function LoadingSlip({ challan, lrDetails, profile, driverMobile }: LoadingSlipProps) {
 
     const totalPackages = lrDetails.reduce((sum, lr) => sum + lr.quantity, 0);
     const totalWeight = lrDetails.reduce((sum, lr) => sum + lr.actualWeight, 0);
     const totalItems = lrDetails.length;
+    const { grandTotal, totalTopayAmount, commission, labour, crossing, carting, balanceTruckHire, debitCreditAmount } = challan.summary;
 
     return (
         <div className="p-4 font-sans text-black bg-white">
@@ -79,7 +90,25 @@ export function LoadingSlip({ challan, lrDetails, profile, driverMobile }: Loadi
                 </Table>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mt-20 text-xs">
+            <div className="grid grid-cols-2 gap-4 mt-2">
+                <div className="border border-black p-2">
+                    <h3 className="font-bold underline text-xs mb-1">Remarks</h3>
+                    <p className="text-xs min-h-[60px]">{challan.remark || 'No remarks.'}</p>
+                </div>
+                 <div className="border border-black p-2 space-y-1">
+                    <h3 className="font-bold underline text-xs mb-1 text-center">Summary</h3>
+                    <SummaryItem label="Total Topay Amount" value={totalTopayAmount} profile={profile} />
+                    <SummaryItem label="Commission" value={commission} profile={profile} />
+                    <SummaryItem label="Labour" value={labour} profile={profile} />
+                    <SummaryItem label="Balance Truck Hire" value={balanceTruckHire} profile={profile} />
+                    <div className="flex justify-between font-bold border-t border-black pt-1 mt-1">
+                        <span>Total:</span>
+                        <span>{profile ? debitCreditAmount.toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : debitCreditAmount}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-12 text-xs">
                 <div className="text-center">
                     <p className="pt-1 border-t border-black">Driver Signature</p>
                 </div>
