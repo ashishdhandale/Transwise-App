@@ -94,10 +94,17 @@ export function Combobox({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Tab' && !e.shiftKey) {
-      if (open) {
+    // When the dropdown is open, the focus is on the CommandInput.
+    // This handler for the PopoverTrigger is for when it's closed.
+    if (!open && e.key === 'Tab') {
+        // Allow default tab behavior to move to the next element.
+        return;
+    }
+    if (e.key === 'Tab' && open) {
+        // If dropdown is open, we close it. The focus will return
+        // to the trigger, and the default Tab behavior will then
+        // move to the next element.
         setOpen(false);
-      }
     }
   }
 
@@ -128,7 +135,13 @@ export function Combobox({
             inputRef.current?.focus();
           }}
         >
-          <Command>
+          <Command onKeyDown={(e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                setOpen(false);
+                triggerRef.current?.focus();
+            }
+          }}>
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
