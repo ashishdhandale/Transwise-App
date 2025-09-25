@@ -777,7 +777,6 @@ export function PtlChallanForm() {
                                     onChange={handleOwnedVehicleSelect}
                                     placeholder="Select Owned Vehicle..."
                                     searchPlaceholder="Search vehicle..."
-                                    autoOpenOnFocus={true}
                                 />
                             ) : (
                                 <Input 
