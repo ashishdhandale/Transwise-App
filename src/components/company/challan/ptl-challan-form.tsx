@@ -581,7 +581,7 @@ export function PtlChallanForm() {
             setIsSlipOpen(true);
             toast({ title: "Loading Slip Generated", description: "The challan has been saved as a pending draft." });
         }
-    }
+    };
 
 
     const toStationOptions = useMemo(() => {
@@ -668,7 +668,6 @@ export function PtlChallanForm() {
         }
     };
 
-
     if (isLoading) {
         return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
@@ -679,7 +678,7 @@ export function PtlChallanForm() {
             {/* Header Section */}
             <Card>
                  <CardContent className="p-2">
-                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-2 text-xs items-end">
+                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-2 items-end">
                         <div className="space-y-0.5">
                             <Label className="text-xs">Challan No.</Label>
                             <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
@@ -926,15 +925,15 @@ export function PtlChallanForm() {
                  <Card className="p-1 h-full"><CardHeader className="p-1"><CardTitle className="text-sm font-semibold text-center">Additional Charges</CardTitle></CardHeader>
                     <CardContent className="p-1 space-y-1 text-xs">
                         <div className="flex justify-between font-bold"><span>Total TOPAY:</span><span>{financialSummary.toPayAmt.toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span>Comission</span><Input className="h-6 w-24 text-xs" value={additionalCharges.commission} onChange={e => handleChargeChange('commission', e.target.value)} /></div>
-                        <div className="flex justify-between"><span>Labor</span><Input className="h-6 w-24 text-xs" value={additionalCharges.labour} onChange={e => handleChargeChange('labour', e.target.value)} /></div>
-                        <div className="flex justify-between"><span>Crossing</span><Input className="h-6 w-24 text-xs" value={additionalCharges.crossing} onChange={e => handleChargeChange('crossing', e.target.value)} /></div>
-                        <div className="flex justify-between"><span>Carting</span><Input className="h-6 w-24 text-xs" value={additionalCharges.carting} onChange={e => handleChargeChange('carting', e.target.value)} /></div>
-                        <div className="flex justify-between"><span>Other Charges</span><Input className="h-6 w-24 text-xs" value={additionalCharges.otherCharges} onChange={e => handleChargeChange('otherCharges', e.target.value)} /></div>
-                        <div className="flex justify-between"><span>Veh.Freight</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehFreight} onChange={e => handleChargeChange('vehFreight', e.target.value)} /></div>
-                        <div className="flex justify-between"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehAdvance} onChange={e => handleChargeChange('vehAdvance', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><span>Comission</span><Input className="h-6 w-24 text-xs" value={additionalCharges.commission} onChange={e => handleChargeChange('commission', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><span>Labor</span><Input className="h-6 w-24 text-xs" value={additionalCharges.labour} onChange={e => handleChargeChange('labour', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><span>Crossing</span><Input className="h-6 w-24 text-xs" value={additionalCharges.crossing} onChange={e => handleChargeChange('crossing', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><span>Carting</span><Input className="h-6 w-24 text-xs" value={additionalCharges.carting} onChange={e => handleChargeChange('carting', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><span>Other Charges</span><Input className="h-6 w-24 text-xs" value={additionalCharges.otherCharges} onChange={e => handleChargeChange('otherCharges', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><span>Veh.Freight</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehFreight} onChange={e => handleChargeChange('vehFreight', e.target.value)} /></div>
+                        <div className="flex justify-between items-center"><span>Veh. Advance</span><Input className="h-6 w-24 text-xs" value={additionalCharges.vehAdvance} onChange={e => handleChargeChange('vehAdvance', e.target.value)} /></div>
                         <div className="flex justify-between items-center"><a>+Add Fuel</a><span><Input className="h-6 w-12 text-xs inline-block" placeholder="Ltr" value={additionalCharges.fuelLtr || ''} onChange={e => handleChargeChange('fuelLtr', e.target.value)} /><Input className="h-6 w-16 text-xs inline-block ml-1" placeholder="Amt" value={additionalCharges.fuelAmt || ''} onChange={e => handleChargeChange('fuelAmt', e.target.value)} /></span></div>
-                        <div className="flex justify-between"><span>Balance Truck Hire</span><Input readOnly value={financialSummary.balanceTruckHire.toFixed(2)} className="h-6 w-24 text-xs" /></div>
+                        <div className="flex justify-between items-center"><span>Balance Truck Hire</span><Input readOnly value={financialSummary.balanceTruckHire.toFixed(2)} className="h-6 w-24 text-xs" /></div>
                         <div className="flex justify-between font-bold text-red-600"><span>Total:</span><span>Rs. {financialSummary.totalCharges.toFixed(2)}</span></div>
                     </CardContent>
                  </Card>
@@ -1028,5 +1027,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
-    
