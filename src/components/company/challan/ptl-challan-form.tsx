@@ -765,6 +765,7 @@ export function PtlChallanForm() {
                                 searchPlaceholder="Search suppliers..."
                                 addMessage="Add New Supplier"
                                 onAdd={handleOpenAddVendor}
+                                autoOpenOnFocus={true}
                             />
                         </div>
                         <div className="space-y-0.5">
@@ -803,8 +804,6 @@ export function PtlChallanForm() {
                                     searchPlaceholder="Search driver..."
                                     addMessage="Add New Driver"
                                     onAdd={handleOpenAddDriver}
-                                    allowFreeform
-                                    onFreeformChange={setDriverName}
                                 />
                              ) : (
                                  <Input 
