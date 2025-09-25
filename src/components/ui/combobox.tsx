@@ -93,6 +93,14 @@ export function Combobox({
       }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      if (open) {
+        setOpen(false);
+      }
+    }
+  }
+
   return (
     <ClientOnly>
       <Popover open={open} onOpenChange={handleOpenChange}>
@@ -105,6 +113,7 @@ export function Combobox({
             className="w-full justify-between"
             disabled={disabled}
             onFocus={handleTriggerFocus}
+            onKeyDown={handleKeyDown}
           >
             <span className="truncate">
               {displayValue || placeholder}
