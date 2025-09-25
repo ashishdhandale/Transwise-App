@@ -5,7 +5,6 @@
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import type { ShortExtraEntry } from './ptl-challan-form';
 
 interface LoadingSlipProps {
     challan: Challan;
@@ -13,13 +12,12 @@ interface LoadingSlipProps {
     profile: CompanyProfileFormValues;
     driverMobile?: string;
     remark: string;
-    shortExtraMessages: ShortExtraEntry[];
 }
 
 const thClass = "text-left text-xs font-bold text-black border border-black";
 const tdClass = "text-xs border border-black";
 
-export function LoadingSlip({ challan, lrDetails, profile, driverMobile, remark, shortExtraMessages }: LoadingSlipProps) {
+export function LoadingSlip({ challan, lrDetails, profile, driverMobile, remark }: LoadingSlipProps) {
 
     const totalPackages = lrDetails.reduce((sum, lr) => sum + lr.quantity, 0);
     const totalWeight = lrDetails.reduce((sum, lr) => sum + lr.actualWeight, 0);
@@ -83,23 +81,9 @@ export function LoadingSlip({ challan, lrDetails, profile, driverMobile, remark,
                 </Table>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mt-2">
-                <div className="border border-black p-2">
-                    <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
-                    <p className="text-xs min-h-[60px] whitespace-pre-line">{remark || 'No remarks.'}</p>
-                </div>
-                 <div className="border border-black p-2 space-y-1">
-                    <h3 className="font-bold underline text-xs mb-1">Short / Extra Loading</h3>
-                     {shortExtraMessages?.length > 0 ? (
-                        <ul className="text-xs list-disc list-inside">
-                            {shortExtraMessages.map(entry => (
-                                <li key={entry.lrNo} className="text-destructive font-medium">{entry.message}</li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="text-xs text-center text-gray-500 min-h-[60px] flex items-center justify-center">No short/extra quantities noted.</p>
-                    )}
-                </div>
+            <div className="mt-2 border border-black p-2">
+                <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
+                <p className="text-xs min-h-[60px] whitespace-pre-line">{remark || 'No remarks.'}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-12 text-xs">

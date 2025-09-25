@@ -68,7 +68,6 @@ interface SlipData {
     lrDetails: LrDetail[];
     driverMobile?: string;
     remark: string;
-    shortExtraMessages: ShortExtraEntry[];
 }
 
 export function PtlChallanForm() {
@@ -533,7 +532,7 @@ export function PtlChallanForm() {
             }));
             saveLrDetailsData([...otherLrDetails, ...newLrDetailsForChallan]);
     
-            return { challan: challanPayload, lrDetails: newLrDetailsForChallan, driverMobile, remark, shortExtraMessages: [] };
+            return { challan: challanPayload, lrDetails: newLrDetailsForChallan, driverMobile, remark };
     
         } catch (error) {
             console.error("Failed to save challan", error);
@@ -1000,7 +999,6 @@ export function PtlChallanForm() {
                                     profile={companyProfile}
                                     driverMobile={slipData.driverMobile}
                                     remark={slipData.remark}
-                                    shortExtraMessages={slipData.shortExtraMessages}
                                 />
                             )}
                         </div>
