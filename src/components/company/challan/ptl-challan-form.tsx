@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -18,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -85,6 +84,7 @@ interface SlipData {
 export function PtlChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
@@ -212,9 +212,45 @@ export function PtlChallanForm() {
 
                 loadMasterData();
                 const allBookings = getBookings();
+                
+                const challanIdToLoad = searchParams.get('challanId');
+                if (challanIdToLoad) {
+                    // MODIFICATION MODE
+                    const allChallans = getChallanData();
+                    const challanToLoad = allChallans.find(c => c.challanId === challanIdToLoad);
+                    const lrDetails = getLrDetailsData().filter(lr => lr.challanId === challanIdToLoad);
+                    
+                    if (challanToLoad && lrDetails) {
+                        setChallanNo(challanToLoad.challanId);
+                        setChallanDate(parseISO(challanToLoad.dispatchDate)); // Use dispatch date for both
+                        setDispatchDate(parseISO(challanToLoad.dispatchDate));
+                        setFromStation(challanToLoad.fromStation);
+                        setDestinationStation(challanToLoad.toStation);
+                        setDispatchTo(challanToLoad.dispatchToParty);
+                        setLorrySupplier(challanToLoad.summary.grandTotal > 0 ? 'Market Vehicle' : 'Own Vehicle'); // Heuristic
+                        setVehicleNo(challanToLoad.vehicleNo);
+                        setDriverName(challanToLoad.driverName);
+                        // setVehicleCapacity...
+                        
+                        const lrNosToLoad = new Set(lrDetails.map(lr => lr.lrNo));
+                        const bookingsForChallan = allBookings.filter(b => lrNosToLoad.has(b.lrNo));
+                        setSelectedBookings(bookingsForChallan);
+                        
+                        const dispatchQtys: {[key: string]: number} = {};
+                        bookingsForChallan.forEach(b => {
+                            const detail = lrDetails.find(lr => lr.lrNo === b.lrNo);
+                            if (detail) dispatchQtys[b.trackingId] = detail.quantity;
+                        });
+                        setDispatchQuantities(dispatchQtys);
+                    }
+                } else {
+                    // NEW CHALLAN MODE
+                     setChallanNo(`TEMP-${Date.now().toString().slice(-6)}`);
+                }
+                
                 const ptlStock = allBookings.filter(b => b.loadType === 'PTL' && b.status === 'In Stock');
                 setAllStockBookings(ptlStock);
-                setChallanNo(`TEMP-${Date.now().toString().slice(-6)}`);
+               
             } catch (error) {
                 toast({ title: "Error", description: "Failed to load initial data.", variant: "destructive" });
             } finally {
@@ -222,7 +258,7 @@ export function PtlChallanForm() {
             }
         }
         loadInitialData();
-    }, [loadMasterData, toast]);
+    }, [loadMasterData, toast, searchParams]);
 
     useEffect(() => {
         const selectedDriver = drivers.find(d => d.name === driverName);

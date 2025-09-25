@@ -37,6 +37,8 @@ import { format, parseISO, isWithinInterval } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 const thClassPending = "bg-white text-black font-semibold border";
 const tdClass = "p-2 whitespace-nowrap";
@@ -204,10 +206,31 @@ export function ChallanList() {
                                         <TableCell className={`${tdClass} border`}>{challan.dispatchToParty}</TableCell>
                                         <TableCell className={`${tdClass} border`}>
                                             <div className="flex items-center gap-2">
-                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>Modify</Button>
-                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>view</Button>
-                                                <Button variant="link" className="p-0 h-auto text-green-600" onClick={() => handleFinalize(challan.challanId)}>Finalise</Button>
-                                                <Button variant="link" className="p-0 h-auto text-red-600" onClick={() => handleDelete(challan.challanId)}>Delete</Button>
+                                                <Button variant="outline" size="sm" className="h-7" onClick={() => router.push(`/company/challan/new?challanId=${challan.challanId}`)}>
+                                                    <Pencil className="mr-1 h-3 w-3" /> Modify
+                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive" size="sm" className="h-7">
+                                                            <Trash2 className="mr-1 h-3 w-3" /> Delete
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This will permanently delete the pending challan and revert all associated LRs to "In Stock". This action cannot be undone.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(challan.challanId)}>Delete Challan</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                                <Button variant="ghost" size="sm" className="h-7 text-green-600" onClick={() => handleFinalize(challan.challanId)}>
+                                                    Finalize
+                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
