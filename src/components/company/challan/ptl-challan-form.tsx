@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -36,7 +35,7 @@ import { useReactToPrint } from 'react-to-print';
 
 
 const tdClass = "p-1 whitespace-nowrap text-xs";
-const thClass = "p-1.5 h-9 bg-gray-100 text-gray-700 font-semibold text-xs text-center sticky top-0 z-10 whitespace-nowrap";
+const thClass = "p-1 h-9 bg-gray-100 text-gray-700 font-semibold text-xs text-center sticky top-0 z-10 whitespace-nowrap";
 
 const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
@@ -503,10 +502,12 @@ export function PtlChallanForm() {
     
             const existingChallanIndex = allChallans.findIndex(c => c.challanId === newChallanId);
             if (existingChallanIndex > -1) {
-                // Update existing challan
-                allChallans[existingChallanIndex] = challanPayload;
+                allChallans[existingChallanIndex] = {
+                    ...allChallans[existingChallanIndex],
+                    ...challanPayload,
+                    status: allChallans[existingChallanIndex].status
+                };
             } else {
-                // Add new challan
                 allChallans.push(challanPayload);
             }
             saveChallanData(allChallans);
@@ -522,7 +523,6 @@ export function PtlChallanForm() {
             });
             saveBookings(updatedBookings);
     
-            // Update LR details - remove old ones for this challan and add new ones
             const otherLrDetails = allLrDetails.filter(d => d.challanId !== newChallanId);
             const newLrDetailsForChallan: LrDetail[] = selectedBookings.map(b => ({
                 challanId: newChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
@@ -669,7 +669,9 @@ export function PtlChallanForm() {
     };
 
 
-    if (isLoading) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
     
     return (
         <div className="space-y-2">
@@ -1026,6 +1028,3 @@ export function PtlChallanForm() {
         </div>
     );
 }
-
-    
-    
