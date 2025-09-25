@@ -117,6 +117,7 @@ export function PtlChallanForm() {
     // Validation and Dispatch State
     const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
     const [isWeightAlertOpen, setIsWeightAlertOpen] = useState(false);
+    const [isExitAlertOpen, setIsExitAlertOpen] = useState(false);
     const [isOverloaded, setIsOverloaded] = useState(false);
     const [overflowLrNos, setOverflowLrNos] = useState<Set<string>>(new Set());
     const [dispatchQuantities, setDispatchQuantities] = useState<{ [trackingId: string]: number }>({});
@@ -460,12 +461,12 @@ export function PtlChallanForm() {
         }
     };
 
-    const handleFinalize = async () => {
+    const saveChallan = async (isFinal: boolean) => {
         if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0 || !dispatchTo) {
             toast({ title: "Validation Error", description: "Vehicle, Driver, From Station, Dispatch To, and at least one booking are required.", variant: "destructive" });
-            return;
+            return false;
         }
-    
+
         setIsSubmitting(true);
         await new Promise(resolve => setTimeout(resolve, 500));
     
@@ -475,33 +476,12 @@ export function PtlChallanForm() {
             const allBookings = getBookings();
             const selectedLrs = new Set(selectedBookings.map(b => b.trackingId));
     
-            const newChallanId = challanNo; // Use the temp challan number
+            const newChallanId = challanNo;
     
             const updatedBookings = allBookings.map(booking => {
                 if (selectedLrs.has(booking.trackingId)) {
-                    const dispatchQty = dispatchQuantities[booking.trackingId] ?? booking.qty;
-                    const isShortDispatch = dispatchQty < booking.qty;
-    
-                    if (isShortDispatch) {
-                        const remainingQty = booking.qty - dispatchQty;
-                        const originalAmountPerUnit = booking.totalAmount / booking.qty;
-    
-                        const remainingBooking: Booking = {
-                            ...booking,
-                            trackingId: `TRK-${Date.now()}-${Math.random()}`,
-                            lrNo: `${booking.lrNo}-R`, // Append -R for remaining
-                            qty: remainingQty,
-                            totalAmount: originalAmountPerUnit * remainingQty,
-                            status: 'In Stock',
-                            itemDescription: `${booking.itemDescription} (Remaining from GRN ${booking.lrNo})`,
-                            dispatchStatus: 'Short Dispatched'
-                        };
-                        // This will be added later with newBookings logic
-                        // This avoids modifying array while iterating
-                    }
-                    
-                     addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallanId}`);
-                    return { ...booking, status: 'In Transit' as const, dispatchStatus: isShortDispatch ? 'Short Dispatched' : undefined };
+                    addHistoryLog(booking.lrNo, 'In Transit', companyProfile?.companyName || 'Admin', `Dispatched on challan ${newChallanId}`);
+                    return { ...booking, status: 'In Transit' as const };
                 }
                 return booking;
             });
@@ -548,18 +528,48 @@ export function PtlChallanForm() {
                 chargeWeight: b.chgWt, grandTotal: b.totalAmount
             }));
             saveLrDetailsData([...allLrDetails, ...newLrDetailsForChallan]);
-    
-            toast({ title: "Challan Created", description: `Temporary challan ${newChallanId} is now pending.` });
-            router.push('/company/challan');
-    
+
+            return true;
         } catch (error) {
             console.error("Failed to save challan", error);
             toast({ title: "Error", description: "An unexpected error occurred while saving the challan.", variant: "destructive" });
+            return false;
         } finally {
             setIsSubmitting(false);
         }
     };
     
+    const handleFinalize = async () => {
+        const success = await saveChallan(true);
+        if (success) {
+            toast({ title: "Challan Created", description: `Temporary challan ${challanNo} is now pending.` });
+            router.push('/company/challan');
+        }
+    };
+    
+    const handleSaveOnExit = async () => {
+        if (selectedBookings.length === 0) {
+            router.push('/company/challan');
+            return;
+        }
+        const success = await saveChallan(false);
+        if (success) {
+            toast({ title: "Challan Saved as Pending", description: `Challan ${challanNo} saved.` });
+            router.push('/company/challan');
+        } else {
+             setIsExitAlertOpen(false); // keep dialog open on failure
+        }
+    };
+
+    const handleExitClick = () => {
+        if (selectedBookings.length > 0) {
+            setIsExitAlertOpen(true);
+        } else {
+            router.push('/company/challan');
+        }
+    };
+
+
     const handleManualLrSearch = () => {
         if (!manualLrNoInput.trim()) return;
         const allBookings = getBookings();
@@ -1098,7 +1108,7 @@ export function PtlChallanForm() {
 
             {/* Actions */}
             <div className="flex justify-center gap-4">
-                <Button variant="outline" onClick={() => router.push('/company/challan')}>Exit</Button>
+                <Button variant="outline" onClick={handleExitClick}>Exit</Button>
                 <Button variant="outline">Print Loading Copy</Button>
                 <Button onClick={handleFinalize} disabled={isSubmitting || selectedBookings.length === 0}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -1120,6 +1130,25 @@ export function PtlChallanForm() {
                 </AlertDialogContent>
             </AlertDialog>
             
+            <AlertDialog open={isExitAlertOpen} onOpenChange={setIsExitAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Exit Without Finalizing?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You have unsaved changes. Do you want to save this challan as a pending draft before exiting?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSaveOnExit} disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save & Exit
+                        </AlertDialogAction>
+                        <Button variant="destructive" onClick={() => router.push('/company/challan')}>Exit Without Saving</Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            
             <AddVendorDialog 
                 isOpen={isAddVendorOpen} 
                 onOpenChange={setIsAddVendorOpen} 
@@ -1135,3 +1164,4 @@ export function PtlChallanForm() {
         </div>
     );
 }
+
