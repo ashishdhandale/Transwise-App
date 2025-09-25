@@ -68,11 +68,10 @@ export function ChallanList() {
     }, []);
 
     const { pendingChallans, finalizedChallans } = useMemo(() => {
-        const all = getChallanData();
-        const pending = all.filter(c => c.status === 'Pending')
+        const pending = challans.filter(c => c.status === 'Pending')
             .sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
             
-        let finalized = all.filter(c => c.status === 'Finalized');
+        let finalized = challans.filter(c => c.status === 'Finalized');
         
         if (finalizedFilter !== 'Both') {
             finalized = finalized.filter(c => c.challanType === finalizedFilter);
@@ -113,7 +112,7 @@ export function ChallanList() {
         });
         
         saveChallanData(updatedChallans);
-        setChallans(updatedChallans);
+        loadChallans();
     };
     
     const handleDelete = (challanId: string) => {
@@ -139,7 +138,7 @@ export function ChallanList() {
         const updatedChallans = getChallanData().filter(c => c.challanId !== challanId);
         saveChallanData(updatedChallans);
         
-        setChallans(updatedChallans);
+        loadChallans();
         toast({ title: "Challan Deleted", description: `Associated LRs have been returned to stock.`, variant: "destructive" });
     }
 
