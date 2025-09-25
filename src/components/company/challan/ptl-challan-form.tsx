@@ -980,7 +980,7 @@ export function PtlChallanForm() {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleSaveOnExit} disabled={isSubmitting}>
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save & Exit
+                            Save &amp; Exit
                         </AlertDialogAction>
                         <Button variant="destructive" onClick={() => router.push('/company/challan')}>Exit Without Saving</Button>
                     </AlertDialogFooter>
@@ -1028,3 +1028,5 @@ export function PtlChallanForm() {
         </div>
     );
 }
+
+    
