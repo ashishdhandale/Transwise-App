@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
 import type { Driver, VehicleMaster, City, Vendor, Customer, Item } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Save, X, Trash2, Search, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { Loader2, PlusCircle, Save, X, Trash2, Search, Calendar as CalendarIcon, Check, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { getChallanData, saveChallanData, type Challan, saveLrDetailsData, getLrDetailsData, LrDetail } from '@/lib/challan-data';
@@ -28,8 +28,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { bookingOptions } from '@/lib/booking-data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { AddVendorDialog } from '../master/add-vendor-dialog';
 import { AddDriverDialog } from '../master/add-driver-dialog';
+import { LoadingSlip } from './loading-slip';
+import { useReactToPrint } from 'react-to-print';
 
 
 const tdClass = "p-1 whitespace-nowrap text-xs";
@@ -74,6 +77,11 @@ interface ManualShortExtraEntry {
     loadWt: number;
 }
 
+interface SlipData {
+    challan: Challan;
+    lrDetails: LrDetail[];
+}
+
 export function PtlChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
@@ -97,7 +105,6 @@ export function PtlChallanForm() {
     
     // Refs for focus management
     const vehicleCapacityRef = useRef<HTMLInputElement>(null);
-    const driverNameRef = useRef<HTMLInputElement>(null);
 
 
     // Master Data
@@ -129,6 +136,15 @@ export function PtlChallanForm() {
         commission: 0, labour: 0, crossing: 0, carting: 0, otherCharges: 0,
         vehFreight: 0, vehAdvance: 0, fuelLtr: 0, fuelAmt: 0
     });
+    
+    // Print/Dialog state
+    const [isSlipOpen, setIsSlipOpen] = useState(false);
+    const [slipData, setSlipData] = useState<SlipData | null>(null);
+    const slipRef = useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+        content: () => slipRef.current,
+    });
+
 
     // Manual Short/Extra State
     const [manualEntryType, setManualEntryType] = useState<'Extra' | 'Short'>('Extra');
@@ -461,10 +477,10 @@ export function PtlChallanForm() {
         }
     };
 
-    const saveChallan = async (isFinal: boolean) => {
+    const saveChallan = async (isFinal: boolean): Promise<SlipData | null> => {
         if (!vehicleNo || !driverName || !fromStation || selectedBookings.length === 0 || !dispatchTo) {
             toast({ title: "Validation Error", description: "Vehicle, Driver, From Station, Dispatch To, and at least one booking are required.", variant: "destructive" });
-            return false;
+            return null;
         }
 
         setIsSubmitting(true);
@@ -529,19 +545,19 @@ export function PtlChallanForm() {
             }));
             saveLrDetailsData([...allLrDetails, ...newLrDetailsForChallan]);
 
-            return true;
+            return { challan: newChallan, lrDetails: newLrDetailsForChallan };
         } catch (error) {
             console.error("Failed to save challan", error);
             toast({ title: "Error", description: "An unexpected error occurred while saving the challan.", variant: "destructive" });
-            return false;
+            return null;
         } finally {
             setIsSubmitting(false);
         }
     };
     
     const handleFinalize = async () => {
-        const success = await saveChallan(true);
-        if (success) {
+        const savedData = await saveChallan(true);
+        if (savedData) {
             toast({ title: "Challan Created", description: `Temporary challan ${challanNo} is now pending.` });
             router.push('/company/challan');
         }
@@ -552,8 +568,8 @@ export function PtlChallanForm() {
             router.push('/company/challan');
             return;
         }
-        const success = await saveChallan(false);
-        if (success) {
+        const savedData = await saveChallan(false);
+        if (savedData) {
             toast({ title: "Challan Saved as Pending", description: `Challan ${challanNo} saved.` });
             router.push('/company/challan');
         } else {
@@ -568,6 +584,15 @@ export function PtlChallanForm() {
             router.push('/company/challan');
         }
     };
+
+    const handlePrintLoadingCopy = async () => {
+        const data = await saveChallan(false);
+        if (data && companyProfile) {
+            setSlipData(data);
+            setIsSlipOpen(true);
+            toast({ title: "Loading Slip Generated", description: "The challan has been saved as a pending draft." });
+        }
+    }
 
 
     const handleManualLrSearch = () => {
@@ -816,7 +841,6 @@ export function PtlChallanForm() {
                                 />
                              ) : (
                                  <Input 
-                                    ref={driverNameRef}
                                     className="h-9 text-xs"
                                     placeholder="Enter Driver Name"
                                     value={driverName || ''}
@@ -1109,13 +1133,17 @@ export function PtlChallanForm() {
             {/* Actions */}
             <div className="flex justify-center gap-4">
                 <Button variant="outline" onClick={handleExitClick}>Exit</Button>
-                <Button variant="outline">Print Loading Copy</Button>
+                <Button variant="outline" onClick={handlePrintLoadingCopy} disabled={isSubmitting || selectedBookings.length === 0}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print Loading Copy
+                </Button>
                 <Button onClick={handleFinalize} disabled={isSubmitting || selectedBookings.length === 0}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save &amp; Finalize
                 </Button>
             </div>
-             <AlertDialog open={isWeightAlertOpen} onOpenChange={setIsWeightAlertOpen}>
+
+            <AlertDialog open={isWeightAlertOpen} onOpenChange={setIsWeightAlertOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Vehicle is Overloaded</AlertDialogTitle>
@@ -1148,6 +1176,29 @@ export function PtlChallanForm() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            
+            <Dialog open={isSlipOpen} onOpenChange={setIsSlipOpen}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Loading Slip</DialogTitle>
+                    </DialogHeader>
+                    <div className="max-h-[70vh] overflow-y-auto p-4 bg-gray-100">
+                        <div ref={slipRef}>
+                            {slipData && companyProfile && (
+                                <LoadingSlip 
+                                    challan={slipData.challan} 
+                                    lrDetails={slipData.lrDetails}
+                                    profile={companyProfile}
+                                />
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsSlipOpen(false)}>Close</Button>
+                        <Button onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             
             <AddVendorDialog 
                 isOpen={isAddVendorOpen} 
