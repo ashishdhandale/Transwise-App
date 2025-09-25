@@ -680,19 +680,19 @@ export function PtlChallanForm() {
                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-2 items-end">
                         <div className="space-y-0.5">
                             <Label className="text-xs">Challan No.</Label>
-                            <Input value={challanNo} readOnly className="h-9 text-xs font-bold text-red-600" />
+                            <Input value={challanNo} readOnly className="h-8 text-xs font-bold text-red-600" />
                         </div>
                         <div className="space-y-0.5">
                             <Label className="text-xs">Challan Date</Label>
-                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
+                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-8 w-full justify-between text-xs px-2"><>{format(challanDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={challanDate} onSelect={(d) => d && setChallanDate(d)}/></PopoverContent></Popover>
                         </div>
                         <div className="space-y-0.5">
                             <Label className="text-xs">Dispatch Date</Label>
-                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-9 w-full justify-between text-xs px-2"><>{format(dispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dispatchDate} onSelect={(d) => d && setDispatchDate(d)}/></PopoverContent></Popover>
+                            <Popover><PopoverTrigger asChild><Button variant="outline" className="h-8 w-full justify-between text-xs px-2"><>{format(dispatchDate, 'dd/MM/yyyy')}<CalendarIcon className="h-3 w-3" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dispatchDate} onSelect={(d) => d && setDispatchDate(d)}/></PopoverContent></Popover>
                         </div>
                         <div className="space-y-0.5">
                             <Label className="text-xs">From Station</Label>
-                            <Input value={fromStation} readOnly className="h-9 text-xs" />
+                            <Input value={fromStation} readOnly className="h-8 text-xs" />
                         </div>
                          <div className="space-y-0.5">
                             <Label className="text-xs">Dispatch To (Party)</Label>
@@ -716,7 +716,7 @@ export function PtlChallanForm() {
                         </div>
                         <div className="space-y-0.5">
                             <Label className="text-xs">Veh.Hire Receipt No</Label>
-                            <Input className="h-9 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
+                            <Input className="h-8 text-xs" value={vehHireReceiptNo} onChange={e => setVehHireReceiptNo(e.target.value)} />
                         </div>
                         <div className="space-y-0.5">
                             <Label className="text-xs">Vehicle Supplier</Label>
@@ -743,7 +743,7 @@ export function PtlChallanForm() {
                                 />
                             ) : (
                                 <Input 
-                                    className="h-9 text-xs" 
+                                    className="h-8 text-xs" 
                                     placeholder="Enter Market Vehicle No."
                                     value={vehicleNo || ''}
                                     onChange={(e) => setVehicleNo(e.target.value.toUpperCase())}
@@ -753,7 +753,7 @@ export function PtlChallanForm() {
                         </div>
                          <div className="space-y-0.5">
                             <Label className="text-xs">Veh.Capacity</Label>
-                            <Input ref={vehicleCapacityRef} className="h-9 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
+                            <Input ref={vehicleCapacityRef} className="h-8 text-xs" placeholder="Weight In Kg" value={vehicleCapacity} onChange={e => setVehicleCapacity(e.target.value)} />
                         </div>
                          <div className="space-y-0.5">
                             <Label className="text-xs">Driver Name</Label>
@@ -769,7 +769,7 @@ export function PtlChallanForm() {
                                 />
                              ) : (
                                  <Input 
-                                    className="h-9 text-xs"
+                                    className="h-8 text-xs"
                                     placeholder="Enter Driver Name"
                                     value={driverName || ''}
                                     onChange={(e) => setDriverName(e.target.value)}
@@ -778,7 +778,7 @@ export function PtlChallanForm() {
                         </div>
                          <div className="space-y-0.5">
                             <Label className="text-xs">Driver Contact No</Label>
-                            <Input value={driverMobile} onChange={e => setDriverMobile(e.target.value)} className="h-9 text-xs" />
+                            <Input value={driverMobile} onChange={e => setDriverMobile(e.target.value)} className="h-8 text-xs" />
                         </div>
                     </div>
                 </CardContent>
@@ -817,7 +817,7 @@ export function PtlChallanForm() {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {cityWiseFilterOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                            {cityWiseFilterOptions.map(opt => <SelectItem key={opt.value} value={opt.label}>{opt.label}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -1025,4 +1025,5 @@ export function PtlChallanForm() {
         </div>
     );
 }
+
     
