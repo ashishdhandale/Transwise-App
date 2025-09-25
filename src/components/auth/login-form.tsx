@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ export default function LoginForm() {
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="userId">User ID</Label>
-                        <Input id="userId" placeholder="LOGIN ID" value={userId} onChange={(e) => setUserId(e.target.value)} required 
+                        <Input id="userId" placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} required 
                                className="border-gray-300 focus:border-primary focus:ring-primary"/>
                     </div>
                     <div className="space-y-1">
