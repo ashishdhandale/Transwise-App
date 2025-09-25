@@ -64,19 +64,6 @@ interface AdditionalCharges {
     fuelAmt: number;
 }
 
-interface ManualShortExtraEntry {
-    id: number;
-    type: 'Extra' | 'Short';
-    lrNoInput: string;
-    selectedLr: string;
-    selectedItem: string;
-    originalQty: number;
-    loadQty: number;
-    wtPerUnit: number;
-    actualWt: number;
-    loadWt: number;
-}
-
 interface SlipData {
     challan: Challan;
     lrDetails: LrDetail[];
@@ -135,7 +122,6 @@ export function PtlChallanForm() {
     const [dispatchQuantities, setDispatchQuantities] = useState<{ [trackingId: string]: number }>({});
     const [modifiedQtyLrNos, setModifiedQtyLrNos] = useState<Set<string>>(new Set());
     const [shortExtraMessages, setShortExtraMessages] = useState<ShortExtraEntry[]>([]);
-    const [manualShortExtraEntries, setManualShortExtraEntries] = useState<ManualShortExtraEntry[]>([]);
 
     const [additionalCharges, setAdditionalCharges] = useState<AdditionalCharges>({
         commission: 0, labour: 0, crossing: 0, carting: 0, otherCharges: 0,
@@ -150,18 +136,6 @@ export function PtlChallanForm() {
         content: () => slipRef.current,
     });
 
-
-    // Manual Short/Extra State
-    const [manualEntryType, setManualEntryType] = useState<'Extra' | 'Short'>('Extra');
-    const [manualLrNoInput, setManualLrNoInput] = useState('');
-    const [searchedLr, setSearchedLr] = useState<Booking | null>(null);
-    const [manualSelectedLr, setManualSelectedLr] = useState<string | undefined>();
-    const [manualSelectedItem, setManualSelectedItem] = useState<string | undefined>();
-    const [manualOriginalQty, setManualOriginalQty] = useState(0);
-    const [manualLoadQty, setManualLoadQty] = useState<number | ''>('');
-    const [manualWtPerUnit, setManualWtPerUnit] = useState(0);
-    const [manualActualWt, setManualActualWt] = useState(0);
-    const [manualLoadWt, setManualLoadWt] = useState<number | ''>('');
 
     // Dialog states
     const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
@@ -337,12 +311,6 @@ export function PtlChallanForm() {
 
         return { paidAmt, toPayAmt, toBeBilledAmt, totalFreight, balanceTruckHire, totalCharges };
     }, [selectedBookings, additionalCharges]);
-    
-    useEffect(() => {
-        if (typeof manualLoadQty === 'number' && manualWtPerUnit > 0) {
-            setManualLoadWt(manualLoadQty * manualWtPerUnit);
-        }
-    }, [manualLoadQty, manualWtPerUnit]);
 
 
     const handleChargeChange = (field: keyof AdditionalCharges, value: string) => {
@@ -649,67 +617,6 @@ export function PtlChallanForm() {
         }
     }
 
-
-    const handleManualLrSearch = () => {
-        if (!manualLrNoInput.trim()) return;
-        const allBookings = getBookings();
-        const found = allBookings.find(b => b.lrNo.toLowerCase() === manualLrNoInput.trim().toLowerCase());
-        if (found) {
-            setSearchedLr(found);
-            setManualSelectedLr(found.lrNo);
-            if (found.itemRows.length > 0) {
-                // Pre-select the first item
-                const firstItem = found.itemRows[0];
-                setManualSelectedItem(firstItem.itemName);
-                setManualOriginalQty(firstItem.qty ? parseInt(firstItem.qty, 10) : 0);
-                const actWt = firstItem.actWt ? parseFloat(firstItem.actWt) : 0;
-                const qty = firstItem.qty ? parseInt(firstItem.qty, 10) : 0;
-                setManualWtPerUnit(qty > 0 ? actWt / qty : 0);
-                setManualActualWt(actWt);
-            }
-        } else {
-            toast({ title: "Not Found", description: `GR No. ${manualLrNoInput} not found.`, variant: "destructive"});
-            setSearchedLr(null);
-            setManualSelectedLr(undefined);
-        }
-    }
-    
-    const handleAddManualEntry = () => {
-        if (!manualSelectedLr || manualLoadQty === '' || manualLoadWt === '') {
-            toast({ title: "Incomplete Entry", description: "Please fill all fields for the manual entry.", variant: "destructive" });
-            return;
-        }
-
-        const newEntry: ManualShortExtraEntry = {
-            id: Date.now(),
-            type: manualEntryType,
-            lrNoInput: manualLrNoInput,
-            selectedLr: manualSelectedLr,
-            selectedItem: manualSelectedItem || '',
-            originalQty: manualOriginalQty,
-            loadQty: manualLoadQty,
-            wtPerUnit: manualWtPerUnit,
-            actualWt: manualActualWt,
-            loadWt: manualLoadWt,
-        };
-
-        setManualShortExtraEntries(prev => [...prev, newEntry]);
-
-        // Reset fields
-        setManualLrNoInput('');
-        setSearchedLr(null);
-        setManualSelectedLr(undefined);
-        setManualSelectedItem(undefined);
-        setManualOriginalQty(0);
-        setManualLoadQty('');
-        setManualWtPerUnit(0);
-        setManualActualWt(0);
-        setManualLoadWt('');
-    };
-
-    const handleRemoveManualEntry = (idToRemove: number) => {
-        setManualShortExtraEntries(prev => prev.filter(entry => entry.id !== idToRemove));
-    };
 
     const toStationOptions = useMemo(() => {
         return cities.map(city => ({ label: city.name, value: city.name }));
@@ -1076,115 +983,6 @@ export function PtlChallanForm() {
                  </Card>
             </div>
             
-            {/* Extra / Short Entries Section */}
-            <Card>
-                <CardHeader className="p-2">
-                    <CardTitle className="text-sm font-headline">Extra / Short Entries</CardTitle>
-                </CardHeader>
-                <CardContent className="p-2 space-y-2">
-                     <div className="flex items-stretch gap-[1px] text-xs">
-                        <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Extra/Short LR</div>
-                            <Select value={manualEntryType} onValueChange={(v) => setManualEntryType(v as any)}><SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" ><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Extra">Extra</SelectItem><SelectItem value="Short">Short</SelectItem></SelectContent></Select>
-                        </div>
-                        <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">LR NO</div>
-                            <Input
-                                placeholder="LR NO"
-                                className="w-24 h-8 text-xs rounded-none border-t-0"
-                                value={manualLrNoInput}
-                                onChange={e => setManualLrNoInput(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleManualLrSearch()}
-                            />
-                        </div>
-                        <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">SELECT LR</div>
-                            <Select value={manualSelectedLr} onValueChange={setManualSelectedLr} disabled={!searchedLr}>
-                                <SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" />
-                                <SelectContent>
-                                    {searchedLr && <SelectItem value={searchedLr.lrNo}>{searchedLr.lrNo}</SelectItem>}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Select Item</div>
-                             <Select value={manualSelectedItem} onValueChange={setManualSelectedItem} disabled={!searchedLr}>
-                                 <SelectTrigger className="w-24 h-8 text-xs rounded-none border-t-0" />
-                                 <SelectContent>
-                                     {searchedLr?.itemRows.map(item => <SelectItem key={item.id} value={item.itemName}>{item.itemName}</SelectItem>)}
-                                 </SelectContent>
-                             </Select>
-                        </div>
-                         <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">QTY</div>
-                            <Input readOnly value={manualOriginalQty} className="w-14 h-8 text-xs rounded-none border-t-0 text-center" />
-                        </div>
-                         <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">LOAD QTY</div>
-                            <Input value={manualLoadQty} onChange={e => setManualLoadQty(Number(e.target.value))} className="w-20 h-8 text-xs rounded-none border-t-0" />
-                        </div>
-                         <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Wt/Unit</div>
-                            <Input readOnly value={manualWtPerUnit.toFixed(2)} className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
-                        </div>
-                         <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Act.Wt.</div>
-                            <Input readOnly value={manualActualWt} className="w-20 h-8 text-xs rounded-none border-t-0 text-center" />
-                        </div>
-                         <div className="flex flex-col">
-                            <div className="bg-[#00bcd4] text-white text-center p-1 font-semibold h-8 flex items-center justify-center border-r border-white/50">Load Wt.</div>
-                            <Input value={manualLoadWt} onChange={e => setManualLoadWt(Number(e.target.value))} className="w-20 h-8 text-xs rounded-none border-t-0" />
-                        </div>
-                        <Button size="sm" className="h-16 self-end bg-green-500 hover:bg-green-600 rounded-l-none" onClick={handleAddManualEntry}>Add More</Button>
-                    </div>
-                    <div className="border rounded-md overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className={thClass}>#</TableHead>
-                                    <TableHead className={thClass}>Extra/Short LR</TableHead>
-                                    <TableHead className={thClass}>LR NO</TableHead>
-                                    <TableHead className={thClass}>SELECT LR</TableHead>
-                                    <TableHead className={thClass}>Select Item</TableHead>
-                                    <TableHead className={thClass}>QTY</TableHead>
-                                    <TableHead className={thClass}>Load Qty</TableHead>
-                                    <TableHead className={thClass}>Wt/Unit</TableHead>
-                                    <TableHead className={thClass}>Act.Wt.</TableHead>
-                                    <TableHead className={thClass}>Load Wt.</TableHead>
-                                    <TableHead className={thClass}>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {manualShortExtraEntries.map((entry, index) => (
-                                    <TableRow key={entry.id}>
-                                        <TableCell className={tdClass}>{index + 1}</TableCell>
-                                        <TableCell className={tdClass}>{entry.type}</TableCell>
-                                        <TableCell className={tdClass}>{entry.lrNoInput}</TableCell>
-                                        <TableCell className={tdClass}>{entry.selectedLr}</TableCell>
-                                        <TableCell className={tdClass}>{entry.selectedItem}</TableCell>
-                                        <TableCell className={tdClass}>{entry.originalQty}</TableCell>
-                                        <TableCell className={tdClass}>{entry.loadQty}</TableCell>
-                                        <TableCell className={tdClass}>{entry.wtPerUnit}</TableCell>
-                                        <TableCell className={tdClass}>{entry.actualWt}</TableCell>
-                                        <TableCell className={tdClass}>{entry.loadWt}</TableCell>
-                                        <TableCell className={tdClass}>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleRemoveManualEntry(entry.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {manualShortExtraEntries.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={11} className="text-center h-16 text-muted-foreground text-xs">No manual entries added.</TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-
             {/* Actions */}
             <div className="flex justify-center gap-4">
                 <Button variant="outline" onClick={handleExitClick}>Exit</Button>
