@@ -173,6 +173,9 @@ export interface StationRate {
     toStation: string;
     rate: number;
     rateOn: RateOnType;
+    lrType?: string;
+    itemName?: string;
+    description?: string;
 }
 
 export interface ItemRate {

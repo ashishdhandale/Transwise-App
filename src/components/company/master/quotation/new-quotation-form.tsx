@@ -68,6 +68,8 @@ export function NewQuotationForm() {
     const [description, setDescription] = useState('');
     const [rate, setRate] = useState<number | ''>('');
     const [rateOn, setRateOn] = useState<RateOnType>('Chg.wt');
+    const [lrType, setLrType] = useState(defaultLrType);
+
 
     // Preview Dialog
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -96,6 +98,10 @@ export function NewQuotationForm() {
         loadData();
     }, []);
     
+    useEffect(() => {
+        setLrType(defaultLrType);
+    }, [defaultLrType]);
+
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name, value: c.name })), [cities]);
     const itemOptions = useMemo(() => masterItems.map(i => ({ label: i.name, value: i.name })), [masterItems]);
     const customerOptions = useMemo(() => [{label: 'Default Rate List', value: 'Default Rate List'}, ...customers.map(c => ({ label: c.name, value: c.name }))], [customers]);
@@ -114,6 +120,7 @@ export function NewQuotationForm() {
             rateOn,
             itemName: itemName || 'Any',
             description,
+            lrType,
         };
 
         setItems(prev => [...prev, newItem]);
@@ -125,6 +132,7 @@ export function NewQuotationForm() {
         setDescription('');
         setRate('');
         setRateOn('Chg.wt');
+        setLrType(defaultLrType);
     }
     
     const handleSaveQuotation = () => {
@@ -144,7 +152,7 @@ export function NewQuotationForm() {
             name: `Quotation for ${partyName} - ${new Date().toLocaleDateString()}`,
             isStandard: partyName === 'Default Rate List',
             customerIds: customer ? [customer.id] : [],
-            stationRates: items.map(({ fromStation, toStation, rate, rateOn }) => ({ fromStation, toStation, rate, rateOn })),
+            stationRates: items.map(({ fromStation, toStation, rate, rateOn, lrType, itemName, description }) => ({ fromStation, toStation, rate, rateOn, lrType, itemName, description })),
             itemRates: [],
         };
 
@@ -229,7 +237,7 @@ export function NewQuotationForm() {
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-dashed grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-4 items-end">
+                        <div className="p-4 border-t border-dashed grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] lg:grid-cols-[1fr_1.5fr_1fr_auto] gap-4 items-end">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <Label>Item Name</Label>
@@ -240,7 +248,7 @@ export function NewQuotationForm() {
                                     <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional"/>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                                 <div>
                                     <Label>Rate</Label>
                                     <Input type="number" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
@@ -254,8 +262,18 @@ export function NewQuotationForm() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <div className="col-span-2 lg:col-span-1">
+                                    <Label>Booking Type</Label>
+                                    <Select value={lrType} onValueChange={(v) => setLrType(v)}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {bookingOptions.bookingTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                            <Button onClick={handleAddToList} className="h-10"><PlusCircle className="mr-2 h-4 w-4" /> Add Item to Route</Button>
+                            <div className="hidden lg:block"></div> {/* Spacer for grid alignment */}
+                            <Button onClick={handleAddToList} className="h-10"><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>
                         </div>
                      </div>
 
@@ -268,6 +286,7 @@ export function NewQuotationForm() {
                                     <TableHead>To</TableHead>
                                     <TableHead>Item</TableHead>
                                     <TableHead>Rate</TableHead>
+                                    <TableHead>Booking Type</TableHead>
                                     <TableHead>Action</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -279,6 +298,7 @@ export function NewQuotationForm() {
                                         <TableCell>{item.toStation}</TableCell>
                                         <TableCell>{item.itemName}</TableCell>
                                         <TableCell>{item.rate} / {rateOnOptions.find(o => o.value === item.rateOn)?.label}</TableCell>
+                                        <TableCell>{item.lrType}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setItems(prev => prev.filter(p => p.id !== item.id))}>
                                                 <Trash2 className="h-4 w-4"/>
@@ -288,7 +308,7 @@ export function NewQuotationForm() {
                                 ))}
                                 {items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No items added to the quotation yet.</TableCell>
+                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">No items added to the quotation yet.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -346,5 +366,3 @@ export function NewQuotationForm() {
         </div>
     )
 }
-
-    
