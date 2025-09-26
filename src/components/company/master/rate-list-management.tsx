@@ -13,9 +13,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle, Search, MoreHorizontal, Pencil, Printer, Trash2 } from 'lucide-react';
 import type { RateList } from '@/lib/types';
-import { getRateLists } from '@/lib/rate-list-data';
+import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,26 @@ import { getCustomers } from '@/lib/customer-data';
 import type { Customer } from '@/lib/types';
 import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const thClass = "bg-cyan-500 text-white font-semibold";
 const tdClass = "whitespace-nowrap";
@@ -31,6 +51,7 @@ export function RateListManagement() {
   const [rateLists, setRateLists] = useState<RateList[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     try {
@@ -44,6 +65,13 @@ export function RateListManagement() {
   const findCustomer = (customerId: number) => {
     return customers.find(c => c.id === customerId);
   }
+
+  const handleDelete = (id: number) => {
+    const updatedLists = rateLists.filter(list => list.id !== id);
+    saveRateLists(updatedLists);
+    setRateLists(updatedLists);
+    toast({ title: "Quotation Deleted", description: "The quotation has been successfully deleted.", variant: "destructive" });
+  };
 
   const filteredRateLists = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
@@ -100,9 +128,38 @@ export function RateListManagement() {
                     return (
                         <TableRow key={list.id}>
                              <TableCell className={cn(tdClass)}>
-                                <Button variant="link" className="p-0 h-auto text-blue-600">Update</Button>
-                                <span className="mx-1">|</span>
-                                <Button variant="link" className="p-0 h-auto text-blue-600">Print</Button>
+                                 <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" />Update</DropdownMenuItem>
+                                        <DropdownMenuItem><Printer className="mr-2 h-4 w-4" />Print</DropdownMenuItem>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4" />Delete
+                                                </DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone and will permanently delete this quotation.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDelete(list.id)}>Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </DropdownMenuContent>
+                                 </DropdownMenu>
                             </TableCell>
                             <TableCell className={cn(tdClass, "font-medium")}>{list.name.split('-')[0]}</TableCell>
                             <TableCell className={cn(tdClass)}>{customer?.name || 'Standard'}</TableCell>
