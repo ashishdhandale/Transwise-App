@@ -237,7 +237,7 @@ export function NewQuotationForm() {
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-dashed">
+                        <div className="p-4 border-t border-dashed space-y-4">
                              <div className="grid grid-cols-1 md:grid-cols-[1.5fr_2fr_1fr_1fr_1fr_auto] gap-4 items-end">
                                 <div className="space-y-1">
                                     <Label>Item Name</Label>
@@ -269,7 +269,9 @@ export function NewQuotationForm() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <Button onClick={handleAddToList} className="h-10"><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
+                                 <Button onClick={handleAddToList} size="icon" className="h-10 w-10">
+                                    <PlusCircle className="h-5 w-5" />
+                                </Button>
                             </div>
                         </div>
                      </div>
