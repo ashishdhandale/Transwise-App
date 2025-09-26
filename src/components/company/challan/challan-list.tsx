@@ -256,14 +256,14 @@ export function ChallanList() {
                                 <Label>From Date</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm" className="w-32 justify-between font-normal"><>{dateRange?.from ? format(dateRange.from, "dd/MM/yy") : <span>Pick date</span>} <CalendarIcon className="h-4 w-4" /></></Button>
+                                        <Button variant="outline" size="sm" className="w-32 justify-between font-normal"><>{dateRange?.from ? format(dateRange.from, "dd/MM/yy") : <span>Pick date</span>} <CalendarIcon className="h-4 w-4" /></Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} /></PopoverContent>
                                 </Popover>
                                 <Label>To Date</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                         <Button variant="outline" size="sm" className="w-32 justify-between font-normal"><>{dateRange?.to ? format(dateRange.to, "dd/MM/yy") : <span>Pick date</span>} <CalendarIcon className="h-4 w-4" /></></Button>
+                                         <Button variant="outline" size="sm" className="w-32 justify-between font-normal"><>{dateRange?.to ? format(dateRange.to, "dd/MM/yy") : <span>Pick date</span>} <CalendarIcon className="h-4 w-4" /></Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} /></PopoverContent>
                                 </Popover>
@@ -292,10 +292,29 @@ export function ChallanList() {
                                 {finalizedChallans.map(challan => (
                                      <TableRow key={challan.challanId} className="odd:bg-white even:bg-cyan-50/50">
                                         <TableCell className={`${tdClass}`}>
-                                             <div className="flex items-center gap-2">
-                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>Modify</Button>
-                                                <Button variant="link" className="p-0 h-auto text-blue-600" onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>view</Button>
-                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>
+                                                        <Eye className="mr-2 h-4 w-4" /> View
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>
+                                                        <Pencil className="mr-2 h-4 w-4" /> Modify
+                                                    </DropdownMenuItem>
+                                                     <DropdownMenuItem>
+                                                        <CheckCircle className="mr-2 h-4 w-4" /> Mark as Arrived
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-red-500">
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                         <TableCell className={`${tdClass}`}>
                                              <span className={cn('font-bold', challan.challanType === 'Dispatch' ? 'text-blue-600' : 'text-purple-600')}>
