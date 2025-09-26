@@ -1,23 +1,8 @@
 
 'use client';
 
-import { Suspense } from 'react';
-import DashboardLayout from '../../(dashboard)/layout';
-import { ChallanTracking } from '@/components/company/challan-tracking/challan-tracking';
-
-
-function ChallanTrackingPage() {
-  return (
-    <DashboardLayout>
-      <ChallanTracking />
-    </DashboardLayout>
-  );
-}
+// This page has been cleared to start fresh.
 
 export default function ChallanTrackingRootPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ChallanTrackingPage />
-    </Suspense>
-  );
+  return null;
 }

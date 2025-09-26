@@ -1,54 +1,9 @@
 
-export interface Challan {
-  challanId: string;
-  dispatchDate: string;
-  dispatchToParty: string;
-  vehicleNo: string;
-  driverName: string;
-  fromStation: string;
-  toStation: string;
-  senderId: string;
-  inwardId: string;
-  inwardDate: string;
-  receivedFromParty: string;
-  challanType: 'Dispatch' | 'Inward';
-  status: 'Pending' | 'Finalized';
-  vehicleHireFreight: number;
-  advance: number;
-  balance: number;
-  totalLr: number;
-  totalPackages: number;
-  totalItems: number;
-  totalActualWeight: number;
-  totalChargeWeight: number;
-  remark?: string;
-  summary: {
-    grandTotal: number;
-    totalTopayAmount: number;
-    commission: number;
-    labour: number;
-    crossing: number;
-    carting: number;
-    balanceTruckHire: number;
-    debitCreditAmount: number;
-  };
-}
+// This file has been cleared to start the challan feature from scratch.
+// Types and data fetching logic will be re-added as we build the feature.
 
-export interface LrDetail {
-  challanId: string; // Link to the Challan
-  lrNo: string;
-  lrType: 'FOC' | 'PAID' | 'TOPAY' | 'TBB';
-  sender: string;
-  receiver: string;
-  from: string;
-  to: string;
-  bookingDate: string;
-  itemDescription: string;
-  quantity: number;
-  actualWeight: number;
-  chargeWeight: number;
-  grandTotal: number;
-}
+export interface Challan {}
+export interface LrDetail {}
 
 const CHALLAN_DATA_KEY = 'transwise_challan_data';
 const LR_DETAILS_KEY = 'transwise_lr_details_data';
@@ -75,9 +30,3 @@ export const saveLrDetailsData = (data: LrDetail[]) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(LR_DETAILS_KEY, JSON.stringify(data));
 }
-
-
-export const challanData: Challan[] = [];
-export const lrDetailsData: LrDetail[] = [];
-
-    
