@@ -128,31 +128,30 @@ export function ItemDetailsTable({
   }, [loadItemsAndRates]);
 
   const activeRateList = useMemo(() => {
-    const allRateLists = rateLists;
-    if (!allRateLists.length) {
-        toast({ title: "No Rates Found", description: "Please set up a Standard Rate List in the Master menu.", variant: "destructive" });
-        return null;
-    }
+    if (!rateLists.length) return null;
 
     // 1. Check for a customer-specific quotation
     if (sender) {
-        const customerRateList = allRateLists.find(rl => !rl.isStandard && rl.customerIds?.includes(sender.id));
+        const customerRateList = rateLists.find(rl => !rl.isStandard && rl.customerIds?.includes(sender.id));
         if (customerRateList) {
             return customerRateList;
         }
     }
 
     // 2. Fallback to the standard rate list
-    const standardRateList = allRateLists.find(rl => rl.isStandard);
-    if (standardRateList) {
-        return standardRateList;
+    return rateLists.find(rl => rl.isStandard) || null;
+  }, [sender, rateLists]);
+
+  useEffect(() => {
+    // This effect handles showing toasts based on rate list status, preventing the render-cycle error.
+    const hasStandardRateList = rateLists.some(rl => rl.isStandard);
+    
+    if (rateLists.length === 0) {
+      toast({ title: "No Rates Found", description: "Please set up a Standard Rate List in the Master menu.", variant: "destructive" });
+    } else if (!hasStandardRateList) {
+      toast({ title: "No Standard Rates", description: "No Standard Rate List found. Please designate one in the Master menu.", variant: "destructive" });
     }
-
-    // 3. Error if no standard list is found
-    toast({ title: "No Standard Rates", description: "No Standard Rate List found. Please designate one in the Master menu.", variant: "destructive" });
-    return null;
-
-  }, [sender, rateLists, toast]);
+  }, [rateLists, toast]);
 
 
   useEffect(() => {
