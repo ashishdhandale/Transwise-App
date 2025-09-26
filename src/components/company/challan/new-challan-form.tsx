@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -36,6 +37,7 @@ import { LoadingSlip } from './loading-slip';
 import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -81,6 +83,7 @@ export function NewChallanForm() {
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [cities, setCities] = useState<City[]>([]);
+    const [toStationFilter, setToStationFilter] = useState('All');
     
     const { toast } = useToast();
     const router = useRouter();
@@ -339,11 +342,41 @@ export function NewChallanForm() {
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
     const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name, value: d.name })), [drivers]);
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
+    
+    const stockToStationOptions = useMemo(() => {
+        const stations = new Set(inStockLrs.map(lr => lr.toCity));
+        return ['All', ...Array.from(stations)];
+    }, [inStockLrs]);
+    
+    const filteredInStockLrs = useMemo(() => {
+        if (toStationFilter === 'All') {
+            return inStockLrs;
+        }
+        return inStockLrs.filter(lr => lr.toCity === toStationFilter);
+    }, [inStockLrs, toStationFilter]);
+
 
     const renderTable = (title: string, data: Booking[], selection: Set<string>, onSelect: (id: string, checked: boolean) => void, onSelectAll: (checked: boolean) => void) => (
         <Card className="h-full flex flex-col">
             <CardHeader className="p-3">
-                <CardTitle className="text-base">{title}</CardTitle>
+                 <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">{title}</CardTitle>
+                    {title === 'LRs In Stock' && (
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
+                             <Select value={toStationFilter} onValueChange={setToStationFilter}>
+                                <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {stockToStationOptions.map(station => (
+                                        <SelectItem key={station} value={station}>{station}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                 </div>
             </CardHeader>
             <CardContent className="p-0 flex-grow">
                 <div className="overflow-y-auto h-96 border-t">
@@ -420,12 +453,12 @@ export function NewChallanForm() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                {renderTable('LRs In Stock', inStockLrs, stockSelection, (id, checked) => {
+                {renderTable('LRs In Stock', filteredInStockLrs, stockSelection, (id, checked) => {
                     const newSelection = new Set(stockSelection);
                     if (checked) newSelection.add(id); else newSelection.delete(id);
                     setStockSelection(newSelection);
                 }, (checked) => {
-                    if (checked) setStockSelection(new Set(inStockLrs.map(lr => lr.trackingId))); else setStockSelection(new Set());
+                    if (checked) setStockSelection(new Set(filteredInStockLrs.map(lr => lr.trackingId))); else setStockSelection(new Set());
                 })}
 
                 <div className="flex flex-col gap-2">
