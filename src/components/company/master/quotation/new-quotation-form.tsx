@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Save } from 'lucide-react';
+import { Trash2, PlusCircle, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { City, Customer, Item, RateList, RateOnType, StationRate } from '@/lib/types';
 import { getCities } from '@/lib/city-data';
@@ -97,8 +97,7 @@ export function NewQuotationForm() {
     };
     
     const resetEntryFields = () => {
-        setFromStation(undefined);
-        setToStation(undefined);
+        // Don't reset From and To station
         setItemName(undefined);
         setDescription('');
         setRate('');
@@ -120,6 +119,7 @@ export function NewQuotationForm() {
         
         const newRateList: Omit<RateList, 'id'> = {
             name: `Quotation for ${partyName} - ${new Date().toLocaleDateString()}`,
+            isStandard: partyName === 'Default Quote',
             customerIds: customer ? [customer.id] : [],
             stationRates: items.map(({ fromStation, toStation, rate, rateOn }) => ({ fromStation, toStation, rate, rateOn })),
             itemRates: [], // This could be extended to support item-specific rates in the quotation form
@@ -169,36 +169,46 @@ export function NewQuotationForm() {
                     <CardTitle>Quotation Items</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <div className="p-4 border rounded-md grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1.5fr_auto] gap-4 items-end">
-                        <div>
-                            <Label>From Station</Label>
-                            <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="From..."/>
+                     <div className="p-4 border rounded-md space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label>From Station</Label>
+                                <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="From..."/>
+                            </div>
+                            <div>
+                                <Label>To Station</Label>
+                                <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="To..."/>
+                            </div>
                         </div>
-                         <div>
-                            <Label>To Station</Label>
-                            <Combobox options={cityOptions} value={toStation} onChange={setToStation} placeholder="To..."/>
-                        </div>
-                         <div>
-                            <Label>Item Name</Label>
-                            <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
+
+                        <div className="p-4 border-t border-dashed grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto_auto] gap-4 items-end">
+                            <div>
+                                <Label>Item Name</Label>
+                                <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
+                            </div>
                              <div>
-                                <Label>Rate</Label>
-                                <Input type="number" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
-                             </div>
-                             <div>
-                                <Label>Rate On</Label>
-                                <Select value={rateOn} onValueChange={(v) => setRateOn(v as RateOnType)}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                             </div>
+                                <Label>Description</Label>
+                                <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional item description"/>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label>Rate</Label>
+                                    <Input type="number" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
+                                </div>
+                                <div>
+                                    <Label>Rate On</Label>
+                                    <Select value={rateOn} onValueChange={(v) => setRateOn(v as RateOnType)}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <Button onClick={handleAddToList}><PlusCircle className="mr-2 h-4 w-4" /> Add Item to Route</Button>
                         </div>
-                         <Button onClick={handleAddToList}>Add</Button>
                      </div>
+
                      <div className="mt-4 overflow-x-auto border rounded-md">
                         <Table>
                             <TableHeader>
