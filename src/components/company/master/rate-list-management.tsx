@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle, Search } from 'lucide-react';
 import type { RateList } from '@/lib/types';
 import { getRateLists } from '@/lib/rate-list-data';
@@ -21,8 +21,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getCustomers } from '@/lib/customer-data';
 import type { Customer } from '@/lib/types';
+import { format } from 'date-fns';
 
-const thClass = "bg-primary/10 text-primary font-semibold";
+const thClass = "bg-cyan-500 text-white font-semibold";
 const tdClass = "whitespace-nowrap";
 
 export function RateListManagement() {
@@ -39,68 +40,82 @@ export function RateListManagement() {
     }
   }, []);
   
-  const findCustomerName = (customerId: number) => {
-    return customers.find(c => c.id === customerId)?.name || 'Unknown Customer';
+  const findCustomer = (customerId: number) => {
+    return customers.find(c => c.id === customerId);
   }
 
   const filteredRateLists = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
-    return rateLists.filter(list => 
-        list.name.toLowerCase().includes(searchLower) ||
-        list.customerIds?.some(id => findCustomerName(id).toLowerCase().includes(searchLower))
-    );
+    if (!searchLower) return rateLists;
+
+    return rateLists.filter(list => {
+      const customer = list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null;
+      return list.name.toLowerCase().includes(searchLower) ||
+             (customer && customer.name.toLowerCase().includes(searchLower));
+    });
   }, [rateLists, customers, searchTerm]);
 
   return (
     <Card>
-       <CardHeader>
-            <CardTitle className="font-headline">Manage Quotations</CardTitle>
-            <div className="flex flex-row items-center justify-between pt-4">
-                <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by name or customer..."
-                        className="pl-8"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <Button asChild>
-                    <Link href="/company/master/quotation/new">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Generate New Quotation
-                    </Link>
-                </Button>
+      <CardContent className="pt-6">
+         <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
+            <div>
+              <Label htmlFor="search-quotation" className="text-sm font-semibold">Search By Name / Quote No,</Label>
+               <div className="relative w-full max-w-xs mt-1">
+                  <Input
+                    id="search-quotation"
+                    placeholder="Search..."
+                    className="pl-4 pr-10 border-gray-400"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center justify-center w-10 border-l bg-gray-100 rounded-r-md">
+                     <Search className="h-5 w-5 text-gray-500" />
+                  </div>
+              </div>
             </div>
-      </CardHeader>
-      <CardContent>
-         <div className="overflow-x-auto border rounded-md max-h-[60vh]">
+            <Button asChild>
+                <Link href="/company/master/quotation/new">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Generate New Quotation
+                </Link>
+            </Button>
+        </div>
+        <div className="overflow-x-auto border rounded-md">
             <Table>
                 <TableHeader>
                 <TableRow>
-                    <TableHead className={thClass}>Quotation Name</TableHead>
-                    <TableHead className={thClass}>Associated Customers</TableHead>
+                    <TableHead className={thClass}>Action</TableHead>
+                    <TableHead className={thClass}>Quotation No</TableHead>
+                    <TableHead className={thClass}>Customer Name</TableHead>
+                    <TableHead className={thClass}>GST No</TableHead>
+                    <TableHead className={thClass}>Quotation Date</TableHead>
+                    <TableHead className={thClass}>Valid Till</TableHead>
                     <TableHead className={thClass}>Status</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {filteredRateLists.map((list) => (
-                    <TableRow key={list.id}>
-                        <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
-                        <TableCell className={cn(tdClass)}>
-                            {list.customerIds && list.customerIds.length > 0 
-                                ? list.customerIds.map(id => findCustomerName(id)).join(', ')
-                                : 'N/A'
-                            }
-                        </TableCell>
-                         <TableCell className={cn(tdClass)}>
-                            {list.isStandard ? (
-                                <Badge variant="default" className="bg-green-600 hover:bg-green-700">Standard Rate</Badge>
-                            ) : (
-                                <Badge variant="secondary">Quotation</Badge>
-                            )}
-                        </TableCell>
-                    </TableRow>
-                ))}
+                {filteredRateLists.map((list) => {
+                    const customer = list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null;
+                    return (
+                        <TableRow key={list.id}>
+                             <TableCell className={cn(tdClass)}>
+                                <Button variant="link" className="p-0 h-auto text-blue-600">Update</Button>
+                                <span className="mx-1">|</span>
+                                <Button variant="link" className="p-0 h-auto text-blue-600">Print</Button>
+                            </TableCell>
+                            <TableCell className={cn(tdClass, "font-medium")}>{list.name.split('-')[0]}</TableCell>
+                            <TableCell className={cn(tdClass)}>{customer?.name || 'Standard'}</TableCell>
+                            <TableCell className={cn(tdClass)}>{customer?.gstin || 'N/A'}</TableCell>
+                            <TableCell className={cn(tdClass)}>{format(new Date(), 'dd-MMM-yyyy')}</TableCell>
+                            <TableCell className={cn(tdClass)}>{format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'dd-MMM-yyyy')}</TableCell>
+                            <TableCell className={cn(tdClass)}>
+                                 <Badge variant={list.isStandard ? 'default' : 'secondary'} className={list.isStandard ? 'bg-green-600' : ''}>
+                                    {list.isStandard ? 'Standard' : 'Active'}
+                                </Badge>
+                            </TableCell>
+                        </TableRow>
+                    );
+                })}
                 </TableBody>
             </Table>
             {filteredRateLists.length === 0 && (
