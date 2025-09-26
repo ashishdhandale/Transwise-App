@@ -345,4 +345,3 @@ export function ChallanList() {
         </div>
     );
 }
-    
