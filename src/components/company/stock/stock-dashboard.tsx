@@ -29,8 +29,9 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { getChallanData, saveChallanData, type Challan, getLrDetailsData, saveLrDetailsData, LrDetail } from '@/lib/challan-data';
+import { getChallanData, saveChallanData, type Challan, getLrDetailsData, saveLrDetailsData, type LrDetail } from '@/lib/challan-data';
 import { addHistoryLog } from '@/lib/history-data';
+import { useRouter } from 'next/navigation';
 
 const thClass = "text-primary font-bold";
 const tdClass = "whitespace-nowrap";
@@ -54,6 +55,7 @@ export function StockDashboard() {
   const [stock, setStock] = useState<Booking[]>([]);
   const [selectedLrs, setSelectedLrs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const router = useRouter();
 
   const loadStock = () => {
      try {
@@ -126,7 +128,6 @@ export function StockDashboard() {
       totalItems: selectedBookings.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
       totalActualWeight: selectedBookings.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
       totalChargeWeight: selectedBookings.reduce((sum, b) => sum + b.chgWt, 0),
-      // Set defaults for fields that will be finalized later
       dispatchToParty: selectedBookings[0]?.toCity || '',
       vehicleNo: '',
       driverName: '',
@@ -178,9 +179,12 @@ export function StockDashboard() {
     });
     saveBookings(updatedBookings);
 
-    toast({ title: "Loading Challan Generated", description: `Temporary challan ${newChallanId} has been created.` });
-    setSelectedLrs(new Set());
-    loadStock(); // Refresh the stock list
+    toast({ 
+      title: "Loading Challan Generated", 
+      description: `Temporary challan ${newChallanId} created. You will be redirected to finalize it.`,
+    });
+    
+    router.push(`/company/challan/new?challanId=${newChallanId}`);
   };
 
   return (

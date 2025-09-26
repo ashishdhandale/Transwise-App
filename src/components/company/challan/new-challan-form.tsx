@@ -42,10 +42,10 @@ import html2canvas from 'html2canvas';
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap px-2 py-1 h-9";
 
-const generateChallanId = (challans: Challan[], prefix: string): string => {
+const generatePermanentChallanId = (challans: Challan[], prefix: string): string => {
     const relevantChallanIds = challans
         .map(c => c.challanId)
-        .filter(id => id.startsWith(prefix));
+        .filter(id => id.startsWith(prefix) && !id.startsWith('TEMP-'));
 
     if (relevantChallanIds.length === 0) {
         return `${prefix}01`;
@@ -94,7 +94,7 @@ export function NewChallanForm() {
     const [isDownloading, setIsDownloading] = useState(false);
     
 
-    const loadInitialData = useCallback(async (existingChallanId?: string | null) => {
+    const loadInitialData = useCallback(async () => {
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
 
@@ -105,6 +105,8 @@ export function NewChallanForm() {
         setVehicles(getVehicles());
         setDrivers(getDrivers());
         setCities(allCities);
+        
+        const existingChallanId = searchParams.get('challanId');
 
         if (existingChallanId) {
             const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
@@ -127,8 +129,9 @@ export function NewChallanForm() {
                 setInStockLrs(inStock);
             }
         } else {
-            const challanPrefix = profile?.challanPrefix || 'CHLN';
-            setChallanId(generateChallanId(allChallans, challanPrefix));
+            // For a brand new challan, we don't assign a permanent ID yet.
+            // A temporary ID will be created on the first save action if needed.
+            setChallanId(''); 
             setInStockLrs(allBookings.filter(b => b.status === 'In Stock'));
             setAddedLrs([]);
 
@@ -137,12 +140,11 @@ export function NewChallanForm() {
                 setFromStation(defaultStation);
             }
         }
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
-        const challanIdParam = searchParams.get('challanId');
-        loadInitialData(challanIdParam);
-    }, [searchParams, loadInitialData]);
+        loadInitialData();
+    }, [loadInitialData]);
 
     const handleAddToChallan = () => {
         const toAdd = inStockLrs.filter(lr => stockSelection.has(lr.trackingId));
@@ -166,9 +168,16 @@ export function NewChallanForm() {
 
         const allChallans = getChallanData();
         const existingChallanIndex = allChallans.findIndex(c => c.challanId === challanId);
+        
+        let newChallanId = challanId;
+        // If it's a new or temporary challan, generate a permanent ID
+        if (!challanId || challanId.startsWith('TEMP-')) {
+            const challanPrefix = companyProfile?.challanPrefix || 'CHLN';
+            newChallanId = generatePermanentChallanId(allChallans, challanPrefix);
+        }
 
         const newChallanData: Challan = {
-            challanId,
+            challanId: newChallanId,
             dispatchDate: format(dispatchDate!, 'yyyy-MM-dd'),
             challanType: 'Dispatch',
             status: 'Finalized',
@@ -182,9 +191,9 @@ export function NewChallanForm() {
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
             totalActualWeight: addedLrs.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
             totalChargeWeight: addedLrs.reduce((sum, b) => sum + b.chgWt, 0),
-            vehicleHireFreight: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].vehicleHireFreight : 0, 
-            advance: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].advance : 0,
-            balance: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].balance : 0,
+            vehicleHireFreight: (existingChallanIndex !== -1 ? allChallans[existingChallanIndex].vehicleHireFreight : 0), 
+            advance: (existingChallanIndex !== -1 ? allChallans[existingChallanIndex].advance : 0),
+            balance: (existingChallanIndex !== -1 ? allChallans[existingChallanIndex].balance : 0),
             senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark: remark || '',
             summary: {
                 grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
@@ -201,7 +210,7 @@ export function NewChallanForm() {
         saveChallanData(allChallans);
 
         const newLrDetails: LrDetail[] = addedLrs.map(b => ({
-            challanId,
+            challanId: newChallanId,
             lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
             from: b.fromCity, to: b.toCity, bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
             itemDescription: b.itemDescription, quantity: b.qty,
@@ -210,7 +219,7 @@ export function NewChallanForm() {
         }));
         
         let allLrDetails = getLrDetailsData();
-        // Remove old details for this challan and add the new ones
+        // Remove old details for this challan (if it was temporary) and add the new ones
         allLrDetails = allLrDetails.filter(d => d.challanId !== challanId);
         allLrDetails.push(...newLrDetails);
         saveLrDetailsData(allLrDetails);
@@ -219,14 +228,14 @@ export function NewChallanForm() {
         const updatedBookings = allBookings.map(b => {
             const wasAdded = addedLrs.some(addedLr => addedLr.trackingId === b.trackingId);
             if (wasAdded && b.status !== 'In Transit') {
-                addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'System', `Dispatched via Challan ${challanId}`);
+                addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'System', `Dispatched via Challan ${newChallanId}`);
                 return { ...b, status: 'In Transit' as const };
             }
             return b;
         });
         saveBookings(updatedBookings);
         
-        toast({ title: "Challan Finalized", description: `Challan ${challanId} has been saved.` });
+        toast({ title: "Challan Finalized", description: `Challan ${newChallanId} has been saved.` });
         
         setPreviewData({ challan: newChallanData, lrDetails: newLrDetails });
         setIsPreviewOpen(true);
@@ -328,7 +337,7 @@ export function NewChallanForm() {
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                     <div className="space-y-1">
                         <Label>Challan ID</Label>
-                        <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
+                        <Input value={challanId || 'Will be generated upon finalization'} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
                     </div>
                     <div className="space-y-1">
                         <Label>Dispatch Date</Label>
