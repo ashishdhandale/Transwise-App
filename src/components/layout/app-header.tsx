@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, BookCopy } from 'lucide-react';
+import { Bell, BookCopy, ArrowLeft } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -38,11 +38,20 @@ export function AppHeader() {
   const avatarSeed = isAdmin ? 'admin-avatar' : 'avatar';
   const avatarFallback = isAdmin ? 'SA' : 'U';
   const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : '/';
+  
+  const rootPages = ['/admin', '/company', '/'];
+  const showBackButton = !rootPages.includes(pathname);
 
   return (
     <header className="flex h-20 items-center gap-4 border-b bg-primary text-primary-foreground px-4 lg:px-6 sticky top-0 z-30">
       <SidebarTrigger className="md:hidden text-primary-foreground" />
       <div className="flex-1 flex items-center gap-4">
+        {showBackButton && (
+           <Button variant="ghost" size="icon" onClick={() => router.back()} className="hover:bg-primary-foreground/10">
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">Go Back</span>
+          </Button>
+        )}
         <Link href={homeHref}>
           <div>
             <div className="font-bold text-2xl font-headline flex items-center">
