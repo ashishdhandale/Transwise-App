@@ -37,27 +37,21 @@ import { Switch } from '@/components/ui/switch';
 import type { ChargeSetting } from '../settings/additional-charges-settings';
 
 const rateOnOptions: { label: string; value: RateOnType }[] = [
-    { label: 'Charge Wt.', value: 'Chg.wt' },
-    { label: 'Actual Wt.', value: 'Act.wt' },
+    { label: 'Chg.wt', value: 'Chg.wt' },
+    { label: 'Act.wt', value: 'Act.wt' },
     { label: 'Quantity', value: 'Quantity' },
     { label: 'Fixed', value: 'Fixed' },
 ];
 
 const chargeValueSchema = z.object({
-    rate: z.coerce.number().min(0),
-    rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity', 'Fixed']),
-}).optional();
+    rate: z.coerce.number().min(0, 'Rate must be >= 0').optional().default(0),
+    rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity', 'Fixed']).optional().default('Chg.wt'),
+});
 
 const stationRateSchema = z.object({
-    fromStation: z.string().min(1),
-    toStation: z.string().min(1),
-    charges: z.object({
-        baseRate: z.object({
-            rate: z.coerce.number().min(0),
-            rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity', 'Fixed']),
-        }),
-        // Dynamically add other charges
-    }).catchall(chargeValueSchema),
+    fromStation: z.string().min(1, 'From station is required.'),
+    toStation: z.string().min(1, 'To station is required.'),
+    charges: z.record(chargeValueSchema).optional(),
 });
 
 const rateListSchema = z.object({
@@ -89,9 +83,12 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
     useEffect(() => {
         try {
             const saved = localStorage.getItem(LOCAL_STORAGE_KEY_CHARGES);
+            const defaultCharge: ChargeSetting = { id: 'baseRate', name: 'Base Rate', isVisible: true, isEditable: true, calculationType: 'fixed', value: 0, isCustom: false };
             if (saved) {
                 const parsed = JSON.parse(saved);
-                setChargeSettings(parsed.charges || []);
+                setChargeSettings([defaultCharge, ...(parsed.charges || [])]);
+            } else {
+                setChargeSettings([defaultCharge]);
             }
         } catch (error) { console.error("Could not load charge settings"); }
     }, [isOpen]);
@@ -115,7 +112,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                 name: rateList.name,
                 isStandard: rateList.isStandard || false,
                 customerIds: rateList.customerIds || [],
-                stationRates: rateList.stationRates.map(sr => ({ ...sr, charges: sr.charges || { baseRate: { rate: 0, rateOn: 'Chg.wt'}} })) || [],
+                stationRates: rateList.stationRates || [],
                 itemRates: rateList.itemRates || [],
             });
         } else {
@@ -138,6 +135,9 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
     };
 
     const cityOptions = cities.map(c => ({ label: c.name, value: c.name }));
+
+    const visibleChargeSettings = chargeSettings.filter(cs => cs.isVisible && cs.id !== 'othersCharge');
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -236,18 +236,15 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                 />
                             </TabsContent>
                             <TabsContent value="rates">
-                                {/* Table Header */}
-                                <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_1fr] gap-2 px-2 pb-2 border-b">
+                                <div className="grid grid-cols-[1.5fr_1.5fr_repeat(5,_1fr)] gap-2 px-2 pb-2 border-b">
                                     <Label>From</Label>
                                     <Label>To</Label>
-                                    <Label className="text-center">Base Rate</Label>
-                                    {chargeSettings.filter(cs => cs.id !== 'othersCharge' && cs.isVisible).map(cs => <Label key={cs.id} className="text-center">{cs.name}</Label>)}
+                                    {visibleChargeSettings.map(cs => <Label key={cs.id} className="text-center">{cs.name}</Label>)}
                                 </div>
-                                {/* Table Rows */}
                                 <ScrollArea className="h-[45vh]">
                                     <div className="space-y-2 p-1">
                                     {stationFields.map((field, index) => (
-                                        <div key={field.id} className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 items-start">
+                                        <div key={field.id} className="grid grid-cols-[1.5fr_1.5fr_repeat(5,_1fr)_auto] gap-2 items-start">
                                             <FormField control={form.control} name={`stationRates.${index}.fromStation`} render={({ field }) => (
                                                 <Combobox options={cityOptions} {...field} placeholder="From..."/>
                                             )} />
@@ -255,27 +252,13 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                                 <Combobox options={cityOptions} {...field} placeholder="To..."/>
                                             )} />
                                             
-                                            {/* Base Rate */}
-                                            <div className="flex flex-col gap-1">
-                                                <FormField control={form.control} name={`stationRates.${index}.charges.baseRate.rate`} render={({ field }) => (
-                                                   <Input type="number" placeholder="Rate" {...field} />
-                                                )} />
-                                                <FormField control={form.control} name={`stationRates.${index}.charges.baseRate.rateOn`} render={({ field }) => (
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <FormControl><SelectTrigger className="h-7 text-xs"><SelectValue/></SelectTrigger></FormControl>
-                                                        <SelectContent><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Act.wt">Act.wt</SelectItem></SelectContent>
-                                                    </Select>
-                                                )} />
-                                            </div>
-
-                                            {/* Dynamic Additional Charges */}
-                                            {chargeSettings.filter(cs => cs.id !== 'othersCharge' && cs.isVisible).map(chargeSetting => (
+                                            {visibleChargeSettings.map(chargeSetting => (
                                                  <div key={chargeSetting.id} className="flex flex-col gap-1">
                                                     <FormField control={form.control} name={`stationRates.${index}.charges.${chargeSetting.id}.rate`} render={({ field }) => (
                                                         <Input type="number" placeholder="Rate" {...field} />
                                                     )} />
                                                     <FormField control={form.control} name={`stationRates.${index}.charges.${chargeSetting.id}.rateOn`} render={({ field }) => (
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value || 'Chg.wt'}>
                                                             <FormControl><SelectTrigger className="h-7 text-xs"><SelectValue/></SelectTrigger></FormControl>
                                                             <SelectContent>
                                                                 {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
@@ -289,7 +272,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                         </div>
                                     ))}
                                      <Button type="button" size="sm" variant="outline" onClick={() => {
-                                        const newStationRate: any = {fromStation: '', toStation: '', charges: { baseRate: { rate: 0, rateOn: 'Chg.wt' }}};
+                                        const newStationRate: any = {fromStation: '', toStation: '', charges: {}};
                                         chargeSettings.forEach(cs => {
                                             newStationRate.charges[cs.id] = { rate: 0, rateOn: cs.calculationType === 'fixed' ? 'Fixed' : 'Chg.wt' };
                                         });

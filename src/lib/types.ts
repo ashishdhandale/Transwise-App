@@ -178,8 +178,6 @@ export interface StationRate {
     toStation: string;
     charges: {
         baseRate: ChargeValue;
-        labour?: ChargeValue;
-        doorDelivery?: ChargeValue;
         [key: string]: ChargeValue | undefined;
     };
 }
