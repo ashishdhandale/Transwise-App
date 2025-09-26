@@ -237,18 +237,16 @@ export function NewQuotationForm() {
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-dashed grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] lg:grid-cols-[1fr_1.5fr_1fr_auto] gap-4 items-end">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="p-4 border-t border-dashed">
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                                 <div>
                                     <Label>Item Name</Label>
                                     <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
                                 </div>
-                                <div>
+                                <div className="lg:col-span-2">
                                     <Label>Description</Label>
                                     <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional"/>
                                 </div>
-                            </div>
-                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                                 <div>
                                     <Label>Rate</Label>
                                     <Input type="number" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
@@ -262,7 +260,7 @@ export function NewQuotationForm() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="col-span-2 lg:col-span-1">
+                                <div>
                                     <Label>Booking Type</Label>
                                     <Select value={lrType} onValueChange={(v) => setLrType(v)}>
                                         <SelectTrigger><SelectValue /></SelectTrigger>
@@ -272,8 +270,9 @@ export function NewQuotationForm() {
                                     </Select>
                                 </div>
                             </div>
-                            <div className="hidden lg:block"></div> {/* Spacer for grid alignment */}
-                            <Button onClick={handleAddToList} className="h-10"><PlusCircle className="mr-2 h-4 w-4" /> Add Item</Button>
+                            <div className="flex justify-end mt-4">
+                                <Button onClick={handleAddToList} className="h-10"><PlusCircle className="mr-2 h-4 w-4" /> Add Item to List</Button>
+                            </div>
                         </div>
                      </div>
 
