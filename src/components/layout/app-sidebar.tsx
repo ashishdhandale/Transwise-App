@@ -340,7 +340,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="#" size="sm" tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Rate list"><List />Rate list</SidebarMenuButton>
+                <SidebarMenuButton href="/company/master/rate-list" size="sm" isActive={pathname === '/company/master/rate-list'} tooltip="Rate list"><List />Rate list</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>

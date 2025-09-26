@@ -166,3 +166,27 @@ export interface VehicleMaster {
   permitDetails?: string;
 }
 
+export interface StationRate {
+  fromStation: string;
+  toStation: string;
+  rate: number;
+}
+
+export interface KmRate {
+  fromKm: number;
+  toKm: number;
+  ratePerKm: number;
+}
+
+export interface TruckRate {
+  truckType: string;
+  rate: number;
+}
+
+export interface RateList {
+  id: number;
+  name: string;
+  stationRates: StationRate[];
+  kmRates: KmRate[];
+  truckRates: TruckRate[];
+}
