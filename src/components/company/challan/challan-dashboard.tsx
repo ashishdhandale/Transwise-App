@@ -14,8 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, PlusCircle, Search, Trash2, Printer, Loader2, Download } from 'lucide-react';
-import { getChallanData, saveChallanData, getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
+import { FileText, PlusCircle, Search, Trash2, Printer, Loader2, Download, MoreHorizontal, Pencil, Eye } from 'lucide-react';
+import { getChallanData, saveChallanData } from '@/lib/challan-data';
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -43,9 +43,11 @@ import type { Driver } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import React from 'react';
+import { getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-const thClass = 'bg-primary/10 text-primary font-semibold whitespace-nowrap';
-const tdClass = 'whitespace-nowrap';
+const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
+const tdClass = "whitespace-nowrap";
 
 const statusColors: { [key: string]: string } = {
   Pending: 'text-yellow-600 border-yellow-500/80',
@@ -90,35 +92,46 @@ const ChallanTable = ({ title, challans, onDelete, onReprint }: { title: string;
                     </Badge>
                   </TableCell>
                   <TableCell className={`${tdClass} text-right`}>
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href={`/company/challan/new?challanId=${challan.challanId}`}>View/Edit</Link>
-                    </Button>
-                    {onReprint && (
-                        <Button variant="outline" size="sm" className="ml-2" onClick={() => onReprint(challan)}>
-                            <Printer className="mr-2 h-4 w-4" /> Reprint
-                        </Button>
-                    )}
-                    {onDelete && (
-                         <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive ml-2">
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This will delete the temporary challan and move all its LRs back to stock. This action cannot be undone.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => onDelete(challan.challanId)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    )}
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                                <Link href={`/company/challan/new?challanId=${challan.challanId}`}><Pencil className="mr-2 h-4 w-4" />View/Edit</Link>
+                            </DropdownMenuItem>
+                            {onReprint && (
+                                <DropdownMenuItem onClick={() => onReprint(challan)}>
+                                    <Printer className="mr-2 h-4 w-4" /> Reprint
+                                </DropdownMenuItem>
+                            )}
+                            {onDelete && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This will delete the temporary challan and move all its LRs back to stock. This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onDelete(challan.challanId)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -161,7 +174,6 @@ export function ChallanDashboard() {
   }, []);
 
   const handleDeleteTempChallan = (challanIdToDelete: string) => {
-    // Revert bookings to 'In Stock'
     const lrDetails = getLrDetailsData();
     const lrsToRevert = lrDetails.filter(lr => lr.challanId === challanIdToDelete).map(lr => lr.lrNo);
     
@@ -177,7 +189,6 @@ export function ChallanDashboard() {
         saveBookings(updatedBookings);
     }
     
-    // Delete the challan and its associated LR details
     const updatedChallans = allChallans.filter(c => c.challanId !== challanIdToDelete);
     saveChallanData(updatedChallans);
     setAllChallans(updatedChallans);
