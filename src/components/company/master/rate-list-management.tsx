@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { getCustomers } from '@/lib/customer-data';
 import type { Customer } from '@/lib/types';
 import { format } from 'date-fns';
+import { Label } from '@/components/ui/label';
 
 const thClass = "bg-cyan-500 text-white font-semibold";
 const tdClass = "whitespace-nowrap";
@@ -128,4 +129,3 @@ export function RateListManagement() {
     </Card>
   );
 }
-
