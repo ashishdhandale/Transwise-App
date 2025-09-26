@@ -59,6 +59,7 @@ import html2canvas from 'html2canvas';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PartialCancellationDialog } from './partial-cancellation-dialog';
 import { Label } from '@/components/ui/label';
+import { ClientOnly } from '@/components/ui/client-only';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -253,7 +254,7 @@ export function BookingsDashboard() {
   const tdClass = "p-1 whitespace-nowrap";
 
   return (
-    <>
+    <ClientOnly>
       <main className="flex-1 p-4 md:p-6 bg-white">
         <Card className="border-2 border-cyan-200">
           <div className="p-4 space-y-4">
@@ -530,6 +531,6 @@ export function BookingsDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </ClientOnly>
   );
 }

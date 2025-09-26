@@ -19,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { ClientOnly } from '@/components/ui/client-only';
 
 function Dashboard() {
   return (
@@ -37,10 +38,14 @@ function Dashboard() {
           <SummaryCards />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <div className="lg:col-span-4">
-              <DeliveriesList />
+              <ClientOnly>
+                <DeliveriesList />
+              </ClientOnly>
             </div>
             <div className="lg:col-span-3">
-              <MapView />
+              <ClientOnly>
+                <MapView />
+              </ClientOnly>
             </div>
           </div>
         </TabsContent>
@@ -53,7 +58,9 @@ function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <OptimizerForm />
+              <ClientOnly>
+                <OptimizerForm />
+              </ClientOnly>
             </CardContent>
           </Card>
         </TabsContent>
