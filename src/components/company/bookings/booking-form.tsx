@@ -95,7 +95,7 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isParti
             changes.push(`- Booking Date changed from '${format(new Date(oldBooking.bookingDate), 'dd-MMM-yyyy')}' to '${format(new Date(newBooking.bookingDate), 'dd-MMM-yyyy')}'`);
         }
         if (oldBooking.lrNo !== newBooking.lrNo) {
-            changes.push(`- GR Number changed from '${oldBooking.lrNo}' to '${newBooking.lrNo}'`);
+            changes.push(`- LR Number changed from '${oldBooking.lrNo}' to '${newBooking.lrNo}'`);
         }
         if (oldBooking.lrType !== newBooking.lrType) {
             changes.push(`- Booking Type changed from '${oldBooking.lrType}' to '${newBooking.lrType}'`);
@@ -173,7 +173,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const [receiver, setReceiver] = useState<Customer | null>(null);
     const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
-    const [currentGrNumber, setCurrentGrNumber] = useState('');
+    const [currentLrNumber, setCurrentLrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -208,18 +208,18 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const [isStationAlertOpen, setIsStationAlertOpen] = useState(false);
 
 
-    const generateGrNumber = (bookings: Booking[], prefix: string) => {
+    const generateLrNumber = (bookings: Booking[], prefix: string) => {
         if (isOfflineMode || isEditMode || isPartialCancel) return '';
 
-        const relevantGrNumbers = bookings
+        const relevantLrNumbers = bookings
             .map(b => b.lrNo)
             .filter(lrNo => lrNo.startsWith(prefix));
 
-        if (relevantGrNumbers.length === 0) {
+        if (relevantLrNumbers.length === 0) {
             return `${prefix}01`;
         }
 
-        const lastSequence = relevantGrNumbers
+        const lastSequence = relevantLrNumbers
             .map(lrNo => parseInt(lrNo.substring(prefix.length), 10))
             .filter(num => !isNaN(num))
             .reduce((max, current) => Math.max(max, current), 0);
@@ -263,7 +263,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                     const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
                     const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
 
-                    setCurrentGrNumber(bookingToLoad.lrNo);
+                    setCurrentLrNumber(bookingToLoad.lrNo);
                     setBookingDate(new Date(bookingToLoad.bookingDate));
                     setBookingType(bookingToLoad.lrType);
                     setLoadType(bookingToLoad.loadType || 'PTL');
@@ -287,8 +287,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 }
 
             } else {
-                let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
-                setCurrentGrNumber(generateGrNumber(parsedBookings, grnPrefix));
+                let grnPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
+                setCurrentLrNumber(generateLrNumber(parsedBookings, grnPrefix));
                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                 setBookingDate(new Date());
             }
@@ -306,8 +306,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const handleReset = () => {
         const profile = companyProfile;
         const parsedBookings = getBookings();
-        let grnPrefix = (profile?.grnPrefix?.trim()) ? profile.grnPrefix.trim() : 'CONAG';
-        setCurrentGrNumber(isOfflineMode ? '' : generateGrNumber(parsedBookings, grnPrefix));
+        let lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(parsedBookings, lrPrefix));
         
         let keyCounter = 1;
         setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
@@ -364,7 +364,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         const validRows = itemRows.filter(row => !isRowEmpty(row));
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
-            lrNo: currentGrNumber,
+            lrNo: currentLrNumber,
             bookingDate: bookingDate!.toISOString(),
             fromCity: fromStation!.name,
             toCity: toStation!.name,
@@ -393,16 +393,16 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 saveBookings(updatedBookings);
                 
                 if (changeDetails !== 'No changes detected.') {
-                    addHistoryLog(currentGrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
+                    addHistoryLog(currentLrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
                 }
 
-                toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated GR Number: ${currentGrNumber}` });
+                toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
                 if (onSaveSuccess) onSaveSuccess();
             } else {
                 const newBooking: Booking = { trackingId: `TRK-${Date.now()}`, ...newBookingData };
                 const updatedBookings = [...allBookings, newBooking];
                 saveBookings(updatedBookings);
-                addHistoryLog(currentGrNumber, 'Booking Created', 'Admin');
+                addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
                 if (newBooking.loadType === 'FTL') {
                     // For FTL, we create a pending challan immediately.
@@ -466,7 +466,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentGrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast]);
+    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -476,7 +476,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         if (!sender?.name) newErrors.sender = true;
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
-        if ((isOfflineMode || isEditMode || isPartialCancel) && !currentGrNumber) newErrors.grNumber = true;
+        if ((isOfflineMode || isEditMode || isPartialCancel) && !currentLrNumber) newErrors.lrNumber = true;
 
         setErrors(newErrors);
 
@@ -561,9 +561,9 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     <ClientOnly>
         <div className="space-y-4">
             <h1 className="text-2xl font-bold text-primary">
-                {isEditMode ? `Edit Booking: ${currentGrNumber}` : 
-                 isViewOnly ? `View Booking: ${currentGrNumber}` :
-                 isPartialCancel ? `Partial Cancellation: ${currentGrNumber}` :
+                {isEditMode ? `Edit Booking: ${currentLrNumber}` : 
+                 isViewOnly ? `View Booking: ${currentLrNumber}` :
+                 isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
                  (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking')}
             </h1>
             <Card className="border-2 border-green-200">
@@ -575,8 +575,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         onToStationChange={setToStation}
                         fromStation={fromStation}
                         toStation={toStation}
-                        grNumber={currentGrNumber}
-                        onGrNumberChange={setCurrentGrNumber}
+                        lrNumber={currentLrNumber}
+                        onLrNumberChange={setCurrentLrNumber}
                         bookingDate={bookingDate}
                         onBookingDateChange={setBookingDate}
                         isEditMode={isEditMode}
@@ -609,7 +609,14 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                             isViewOnly={readOnly}
                         />
                     )}
-                    <ItemDetailsTable rows={itemRows} onRowsChange={setItemRows} isViewOnly={isViewOnly} />
+                    <ItemDetailsTable 
+                        rows={itemRows} 
+                        onRowsChange={setItemRows} 
+                        isViewOnly={isViewOnly}
+                        sender={sender}
+                        fromStation={fromStation}
+                        toStation={toStation}
+                    />
                     
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
                         <ChargesSection 

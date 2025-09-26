@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -29,10 +30,11 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@/components/ui/combobox';
-import type { Item } from '@/lib/types';
+import type { City, Customer, Item, RateList } from '@/lib/types';
 import { AddItemDialog } from '../master/add-item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ClientOnly } from '@/components/ui/client-only';
+import { getRateLists } from '@/lib/rate-list-data';
 
 
 export interface ItemRow {
@@ -81,10 +83,21 @@ interface ItemDetailsTableProps {
     rows: ItemRow[];
     onRowsChange: (rows: ItemRow[]) => void;
     isViewOnly?: boolean;
+    sender: Customer | null;
+    fromStation: City | null;
+    toStation: City | null;
 }
 
-export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: ItemDetailsTableProps) {
+export function ItemDetailsTable({ 
+    rows, 
+    onRowsChange, 
+    isViewOnly = false,
+    sender,
+    fromStation,
+    toStation,
+}: ItemDetailsTableProps) {
   const [itemOptions, setItemOptions] = useState<Item[]>([]);
+  const [rateLists, setRateLists] = useState<RateList[]>([]);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [initialItemData, setInitialItemData] = useState<Partial<Item> | null>(null);
   const [weightWarning, setWeightWarning] = useState<{ rowIndex: number; value: string } | null>(null);
@@ -92,7 +105,7 @@ export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: Ite
   const { toast } = useToast();
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
-  const loadItems = useCallback(() => {
+  const loadItemsAndRates = useCallback(() => {
     try {
         const savedItems = localStorage.getItem(LOCAL_STORAGE_KEY_ITEMS);
         if (savedItems) {
@@ -105,14 +118,21 @@ export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: Ite
             setItemOptions(defaultItems);
             localStorage.setItem(LOCAL_STORAGE_KEY_ITEMS, JSON.stringify(defaultItems));
         }
+        setRateLists(getRateLists());
     } catch (error) {
-        console.error("Failed to load item options", error);
+        console.error("Failed to load master data", error);
     }
   }, []);
   
   useEffect(() => {
-    loadItems();
-  }, [loadItems]);
+    loadItemsAndRates();
+  }, [loadItemsAndRates]);
+
+  const activeRateList = useMemo(() => {
+    if (!sender) return rateLists.find(rl => rl.name === 'Standard Rate List') || null;
+    const customerRateList = rateLists.find(rl => rl.customerIds?.includes(sender.id));
+    return customerRateList || rateLists.find(rl => rl.name === 'Standard Rate List') || null;
+  }, [sender, rateLists]);
 
 
   useEffect(() => {
@@ -194,8 +214,23 @@ export function ItemDetailsTable({ rows, onRowsChange, isViewOnly = false }: Ite
     
     if (columnId === 'itemName') {
         const selectedItem = itemOptions.find(item => item.name.toLowerCase() === value.toLowerCase());
-        if (selectedItem && selectedItem.description) {
-            newRow.description = selectedItem.description;
+        if (selectedItem) {
+            if (selectedItem.description) {
+                newRow.description = selectedItem.description;
+            }
+            if (activeRateList && fromStation && toStation) {
+                const itemRate = activeRateList.itemRates?.find(ir => ir.itemId === String(selectedItem.id));
+                if (itemRate) {
+                    newRow.rate = String(itemRate.rate);
+                    newRow.freightOn = itemRate.rateOn;
+                } else {
+                    const stationRate = activeRateList.stationRates?.find(sr => sr.fromStation === fromStation.name && sr.toStation === toStation.name);
+                    if (stationRate) {
+                        newRow.rate = String(stationRate.rate);
+                        newRow.freightOn = stationRate.rateOn;
+                    }
+                }
+            }
         }
     }
     
