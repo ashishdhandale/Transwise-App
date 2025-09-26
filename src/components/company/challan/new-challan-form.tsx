@@ -31,8 +31,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { getDrivers } from '@/lib/driver-data';
 import { getVehicles } from '@/lib/vehicle-data';
 import { getCities } from '@/lib/city-data';
-import { Textarea } from '../ui/textarea';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSlip } from './loading-slip';
 import React from 'react';
 import jsPDF from 'jspdf';
@@ -185,7 +185,7 @@ export function NewChallanForm() {
             vehicleHireFreight: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].vehicleHireFreight : 0, 
             advance: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].advance : 0,
             balance: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].balance : 0,
-            senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark,
+            senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark: remark || '',
             summary: {
                 grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
                 totalTopayAmount: addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
@@ -397,7 +397,7 @@ export function NewChallanForm() {
                                     lrDetails={previewData.lrDetails} 
                                     profile={companyProfile}
                                     driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
-                                    remark={previewData.challan.remark}
+                                    remark={previewData.challan.remark || ''}
                                 />
                             </div>
                         </div>
