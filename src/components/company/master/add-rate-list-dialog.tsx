@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { RateList, City, Customer, Item, RateOnType } from '@/lib/types';
+import type { RateList, City, Customer, Item, RateOnType, ChargeValue } from '@/lib/types';
 import { Trash2, PlusCircle } from 'lucide-react';
 import { Combobox } from '@/components/ui/combobox';
 import {
@@ -34,24 +34,30 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import type { ChargeSetting } from '../settings/additional-charges-settings';
 
-const rateOnOptions: { label: string, value: RateOnType }[] = [
+const rateOnOptions: { label: string; value: RateOnType }[] = [
     { label: 'Charge Wt.', value: 'Chg.wt' },
     { label: 'Actual Wt.', value: 'Act.wt' },
     { label: 'Quantity', value: 'Quantity' },
+    { label: 'Fixed', value: 'Fixed' },
 ];
+
+const chargeValueSchema = z.object({
+    rate: z.coerce.number().min(0),
+    rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity', 'Fixed']),
+}).optional();
 
 const stationRateSchema = z.object({
     fromStation: z.string().min(1),
     toStation: z.string().min(1),
-    rate: z.coerce.number().min(0),
-    rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity']),
-});
-
-const itemRateSchema = z.object({
-    itemId: z.string().min(1),
-    rate: z.coerce.number().min(0),
-    rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity']),
+    charges: z.object({
+        baseRate: z.object({
+            rate: z.coerce.number().min(0),
+            rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity', 'Fixed']),
+        }),
+        // Dynamically add other charges
+    }).catchall(chargeValueSchema),
 });
 
 const rateListSchema = z.object({
@@ -59,7 +65,7 @@ const rateListSchema = z.object({
   isStandard: z.boolean(),
   customerIds: z.array(z.number()),
   stationRates: z.array(stationRateSchema),
-  itemRates: z.array(itemRateSchema),
+  itemRates: z.array(z.any()), // Keep itemRates simple for now
 });
 
 type RateListFormValues = z.infer<typeof rateListSchema>;
@@ -74,8 +80,21 @@ interface AddRateListDialogProps {
     customers: Customer[];
 }
 
+const LOCAL_STORAGE_KEY_CHARGES = 'transwise_additional_charges_settings';
+
 export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, cities, items, customers }: AddRateListDialogProps) {
     const { toast } = useToast();
+    const [chargeSettings, setChargeSettings] = useState<ChargeSetting[]>([]);
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(LOCAL_STORAGE_KEY_CHARGES);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                setChargeSettings(parsed.charges || []);
+            }
+        } catch (error) { console.error("Could not load charge settings"); }
+    }, [isOpen]);
 
     const form = useForm<RateListFormValues>({
         resolver: zodResolver(rateListSchema),
@@ -89,7 +108,6 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
     });
     
     const { fields: stationFields, append: appendStation, remove: removeStation } = useFieldArray({ control: form.control, name: "stationRates" });
-    const { fields: itemFields, append: appendItem, remove: removeItem } = useFieldArray({ control: form.control, name: "itemRates" });
     
     useEffect(() => {
         if (rateList) {
@@ -97,7 +115,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                 name: rateList.name,
                 isStandard: rateList.isStandard || false,
                 customerIds: rateList.customerIds || [],
-                stationRates: rateList.stationRates || [],
+                stationRates: rateList.stationRates.map(sr => ({ ...sr, charges: sr.charges || { baseRate: { rate: 0, rateOn: 'Chg.wt'}} })) || [],
                 itemRates: rateList.itemRates || [],
             });
         } else {
@@ -105,8 +123,8 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                 name: '',
                 isStandard: false,
                 customerIds: [],
-                stationRates: [{ fromStation: '', toStation: '', rate: 0, rateOn: 'Chg.wt' }],
-                itemRates: [{ itemId: '', rate: 0, rateOn: 'Chg.wt' }],
+                stationRates: [],
+                itemRates: [],
             });
         }
     }, [rateList, isOpen, form]);
@@ -120,23 +138,23 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
     };
 
     const cityOptions = cities.map(c => ({ label: c.name, value: c.name }));
-    const itemOptions = items.map(i => ({ label: i.name, value: i.id.toString() }));
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-7xl">
                 <DialogHeader>
-                    <DialogTitle>{rateList ? 'Edit Rate List' : 'Add New Rate List'}</DialogTitle>
+                    <DialogTitle>{rateList ? 'Edit Rate List' : 'Add New Quotation'}</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSave)} className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-4">
-                        <div className="flex justify-between items-center">
+                    <form onSubmit={form.handleSubmit(handleSave)} className="py-4 space-y-4 max-h-[80vh] pr-4">
+                        {/* Header Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-4 items-center border-b pb-4">
                             <FormField
                                 control={form.control}
                                 name="name"
                                 render={({ field }) => (
-                                    <FormItem className="flex-grow">
-                                    <FormLabel>Rate List Name</FormLabel>
+                                    <FormItem>
+                                    <FormLabel>Quotation / Rate List Name</FormLabel>
                                     <FormControl>
                                         <Input {...field} autoFocus />
                                     </FormControl>
@@ -144,28 +162,35 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                     </FormItem>
                                 )}
                             />
-                             <FormField
+                            <FormField
                                 control={form.control}
                                 name="isStandard"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-center ml-4 mt-6">
-                                        <FormLabel>Set as Standard</FormLabel>
+                                    <FormItem className="flex items-center gap-2 pt-6">
                                         <FormControl>
                                             <Switch
                                                 checked={field.value}
                                                 onCheckedChange={field.onChange}
+                                                id="isStandard"
                                             />
                                         </FormControl>
+                                        <FormLabel htmlFor="isStandard">Set as Standard Rate</FormLabel>
                                     </FormItem>
                                 )}
                             />
+                             <div className="pt-6">
+                                <DialogClose asChild>
+                                    <Button variant="outline">Cancel</Button>
+                                </DialogClose>
+                                <Button type="submit" className="ml-2">Save</Button>
+                            </div>
                         </div>
-                        
-                        <Tabs defaultValue="associations">
+
+                        {/* Body / Tabs Section */}
+                         <Tabs defaultValue="rates">
                             <TabsList>
-                                <TabsTrigger value="associations">Associations</TabsTrigger>
-                                <TabsTrigger value="station">Station-wise</TabsTrigger>
-                                <TabsTrigger value="item">Item-wise</TabsTrigger>
+                                <TabsTrigger value="rates">Station Rates</TabsTrigger>
+                                <TabsTrigger value="associations">Customer Associations</TabsTrigger>
                             </TabsList>
                             <TabsContent value="associations" className="p-1">
                                 <FormField
@@ -175,9 +200,9 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                         <FormItem>
                                             <div className="mb-4">
                                                 <FormLabel className="text-base">Associated Customers</FormLabel>
-                                                <p className="text-sm text-muted-foreground">Apply this rate list to selected customers. A standard rate list cannot have customer associations.</p>
+                                                <p className="text-sm text-muted-foreground">Apply this quotation to selected customers. A standard rate list cannot have associations.</p>
                                             </div>
-                                            <ScrollArea className="h-72 w-full rounded-md border">
+                                            <ScrollArea className="h-72 w-1/2 rounded-md border">
                                                 <div className="p-4">
                                                 {customers.map((customer) => (
                                                     <FormField
@@ -210,65 +235,70 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                     )}
                                 />
                             </TabsContent>
-                            <TabsContent value="station">
-                                {stationFields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end mb-2">
-                                        <FormField control={form.control} name={`stationRates.${index}.fromStation`} render={({ field }) => (
-                                            <FormItem><FormLabel>From</FormLabel><Combobox options={cityOptions} {...field} placeholder="From Station..."/></FormItem>
-                                        )} />
-                                        <FormField control={form.control} name={`stationRates.${index}.toStation`} render={({ field }) => (
-                                            <FormItem><FormLabel>To</FormLabel><Combobox options={cityOptions} {...field} placeholder="To Station..."/></FormItem>
-                                        )} />
-                                        <FormField control={form.control} name={`stationRates.${index}.rate`} render={({ field }) => (
-                                            <FormItem><FormLabel>Rate</FormLabel><Input type="number" {...field} /></FormItem>
-                                        )} />
-                                         <FormField control={form.control} name={`stationRates.${index}.rateOn`} render={({ field }) => (
-                                            <FormItem><FormLabel>Rate On</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                            </FormItem>
-                                        )} />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeStation(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                            <TabsContent value="rates">
+                                {/* Table Header */}
+                                <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_1fr] gap-2 px-2 pb-2 border-b">
+                                    <Label>From</Label>
+                                    <Label>To</Label>
+                                    <Label className="text-center">Base Rate</Label>
+                                    {chargeSettings.filter(cs => cs.id !== 'othersCharge' && cs.isVisible).map(cs => <Label key={cs.id} className="text-center">{cs.name}</Label>)}
+                                </div>
+                                {/* Table Rows */}
+                                <ScrollArea className="h-[45vh]">
+                                    <div className="space-y-2 p-1">
+                                    {stationFields.map((field, index) => (
+                                        <div key={field.id} className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_1fr_auto] gap-2 items-start">
+                                            <FormField control={form.control} name={`stationRates.${index}.fromStation`} render={({ field }) => (
+                                                <Combobox options={cityOptions} {...field} placeholder="From..."/>
+                                            )} />
+                                            <FormField control={form.control} name={`stationRates.${index}.toStation`} render={({ field }) => (
+                                                <Combobox options={cityOptions} {...field} placeholder="To..."/>
+                                            )} />
+                                            
+                                            {/* Base Rate */}
+                                            <div className="flex flex-col gap-1">
+                                                <FormField control={form.control} name={`stationRates.${index}.charges.baseRate.rate`} render={({ field }) => (
+                                                   <Input type="number" placeholder="Rate" {...field} />
+                                                )} />
+                                                <FormField control={form.control} name={`stationRates.${index}.charges.baseRate.rateOn`} render={({ field }) => (
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <FormControl><SelectTrigger className="h-7 text-xs"><SelectValue/></SelectTrigger></FormControl>
+                                                        <SelectContent><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Act.wt">Act.wt</SelectItem></SelectContent>
+                                                    </Select>
+                                                )} />
+                                            </div>
+
+                                            {/* Dynamic Additional Charges */}
+                                            {chargeSettings.filter(cs => cs.id !== 'othersCharge' && cs.isVisible).map(chargeSetting => (
+                                                 <div key={chargeSetting.id} className="flex flex-col gap-1">
+                                                    <FormField control={form.control} name={`stationRates.${index}.charges.${chargeSetting.id}.rate`} render={({ field }) => (
+                                                        <Input type="number" placeholder="Rate" {...field} />
+                                                    )} />
+                                                    <FormField control={form.control} name={`stationRates.${index}.charges.${chargeSetting.id}.rateOn`} render={({ field }) => (
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl><SelectTrigger className="h-7 text-xs"><SelectValue/></SelectTrigger></FormControl>
+                                                            <SelectContent>
+                                                                {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )} />
+                                                </div>
+                                            ))}
+
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeStation(index)} className="mt-4"><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                        </div>
+                                    ))}
+                                     <Button type="button" size="sm" variant="outline" onClick={() => {
+                                        const newStationRate: any = {fromStation: '', toStation: '', charges: { baseRate: { rate: 0, rateOn: 'Chg.wt' }}};
+                                        chargeSettings.forEach(cs => {
+                                            newStationRate.charges[cs.id] = { rate: 0, rateOn: cs.calculationType === 'fixed' ? 'Fixed' : 'Chg.wt' };
+                                        });
+                                        appendStation(newStationRate);
+                                     }}><PlusCircle className="mr-2 h-4 w-4" />Add Row</Button>
                                     </div>
-                                ))}
-                                <Button type="button" size="sm" variant="outline" onClick={() => appendStation({fromStation: '', toStation: '', rate: 0, rateOn: 'Chg.wt'})}><PlusCircle className="mr-2 h-4 w-4" />Add Station Rate</Button>
-                            </TabsContent>
-                             <TabsContent value="item">
-                                {itemFields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-end mb-2">
-                                        <FormField control={form.control} name={`itemRates.${index}.itemId`} render={({ field }) => (
-                                            <FormItem><FormLabel>Item</FormLabel><Combobox options={itemOptions} {...field} placeholder="Select item..."/></FormItem>
-                                        )} />
-                                        <FormField control={form.control} name={`itemRates.${index}.rate`} render={({ field }) => (
-                                            <FormItem><FormLabel>Rate</FormLabel><Input type="number" {...field} /></FormItem>
-                                        )} />
-                                         <FormField control={form.control} name={`itemRates.${index}.rateOn`} render={({ field }) => (
-                                            <FormItem><FormLabel>Rate On</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                                                <SelectContent>
-                                                    {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                            </FormItem>
-                                        )} />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                    </div>
-                                ))}
-                                <Button type="button" size="sm" variant="outline" onClick={() => appendItem({itemId: '', rate: 0, rateOn: 'Chg.wt'})}><PlusCircle className="mr-2 h-4 w-4" />Add Item Rate</Button>
+                                </ScrollArea>
                             </TabsContent>
                         </Tabs>
-
-                        <DialogFooter className="mt-4 pt-4 border-t">
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancel</Button>
-                            </DialogClose>
-                            <Button type="submit">Save</Button>
-                        </DialogFooter>
                     </form>
                 </Form>
             </DialogContent>

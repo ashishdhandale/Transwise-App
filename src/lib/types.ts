@@ -166,30 +166,30 @@ export interface VehicleMaster {
   permitDetails?: string;
 }
 
-export type RateOnType = 'Chg.wt' | 'Act.wt' | 'Quantity';
+export type RateOnType = 'Chg.wt' | 'Act.wt' | 'Quantity' | 'Fixed';
+
+export interface ChargeValue {
+    rate: number;
+    rateOn: RateOnType;
+}
 
 export interface StationRate {
-  fromStation: string;
-  toStation: string;
-  rate: number;
-  rateOn: RateOnType;
-}
-
-export interface KmRate {
-  fromKm: number;
-  toKm: number;
-  ratePerKm: number;
-}
-
-export interface TruckRate {
-  truckType: string;
-  rate: number;
+    fromStation: string;
+    toStation: string;
+    charges: {
+        baseRate: ChargeValue;
+        labour?: ChargeValue;
+        doorDelivery?: ChargeValue;
+        [key: string]: ChargeValue | undefined;
+    };
 }
 
 export interface ItemRate {
-  itemId: string;
-  rate: number;
-  rateOn: RateOnType;
+    itemId: string;
+    charges: {
+        baseRate: ChargeValue;
+        [key: string]: ChargeValue | undefined;
+    };
 }
 
 export interface RateList {
