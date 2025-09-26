@@ -53,6 +53,7 @@ export function Combobox({
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
 
 
   const handleSelect = (currentValue: string) => {
@@ -92,6 +93,14 @@ export function Combobox({
           setOpen(true);
       }
   }
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+          e.preventDefault();
+          setOpen(false);
+          triggerRef.current?.focus();
+      }
+  };
 
   const currentInputValue = allowFreeform ? value : searchQuery;
 
@@ -100,6 +109,7 @@ export function Combobox({
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
+            ref={triggerRef}
             variant="outline"
             role="combobox"
             aria-expanded={open}
@@ -119,6 +129,7 @@ export function Combobox({
             e.preventDefault();
             inputRef.current?.focus();
           }}
+          onKeyDown={handleKeyDown}
         >
           <Command>
             <CommandInput
