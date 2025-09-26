@@ -8,7 +8,7 @@ import { BookingForm } from '@/components/company/bookings/booking-form';
 function NewBookingPage() {
     return (
         <DashboardLayout>
-            <main className="flex-1 p-4 md:p-6 bg-cyan-50/50">
+            <main className="flex-1 p-4 md:p-6">
                 <BookingForm />
             </main>
         </DashboardLayout>

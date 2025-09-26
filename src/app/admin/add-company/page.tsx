@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import DashboardLayout from '../../(dashboard)/layout';
 import AddCompanyForm from '@/components/admin/add-company-form';
+import { BackButton } from '@/components/ui/back-button';
 
 function AddCompanyPage() {
   return (
@@ -12,6 +13,7 @@ function AddCompanyPage() {
       <DashboardLayout>
         <main className="flex-1 p-4 md:p-8">
             <div>
+                 <BackButton />
                  <h1 className="text-3xl font-bold tracking-tight font-headline mb-6">
                     Add New User Business Details
                 </h1>

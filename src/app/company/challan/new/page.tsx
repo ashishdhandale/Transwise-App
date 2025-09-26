@@ -8,7 +8,7 @@ import { NewChallanForm } from '@/components/company/challan/new-challan-form';
 function NewChallanPage() {
   return (
     <DashboardLayout>
-      <main className="flex-1 p-4 md:p-6 bg-secondary/30">
+      <main className="flex-1 p-4 md:p-6">
         <NewChallanForm />
       </main>
     </DashboardLayout>
