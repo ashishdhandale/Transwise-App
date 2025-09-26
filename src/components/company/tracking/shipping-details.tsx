@@ -3,9 +3,6 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Truck, Package, MapPin, Building, Calendar, Phone, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
@@ -13,10 +10,10 @@ import type { BookingHistory } from '@/lib/history-data';
 import { format, parseISO } from 'date-fns';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
-const DetailRow = ({ label, value, profile, children }: { label?: string; value?: string | number; profile: CompanyProfileFormValues | null; children?: React.ReactNode }) => (
-  <div className="grid grid-cols-[150px_1fr] text-sm border-b last:border-b-0">
-    <div className="bg-primary/10 text-primary font-semibold p-2 border-r">{label}</div>
-    <div className="p-2 break-words flex items-center">{value}{children || ''}</div>
+const DetailRow = ({ label, value, children }: { label?: string; value?: string | number; children?: React.ReactNode }) => (
+  <div className="grid grid-cols-[140px_1fr] text-sm items-start">
+    <div className="text-muted-foreground">{label}</div>
+    <div className="font-semibold break-words flex items-center">: {value}{children || ''}</div>
   </div>
 );
 
@@ -29,15 +26,7 @@ interface ShippingDetailsProps {
 export function ShippingDetails({ booking, history, profile }: ShippingDetailsProps) {
     
     if (!booking) {
-        return (
-             <Card className="border-gray-300 w-full flex items-center justify-center min-h-96">
-                <div className="text-center text-muted-foreground">
-                    <Search className="h-12 w-12 mx-auto" />
-                    <p className="mt-2 font-medium">Search for an LR Number or Tracking ID to see details</p>
-                    <p className="text-sm">The shipping and delivery details will appear here.</p>
-                </div>
-            </Card>
-        );
+        return null;
     }
 
     const formatValue = (amount: number) => {
@@ -48,73 +37,67 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
     const deliveredEvent = history?.logs.find(log => log.action === 'Delivered');
 
   return (
-    <Card className="border-gray-300 w-full">
-      <CardHeader className="p-3 border-b-2 border-primary">
-        <CardTitle className="text-base font-bold text-primary">Shipping & Delivery Details</CardTitle>
+    <Card className="border-primary/30 w-full">
+      <CardHeader className="p-4 border-b-2 border-primary/20">
+        <CardTitle className="text-lg font-headline text-primary">Shipping & Delivery Details for: {booking.lrNo}</CardTitle>
       </CardHeader>
-      <CardContent className="p-3 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left Column: Booking & Delivery */}
-        <div className="xl:col-span-2 space-y-6">
-            {/* Booking Details */}
-            <Card className="border-gray-300 overflow-hidden">
-                <CardHeader className="p-2 bg-primary text-primary-foreground">
-                <CardTitle className="text-sm font-bold flex items-center gap-2"><Package className="size-4" />Booking Details</CardTitle>
+      <CardContent className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Left Column: Booking & Parties */}
+        <div className="space-y-4">
+             {/* Booking Details */}
+            <Card className="border-gray-200 overflow-hidden shadow-sm">
+                <CardHeader className="p-3 bg-muted/50">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2"><Package className="size-5 text-primary" />Booking Details</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2">
-                        <DetailRow label="LR NO" value={booking.lrNo} profile={profile} />
-                        <DetailRow label="Tracking ID" value={booking.trackingId} profile={profile} />
-                        <DetailRow label="Booking Date" value={format(parseISO(booking.bookingDate), 'yyyy-MM-dd')} profile={profile} />
-                        <DetailRow label="Booked From" value={booking.fromCity} profile={profile} />
-                        <DetailRow label="Booked To" value={booking.toCity} profile={profile} />
-                        <DetailRow label="Item Name" value={booking.itemDescription} profile={profile} />
-                        <DetailRow label="Total Qty" value={booking.qty} profile={profile} />
-                        <DetailRow label="Total Chg Wt" value={`${booking.chgWt} KG`} profile={profile} />
-                        <DetailRow label="Payment Mode" value={booking.lrType} profile={profile} />
-                        <DetailRow label="Total Freight" profile={profile}>
-                            {formatValue(booking.totalAmount)}
-                        </DetailRow>
-                        <DetailRow label="Booking Note" value="Handle with care" profile={profile} />
-                    </div>
+                <CardContent className="p-3 space-y-2">
+                    <DetailRow label="Tracking ID" value={booking.trackingId} />
+                    <DetailRow label="Booking Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} />
+                    <DetailRow label="Item Name" value={booking.itemDescription} />
+                    <DetailRow label="Total Qty" value={booking.qty} />
+                    <DetailRow label="Charge Wt" value={`${booking.chgWt} KG`} />
+                    <DetailRow label="Payment Mode" value={booking.lrType} />
+                    <DetailRow label="Total Freight" value={formatValue(booking.totalAmount)} />
                 </CardContent>
             </Card>
 
-            {/* Delivery Details */}
-            <Card className="border-gray-300 overflow-hidden">
-                <CardHeader className="p-2 bg-primary text-primary-foreground">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2"><MapPin className="size-4" />Delivery Details</CardTitle>
+            <Card className="border-gray-200 overflow-hidden shadow-sm">
+                <CardHeader className="p-3 bg-muted/50">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2"><Building className="size-5 text-primary" />Parties</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2">
-                        <DetailRow label="Status" value={booking.status} profile={profile} />
-                        <DetailRow label="Delivery Type" value="Door" profile={profile} />
-                        <DetailRow label="D.M. NO" value={deliveredEvent ? `DM-${booking.trackingId}`: '-'} profile={profile} />
-                        <DetailRow label="Delivery Date" value={deliveredEvent?.timestamp} profile={profile} />
-                        <DetailRow label="Received BY" value={deliveredEvent ? 'Signature on File' : '-'} profile={profile} />
-                        <DetailRow label="Deliverd By" value={deliveredEvent?.user} profile={profile} />
+                <CardContent className="p-3 space-y-3">
+                    <div>
+                        <h4 className="font-bold text-sm mb-1">Sender</h4>
+                        <DetailRow label="Name" value={booking.sender} />
+                        <DetailRow label="Origin" value={booking.fromCity} />
+                    </div>
+                     <div>
+                        <h4 className="font-bold text-sm mb-1">Receiver</h4>
+                        <DetailRow label="Name" value={booking.receiver} />
+                        <DetailRow label="Destination" value={booking.toCity} />
                     </div>
                 </CardContent>
             </Card>
         </div>
-
-        {/* Right Column: Transit & Contact */}
-        <div className="space-y-6">
-            {/* Transit Details */}
-            <Card className="border-gray-300">
-                <CardHeader className="p-2 bg-primary text-primary-foreground">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2"><Truck className="size-4" />Transit Details</CardTitle>
+        
+        {/* Middle Column: Transit */}
+        <div className="space-y-4">
+             <Card className="border-gray-200 shadow-sm h-full">
+                <CardHeader className="p-3 bg-muted/50">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2"><Truck className="size-5 text-primary" />Transit History</CardTitle>
                 </CardHeader>
-                <CardContent className="p-3">
-                    <div className="relative pl-6">
-                        <div className="absolute left-3 top-3 bottom-3 w-0.5 bg-border"></div>
+                <CardContent className="p-4">
+                    <div className="relative pl-4">
+                        <div className="absolute left-6 top-5 bottom-5 w-0.5 bg-border -z-10"></div>
                         {history?.logs.map((event, index) => (
-                             <div key={index} className="relative flex items-start gap-4 mb-4 last:mb-0">
-                                <div className={cn("absolute left-[-1.125rem] top-1.5 size-5 bg-card border-2 rounded-full z-10", 
+                             <div key={index} className="relative flex items-start gap-4 mb-6 last:mb-0">
+                                <div className={cn("absolute left-[-0.3rem] top-0 flex items-center justify-center size-9 bg-card border-2 rounded-full z-10", 
                                     event.action === 'Delivered' ? 'border-green-500' : 'border-primary'
-                                )}></div>
-                                <div className="flex-1">
-                                    <p className="font-semibold text-sm">{event.details}</p>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Truck className="size-3" />{event.action}</p>
+                                )}>
+                                    <Truck className={cn('size-5', event.action === 'Delivered' ? 'text-green-500' : 'text-primary')} />
+                                </div>
+                                <div className="flex-1 ml-10">
+                                    <p className="font-semibold text-sm">{event.action}</p>
+                                    <p className="text-xs text-muted-foreground">{event.details}</p>
                                     <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="size-3" />{event.timestamp}</p>
                                 </div>
                             </div>
@@ -125,25 +108,34 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                     </div>
                 </CardContent>
             </Card>
+        </div>
 
-            {/* Contact Details */}
-            <Card className="border-gray-300">
-                <CardHeader className="p-2 bg-primary text-primary-foreground">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2"><Building className="size-4" />Delivery Contact</CardTitle>
+        {/* Right Column: Delivery */}
+        <div className="space-y-4">
+            <Card className="border-gray-200 shadow-sm">
+                <CardHeader className="p-3 bg-muted/50">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2"><MapPin className="size-5 text-primary" />Delivery Status</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 text-center">
+                    <p className={cn("text-2xl font-bold", booking.status === 'Delivered' ? 'text-green-600' : 'text-amber-600')}>
+                        {booking.status}
+                    </p>
+                    {deliveredEvent && (
+                         <p className="text-sm text-muted-foreground">
+                            Delivered on {format(new Date(deliveredEvent.timestamp), 'PPP')}
+                        </p>
+                    )}
+                </CardContent>
+            </Card>
+             <Card className="border-gray-200 shadow-sm">
+                <CardHeader className="p-3 bg-muted/50">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2"><Phone className="size-4 text-primary" />Delivery Contact</CardTitle>
                 </CardHeader>
                  <CardContent className="p-3 space-y-2">
                     <div className="text-sm">
                         <p className="font-semibold">Transwise - {booking.toCity} Office</p>
                         <p className="text-muted-foreground">MIDC, Main Road, {booking.toCity}</p>
                         <p className="text-muted-foreground flex items-center gap-1.5"><Phone className="size-3" />+91 98765 43210</p>
-                    </div>
-                    <Separator />
-                     <div className="space-y-1">
-                        <p className="font-semibold text-xs text-muted-foreground">Share Contact via SMS</p>
-                        <div className="flex gap-2">
-                        <Input placeholder="Enter Mobile No." className="h-8 text-sm border-gray-300" />
-                        <Button size="sm" className="h-8">Send</Button>
-                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -152,5 +144,3 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
     </Card>
   );
 }
-
-    
