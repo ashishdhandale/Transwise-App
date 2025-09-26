@@ -33,7 +33,6 @@ interface ComboboxProps {
     onAdd?: (query?: string) => void;
     disabled?: boolean;
     allowFreeform?: boolean;
-    onFreeformChange?: (value: string) => void;
     autoOpenOnFocus?: boolean;
 }
 
@@ -49,7 +48,6 @@ export function Combobox({
     onAdd,
     disabled = false,
     allowFreeform = false,
-    onFreeformChange,
     autoOpenOnFocus = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
@@ -66,8 +64,8 @@ export function Combobox({
   
   const handleInputChange = (query: string) => {
       setSearchQuery(query);
-      if (allowFreeform && onFreeformChange) {
-          onFreeformChange(query);
+      if (allowFreeform) {
+          onChange(query);
       }
   }
 
@@ -84,6 +82,9 @@ export function Combobox({
       setOpen(isOpen);
       if (!isOpen && onBlur) {
           onBlur();
+      }
+      if (!isOpen) {
+          setSearchQuery(''); // Clear search on close
       }
   }
 
@@ -102,6 +103,8 @@ export function Combobox({
         }
     }
   }
+
+  const currentInputValue = allowFreeform ? value : searchQuery;
 
   return (
     <ClientOnly>
@@ -135,7 +138,7 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
-              value={allowFreeform ? value : searchQuery}
+              value={currentInputValue}
               onValueChange={handleInputChange}
             />
             <CommandList>

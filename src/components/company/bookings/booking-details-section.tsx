@@ -277,6 +277,8 @@ export function BookingDetailsSection({
                         addMessage="Add New Station"
                         onAdd={handleOpenAddCity}
                         disabled={isViewOnly}
+                        autoOpenOnFocus
+                        allowFreeform
                     />
                 </div>
                 <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
@@ -291,6 +293,8 @@ export function BookingDetailsSection({
                         addMessage="Add New Station"
                         onAdd={handleOpenAddCity}
                         disabled={isViewOnly}
+                        autoOpenOnFocus
+                        allowFreeform
                     />
                 </div>
                 <div className="space-y-1">
@@ -314,5 +318,3 @@ export function BookingDetailsSection({
         </>
     );
 }
-
-    
