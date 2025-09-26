@@ -18,10 +18,10 @@ export function ChallanList() {
           <Button asChild className="bg-green-500 hover:bg-green-600 text-white">
             <Link href="/company/challan/new">Dispatch Challan</Link>
           </Button>
-          <Button className="bg-orange-400 hover:bg-orange-500 text-white">
+          <Button className="bg-orange-400 hover:bg-orange-500 text-white" disabled>
             Inward Challan
           </Button>
-          <Button className="bg-purple-500 hover:bg-purple-600 text-white">
+          <Button className="bg-purple-500 hover:bg-purple-600 text-white" disabled>
             Import Challan
           </Button>
         </div>
