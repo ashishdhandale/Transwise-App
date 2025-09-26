@@ -94,16 +94,6 @@ export function Combobox({
       }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Tab') {
-        if (open) {
-            e.preventDefault();
-            setOpen(false);
-            triggerRef.current?.focus();
-        }
-    }
-  }
-
   const currentInputValue = allowFreeform ? value : searchQuery;
 
   return (
@@ -118,7 +108,6 @@ export function Combobox({
             className="w-full justify-between"
             disabled={disabled}
             onFocus={handleTriggerFocus}
-            onKeyDown={handleKeyDown}
           >
             <span className="truncate">
               {displayValue || placeholder}
@@ -134,7 +123,7 @@ export function Combobox({
           }}
           onCloseAutoFocus={(e) => e.preventDefault()}
         >
-          <Command onKeyDown={handleKeyDown}>
+          <Command>
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
