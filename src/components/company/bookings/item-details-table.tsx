@@ -144,18 +144,6 @@ export function ItemDetailsTable({
   }, [sender, rateLists]);
 
   useEffect(() => {
-    // This effect handles showing toasts based on rate list status, preventing the render-cycle error.
-    const hasStandardRateList = rateLists.some(rl => rl.isStandard);
-    
-    if (rateLists.length === 0) {
-      toast({ title: "No Rates Found", description: "Please set up a Standard Rate List in the Master menu.", variant: "destructive" });
-    } else if (!hasStandardRateList) {
-      toast({ title: "No Standard Rates", description: "No Standard Rate List found. Please designate one in the Master menu.", variant: "destructive" });
-    }
-  }, [rateLists, toast]);
-
-
-  useEffect(() => {
     if (nextFocusRef?.current && !weightWarning) {
       nextFocusRef.current.focus();
       setNextFocusRef(null);
