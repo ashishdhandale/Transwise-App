@@ -140,12 +140,12 @@ export function ChallanList() {
         
         loadChallans();
         toast({ title: "Challan Deleted", description: `Associated LRs have been returned to stock.`, variant: "destructive" });
-    }
+    };
 
     const formatValue = (amount: number) => {
         if (!companyProfile) return amount.toLocaleString();
         return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-    }
+    };
 
     return (
         <div className="space-y-4">
@@ -344,3 +344,4 @@ export function ChallanList() {
         </div>
     );
 }
+    
