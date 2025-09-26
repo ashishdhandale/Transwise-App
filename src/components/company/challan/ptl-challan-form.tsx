@@ -197,7 +197,7 @@ export function PtlChallanForm() {
                     
                     if (challanToLoad && lrDetails) {
                         setChallanNo(challanToLoad.challanId);
-                        setChallanDate(parseISO(challanToLoad.dispatchDate)); // Use dispatch date for both
+                        setChallanDate(parseISO(challanToLoad.dispatchDate));
                         setDispatchDate(parseISO(challanToLoad.dispatchDate));
                         setFromStation(challanToLoad.fromStation);
                         setDestinationStation(challanToLoad.toStation);
