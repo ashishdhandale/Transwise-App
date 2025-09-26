@@ -3,7 +3,6 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -37,10 +36,91 @@ import {
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 const tdClass = "whitespace-nowrap";
+
+const countBadge = (count: number, singular: string, plural: string) => (
+  count > 0 && <Badge variant="secondary">{count} {count === 1 ? singular : plural}</Badge>
+);
+
+const RateListTable = ({ rateLists, onEdit, onDelete }: { rateLists: RateList[], onEdit: (list: RateList) => void, onDelete: (id: number) => void }) => (
+    <div className="overflow-x-auto border rounded-md max-h-[60vh]">
+        <Table>
+            <TableHeader>
+            <TableRow>
+                <TableHead className={thClass}>Name</TableHead>
+                <TableHead className={thClass}>Type / Associations</TableHead>
+                <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
+            </TableRow>
+            </TableHeader>
+            <TableBody>
+            {rateLists.map((list) => (
+                <TableRow key={list.id}>
+                <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
+                <TableCell className={cn(tdClass)}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {list.isStandard ? (
+                        <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                            <Star className="mr-1.5 h-3 w-3"/>
+                            Standard Rate
+                        </Badge>
+                        ) : (
+                        <Badge variant="outline">Customer Quotation</Badge>
+                        )}
+                        {countBadge(list.customerIds?.length || 0, 'Customer', 'Customers')}
+                        {countBadge(list.stationRates?.length || 0, 'Station Rule', 'Station Rules')}
+                        {countBadge(list.itemRates?.length || 0, 'Item Rule', 'Item Rules')}
+                    </div>
+                </TableCell>
+                <TableCell className={cn(tdClass, "text-right")}>
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator/>
+                        <DropdownMenuItem onClick={() => onEdit(list)}>
+                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete this rate list.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => onDelete(list.id)}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </TableCell>
+                </TableRow>
+            ))}
+            </TableBody>
+        </Table>
+         {rateLists.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground">
+            No items found in this category.
+          </div>
+        )}
+    </div>
+);
+
 
 export function RateListManagement() {
   const [rateLists, setRateLists] = useState<RateList[]>([]);
@@ -63,10 +143,12 @@ export function RateListManagement() {
     }
   }, []);
 
-  const filteredRateLists = useMemo(() => {
-    return rateLists.filter(list => 
-        list.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const { customerQuotations, standardRateLists } = useMemo(() => {
+    const filtered = rateLists.filter(list => list.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return {
+        customerQuotations: filtered.filter(list => !list.isStandard),
+        standardRateLists: filtered.filter(list => list.isStandard),
+    }
   }, [rateLists, searchTerm]);
 
   const handleAddNew = () => {
@@ -117,10 +199,6 @@ export function RateListManagement() {
     return true;
   };
   
-  const countBadge = (count: number, singular: string, plural: string) => (
-      count > 0 && <Badge variant="secondary">{count} {count === 1 ? singular : plural}</Badge>
-  );
-
   return (
     <Card>
        <CardHeader>
@@ -143,79 +221,18 @@ export function RateListManagement() {
             </div>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto border rounded-md max-h-[70vh]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={thClass}>Name</TableHead>
-                  <TableHead className={thClass}>Type / Associations</TableHead>
-                  <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRateLists.map((list) => (
-                  <TableRow key={list.id}>
-                    <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
-                    <TableCell className={cn(tdClass)}>
-                       <div className="flex items-center gap-2 flex-wrap">
-                          {list.isStandard ? (
-                            <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                                <Star className="mr-1.5 h-3 w-3"/>
-                                Standard Rate
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">Customer Quotation</Badge>
-                          )}
-                          {countBadge(list.customerIds?.length, 'Customer', 'Customers')}
-                          {countBadge(list.stationRates?.length, 'Station Rule', 'Station Rules')}
-                          {countBadge(list.itemRates?.length, 'Item Rule', 'Item Rules')}
-                       </div>
-                    </TableCell>
-                    <TableCell className={cn(tdClass, "text-right")}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator/>
-                            <DropdownMenuItem onClick={() => handleEdit(list)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                    </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                 <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete this rate list.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(list.id)}>Continue</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-        </div>
-        {filteredRateLists.length === 0 && (
-          <div className="text-center p-8 text-muted-foreground">
-            No rate lists found.
-          </div>
-        )}
+        <Tabs defaultValue="quotations" className="space-y-4">
+            <TabsList>
+                <TabsTrigger value="quotations">Customer Quotations</TabsTrigger>
+                <TabsTrigger value="standard">Standard Rate List</TabsTrigger>
+            </TabsList>
+            <TabsContent value="quotations">
+                <RateListTable rateLists={customerQuotations} onEdit={handleEdit} onDelete={handleDelete} />
+            </TabsContent>
+            <TabsContent value="standard">
+                <RateListTable rateLists={standardRateLists} onEdit={handleEdit} onDelete={handleDelete} />
+            </TabsContent>
+        </Tabs>
       </CardContent>
        <AddRateListDialog
           isOpen={isDialogOpen}
