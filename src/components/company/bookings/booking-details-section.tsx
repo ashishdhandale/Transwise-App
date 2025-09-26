@@ -70,7 +70,6 @@ export function BookingDetailsSection({
     const [allCustomCities, setAllCustomCities] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const [initialCityData, setInitialCityData] = useState<Partial<City> | null>(null);
-    const datePickerRef = useRef<HTMLButtonElement>(null);
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
     const stationOptions = useMemo(() => {
@@ -144,14 +143,6 @@ export function BookingDetailsSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [fromStation, isEditMode, companyProfile, allCustomCities]);
 
-    useEffect(() => {
-        if (!isEditMode) {
-            const timer = setTimeout(() => {
-                datePickerRef.current?.focus();
-            }, 0);
-            return () => clearTimeout(timer);
-        }
-    }, [isEditMode]);
 
     const getCityObjectByName = (name: string): City | null => {
         if (cityListSource === 'custom') {
@@ -221,6 +212,7 @@ export function BookingDetailsSection({
                         )}
                         readOnly={!isLrEditable || isViewOnly}
                         placeholder={isLrEditable ? "Enter Manual LRN" : ""}
+                        autoFocus={!isEditMode}
                     />
                 </div>
                 <div className="space-y-1">
@@ -229,7 +221,6 @@ export function BookingDetailsSection({
                         <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                             <PopoverTrigger asChild>
                                 <Button
-                                    ref={datePickerRef}
                                     variant={'outline'}
                                     className={cn(
                                         'w-full justify-between text-left font-normal',
