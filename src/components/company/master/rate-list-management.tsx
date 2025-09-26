@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -14,240 +13,104 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal, Star } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { AddRateListDialog } from './add-rate-list-dialog';
-import type { RateList, City, Item, Customer } from '@/lib/types';
-import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
-import { getCities } from '@/lib/city-data';
-import { getItems } from '@/lib/item-data';
-import { getCustomers } from '@/lib/customer-data';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+import { PlusCircle, Search } from 'lucide-react';
+import type { RateList } from '@/lib/types';
+import { getRateLists } from '@/lib/rate-list-data';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import { getCustomers } from '@/lib/customer-data';
+import type { Customer } from '@/lib/types';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 const tdClass = "whitespace-nowrap";
 
-const countBadge = (count: number, singular: string, plural: string) => (
-  count > 0 && <Badge variant="secondary">{count} {count === 1 ? singular : plural}</Badge>
-);
-
-const RateListTable = ({ rateLists, onEdit, onDelete }: { rateLists: RateList[], onEdit: (list: RateList) => void, onDelete: (id: number) => void }) => (
-    <div className="overflow-x-auto border rounded-md max-h-[60vh]">
-        <Table>
-            <TableHeader>
-            <TableRow>
-                <TableHead className={thClass}>Name</TableHead>
-                <TableHead className={thClass}>Type / Associations</TableHead>
-                <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
-            </TableRow>
-            </TableHeader>
-            <TableBody>
-            {rateLists.map((list) => (
-                <TableRow key={list.id}>
-                <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
-                <TableCell className={cn(tdClass)}>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {list.isStandard ? (
-                        <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                            <Star className="mr-1.5 h-3 w-3"/>
-                            Standard Rate
-                        </Badge>
-                        ) : (
-                        <Badge variant="outline">Customer Quotation</Badge>
-                        )}
-                        {countBadge(list.customerIds?.length || 0, 'Customer', 'Customers')}
-                        {countBadge(list.stationRates?.length || 0, 'Station Rule', 'Station Rules')}
-                        {countBadge(list.itemRates?.length || 0, 'Item Rule', 'Item Rules')}
-                    </div>
-                </TableCell>
-                <TableCell className={cn(tdClass, "text-right")}>
-                    <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator/>
-                        <DropdownMenuItem onClick={() => onEdit(list)}>
-                            <Pencil className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete this rate list.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => onDelete(list.id)}>Continue</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </DropdownMenuContent>
-                    </DropdownMenu>
-                </TableCell>
-                </TableRow>
-            ))}
-            </TableBody>
-        </Table>
-         {rateLists.length === 0 && (
-          <div className="text-center p-8 text-muted-foreground">
-            No items found in this category.
-          </div>
-        )}
-    </div>
-);
-
-
 export function RateListManagement() {
   const [rateLists, setRateLists] = useState<RateList[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentRateList, setCurrentRateList] = useState<RateList | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     try {
         setRateLists(getRateLists());
-        setCities(getCities());
-        setItems(getItems());
         setCustomers(getCustomers());
     } catch (error) {
       console.error("Failed to load master data", error);
     }
   }, []);
-
-  const { customerQuotations, standardRateLists } = useMemo(() => {
-    const filtered = rateLists.filter(list => list.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    return {
-        customerQuotations: filtered.filter(list => !list.isStandard),
-        standardRateLists: filtered.filter(list => list.isStandard),
-    }
-  }, [rateLists, searchTerm]);
-
-  const handleAddNew = () => {
-    setCurrentRateList(null);
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (rateList: RateList) => {
-    setCurrentRateList(rateList);
-    setIsDialogOpen(true);
-  };
   
-  const handleDelete = (id: number) => {
-    const updatedRateLists = rateLists.filter(list => list.id !== id);
-    saveRateLists(updatedRateLists);
-    setRateLists(updatedRateLists);
-    toast({
-      title: 'Rate List Deleted',
-      description: 'The rate list has been removed.',
-      variant: 'destructive',
-    });
-  };
+  const findCustomerName = (customerId: number) => {
+    return customers.find(c => c.id === customerId)?.name || 'Unknown Customer';
+  }
 
-  const handleSave = (rateListData: Omit<RateList, 'id'>, isStandard: boolean): boolean => {
-    let updatedRateLists;
-    // If setting a list as standard, ensure no others are standard
-    if (isStandard) {
-        rateListData.customerIds = []; // Standard list cannot have customer associations
-        updatedRateLists = rateLists.map(list => ({ ...list, isStandard: false }));
-    } else {
-        updatedRateLists = [...rateLists];
-    }
-    
-    if (currentRateList) {
-      updatedRateLists = updatedRateLists.map(list => (list.id === currentRateList.id ? { id: list.id, ...rateListData } : list));
-      toast({ title: 'Rate List Updated', description: `"${rateListData.name}" has been updated successfully.` });
-    } else {
-      const newRateList: RateList = {
-        id: updatedRateLists.length > 0 ? Math.max(...updatedRateLists.map(c => c.id)) + 1 : 1,
-        ...rateListData
-      };
-      updatedRateLists.push(newRateList);
-      toast({ title: 'Rate List Added', description: `"${rateListData.name}" has been added.` });
-    }
-    
-    saveRateLists(updatedRateLists);
-    setRateLists(updatedRateLists);
-    return true;
-  };
-  
+  const filteredRateLists = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase();
+    return rateLists.filter(list => 
+        list.name.toLowerCase().includes(searchLower) ||
+        list.customerIds?.some(id => findCustomerName(id).toLowerCase().includes(searchLower))
+    );
+  }, [rateLists, customers, searchTerm]);
+
   return (
     <Card>
        <CardHeader>
-            <CardTitle className="font-headline">Manage Quotations / Rate Lists</CardTitle>
+            <CardTitle className="font-headline">Manage Quotations</CardTitle>
             <div className="flex flex-row items-center justify-between pt-4">
                 <div className="relative w-full max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search by name..."
+                        placeholder="Search by name or customer..."
                         className="pl-8"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+                <Button asChild>
+                    <Link href="/company/master/quotation/new">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Generate New Quotation
+                    </Link>
+                </Button>
             </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="quotations" className="space-y-4">
-            <TabsList>
-                <TabsTrigger value="quotations">Quotations</TabsTrigger>
-                <TabsTrigger value="standard">Standard Rate List</TabsTrigger>
-            </TabsList>
-            <TabsContent value="quotations">
-                <div className="text-right mb-4">
-                     <Button onClick={handleAddNew}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Quotation
-                    </Button>
+         <div className="overflow-x-auto border rounded-md max-h-[60vh]">
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead className={thClass}>Quotation Name</TableHead>
+                    <TableHead className={thClass}>Associated Customers</TableHead>
+                    <TableHead className={thClass}>Status</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                {filteredRateLists.map((list) => (
+                    <TableRow key={list.id}>
+                        <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
+                        <TableCell className={cn(tdClass)}>
+                            {list.customerIds && list.customerIds.length > 0 
+                                ? list.customerIds.map(id => findCustomerName(id)).join(', ')
+                                : 'N/A'
+                            }
+                        </TableCell>
+                         <TableCell className={cn(tdClass)}>
+                            {list.isStandard ? (
+                                <Badge variant="default" className="bg-green-600 hover:bg-green-700">Standard Rate</Badge>
+                            ) : (
+                                <Badge variant="secondary">Quotation</Badge>
+                            )}
+                        </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+            {filteredRateLists.length === 0 && (
+                <div className="text-center p-8 text-muted-foreground">
+                    No quotations found.
                 </div>
-                <RateListTable rateLists={customerQuotations} onEdit={handleEdit} onDelete={handleDelete} />
-            </TabsContent>
-            <TabsContent value="standard">
-                <div className="text-right mb-4">
-                    <Button onClick={handleAddNew}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Rate List
-                    </Button>
-                </div>
-                <RateListTable rateLists={standardRateLists} onEdit={handleEdit} onDelete={handleDelete} />
-            </TabsContent>
-        </Tabs>
+            )}
+        </div>
       </CardContent>
-       <AddRateListDialog
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onSave={handleSave}
-          rateList={currentRateList}
-          cities={cities}
-          items={items}
-          customers={customers}
-        />
     </Card>
   );
 }
+
