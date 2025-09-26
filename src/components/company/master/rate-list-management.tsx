@@ -213,23 +213,28 @@ export function RateListManagement() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button onClick={handleAddNew}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Rate List
-                    </Button>
-                </div>
             </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="quotations" className="space-y-4">
             <TabsList>
-                <TabsTrigger value="quotations">Customer Quotations</TabsTrigger>
+                <TabsTrigger value="quotations">Quotations</TabsTrigger>
                 <TabsTrigger value="standard">Standard Rate List</TabsTrigger>
             </TabsList>
             <TabsContent value="quotations">
+                <div className="text-right mb-4">
+                     <Button onClick={handleAddNew}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Quotation
+                    </Button>
+                </div>
                 <RateListTable rateLists={customerQuotations} onEdit={handleEdit} onDelete={handleDelete} />
             </TabsContent>
             <TabsContent value="standard">
+                <div className="text-right mb-4">
+                    <Button onClick={handleAddNew}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Rate List
+                    </Button>
+                </div>
                 <RateListTable rateLists={standardRateLists} onEdit={handleEdit} onDelete={handleDelete} />
             </TabsContent>
         </Tabs>
