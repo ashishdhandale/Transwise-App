@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, PlusCircle, Search, Trash2 } from 'lucide-react';
+import { FileText, PlusCircle, Search, Trash2, Printer, Loader2, Download } from 'lucide-react';
 import { getChallanData, saveChallanData, getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
-import type { Challan } from '@/lib/challan-data';
+import type { Challan, LrDetail } from '@/lib/challan-data';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LoadingSlip } from './loading-slip';
+import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import { getDrivers } from '@/lib/driver-data';
+import type { Driver } from '@/lib/types';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import React from 'react';
 
 const thClass = 'bg-primary/10 text-primary font-semibold whitespace-nowrap';
 const tdClass = 'whitespace-nowrap';
@@ -42,7 +52,7 @@ const statusColors: { [key: string]: string } = {
   Finalized: 'text-green-600 border-green-500/80',
 };
 
-const ChallanTable = ({ title, challans, onDelete }: { title: string; challans: Challan[], onDelete?: (challanId: string) => void }) => (
+const ChallanTable = ({ title, challans, onDelete, onReprint }: { title: string; challans: Challan[], onDelete?: (challanId: string) => void, onReprint?: (challan: Challan) => void }) => (
   <Card>
     <CardHeader>
       <CardTitle className="font-headline">{title}</CardTitle>
@@ -83,6 +93,11 @@ const ChallanTable = ({ title, challans, onDelete }: { title: string; challans: 
                     <Button variant="outline" size="sm" asChild>
                         <Link href={`/company/challan/new?challanId=${challan.challanId}`}>View/Edit</Link>
                     </Button>
+                    {onReprint && (
+                        <Button variant="outline" size="sm" className="ml-2" onClick={() => onReprint(challan)}>
+                            <Printer className="mr-2 h-4 w-4" /> Reprint
+                        </Button>
+                    )}
                     {onDelete && (
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -125,8 +140,19 @@ export function ChallanDashboard() {
   const [allChallans, setAllChallans] = useState<Challan[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+  
+  const printRef = React.useRef<HTMLDivElement>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<{ challan: Challan, lrDetails: LrDetail[] } | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
 
-  const loadChallanData = () => {
+
+  const loadChallanData = async () => {
+      const profile = await getCompanyProfile();
+      setCompanyProfile(profile);
+      setDrivers(getDrivers());
       setAllChallans(getChallanData());
   }
 
@@ -165,38 +191,114 @@ export function ChallanDashboard() {
     });
   };
 
+  const handleReprintChallan = (challan: Challan) => {
+    const lrDetails = getLrDetailsData().filter(lr => lr.challanId === challan.challanId);
+    setPreviewData({ challan, lrDetails });
+    setIsPreviewOpen(true);
+  };
+  
+  const handleDownloadPdf = async () => {
+    const input = printRef.current;
+    if (!input || !previewData) return;
+
+    setIsDownloading(true);
+
+    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+    });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgProps = pdf.getImageProperties(imgData);
+    const ratio = imgProps.height / imgProps.width;
+    const imgWidth = pdfWidth - 20;
+    const imgHeight = imgWidth * ratio;
+
+    let height = imgHeight;
+    let position = 10;
+    
+    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+    height -= pdfHeight;
+
+    while (height > 0) {
+        position = height - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        height -= pdfHeight;
+    }
+
+    pdf.save(`challan-${previewData.challan.challanId}.pdf`);
+    setIsDownloading(false);
+  };
+
 
   const pendingChallans = allChallans.filter(c => c.status === 'Pending' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
   const dispatchedChallans = allChallans.filter(c => c.status === 'Finalized' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
 
   return (
-    <main className="flex-1 p-4 md:p-6 bg-secondary/30">
-      <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-          <FileText className="h-8 w-8" />
-          Challan Management
-        </h1>
-        <div className="flex items-center gap-4">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by Challan or Vehicle No..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button asChild>
-                <Link href="/company/challan/new">
-                    <PlusCircle className="mr-2 h-4 w-4" /> New Dispatch Challan
-                </Link>
-            </Button>
+    <>
+      <main className="flex-1 p-4 md:p-6 bg-secondary/30">
+        <header className="mb-4 flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
+            <FileText className="h-8 w-8" />
+            Challan Management
+          </h1>
+          <div className="flex items-center gap-4">
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by Challan or Vehicle No..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Button asChild>
+                  <Link href="/company/challan/new">
+                      <PlusCircle className="mr-2 h-4 w-4" /> New Dispatch Challan
+                  </Link>
+              </Button>
+          </div>
+        </header>
+        <div className="space-y-6">
+          <ChallanTable title="Pending for Dispatch" challans={pendingChallans} onDelete={handleDeleteTempChallan} />
+          <ChallanTable title="Dispatched Challans" challans={dispatchedChallans} onReprint={handleReprintChallan} />
         </div>
-      </header>
-      <div className="space-y-6">
-        <ChallanTable title="Pending for Dispatch" challans={pendingChallans} onDelete={handleDeleteTempChallan} />
-        <ChallanTable title="Dispatched Challans" challans={dispatchedChallans} />
-      </div>
-    </main>
+      </main>
+
+      {previewData && companyProfile && (
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>
+                        Print Preview: {previewData.challan.challanId}
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
+                    <div ref={printRef} className="bg-white">
+                        <LoadingSlip 
+                            challan={previewData.challan} 
+                            lrDetails={previewData.lrDetails} 
+                            profile={companyProfile}
+                            driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
+                            remark={previewData.challan.remark || ''}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="secondary" onClick={() => setIsPreviewOpen(false)}>Close</Button>
+                    <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                        Download PDF
+                    </Button>
+                    <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
