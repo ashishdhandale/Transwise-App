@@ -337,7 +337,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href="/company/master/vehicle" size="sm" isActive={pathname === '/company/master/vehicle'} tooltip="Vehicles"><Truck />Vehicles</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton href="/company/master/rate-list" size="sm" isActive={pathname === '/company/master/rate-list'} tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>
+                <SidebarMenuButton href="/company/master/rate-list" size="sm" isActive={pathname.startsWith('/company/master/rate-list') || pathname.startsWith('/company/master/quotation')} tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>

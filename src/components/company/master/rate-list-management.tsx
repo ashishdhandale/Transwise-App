@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -32,7 +33,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
@@ -116,20 +116,27 @@ export function RateListManagement() {
   return (
     <Card>
        <CardHeader>
-            <CardTitle className="font-headline">Manage Rate Lists</CardTitle>
+            <CardTitle className="font-headline">Manage Quotations / Rate Lists</CardTitle>
             <div className="flex flex-row items-center justify-between pt-4">
                 <div className="relative w-full max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search by rate list name..."
+                        placeholder="Search by name..."
                         className="pl-8"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button onClick={handleAddNew}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Rate List
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button asChild>
+                        <Link href="/company/master/quotation/new">
+                            <PlusCircle className="mr-2 h-4 w-4" /> New Quotation
+                        </Link>
+                    </Button>
+                    <Button onClick={handleAddNew} variant="outline">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Rate List
+                    </Button>
+                </div>
             </div>
       </CardHeader>
       <CardContent>
@@ -137,7 +144,7 @@ export function RateListManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className={thClass}>Rate List Name</TableHead>
+                  <TableHead className={thClass}>Name</TableHead>
                   <TableHead className={thClass}>Associations &amp; Rates</TableHead>
                   <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
                 </TableRow>
