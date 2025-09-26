@@ -168,26 +168,17 @@ export interface VehicleMaster {
 
 export type RateOnType = 'Chg.wt' | 'Act.wt' | 'Quantity' | 'Fixed';
 
-export interface ChargeValue {
+export interface StationRate {
+    fromStation: string;
+    toStation: string;
     rate: number;
     rateOn: RateOnType;
 }
 
-export interface StationRate {
-    fromStation: string;
-    toStation: string;
-    charges: {
-        baseRate: ChargeValue;
-        [key: string]: ChargeValue | undefined;
-    };
-}
-
 export interface ItemRate {
     itemId: string;
-    charges: {
-        baseRate: ChargeValue;
-        [key: string]: ChargeValue | undefined;
-    };
+    rate: number;
+    rateOn: RateOnType;
 }
 
 export interface RateList {
@@ -200,3 +191,5 @@ export interface RateList {
   stationRates: StationRate[];
   itemRates: ItemRate[];
 }
+
+    

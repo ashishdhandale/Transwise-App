@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, PlusCircle, Save } from 'lucide-react';
+import { Trash2, PlusCircle, Save, Printer, Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { City, Customer, Item, RateList, RateOnType, StationRate } from '@/lib/types';
 import { getCities } from '@/lib/city-data';
@@ -27,11 +27,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { saveRateLists, getRateLists } from '@/lib/rate-list-data';
 import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PrintableQuotation } from './printable-quotation';
+import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const rateOnOptions: { label: string; value: RateOnType }[] = [
-    { label: 'Charge Wt.', value: 'Chg.wt' },
-    { label: 'Actual Wt.', value: 'Act.wt' },
+    { label: 'Chg. Wt.', value: 'Chg.wt' },
+    { label: 'Act. Wt.', value: 'Act.wt' },
     { label: 'Quantity', value: 'Quantity' },
+    { label: 'Fixed', value: 'Fixed' },
 ];
 
 interface QuotationItem extends StationRate {
@@ -53,6 +59,7 @@ export function NewQuotationForm() {
     const [cities, setCities] = useState<City[]>([]);
     const [masterItems, setMasterItems] = useState<Item[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     
     // Current item entry
     const [fromStation, setFromStation] = useState<string | undefined>();
@@ -62,19 +69,36 @@ export function NewQuotationForm() {
     const [rate, setRate] = useState<number | ''>('');
     const [rateOn, setRateOn] = useState<RateOnType>('Chg.wt');
 
+    // Preview Dialog
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [savedQuotationData, setSavedQuotationData] = useState<{ party?: Customer, items: QuotationItem[] } | null>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const printRef = useRef<HTMLDivElement>(null);
+
     const { toast } = useToast();
     const router = useRouter();
 
 
     useEffect(() => {
-        setCities(getCities());
-        setMasterItems(getItems());
-        setCustomers(getCustomers());
+        async function loadData() {
+            setCities(getCities());
+            setMasterItems(getItems());
+            setCustomers(getCustomers());
+            const profile = await getCompanyProfile();
+            setCompanyProfile(profile);
+
+            const allRateLists = getRateLists();
+            const lastQuoteNo = allRateLists
+                .filter(rl => rl.name.startsWith('Quotation for'))
+                .length;
+            setQuotationNo(String(lastQuoteNo + 1).padStart(4, '0'));
+        }
+        loadData();
     }, []);
     
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name, value: c.name })), [cities]);
     const itemOptions = useMemo(() => masterItems.map(i => ({ label: i.name, value: i.name })), [masterItems]);
-    const customerOptions = useMemo(() => [{label: 'Default Quote', value: 'Default Quote'}, ...customers.map(c => ({ label: c.name, value: c.name }))], [customers]);
+    const customerOptions = useMemo(() => [{label: 'Default Rate List', value: 'Default Rate List'}, ...customers.map(c => ({ label: c.name, value: c.name }))], [customers]);
 
     const handleAddToList = () => {
         if (!fromStation || !toStation || rate === '') {
@@ -97,7 +121,6 @@ export function NewQuotationForm() {
     };
     
     const resetEntryFields = () => {
-        // Don't reset From and To station
         setItemName(undefined);
         setDescription('');
         setRate('');
@@ -106,12 +129,12 @@ export function NewQuotationForm() {
     
     const handleSaveQuotation = () => {
         if (!partyName) {
-            toast({ title: 'Party Name Required', description: 'Please select a party name for this quotation.', variant: 'destructive' });
+            toast({ title: 'Party Name Required', description: 'Please select a party name for this quotation.', variant: "destructive" });
             return;
         }
 
         if (items.length === 0) {
-            toast({ title: 'No Items', description: 'Please add at least one item to the quotation.', variant: 'destructive' });
+            toast({ title: 'No Items', description: 'Please add at least one item to the quotation.', variant: "destructive" });
             return;
         }
         
@@ -119,10 +142,10 @@ export function NewQuotationForm() {
         
         const newRateList: Omit<RateList, 'id'> = {
             name: `Quotation for ${partyName} - ${new Date().toLocaleDateString()}`,
-            isStandard: partyName === 'Default Quote',
+            isStandard: partyName === 'Default Rate List',
             customerIds: customer ? [customer.id] : [],
             stationRates: items.map(({ fromStation, toStation, rate, rateOn }) => ({ fromStation, toStation, rate, rateOn })),
-            itemRates: [], // This could be extended to support item-specific rates in the quotation form
+            itemRates: [],
         };
 
         const allRateLists = getRateLists();
@@ -130,9 +153,34 @@ export function NewQuotationForm() {
         
         saveRateLists([...allRateLists, { id: newId, ...newRateList }]);
         
+        setSavedQuotationData({ party: customer, items });
+        setIsPreviewOpen(true);
+        
         toast({ title: "Quotation Saved", description: "The new quotation has been saved as a Rate List."});
-        router.push('/company/master/rate-list');
-    }
+    };
+
+    const handleDownloadPdf = async () => {
+        const input = printRef.current;
+        if (!input) return;
+
+        setIsDownloading(true);
+
+        const canvas = await html2canvas(input, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgProps= pdf.getImageProperties(imgData);
+        const imgWidth = imgProps.width;
+        const imgHeight = imgProps.height;
+        const ratio = imgWidth / imgHeight;
+        const finalImgWidth = pdfWidth - 20;
+        const finalImgHeight = finalImgWidth / ratio;
+        
+        pdf.addImage(imgData, 'PNG', 10, 10, finalImgWidth, finalImgHeight);
+        pdf.save(`quotation-${quotationNo}.pdf`);
+        setIsDownloading(false);
+    };
 
     return (
         <div className="space-y-4">
@@ -181,14 +229,16 @@ export function NewQuotationForm() {
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-dashed grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto_auto] gap-4 items-end">
-                            <div>
-                                <Label>Item Name</Label>
-                                <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
-                            </div>
-                             <div>
-                                <Label>Description</Label>
-                                <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional item description"/>
+                        <div className="p-4 border-t border-dashed grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-4 items-end">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <Label>Item Name</Label>
+                                    <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
+                                </div>
+                                <div>
+                                    <Label>Description</Label>
+                                    <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional"/>
+                                </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
@@ -205,7 +255,7 @@ export function NewQuotationForm() {
                                     </Select>
                                 </div>
                             </div>
-                            <Button onClick={handleAddToList}><PlusCircle className="mr-2 h-4 w-4" /> Add Item to Route</Button>
+                            <Button onClick={handleAddToList} className="h-10"><PlusCircle className="mr-2 h-4 w-4" /> Add Item to Route</Button>
                         </div>
                      </div>
 
@@ -259,6 +309,42 @@ export function NewQuotationForm() {
                     <Save className="mr-2 h-4 w-4"/> Save Quotation
                 </Button>
             </div>
+
+            {savedQuotationData && (
+                <Dialog open={isPreviewOpen} onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        router.push('/company/master/rate-list');
+                    }
+                    setIsPreviewOpen(isOpen);
+                }}>
+                    <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>Quotation Saved & Ready to Print</DialogTitle>
+                        </DialogHeader>
+                        <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
+                            <div ref={printRef}>
+                               <PrintableQuotation 
+                                    quotationNo={quotationNo}
+                                    quotationDate={quotationDate!}
+                                    party={savedQuotationData.party}
+                                    items={savedQuotationData.items}
+                                    profile={companyProfile}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                             <Button variant="secondary" onClick={() => router.push('/company/master/rate-list')}>Close & Exit</Button>
+                            <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                                Download PDF
+                            </Button>
+                            <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     )
 }
+
+    
