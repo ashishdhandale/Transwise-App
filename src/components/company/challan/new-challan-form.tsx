@@ -129,9 +129,7 @@ export function NewChallanForm() {
                 setInStockLrs(inStock);
             }
         } else {
-            // For a brand new challan, we don't assign a permanent ID yet.
-            // A temporary ID will be created on the first save action if needed.
-            setChallanId(''); 
+            setChallanId(`TEMP-CHLN-${Date.now()}`); 
             setInStockLrs(allBookings.filter(b => b.status === 'In Stock'));
             setAddedLrs([]);
 
@@ -337,7 +335,7 @@ export function NewChallanForm() {
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                     <div className="space-y-1">
                         <Label>Challan ID</Label>
-                        <Input value={challanId || 'Will be generated upon finalization'} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
+                        <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
                     </div>
                     <div className="space-y-1">
                         <Label>Dispatch Date</Label>
