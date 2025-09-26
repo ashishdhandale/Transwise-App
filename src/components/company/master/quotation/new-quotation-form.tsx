@@ -32,7 +32,6 @@ const rateOnOptions: { label: string; value: RateOnType }[] = [
     { label: 'Charge Wt.', value: 'Chg.wt' },
     { label: 'Actual Wt.', value: 'Act.wt' },
     { label: 'Quantity', value: 'Quantity' },
-    { label: 'Fixed', value: 'Fixed' },
 ];
 
 interface QuotationItem extends StationRate {
@@ -167,10 +166,10 @@ export function NewQuotationForm() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Quotation Items Details</CardTitle>
+                    <CardTitle>Quotation Items</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <div className="p-4 border rounded-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                     <div className="p-4 border rounded-md grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_1.5fr_auto] gap-4 items-end">
                         <div>
                             <Label>From Station</Label>
                             <Combobox options={cityOptions} value={fromStation} onChange={setFromStation} placeholder="From..."/>
@@ -183,34 +182,24 @@ export function NewQuotationForm() {
                             <Label>Item Name</Label>
                             <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
                         </div>
-                         <div>
-                            <Label>Description</Label>
-                            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Item description" />
-                        </div>
-                        <div className="border border-dashed rounded-md p-2">
-                             <Label>Rate</Label>
-                             <div className="flex gap-2 items-center">
+                        <div className="grid grid-cols-2 gap-2">
+                             <div>
+                                <Label>Rate</Label>
                                 <Input type="number" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
+                             </div>
+                             <div>
+                                <Label>Rate On</Label>
                                 <Select value={rateOn} onValueChange={(v) => setRateOn(v as RateOnType)}>
-                                    <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                              </div>
                         </div>
+                         <Button onClick={handleAddToList}>Add</Button>
                      </div>
-                     <div className="flex justify-end gap-2 mt-4">
-                        <Button onClick={handleAddToList}>Add to list</Button>
-                        <Button variant="outline" onClick={resetEntryFields}>Reset</Button>
-                     </div>
-                </CardContent>
-            </Card>
-            
-             <Card>
-                <CardHeader><CardTitle>Quotation Items</CardTitle></CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto border rounded-md">
+                     <div className="mt-4 overflow-x-auto border rounded-md">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -218,8 +207,7 @@ export function NewQuotationForm() {
                                     <TableHead>From</TableHead>
                                     <TableHead>To</TableHead>
                                     <TableHead>Item</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead>Base Rate</TableHead>
+                                    <TableHead>Rate</TableHead>
                                     <TableHead>Action</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -230,7 +218,6 @@ export function NewQuotationForm() {
                                         <TableCell>{item.fromStation}</TableCell>
                                         <TableCell>{item.toStation}</TableCell>
                                         <TableCell>{item.itemName}</TableCell>
-                                        <TableCell>{item.description}</TableCell>
                                         <TableCell>{item.rate} / {rateOnOptions.find(o => o.value === item.rateOn)?.label}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setItems(prev => prev.filter(p => p.id !== item.id))}>
@@ -241,7 +228,7 @@ export function NewQuotationForm() {
                                 ))}
                                 {items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">No items added to the quotation yet.</TableCell>
+                                        <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No items added to the quotation yet.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
