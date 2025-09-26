@@ -1,15 +1,21 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense } from 'react';
+import DashboardLayout from '../../(dashboard)/layout';
+import { ChallanDashboard } from '@/components/company/challan/challan-dashboard';
 
-export default function ChallanListRootPage() {
-  const router = useRouter();
+function ChallanPage() {
+  return (
+    <DashboardLayout>
+      <ChallanDashboard />
+    </DashboardLayout>
+  );
+}
 
-  useEffect(() => {
-    // The login page is at the root path '/'
-    router.replace('/');
-  }, [router]);
-
-  return null;
+export default function ChallanRootPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ChallanPage />
+    </Suspense>
+  );
 }

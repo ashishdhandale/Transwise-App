@@ -1,9 +1,54 @@
+export interface ChallanSummary {
+  grandTotal: number;
+  totalTopayAmount: number;
+  commission: number;
+  labour: number;
+  crossing: number;
+  carting: number;
+  balanceTruckHire: number;
+  debitCreditAmount: number;
+}
 
-// This file has been cleared to start the challan feature from scratch.
-// Types and data fetching logic will be re-added as we build the feature.
+export interface Challan {
+  challanId: string;
+  dispatchDate: string;
+  challanType: 'Dispatch' | 'Inward';
+  status: 'Pending' | 'Finalized';
+  vehicleNo: string;
+  driverName: string;
+  fromStation: string;
+  toStation: string;
+  dispatchToParty: string;
+  totalLr: number;
+  totalPackages: number;
+  totalItems: number;
+  totalActualWeight: number;
+  totalChargeWeight: number;
+  vehicleHireFreight: number;
+  advance: number;
+  balance: number;
+  senderId: string;
+  inwardId: string;
+  inwardDate: string;
+  receivedFromParty: string;
+  summary: ChallanSummary;
+}
 
-export interface Challan {}
-export interface LrDetail {}
+export interface LrDetail {
+  challanId: string;
+  lrNo: string;
+  lrType: string;
+  sender: string;
+  receiver: string;
+  from: string;
+  to: string;
+  bookingDate: string;
+  itemDescription: string;
+  quantity: number;
+  actualWeight: number;
+  chargeWeight: number;
+  grandTotal: number;
+}
 
 const CHALLAN_DATA_KEY = 'transwise_challan_data';
 const LR_DETAILS_KEY = 'transwise_lr_details_data';
