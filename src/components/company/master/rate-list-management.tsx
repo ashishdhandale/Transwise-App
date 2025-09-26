@@ -151,8 +151,6 @@ export function RateListManagement() {
                           {countBadge(list.customerIds?.length, 'Customer', 'Customers')}
                           {countBadge(list.stationRates?.length, 'Station Rule', 'Station Rules')}
                           {countBadge(list.itemRates?.length, 'Item Rule', 'Item Rules')}
-                          {countBadge(list.kmRates?.length, 'KM Rule', 'KM Rules')}
-                          {countBadge(list.truckRates?.length, 'Truck Rule', 'Truck Rules')}
                        </div>
                     </TableCell>
                     <TableCell className={cn(tdClass, "text-right")}>
@@ -207,7 +205,6 @@ export function RateListManagement() {
           onSave={handleSave}
           rateList={currentRateList}
           cities={cities}
-          vehicles={vehicles}
           items={items}
           customers={customers}
         />

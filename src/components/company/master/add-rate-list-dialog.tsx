@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { RateList, City, VehicleMaster, Customer, Item } from '@/lib/types';
+import type { RateList, City, VehicleMaster, Customer, Item, RateOnType } from '@/lib/types';
 import { Trash2, PlusCircle } from 'lucide-react';
 import { Combobox } from '@/components/ui/combobox';
 import {
@@ -32,27 +32,25 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const rateOnOptions: { label: string, value: RateOnType }[] = [
+    { label: 'Charge Wt.', value: 'Chg.wt' },
+    { label: 'Actual Wt.', value: 'Act.wt' },
+    { label: 'Quantity', value: 'Quantity' },
+];
 
 const stationRateSchema = z.object({
     fromStation: z.string().min(1),
     toStation: z.string().min(1),
     rate: z.coerce.number().min(0),
+    rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity']),
 });
 
 const itemRateSchema = z.object({
     itemId: z.string().min(1),
     rate: z.coerce.number().min(0),
-});
-
-const kmRateSchema = z.object({
-    fromKm: z.coerce.number().min(0),
-    toKm: z.coerce.number().min(0),
-    ratePerKm: z.coerce.number().min(0),
-});
-
-const truckRateSchema = z.object({
-    truckType: z.string().min(1),
-    rate: z.coerce.number().min(0),
+    rateOn: z.enum(['Chg.wt', 'Act.wt', 'Quantity']),
 });
 
 const rateListSchema = z.object({
@@ -60,8 +58,6 @@ const rateListSchema = z.object({
   customerIds: z.array(z.number()),
   stationRates: z.array(stationRateSchema),
   itemRates: z.array(itemRateSchema),
-  kmRates: z.array(kmRateSchema),
-  truckRates: z.array(truckRateSchema),
 });
 
 type RateListFormValues = z.infer<typeof rateListSchema>;
@@ -72,12 +68,11 @@ interface AddRateListDialogProps {
     onSave: (rateListData: Omit<RateList, 'id'>) => boolean;
     rateList?: RateList | null;
     cities: City[];
-    vehicles: VehicleMaster[];
     items: Item[];
     customers: Customer[];
 }
 
-export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, cities, vehicles, items, customers }: AddRateListDialogProps) {
+export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, cities, items, customers }: AddRateListDialogProps) {
     const { toast } = useToast();
 
     const form = useForm<RateListFormValues>({
@@ -87,15 +82,11 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
             customerIds: [],
             stationRates: [],
             itemRates: [],
-            kmRates: [],
-            truckRates: [],
         },
     });
     
     const { fields: stationFields, append: appendStation, remove: removeStation } = useFieldArray({ control: form.control, name: "stationRates" });
     const { fields: itemFields, append: appendItem, remove: removeItem } = useFieldArray({ control: form.control, name: "itemRates" });
-    const { fields: kmFields, append: appendKm, remove: removeKm } = useFieldArray({ control: form.control, name: "kmRates" });
-    const { fields: truckFields, append: appendTruck, remove: removeTruck } = useFieldArray({ control: form.control, name: "truckRates" });
     
     useEffect(() => {
         if (rateList) {
@@ -104,17 +95,13 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                 customerIds: rateList.customerIds || [],
                 stationRates: rateList.stationRates || [],
                 itemRates: rateList.itemRates || [],
-                kmRates: rateList.kmRates || [],
-                truckRates: rateList.truckRates || [],
             });
         } else {
             form.reset({
                 name: '',
                 customerIds: [],
-                stationRates: [{ fromStation: '', toStation: '', rate: 0 }],
-                itemRates: [{ itemId: '', rate: 0 }],
-                kmRates: [{ fromKm: 0, toKm: 0, ratePerKm: 0 }],
-                truckRates: [{ truckType: '', rate: 0 }],
+                stationRates: [{ fromStation: '', toStation: '', rate: 0, rateOn: 'Chg.wt' }],
+                itemRates: [{ itemId: '', rate: 0, rateOn: 'Chg.wt' }],
             });
         }
     }, [rateList, isOpen, form]);
@@ -128,7 +115,6 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
     };
 
     const cityOptions = cities.map(c => ({ label: c.name, value: c.name }));
-    const vehicleTypeOptions = [...new Set(vehicles.map(v => v.vehicleType))].map(vt => ({ label: vt, value: vt }));
     const itemOptions = items.map(i => ({ label: i.name, value: i.id.toString() }));
 
     return (
@@ -158,8 +144,6 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                 <TabsTrigger value="associations">Associations</TabsTrigger>
                                 <TabsTrigger value="station">Station-wise</TabsTrigger>
                                 <TabsTrigger value="item">Item-wise</TabsTrigger>
-                                <TabsTrigger value="km">KM-wise</TabsTrigger>
-                                <TabsTrigger value="truck">Truck-wise</TabsTrigger>
                             </TabsList>
                             <TabsContent value="associations" className="p-1">
                                 <FormField
@@ -205,7 +189,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                             </TabsContent>
                             <TabsContent value="station">
                                 {stationFields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end mb-2">
+                                    <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-end mb-2">
                                         <FormField control={form.control} name={`stationRates.${index}.fromStation`} render={({ field }) => (
                                             <FormItem><FormLabel>From</FormLabel><Combobox options={cityOptions} {...field} placeholder="From Station..."/></FormItem>
                                         )} />
@@ -215,55 +199,44 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                         <FormField control={form.control} name={`stationRates.${index}.rate`} render={({ field }) => (
                                             <FormItem><FormLabel>Rate</FormLabel><Input type="number" {...field} /></FormItem>
                                         )} />
+                                         <FormField control={form.control} name={`stationRates.${index}.rateOn`} render={({ field }) => (
+                                            <FormItem><FormLabel>Rate On</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            </FormItem>
+                                        )} />
                                         <Button type="button" variant="ghost" size="icon" onClick={() => removeStation(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                     </div>
                                 ))}
-                                <Button type="button" size="sm" variant="outline" onClick={() => appendStation({fromStation: '', toStation: '', rate: 0})}><PlusCircle className="mr-2 h-4 w-4" />Add Station Rate</Button>
+                                <Button type="button" size="sm" variant="outline" onClick={() => appendStation({fromStation: '', toStation: '', rate: 0, rateOn: 'Chg.wt'})}><PlusCircle className="mr-2 h-4 w-4" />Add Station Rate</Button>
                             </TabsContent>
                              <TabsContent value="item">
                                 {itemFields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-[2fr_1fr_auto] gap-2 items-end mb-2">
+                                    <div key={field.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-end mb-2">
                                         <FormField control={form.control} name={`itemRates.${index}.itemId`} render={({ field }) => (
                                             <FormItem><FormLabel>Item</FormLabel><Combobox options={itemOptions} {...field} placeholder="Select item..."/></FormItem>
                                         )} />
                                         <FormField control={form.control} name={`itemRates.${index}.rate`} render={({ field }) => (
                                             <FormItem><FormLabel>Rate</FormLabel><Input type="number" {...field} /></FormItem>
                                         )} />
+                                         <FormField control={form.control} name={`itemRates.${index}.rateOn`} render={({ field }) => (
+                                            <FormItem><FormLabel>Rate On</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {rateOnOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            </FormItem>
+                                        )} />
                                         <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                     </div>
                                 ))}
-                                <Button type="button" size="sm" variant="outline" onClick={() => appendItem({itemId: '', rate: 0})}><PlusCircle className="mr-2 h-4 w-4" />Add Item Rate</Button>
-                            </TabsContent>
-                             <TabsContent value="km">
-                                {kmFields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end mb-2">
-                                        <FormField control={form.control} name={`kmRates.${index}.fromKm`} render={({ field }) => (
-                                            <FormItem><FormLabel>From (Km)</FormLabel><Input type="number" {...field} /></FormItem>
-                                        )} />
-                                        <FormField control={form.control} name={`kmRates.${index}.toKm`} render={({ field }) => (
-                                            <FormItem><FormLabel>To (Km)</FormLabel><Input type="number" {...field} /></FormItem>
-                                        )} />
-                                        <FormField control={form.control} name={`kmRates.${index}.ratePerKm`} render={({ field }) => (
-                                            <FormItem><FormLabel>Rate/Km</FormLabel><Input type="number" {...field} /></FormItem>
-                                        )} />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeKm(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                    </div>
-                                ))}
-                                <Button type="button" size="sm" variant="outline" onClick={() => appendKm({fromKm: 0, toKm: 0, ratePerKm: 0})}><PlusCircle className="mr-2 h-4 w-4" />Add KM Rate</Button>
-                            </TabsContent>
-                             <TabsContent value="truck">
-                                {truckFields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end mb-2">
-                                        <FormField control={form.control} name={`truckRates.${index}.truckType`} render={({ field }) => (
-                                            <FormItem><FormLabel>Truck Type</FormLabel><Combobox options={vehicleTypeOptions} {...field} placeholder="Select truck type..."/></FormItem>
-                                        )} />
-                                        <FormField control={form.control} name={`truckRates.${index}.rate`} render={({ field }) => (
-                                            <FormItem><FormLabel>Rate</FormLabel><Input type="number" {...field} /></FormItem>
-                                        )} />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeTruck(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                    </div>
-                                ))}
-                                <Button type="button" size="sm" variant="outline" onClick={() => appendTruck({truckType: '', rate: 0})}><PlusCircle className="mr-2 h-4 w-4" />Add Truck Rate</Button>
+                                <Button type="button" size="sm" variant="outline" onClick={() => appendItem({itemId: '', rate: 0, rateOn: 'Chg.wt'})}><PlusCircle className="mr-2 h-4 w-4" />Add Item Rate</Button>
                             </TabsContent>
                         </Tabs>
 

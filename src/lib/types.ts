@@ -166,10 +166,13 @@ export interface VehicleMaster {
   permitDetails?: string;
 }
 
+export type RateOnType = 'Chg.wt' | 'Act.wt' | 'Quantity';
+
 export interface StationRate {
   fromStation: string;
   toStation: string;
   rate: number;
+  rateOn: RateOnType;
 }
 
 export interface KmRate {
@@ -186,6 +189,7 @@ export interface TruckRate {
 export interface ItemRate {
   itemId: string;
   rate: number;
+  rateOn: RateOnType;
 }
 
 export interface RateList {
@@ -195,7 +199,7 @@ export interface RateList {
   customerIds: number[];
   // Rate structures
   stationRates: StationRate[];
-  kmRates: KmRate[];
-  truckRates: TruckRate[];
+  kmRates?: KmRate[];
+  truckRates?: TruckRate[];
   itemRates: ItemRate[];
 }

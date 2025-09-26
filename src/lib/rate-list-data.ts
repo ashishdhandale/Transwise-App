@@ -10,18 +10,12 @@ const initialRateLists: RateList[] = [
         name: 'Standard Rate List',
         customerIds: [],
         stationRates: [
-            { fromStation: 'Nagpur', toStation: 'Pune', rate: 1000 },
-            { fromStation: 'Nagpur', toStation: 'Mumbai', rate: 1200 },
+            { fromStation: 'Nagpur', toStation: 'Pune', rate: 12, rateOn: 'Chg.wt' },
+            { fromStation: 'Nagpur', toStation: 'Mumbai', rate: 15, rateOn: 'Chg.wt' },
         ],
-        kmRates: [
-            { fromKm: 0, toKm: 100, ratePerKm: 10 },
-            { fromKm: 101, toKm: 500, ratePerKm: 8 },
-        ],
-        truckRates: [
-            { truckType: '14 FT', rate: 5000 },
-            { truckType: '20 FT', rate: 8000 },
-        ],
-        itemRates: []
+        itemRates: [
+            { itemId: '1', rate: 100, rateOn: 'Quantity' }
+        ]
     }
 ];
 
