@@ -4,7 +4,7 @@
 import { Suspense } from 'react';
 import DashboardLayout from '../../../(dashboard)/layout';
 import { RateListManagement } from '@/components/company/master/rate-list-management';
-import { List } from 'lucide-react';
+import { FileSignature } from 'lucide-react';
 import { BackButton } from '@/components/ui/back-button';
 
 
@@ -14,8 +14,8 @@ function RateListPage() {
         <header className="mb-4">
             <BackButton />
             <h1 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
-                <List className="h-8 w-8" />
-                Rate List Master
+                <FileSignature className="h-8 w-8" />
+                Quotation / Rate List Master
             </h1>
         </header>
         <RateListManagement />
