@@ -49,7 +49,7 @@ export function HistoryLogDisplay({ logs, isLoading, searchedId }: HistoryLogDis
       <Card className="flex h-64 items-center justify-center border-dashed">
         <div className="text-center text-muted-foreground">
           <Ship className="mx-auto h-12 w-12" />
-          <p className="mt-2 font-medium">Enter a GR or Tracking ID to see its history.</p>
+          <p className="mt-2 font-medium">Enter an LR or Tracking ID to see its history.</p>
         </div>
       </Card>
     );
@@ -70,7 +70,7 @@ export function HistoryLogDisplay({ logs, isLoading, searchedId }: HistoryLogDis
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-headline">
-          History for GR: <span className="text-primary font-bold">{logs.id}</span>
+          History for LR: <span className="text-primary font-bold">{logs.id}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -98,3 +98,5 @@ export function HistoryLogDisplay({ logs, isLoading, searchedId }: HistoryLogDis
     </Card>
   );
 }
+
+    

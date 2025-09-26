@@ -34,8 +34,8 @@ interface BookingDetailsSectionProps {
     onToStationChange: (station: City | null) => void;
     fromStation: City | null;
     toStation: City | null;
-    grNumber: string;
-    onGrNumberChange: (grNumber: string) => void;
+    lrNumber: string;
+    onLrNumberChange: (lrNumber: string) => void;
     bookingDate?: Date;
     onBookingDateChange: (date?: Date) => void;
     isEditMode: boolean;
@@ -55,8 +55,8 @@ export function BookingDetailsSection({
     onToStationChange,
     fromStation,
     toStation,
-    grNumber,
-    onGrNumberChange,
+    lrNumber,
+    onLrNumberChange,
     bookingDate,
     onBookingDateChange,
     isEditMode,
@@ -202,25 +202,25 @@ export function BookingDetailsSection({
     };
 
     const errorClass = 'border-red-500 ring-2 ring-red-500/50';
-    const isGrEditable = isOfflineMode || isEditMode;
+    const isLrEditable = isOfflineMode || isEditMode;
 
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                 <div className="space-y-1">
-                    <Label htmlFor="lrNo">GR Number</Label>
+                    <Label htmlFor="lrNo">LR Number</Label>
                     <Input 
                         id="lrNo" 
-                        value={grNumber}
-                        onChange={(e) => onGrNumberChange(e.target.value)}
+                        value={lrNumber}
+                        onChange={(e) => onLrNumberChange(e.target.value)}
                         className={cn(
                             'font-bold',
-                            !isGrEditable && 'text-red-600 border-red-300',
-                            isGrEditable && 'text-blue-600 border-blue-300',
-                            errors.grNumber && errorClass
+                            !isLrEditable && 'text-red-600 border-red-300',
+                            isLrEditable && 'text-blue-600 border-blue-300',
+                            errors.lrNumber && errorClass
                         )}
-                        readOnly={!isGrEditable || isViewOnly}
-                        placeholder={isGrEditable ? "Enter Manual GRN" : ""}
+                        readOnly={!isLrEditable || isViewOnly}
+                        placeholder={isLrEditable ? "Enter Manual LRN" : ""}
                     />
                 </div>
                 <div className="space-y-1">
@@ -314,3 +314,5 @@ export function BookingDetailsSection({
         </>
     );
 }
+
+    

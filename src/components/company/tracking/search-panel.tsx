@@ -53,7 +53,7 @@ export function SearchPanel({ onSearch }: SearchPanelProps) {
         <CardContent className="p-3 space-y-4">
              {/* Search By Number */}
             <div>
-                <Label htmlFor="search-id" className="font-semibold">GR Number or Tracking ID</Label>
+                <Label htmlFor="search-id" className="font-semibold">LR Number or Tracking ID</Label>
                 <Input 
                     id="search-id" 
                     placeholder="Enter ID"
@@ -124,3 +124,5 @@ export function SearchPanel({ onSearch }: SearchPanelProps) {
     </Card>
   );
 }
+
+    

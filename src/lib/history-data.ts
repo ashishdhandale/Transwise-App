@@ -18,7 +18,7 @@ export interface LogEntry {
 }
 
 export interface BookingHistory {
-  id: string; // This will be the GR Number (e.g., "CONAG01")
+  id: string; // This will be the LR Number (e.g., "CONAG01")
   logs: LogEntry[];
 }
 
@@ -39,16 +39,16 @@ export const getHistoryLogs = (): BookingHistory[] => {
 };
 
 // Function to add a new log entry
-export const addHistoryLog = (grNumber: string, action: LogEntry['action'], user: string, details?: string) => {
+export const addHistoryLog = (lrNumber: string, action: LogEntry['action'], user: string, details?: string) => {
   if (typeof window === 'undefined') return;
   
   const allHistory = getHistoryLogs();
-  const existingHistory = allHistory.find(h => h.id === grNumber);
+  const existingHistory = allHistory.find(h => h.id === lrNumber);
 
   const newLog: LogEntry = {
     timestamp: new Date().toLocaleString(),
     action,
-    details: details || `${action} for GR: ${grNumber}`,
+    details: details || `${action} for LR: ${lrNumber}`,
     user,
   };
 
@@ -57,7 +57,7 @@ export const addHistoryLog = (grNumber: string, action: LogEntry['action'], user
     existingHistory.logs.unshift(newLog);
   } else {
     allHistory.push({
-      id: grNumber,
+      id: lrNumber,
       logs: [newLog],
     });
   }
@@ -70,3 +70,5 @@ export const addHistoryLog = (grNumber: string, action: LogEntry['action'], user
 };
 
 export const historyData: BookingHistory[] = [];
+
+    

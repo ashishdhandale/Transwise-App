@@ -37,7 +37,7 @@ export function HistorySearch({ onSearch, isLoading }: HistorySearchProps) {
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter GR or Tracking ID..."
+            placeholder="Enter LR or Tracking ID..."
             className="flex-grow"
           />
           <Button onClick={handleSearchClick} disabled={isLoading || !searchId} className="w-full sm:w-auto">
@@ -53,3 +53,5 @@ export function HistorySearch({ onSearch, isLoading }: HistorySearchProps) {
     </Card>
   );
 }
+
+    

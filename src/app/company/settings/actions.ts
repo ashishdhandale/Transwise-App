@@ -9,7 +9,7 @@ let companyProfileRecord: CompanyProfileFormValues | null = null;
 
 const defaultProfile: CompanyProfileFormValues = {
     companyName: 'My Transwise Company',
-    grnPrefix: 'CONAG',
+    lrPrefix: 'CONAG',
     challanPrefix: 'CHLN',
     headOfficeAddress: '123 Logistics Lane, Transport City, 440001',
     officeAddress2: '',
@@ -57,3 +57,5 @@ export async function saveCompanyProfile(data: CompanyProfileFormValues): Promis
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
+
+    

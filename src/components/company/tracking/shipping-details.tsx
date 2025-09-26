@@ -33,7 +33,7 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
              <Card className="border-gray-300 w-full flex items-center justify-center min-h-96">
                 <div className="text-center text-muted-foreground">
                     <Search className="h-12 w-12 mx-auto" />
-                    <p className="mt-2 font-medium">Search for a GR Number or Tracking ID to see details</p>
+                    <p className="mt-2 font-medium">Search for an LR Number or Tracking ID to see details</p>
                     <p className="text-sm">The shipping and delivery details will appear here.</p>
                 </div>
             </Card>
@@ -152,3 +152,5 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
     </Card>
   );
 }
+
+    

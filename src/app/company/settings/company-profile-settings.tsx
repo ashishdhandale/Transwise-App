@@ -26,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
-  grnPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
+  lrPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
   challanPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
@@ -51,7 +51,7 @@ export function CompanyProfileSettings() {
         resolver: zodResolver(profileSchema),
         defaultValues: {
             companyName: '',
-            grnPrefix: '',
+            lrPrefix: '',
             challanPrefix: '',
             headOfficeAddress: '',
             officeAddress2: '',
@@ -154,14 +154,14 @@ export function CompanyProfileSettings() {
                     />
                     <FormField
                         control={form.control}
-                        name="grnPrefix"
+                        name="lrPrefix"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>GRN Prefix</FormLabel>
+                                <FormLabel>LR Prefix</FormLabel>
                                 <FormControl>
                                     <Input placeholder="e.g., CONAG" {...field} />
                                 </FormControl>
-                                 <FormDescription>Prefix for new GR numbers.</FormDescription>
+                                 <FormDescription>Prefix for new LR numbers.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -346,3 +346,5 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
+
+    
