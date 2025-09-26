@@ -10,6 +10,7 @@ let companyProfileRecord: CompanyProfileFormValues | null = null;
 const defaultProfile: CompanyProfileFormValues = {
     companyName: 'My Transwise Company',
     grnPrefix: 'CONAG',
+    challanPrefix: 'CHLN',
     headOfficeAddress: '123 Logistics Lane, Transport City, 440001',
     officeAddress2: '',
     city: 'Nagpur',

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, Search, Truck, User, MapPin, ArrowDown, ArrowUp, Save } from 'lucide-react';
+import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2 } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,13 +27,39 @@ import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { format } from 'date-fns';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { getDrivers } from '@/lib/driver-data';
+import { getVehicles } from '@/lib/vehicle-data';
+import { getCities } from '@/lib/city-data';
+import { Textarea } from '../ui/textarea';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { LoadingSlip } from './loading-slip';
+import React from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
-const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
-const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
-const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap px-2 py-1 h-9";
+
+const generateChallanId = (challans: Challan[], prefix: string): string => {
+    const relevantChallanIds = challans
+        .map(c => c.challanId)
+        .filter(id => id.startsWith(prefix));
+
+    if (relevantChallanIds.length === 0) {
+        return `${prefix}01`;
+    }
+
+    const lastSequence = relevantChallanIds
+        .map(id => parseInt(id.substring(prefix.length), 10))
+        .filter(num => !isNaN(num))
+        .reduce((max, current) => Math.max(max, current), 0);
+        
+    const newSequence = lastSequence + 1;
+    
+    return `${prefix}${String(newSequence).padStart(2, '0')}`;
+};
 
 export function NewChallanForm() {
     const [inStockLrs, setInStockLrs] = useState<Booking[]>([]);
@@ -49,6 +75,8 @@ export function NewChallanForm() {
     const [driverName, setDriverName] = useState<string | undefined>(undefined);
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
+    const [remark, setRemark] = useState('');
+
 
     // Master data
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
@@ -56,33 +84,65 @@ export function NewChallanForm() {
     const [cities, setCities] = useState<City[]>([]);
     
     const { toast } = useToast();
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
-    useEffect(() => {
-        async function loadInitialData() {
-            const profile = await getCompanyProfile();
-            setCompanyProfile(profile);
+    // PDF Preview state
+    const printRef = React.useRef<HTMLDivElement>(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewData, setPreviewData] = useState<{ challan: Challan, lrDetails: LrDetail[] } | null>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
+    
 
-            const allBookings = getBookings();
+    const loadInitialData = useCallback(async (existingChallanId?: string | null) => {
+        const profile = await getCompanyProfile();
+        setCompanyProfile(profile);
+
+        const allBookings = getBookings();
+        const allChallans = getChallanData();
+        const allCities = getCities();
+        
+        setVehicles(getVehicles());
+        setDrivers(getDrivers());
+        setCities(allCities);
+
+        if (existingChallanId) {
+            const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
+            const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
+            const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
+
+            if (existingChallan) {
+                setChallanId(existingChallan.challanId);
+                setDispatchDate(new Date(existingChallan.dispatchDate));
+                setVehicleNo(existingChallan.vehicleNo);
+                setDriverName(existingChallan.driverName);
+                setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
+                setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
+                setRemark(existingChallan.remark || '');
+
+                const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
+                const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
+                
+                setAddedLrs(added);
+                setInStockLrs(inStock);
+            }
+        } else {
+            const challanPrefix = profile?.challanPrefix || 'CHLN';
+            setChallanId(generateChallanId(allChallans, challanPrefix));
             setInStockLrs(allBookings.filter(b => b.status === 'In Stock'));
-
-            setChallanId(`CHLN-${Date.now()}`);
-
-            const savedVehicles = localStorage.getItem(LOCAL_STORAGE_KEY_VEHICLES);
-            if(savedVehicles) setVehicles(JSON.parse(savedVehicles));
-
-            const savedDrivers = localStorage.getItem(LOCAL_STORAGE_KEY_DRIVERS);
-            if(savedDrivers) setDrivers(JSON.parse(savedDrivers));
-            
-            const savedCities = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-            if(savedCities) setCities(JSON.parse(savedCities));
+            setAddedLrs([]);
 
             if(profile.city) {
-                const defaultStation = JSON.parse(savedCities || '[]').find((c: City) => c.name.toLowerCase() === profile.city.toLowerCase()) || null;
+                const defaultStation = allCities.find((c: City) => c.name.toLowerCase() === profile.city.toLowerCase()) || null;
                 setFromStation(defaultStation);
             }
         }
-        loadInitialData();
     }, []);
+
+    useEffect(() => {
+        const challanIdParam = searchParams.get('challanId');
+        loadInitialData(challanIdParam);
+    }, [searchParams, loadInitialData]);
 
     const handleAddToChallan = () => {
         const toAdd = inStockLrs.filter(lr => stockSelection.has(lr.trackingId));
@@ -105,7 +165,9 @@ export function NewChallanForm() {
         }
 
         const allChallans = getChallanData();
-        const newChallan: Challan = {
+        const existingChallanIndex = allChallans.findIndex(c => c.challanId === challanId);
+
+        const newChallanData: Challan = {
             challanId,
             dispatchDate: format(dispatchDate!, 'yyyy-MM-dd'),
             challanType: 'Dispatch',
@@ -120,16 +182,23 @@ export function NewChallanForm() {
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
             totalActualWeight: addedLrs.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
             totalChargeWeight: addedLrs.reduce((sum, b) => sum + b.chgWt, 0),
-            vehicleHireFreight: 0, advance: 0, balance: 0,
-            senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
+            vehicleHireFreight: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].vehicleHireFreight : 0, 
+            advance: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].advance : 0,
+            balance: existingChallanIndex !== -1 ? allChallans[existingChallanIndex].balance : 0,
+            senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark,
             summary: {
                 grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
                 totalTopayAmount: addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
                 commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0,
             }
         };
-
-        saveChallanData([...allChallans, newChallan]);
+        
+        if (existingChallanIndex !== -1) {
+            allChallans[existingChallanIndex] = newChallanData;
+        } else {
+            allChallans.push(newChallanData);
+        }
+        saveChallanData(allChallans);
 
         const newLrDetails: LrDetail[] = addedLrs.map(b => ({
             challanId,
@@ -139,14 +208,17 @@ export function NewChallanForm() {
             actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
             chargeWeight: b.chgWt, grandTotal: b.totalAmount
         }));
-
-        const allLrDetails = getLrDetailsData();
-        saveLrDetailsData([...allLrDetails, ...newLrDetails]);
+        
+        let allLrDetails = getLrDetailsData();
+        // Remove old details for this challan and add the new ones
+        allLrDetails = allLrDetails.filter(d => d.challanId !== challanId);
+        allLrDetails.push(...newLrDetails);
+        saveLrDetailsData(allLrDetails);
 
         const allBookings = getBookings();
         const updatedBookings = allBookings.map(b => {
             const wasAdded = addedLrs.some(addedLr => addedLr.trackingId === b.trackingId);
-            if (wasAdded) {
+            if (wasAdded && b.status !== 'In Transit') {
                 addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'System', `Dispatched via Challan ${challanId}`);
                 return { ...b, status: 'In Transit' as const };
             }
@@ -154,15 +226,52 @@ export function NewChallanForm() {
         });
         saveBookings(updatedBookings);
         
-        toast({ title: "Challan Finalized", description: `Challan ${challanId} has been created and LRs are now In Transit.` });
+        toast({ title: "Challan Finalized", description: `Challan ${challanId} has been saved.` });
         
-        // Reset form
-        setAddedLrs([]);
-        setInStockLrs(allBookings.filter(b => b.status === 'In Stock' && !addedLrs.some(alr => alr.trackingId === b.trackingId)));
-        setChallanId(`CHLN-${Date.now()}`);
-        setVehicleNo(undefined);
-        setDriverName(undefined);
-        setToStation(null);
+        setPreviewData({ challan: newChallanData, lrDetails: newLrDetails });
+        setIsPreviewOpen(true);
+    };
+    
+    const handlePrintAndClose = () => {
+        setIsPreviewOpen(false);
+        router.push('/company/challan');
+    };
+    
+    const handleDownloadPdf = async () => {
+        const input = printRef.current;
+        if (!input || !previewData) return;
+
+        setIsDownloading(true);
+
+        const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4',
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgProps = pdf.getImageProperties(imgData);
+        const ratio = imgProps.height / imgProps.width;
+        const imgWidth = pdfWidth - 20;
+        const imgHeight = imgWidth * ratio;
+
+        let height = imgHeight;
+        let position = 10;
+        
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        height -= pdfHeight;
+
+        while (height > 0) {
+            position = height - imgHeight + 10;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            height -= pdfHeight;
+        }
+
+        pdf.save(`challan-${previewData.challan.challanId}.pdf`);
+        setIsDownloading(false);
     };
 
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
@@ -216,7 +325,7 @@ export function NewChallanForm() {
                 <CardHeader>
                     <CardTitle>Challan Details</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                     <div className="space-y-1">
                         <Label>Challan ID</Label>
                         <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
@@ -234,8 +343,16 @@ export function NewChallanForm() {
                         <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
                     </div>
                      <div className="space-y-1">
+                        <Label>From Station</Label>
+                        <Combobox options={cityOptions} value={fromStation?.name} onChange={(val) => setFromStation(cities.find(c => c.name === val) || null)} placeholder="Select Origin..." />
+                    </div>
+                     <div className="space-y-1">
                         <Label>To Station</Label>
                         <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
+                    </div>
+                     <div className="md:col-span-2 lg:col-span-3 space-y-1">
+                        <Label>Remarks / Dispatch Note</Label>
+                        <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                     </div>
                 </CardContent>
             </Card>
@@ -266,7 +383,35 @@ export function NewChallanForm() {
             <div className="flex justify-end">
                 <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize & Save Challan</Button>
             </div>
+            
+            {previewData && companyProfile && (
+                <Dialog open={isPreviewOpen} onOpenChange={handlePrintAndClose}>
+                    <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>Challan Finalized: {previewData.challan.challanId}</DialogTitle>
+                        </DialogHeader>
+                        <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
+                            <div ref={printRef} className="bg-white">
+                                <LoadingSlip 
+                                    challan={previewData.challan} 
+                                    lrDetails={previewData.lrDetails} 
+                                    profile={companyProfile}
+                                    driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
+                                    remark={previewData.challan.remark}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="secondary" onClick={handlePrintAndClose}>Close</Button>
+                            <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                                Download PDF
+                            </Button>
+                            <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }
-
