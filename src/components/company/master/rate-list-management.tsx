@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -16,10 +17,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddRateListDialog } from './add-rate-list-dialog';
-import type { RateList, City, VehicleMaster } from '@/lib/types';
+import type { RateList, City, VehicleMaster, Item, Customer } from '@/lib/types';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import { getCities } from '@/lib/city-data';
 import { getVehicles } from '@/lib/vehicle-data';
+import { getItems } from '@/lib/item-data';
+import { getCustomers } from '@/lib/customer-data';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +36,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 const tdClass = "whitespace-nowrap";
@@ -41,6 +45,8 @@ export function RateListManagement() {
   const [rateLists, setRateLists] = useState<RateList[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentRateList, setCurrentRateList] = useState<RateList | null>(null);
@@ -51,6 +57,8 @@ export function RateListManagement() {
         setRateLists(getRateLists());
         setCities(getCities());
         setVehicles(getVehicles());
+        setItems(getItems());
+        setCustomers(getCustomers());
     } catch (error) {
       console.error("Failed to load master data", error);
     }
@@ -86,7 +94,7 @@ export function RateListManagement() {
   const handleSave = (rateListData: Omit<RateList, 'id'>): boolean => {
     let updatedRateLists;
     if (currentRateList) {
-      updatedRateLists = rateLists.map(list => (list.id === currentRateList.id ? { ...list, ...rateListData } : list));
+      updatedRateLists = rateLists.map(list => (list.id === currentRateList.id ? { id: list.id, ...rateListData } : list));
       toast({ title: 'Rate List Updated', description: `"${rateListData.name}" has been updated successfully.` });
     } else {
       const newRateList: RateList = {
@@ -100,6 +108,10 @@ export function RateListManagement() {
     setRateLists(updatedRateLists);
     return true;
   };
+  
+  const countBadge = (count: number, singular: string, plural: string) => (
+      count > 0 && <Badge variant="secondary">{count} {count === 1 ? singular : plural}</Badge>
+  );
 
   return (
     <Card>
@@ -126,9 +138,7 @@ export function RateListManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead className={thClass}>Rate List Name</TableHead>
-                  <TableHead className={thClass}>Station Rates</TableHead>
-                  <TableHead className={thClass}>KM Rates</TableHead>
-                  <TableHead className={thClass}>Truck Rates</TableHead>
+                  <TableHead className={thClass}>Associations &amp; Rates</TableHead>
                   <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -136,9 +146,15 @@ export function RateListManagement() {
                 {filteredRateLists.map((list) => (
                   <TableRow key={list.id}>
                     <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
-                    <TableCell className={cn(tdClass)}>{list.stationRates.length}</TableCell>
-                    <TableCell className={cn(tdClass)}>{list.kmRates.length}</TableCell>
-                    <TableCell className={cn(tdClass)}>{list.truckRates.length}</TableCell>
+                    <TableCell className={cn(tdClass)}>
+                       <div className="flex items-center gap-2 flex-wrap">
+                          {countBadge(list.customerIds?.length, 'Customer', 'Customers')}
+                          {countBadge(list.stationRates?.length, 'Station Rule', 'Station Rules')}
+                          {countBadge(list.itemRates?.length, 'Item Rule', 'Item Rules')}
+                          {countBadge(list.kmRates?.length, 'KM Rule', 'KM Rules')}
+                          {countBadge(list.truckRates?.length, 'Truck Rule', 'Truck Rules')}
+                       </div>
+                    </TableCell>
                     <TableCell className={cn(tdClass, "text-right")}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -192,6 +208,8 @@ export function RateListManagement() {
           rateList={currentRateList}
           cities={cities}
           vehicles={vehicles}
+          items={items}
+          customers={customers}
         />
     </Card>
   );

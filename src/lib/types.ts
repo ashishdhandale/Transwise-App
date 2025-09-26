@@ -183,10 +183,19 @@ export interface TruckRate {
   rate: number;
 }
 
+export interface ItemRate {
+  itemId: string;
+  rate: number;
+}
+
 export interface RateList {
   id: number;
   name: string;
+  // Associations
+  customerIds: number[];
+  // Rate structures
   stationRates: StationRate[];
   kmRates: KmRate[];
   truckRates: TruckRate[];
+  itemRates: ItemRate[];
 }

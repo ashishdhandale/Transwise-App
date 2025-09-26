@@ -1,4 +1,5 @@
 
+
 import type { RateList } from './types';
 
 const LOCAL_STORAGE_KEY = 'transwise_rate_lists';
@@ -7,6 +8,7 @@ const initialRateLists: RateList[] = [
     {
         id: 1,
         name: 'Standard Rate List',
+        customerIds: [],
         stationRates: [
             { fromStation: 'Nagpur', toStation: 'Pune', rate: 1000 },
             { fromStation: 'Nagpur', toStation: 'Mumbai', rate: 1200 },
@@ -18,7 +20,8 @@ const initialRateLists: RateList[] = [
         truckRates: [
             { truckType: '14 FT', rate: 5000 },
             { truckType: '20 FT', rate: 8000 },
-        ]
+        ],
+        itemRates: []
     }
 ];
 
