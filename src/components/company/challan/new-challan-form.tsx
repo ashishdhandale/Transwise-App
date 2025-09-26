@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -12,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2 } from 'lucide-react';
+import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2, Eye, X } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -157,28 +156,18 @@ export function NewChallanForm() {
         setAddedLrs(prev => prev.filter(lr => !addedSelection.has(lr.trackingId)));
         setAddedSelection(new Set());
     };
-    
-    const handleFinalizeChallan = () => {
-        if (!vehicleNo || !driverName || !toStation || addedLrs.length === 0) {
-            toast({ title: "Missing Information", description: "Please provide Vehicle, Driver, To Station and add at least one LR.", variant: "destructive" });
-            return;
+
+    const buildChallanObject = (status: 'Pending' | 'Finalized', newId?: string): { challan: Challan, lrDetails: LrDetail[] } | null => {
+        if (!vehicleNo || !driverName || !toStation) {
+            toast({ title: "Missing Information", description: "Vehicle, Driver, and To Station are required.", variant: "destructive" });
+            return null;
         }
 
-        const allChallans = getChallanData();
-        const existingChallanIndex = allChallans.findIndex(c => c.challanId === challanId);
-        
-        let newChallanId = challanId;
-        // If it's a new or temporary challan, generate a permanent ID
-        if (!challanId || challanId.startsWith('TEMP-')) {
-            const challanPrefix = companyProfile?.challanPrefix || 'CHLN';
-            newChallanId = generatePermanentChallanId(allChallans, challanPrefix);
-        }
-
-        const newChallanData: Challan = {
-            challanId: newChallanId,
+         const challanDataObject: Challan = {
+            challanId: newId || challanId,
             dispatchDate: format(dispatchDate!, 'yyyy-MM-dd'),
             challanType: 'Dispatch',
-            status: 'Finalized',
+            status,
             vehicleNo,
             driverName,
             fromStation: fromStation?.name || companyProfile?.city || 'N/A',
@@ -189,9 +178,9 @@ export function NewChallanForm() {
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
             totalActualWeight: addedLrs.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
             totalChargeWeight: addedLrs.reduce((sum, b) => sum + b.chgWt, 0),
-            vehicleHireFreight: (existingChallanIndex !== -1 ? allChallans[existingChallanIndex].vehicleHireFreight : 0), 
-            advance: (existingChallanIndex !== -1 ? allChallans[existingChallanIndex].advance : 0),
-            balance: (existingChallanIndex !== -1 ? allChallans[existingChallanIndex].balance : 0),
+            vehicleHireFreight: 0, 
+            advance: 0,
+            balance: 0,
             senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark: remark || '',
             summary: {
                 grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
@@ -199,33 +188,99 @@ export function NewChallanForm() {
                 commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0,
             }
         };
-        
-        if (existingChallanIndex !== -1) {
-            allChallans[existingChallanIndex] = newChallanData;
-        } else {
-            allChallans.push(newChallanData);
-        }
-        saveChallanData(allChallans);
 
-        const newLrDetails: LrDetail[] = addedLrs.map(b => ({
-            challanId: newChallanId,
+        const lrDetailsObject: LrDetail[] = addedLrs.map(b => ({
+            challanId: newId || challanId,
             lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
             from: b.fromCity, to: b.toCity, bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
             itemDescription: b.itemDescription, quantity: b.qty,
             actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
             chargeWeight: b.chgWt, grandTotal: b.totalAmount
         }));
-        
+
+        return { challan: challanDataObject, lrDetails: lrDetailsObject };
+    }
+    
+    const handleSaveAsTemp = () => {
+        const data = buildChallanObject('Pending');
+        if (!data) return;
+
+        const { challan: tempChallan, lrDetails: tempLrDetails } = data;
+
+        const allChallans = getChallanData();
+        const existingChallanIndex = allChallans.findIndex(c => c.challanId === challanId);
+
+        if (existingChallanIndex !== -1) {
+            allChallans[existingChallanIndex] = tempChallan;
+        } else {
+            allChallans.push(tempChallan);
+        }
+        saveChallanData(allChallans);
+
         let allLrDetails = getLrDetailsData();
-        // Remove old details for this challan (if it was temporary) and add the new ones
         allLrDetails = allLrDetails.filter(d => d.challanId !== challanId);
-        allLrDetails.push(...newLrDetails);
+        allLrDetails.push(...tempLrDetails);
         saveLrDetailsData(allLrDetails);
 
         const allBookings = getBookings();
         const updatedBookings = allBookings.map(b => {
-            const wasAdded = addedLrs.some(addedLr => addedLr.trackingId === b.trackingId);
-            if (wasAdded && b.status !== 'In Transit') {
+             const isInThisChallan = tempLrDetails.some(lr => lr.lrNo === b.lrNo);
+             if(isInThisChallan && b.status !== 'In Transit') {
+                return { ...b, status: 'In Transit' as const };
+             }
+             const wasInThisChallan = !isInThisChallan && b.status === 'In Transit' && getLrDetailsData().find(l => l.lrNo === b.lrNo)?.challanId === challanId;
+             if(wasInThisChallan) {
+                 return { ...b, status: 'In Stock' as const };
+             }
+             return b;
+        });
+        saveBookings(updatedBookings);
+
+
+        toast({ title: "Challan Saved", description: `Temporary challan ${challanId} has been saved.` });
+        router.push('/company/challan');
+    };
+
+    const handlePreview = () => {
+        const data = buildChallanObject('Pending');
+        if (!data) return;
+
+        setPreviewData(data);
+        setIsPreviewOpen(true);
+    };
+
+
+    const handleFinalizeChallan = () => {
+        if (addedLrs.length === 0) {
+            toast({ title: "No LRs Added", description: "Please add at least one LR to the challan before finalizing.", variant: "destructive" });
+            return;
+        }
+
+        const challanPrefix = companyProfile?.challanPrefix || 'CHLN';
+        const allChallans = getChallanData();
+        const newChallanId = generatePermanentChallanId(allChallans, challanPrefix);
+
+        const data = buildChallanObject('Finalized', newChallanId);
+        if (!data) return;
+        
+        const { challan: finalChallan, lrDetails: finalLrDetails } = data;
+
+        const existingChallanIndex = allChallans.findIndex(c => c.challanId === challanId);
+        if (existingChallanIndex !== -1) {
+            allChallans.splice(existingChallanIndex, 1);
+        }
+        allChallans.push(finalChallan);
+        saveChallanData(allChallans);
+
+        let allLrDetails = getLrDetailsData();
+        allLrDetails = allLrDetails.filter(d => d.challanId !== challanId); // Remove old temp details
+        allLrDetails.push(...finalLrDetails);
+        saveLrDetailsData(allLrDetails);
+
+        const allBookings = getBookings();
+        const addedLrNos = new Set(finalLrDetails.map(lr => lr.lrNo));
+        const updatedBookings = allBookings.map(b => {
+            if (addedLrNos.has(b.lrNo)) {
                 addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'System', `Dispatched via Challan ${newChallanId}`);
                 return { ...b, status: 'In Transit' as const };
             }
@@ -235,7 +290,7 @@ export function NewChallanForm() {
         
         toast({ title: "Challan Finalized", description: `Challan ${newChallanId} has been saved.` });
         
-        setPreviewData({ challan: newChallanData, lrDetails: newLrDetails });
+        setPreviewData({ challan: finalChallan, lrDetails: finalLrDetails });
         setIsPreviewOpen(true);
     };
     
@@ -387,15 +442,20 @@ export function NewChallanForm() {
                 })}
             </div>
             
-            <div className="flex justify-end">
-                <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize & Save Challan</Button>
+            <div className="flex justify-end gap-2">
+                <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> Save as Temp &amp; Exit</Button>
+                <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
+                <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize &amp; Save Challan</Button>
+                 <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
             </div>
             
             {previewData && companyProfile && (
-                <Dialog open={isPreviewOpen} onOpenChange={handlePrintAndClose}>
+                <Dialog open={isPreviewOpen} onOpenChange={isPreviewOpen && previewData.challan.status === 'Finalized' ? handlePrintAndClose : setIsPreviewOpen}>
                     <DialogContent className="max-w-4xl">
                         <DialogHeader>
-                            <DialogTitle>Challan Finalized: {previewData.challan.challanId}</DialogTitle>
+                            <DialogTitle>
+                                {previewData.challan.status === 'Finalized' ? 'Challan Finalized' : 'Loading Slip Preview'}: {previewData.challan.challanId}
+                            </DialogTitle>
                         </DialogHeader>
                         <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
                             <div ref={printRef} className="bg-white">
@@ -409,12 +469,15 @@ export function NewChallanForm() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="secondary" onClick={handlePrintAndClose}>Close</Button>
+                             <Button variant="secondary" onClick={() => setIsPreviewOpen(false)}>Close Preview</Button>
                             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                                 {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                                 Download PDF
                             </Button>
                             <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                             {previewData.challan.status === 'Finalized' && (
+                                <Button onClick={handlePrintAndClose}>Done &amp; Exit</Button>
+                            )}
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
