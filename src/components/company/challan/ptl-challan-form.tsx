@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -188,41 +189,8 @@ export function PtlChallanForm() {
                 loadMasterData();
                 const allBookings = getBookings();
                 
-                const challanIdToLoad = searchParams.get('challanId');
-                if (challanIdToLoad) {
-                    // MODIFICATION MODE
-                    const allChallans = getChallanData();
-                    const challanToLoad = allChallans.find(c => c.challanId === challanIdToLoad);
-                    const lrDetails = getLrDetailsData().filter(lr => lr.challanId === challanIdToLoad);
-                    
-                    if (challanToLoad && lrDetails) {
-                        setChallanNo(challanToLoad.challanId);
-                        setChallanDate(parseISO(challanToLoad.dispatchDate));
-                        setDispatchDate(parseISO(challanToLoad.dispatchDate));
-                        setFromStation(challanToLoad.fromStation);
-                        setDestinationStation(challanToLoad.toStation);
-                        setDispatchTo(challanToLoad.dispatchToParty);
-                        setLorrySupplier(challanToLoad.summary.grandTotal > 0 ? 'Market Vehicle' : 'Own Vehicle'); // Heuristic
-                        setVehicleNo(challanToLoad.vehicleNo);
-                        setDriverName(challanToLoad.driverName);
-                        setRemark(challanToLoad.remark || '');
-                        // setVehicleCapacity...
-                        
-                        const lrNosToLoad = new Set(lrDetails.map(lr => lr.lrNo));
-                        const bookingsForChallan = allBookings.filter(b => lrNosToLoad.has(b.lrNo));
-                        setSelectedBookings(bookingsForChallan);
-                        
-                        const dispatchQtys: {[key: string]: number} = {};
-                        bookingsForChallan.forEach(b => {
-                            const detail = lrDetails.find(lr => lr.lrNo === b.lrNo);
-                            if (detail) dispatchQtys[b.trackingId] = detail.quantity;
-                        });
-                        setDispatchQuantities(dispatchQtys);
-                    }
-                } else {
-                    // NEW CHALLAN MODE
-                     setChallanNo(`TEMP-${Date.now().toString().slice(-6)}`);
-                }
+                // Always start a new challan
+                setChallanNo(`TEMP-${Date.now().toString().slice(-6)}`);
                 
                 const ptlStock = allBookings.filter(b => b.loadType === 'PTL' && b.status === 'In Stock');
                 setAllStockBookings(ptlStock);
@@ -234,7 +202,7 @@ export function PtlChallanForm() {
             }
         }
         loadInitialData();
-    }, [loadMasterData, toast, searchParams]);
+    }, [loadMasterData, toast]);
 
     useEffect(() => {
         const selectedDriver = drivers.find(d => d.name === driverName);

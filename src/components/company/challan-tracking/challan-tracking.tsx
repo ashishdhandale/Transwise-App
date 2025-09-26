@@ -29,13 +29,14 @@ function ChallanTrackingComponent() {
         setAllChallans(challans);
         setAllLrDetails(getLrDetailsData());
 
-        const challanIdFromUrl = searchParams.get('challanId');
-        if (challanIdFromUrl) {
-            const challanToSelect = challans.find(c => c.challanId === challanIdFromUrl);
-            if (challanToSelect) {
-                setSelectedChallan(challanToSelect);
-            }
-        }
+        // Temporarily disable auto-loading from URL to prevent crashes
+        // const challanIdFromUrl = searchParams.get('challanId');
+        // if (challanIdFromUrl) {
+        //     const challanToSelect = challans.find(c => c.challanId === challanIdFromUrl);
+        //     if (challanToSelect) {
+        //         setSelectedChallan(challanToSelect);
+        //     }
+        // }
     }
     loadData();
   }, [searchParams]);

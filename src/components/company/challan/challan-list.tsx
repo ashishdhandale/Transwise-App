@@ -205,9 +205,9 @@ export function ChallanList() {
                                         <TableCell className={`${tdClass} border`}>{challan.dispatchToParty}</TableCell>
                                         <TableCell className={`${tdClass} border`}>
                                             <div className="flex gap-1">
-                                                <Button size="sm" variant="outline" onClick={() => router.push(`/company/challan/new?challanId=${challan.challanId}`)}>
+                                                {/* <Button size="sm" variant="outline" onClick={() => router.push(`/company/challan/new?challanId=${challan.challanId}`)}>
                                                     <Pencil className="mr-1 h-3 w-3" /> Modify
-                                                </Button>
+                                                </Button> */}
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
                                                         <Button size="sm" variant="destructive">
@@ -302,12 +302,12 @@ export function ChallanList() {
                                                 <DropdownMenuContent>
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>
+                                                    {/* <DropdownMenuItem onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>
                                                         <Eye className="mr-2 h-4 w-4" /> View
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => router.push(`/company/challan-tracking?challanId=${challan.challanId}`)}>
                                                         <Pencil className="mr-2 h-4 w-4" /> Modify
-                                                    </DropdownMenuItem>
+                                                    </DropdownMenuItem> */}
                                                      <DropdownMenuItem>
                                                         <CheckCircle className="mr-2 h-4 w-4" /> Mark as Arrived
                                                     </DropdownMenuItem>
