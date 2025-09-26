@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { RateList, City, VehicleMaster, Customer, Item, RateOnType } from '@/lib/types';
+import type { RateList, City, Customer, Item, RateOnType } from '@/lib/types';
 import { Trash2, PlusCircle } from 'lucide-react';
 import { Combobox } from '@/components/ui/combobox';
 import {
@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 const rateOnOptions: { label: string, value: RateOnType }[] = [
     { label: 'Charge Wt.', value: 'Chg.wt' },
@@ -55,6 +56,7 @@ const itemRateSchema = z.object({
 
 const rateListSchema = z.object({
   name: z.string().min(1, 'Rate list name is required.'),
+  isStandard: z.boolean(),
   customerIds: z.array(z.number()),
   stationRates: z.array(stationRateSchema),
   itemRates: z.array(itemRateSchema),
@@ -65,7 +67,7 @@ type RateListFormValues = z.infer<typeof rateListSchema>;
 interface AddRateListDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
-    onSave: (rateListData: Omit<RateList, 'id'>) => boolean;
+    onSave: (rateListData: Omit<RateList, 'id'>, isStandard: boolean) => boolean;
     rateList?: RateList | null;
     cities: City[];
     items: Item[];
@@ -79,6 +81,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
         resolver: zodResolver(rateListSchema),
         defaultValues: {
             name: '',
+            isStandard: false,
             customerIds: [],
             stationRates: [],
             itemRates: [],
@@ -92,6 +95,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
         if (rateList) {
             form.reset({
                 name: rateList.name,
+                isStandard: rateList.isStandard || false,
                 customerIds: rateList.customerIds || [],
                 stationRates: rateList.stationRates || [],
                 itemRates: rateList.itemRates || [],
@@ -99,6 +103,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
         } else {
             form.reset({
                 name: '',
+                isStandard: false,
                 customerIds: [],
                 stationRates: [{ fromStation: '', toStation: '', rate: 0, rateOn: 'Chg.wt' }],
                 itemRates: [{ itemId: '', rate: 0, rateOn: 'Chg.wt' }],
@@ -108,7 +113,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
 
 
     const handleSave = (data: RateListFormValues) => {
-        const success = onSave(data);
+        const success = onSave(data, data.isStandard);
         if (success) {
             onOpenChange(false);
         }
@@ -125,19 +130,36 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSave)} className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-4">
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Rate List Name</FormLabel>
-                                <FormControl>
-                                    <Input {...field} autoFocus />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="flex justify-between items-center">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem className="flex-grow">
+                                    <FormLabel>Rate List Name</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} autoFocus />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="isStandard"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col items-center ml-4 mt-6">
+                                        <FormLabel>Set as Standard</FormLabel>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                         
                         <Tabs defaultValue="associations">
                             <TabsList>
@@ -153,7 +175,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                         <FormItem>
                                             <div className="mb-4">
                                                 <FormLabel className="text-base">Associated Customers</FormLabel>
-                                                <p className="text-sm text-muted-foreground">Apply this rate list to selected customers.</p>
+                                                <p className="text-sm text-muted-foreground">Apply this rate list to selected customers. A standard rate list cannot have customer associations.</p>
                                             </div>
                                             <ScrollArea className="h-72 w-full rounded-md border">
                                                 <div className="p-4">
@@ -173,6 +195,7 @@ export function AddRateListDialog({ isOpen, onOpenChange, onSave, rateList, citi
                                                                                     ? field.onChange([...(field.value || []), customer.id])
                                                                                     : field.onChange(field.value?.filter((value) => value !== customer.id));
                                                                             }}
+                                                                            disabled={form.getValues('isStandard')}
                                                                         />
                                                                     </FormControl>
                                                                     <FormLabel className="font-normal">{customer.name}</FormLabel>

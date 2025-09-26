@@ -25,7 +25,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -129,10 +128,31 @@ export function ItemDetailsTable({
   }, [loadItemsAndRates]);
 
   const activeRateList = useMemo(() => {
-    if (!sender) return rateLists.find(rl => rl.name === 'Standard Rate List') || null;
-    const customerRateList = rateLists.find(rl => rl.customerIds?.includes(sender.id));
-    return customerRateList || rateLists.find(rl => rl.name === 'Standard Rate List') || null;
-  }, [sender, rateLists]);
+    const allRateLists = rateLists;
+    if (!allRateLists.length) {
+        toast({ title: "No Rates Found", description: "Please set up a Standard Rate List in the Master menu.", variant: "destructive" });
+        return null;
+    }
+
+    // 1. Check for a customer-specific quotation
+    if (sender) {
+        const customerRateList = allRateLists.find(rl => !rl.isStandard && rl.customerIds?.includes(sender.id));
+        if (customerRateList) {
+            return customerRateList;
+        }
+    }
+
+    // 2. Fallback to the standard rate list
+    const standardRateList = allRateLists.find(rl => rl.isStandard);
+    if (standardRateList) {
+        return standardRateList;
+    }
+
+    // 3. Error if no standard list is found
+    toast({ title: "No Standard Rates", description: "No Standard Rate List found. Please designate one in the Master menu.", variant: "destructive" });
+    return null;
+
+  }, [sender, rateLists, toast]);
 
 
   useEffect(() => {
@@ -218,12 +238,14 @@ export function ItemDetailsTable({
             if (selectedItem.description) {
                 newRow.description = selectedItem.description;
             }
-            if (activeRateList && fromStation && toStation) {
+            if (activeRateList) {
+                // Priority 1: Item-specific rate
                 const itemRate = activeRateList.itemRates?.find(ir => ir.itemId === String(selectedItem.id));
                 if (itemRate) {
                     newRow.rate = String(itemRate.rate);
                     newRow.freightOn = itemRate.rateOn;
-                } else {
+                } else if (fromStation && toStation) {
+                    // Priority 2: Station-wise rate
                     const stationRate = activeRateList.stationRates?.find(sr => sr.fromStation === fromStation.name && sr.toStation === toStation.name);
                     if (stationRate) {
                         newRow.rate = String(stationRate.rate);

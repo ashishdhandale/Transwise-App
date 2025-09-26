@@ -15,13 +15,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddRateListDialog } from './add-rate-list-dialog';
-import type { RateList, City, VehicleMaster, Item, Customer } from '@/lib/types';
+import type { RateList, City, Item, Customer } from '@/lib/types';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import { getCities } from '@/lib/city-data';
-import { getVehicles } from '@/lib/vehicle-data';
 import { getItems } from '@/lib/item-data';
 import { getCustomers } from '@/lib/customer-data';
 import {
@@ -33,11 +32,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 const tdClass = "whitespace-nowrap";
@@ -45,7 +44,6 @@ const tdClass = "whitespace-nowrap";
 export function RateListManagement() {
   const [rateLists, setRateLists] = useState<RateList[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-  const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,7 +55,6 @@ export function RateListManagement() {
     try {
         setRateLists(getRateLists());
         setCities(getCities());
-        setVehicles(getVehicles());
         setItems(getItems());
         setCustomers(getCustomers());
     } catch (error) {
@@ -92,19 +89,28 @@ export function RateListManagement() {
     });
   };
 
-  const handleSave = (rateListData: Omit<RateList, 'id'>): boolean => {
+  const handleSave = (rateListData: Omit<RateList, 'id'>, isStandard: boolean): boolean => {
     let updatedRateLists;
+    // If setting a list as standard, ensure no others are standard
+    if (isStandard) {
+        rateListData.customerIds = []; // Standard list cannot have customer associations
+        updatedRateLists = rateLists.map(list => ({ ...list, isStandard: false }));
+    } else {
+        updatedRateLists = [...rateLists];
+    }
+    
     if (currentRateList) {
-      updatedRateLists = rateLists.map(list => (list.id === currentRateList.id ? { id: list.id, ...rateListData } : list));
+      updatedRateLists = updatedRateLists.map(list => (list.id === currentRateList.id ? { id: list.id, ...rateListData } : list));
       toast({ title: 'Rate List Updated', description: `"${rateListData.name}" has been updated successfully.` });
     } else {
       const newRateList: RateList = {
-        id: rateLists.length > 0 ? Math.max(...rateLists.map(c => c.id)) + 1 : 1,
+        id: updatedRateLists.length > 0 ? Math.max(...updatedRateLists.map(c => c.id)) + 1 : 1,
         ...rateListData
       };
-      updatedRateLists = [newRateList, ...rateLists];
+      updatedRateLists.push(newRateList);
       toast({ title: 'Rate List Added', description: `"${rateListData.name}" has been added.` });
     }
+    
     saveRateLists(updatedRateLists);
     setRateLists(updatedRateLists);
     return true;
@@ -129,12 +135,7 @@ export function RateListManagement() {
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button asChild>
-                        <Link href="/company/master/quotation/new">
-                            <PlusCircle className="mr-2 h-4 w-4" /> New Quotation
-                        </Link>
-                    </Button>
-                    <Button onClick={handleAddNew} variant="outline">
+                    <Button onClick={handleAddNew}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Rate List
                     </Button>
                 </div>
@@ -146,7 +147,7 @@ export function RateListManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead className={thClass}>Name</TableHead>
-                  <TableHead className={thClass}>Associations &amp; Rates</TableHead>
+                  <TableHead className={thClass}>Type / Associations</TableHead>
                   <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -156,6 +157,14 @@ export function RateListManagement() {
                     <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
                     <TableCell className={cn(tdClass)}>
                        <div className="flex items-center gap-2 flex-wrap">
+                          {list.isStandard ? (
+                            <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                                <Star className="mr-1.5 h-3 w-3"/>
+                                Standard Rate
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Customer Quotation</Badge>
+                          )}
                           {countBadge(list.customerIds?.length, 'Customer', 'Customers')}
                           {countBadge(list.stationRates?.length, 'Station Rule', 'Station Rules')}
                           {countBadge(list.itemRates?.length, 'Item Rule', 'Item Rules')}

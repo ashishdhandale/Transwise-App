@@ -195,11 +195,10 @@ export interface ItemRate {
 export interface RateList {
   id: number;
   name: string;
+  isStandard?: boolean;
   // Associations
   customerIds: number[];
   // Rate structures
   stationRates: StationRate[];
-  kmRates?: KmRate[];
-  truckRates?: TruckRate[];
   itemRates: ItemRate[];
 }
