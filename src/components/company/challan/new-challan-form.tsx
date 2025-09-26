@@ -37,7 +37,7 @@ import { LoadingSlip } from './loading-slip';
 import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -483,7 +483,13 @@ export function NewChallanForm() {
             </div>
             
             {previewData && companyProfile && (
-                <Dialog open={isPreviewOpen} onOpenChange={isPreviewOpen && previewData.challan.status === 'Finalized' ? handlePrintAndClose : setIsPreviewOpen}>
+                <Dialog open={isPreviewOpen} onOpenChange={(isOpen) => {
+                    if (!isOpen && previewData.challan.status === 'Finalized') {
+                        handlePrintAndClose();
+                    } else {
+                        setIsPreviewOpen(isOpen);
+                    }
+                }}>
                     <DialogContent className="max-w-4xl">
                         <DialogHeader>
                             <DialogTitle>
