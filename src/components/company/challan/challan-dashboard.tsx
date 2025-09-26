@@ -32,7 +32,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSlip } from './loading-slip';
@@ -45,6 +44,7 @@ import html2canvas from 'html2canvas';
 import React from 'react';
 import { getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { BackButton } from '@/components/ui/back-button';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -252,26 +252,29 @@ export function ChallanDashboard() {
   return (
     <>
       <main className="flex-1 p-4 md:p-6 bg-secondary/30">
-        <header className="mb-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-            <FileText className="h-8 w-8" />
-            Challan Management
-          </h1>
-          <div className="flex items-center gap-4">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by Challan or Vehicle No..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button asChild>
-                  <Link href="/company/challan/new">
-                      <PlusCircle className="mr-2 h-4 w-4" /> New Dispatch Challan
-                  </Link>
-              </Button>
+        <header className="mb-4">
+          <BackButton />
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
+              <FileText className="h-8 w-8" />
+              Challan Management
+            </h1>
+            <div className="flex items-center gap-4">
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by Challan or Vehicle No..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Button asChild>
+                    <Link href="/company/challan/new">
+                        <PlusCircle className="mr-2 h-4 w-4" /> New Dispatch Challan
+                    </Link>
+                </Button>
+            </div>
           </div>
         </header>
         <div className="space-y-6">
