@@ -147,6 +147,7 @@ export function ChallanList() {
         return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     };
 
+
     return (
         <div className="space-y-4">
             <header className="flex items-center justify-between">
@@ -204,13 +205,13 @@ export function ChallanList() {
                                         <TableCell className={`${tdClass} border`}>{challan.driverName}</TableCell>
                                         <TableCell className={`${tdClass} border`}>{challan.dispatchToParty}</TableCell>
                                         <TableCell className={`${tdClass} border`}>
-                                            <div className="flex items-center gap-2">
-                                                <Button variant="outline" size="sm" className="h-7" onClick={() => router.push(`/company/challan/new?challanId=${challan.challanId}`)}>
+                                            <div className="flex gap-1">
+                                                <Button size="sm" variant="outline" onClick={() => router.push(`/company/challan/new?challanId=${challan.challanId}`)}>
                                                     <Pencil className="mr-1 h-3 w-3" /> Modify
                                                 </Button>
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button variant="destructive" size="sm" className="h-7">
+                                                        <Button size="sm" variant="destructive">
                                                             <Trash2 className="mr-1 h-3 w-3" /> Delete
                                                         </Button>
                                                     </AlertDialogTrigger>
@@ -227,7 +228,8 @@ export function ChallanList() {
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
-                                                <Button variant="ghost" size="sm" className="h-7 text-green-600" onClick={() => handleFinalize(challan.challanId)}>
+                                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleFinalize(challan.challanId)}>
+                                                    <CheckCircle className="mr-1 h-3 w-3" />
                                                     Finalize
                                                 </Button>
                                             </div>
@@ -344,4 +346,5 @@ export function ChallanList() {
         </div>
     );
 }
+
     
