@@ -1,8 +1,24 @@
 
 'use client';
 
-// This page has been cleared to start fresh.
+import { Suspense } from 'react';
+import DashboardLayout from '../../../(dashboard)/layout';
+import { NewChallanForm } from '@/components/company/challan/new-challan-form';
+
+function NewChallanPage() {
+  return (
+    <DashboardLayout>
+      <main className="flex-1 p-4 md:p-6 bg-secondary/30">
+        <NewChallanForm />
+      </main>
+    </DashboardLayout>
+  );
+}
 
 export default function NewChallanRootPage() {
-    return null;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+        <NewChallanPage />
+    </Suspense>
+  );
 }
