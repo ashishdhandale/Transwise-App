@@ -57,9 +57,11 @@ export function Combobox({
 
 
   const handleSelect = (currentValue: string) => {
-    onChange(currentValue === value ? "" : currentValue);
+    const newValue = currentValue === value ? "" : currentValue;
+    onChange(newValue);
     setSearchQuery('');
     setOpen(false);
+    triggerRef.current?.focus();
   }
   
   const handleInputChange = (query: string) => {
@@ -102,8 +104,6 @@ export function Combobox({
       }
   };
 
-  const currentInputValue = allowFreeform ? value : searchQuery;
-
   return (
     <ClientOnly>
       <Popover open={open} onOpenChange={handleOpenChange}>
@@ -135,8 +135,8 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
-              value={currentInputValue}
-              onValueChange={handleInputChange}
+              value={searchQuery}
+              onValueChange={setSearchQuery}
             />
             <CommandList>
               <CommandEmpty>
