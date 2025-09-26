@@ -52,6 +52,7 @@ export function SearchResults({ results, onSelectResult, selectedTrackingId }: S
                             <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Sender</TableHead>
                             <TableHead className={thClass}>Receiver</TableHead>
+                            <TableHead className={thClass}>Item &amp; Description</TableHead>
                             <TableHead className={thClass}>Status</TableHead>
                         </TableRow>
                         </TableHeader>
@@ -68,6 +69,7 @@ export function SearchResults({ results, onSelectResult, selectedTrackingId }: S
                                 <TableCell className={cn(tdClass)}>{row.toCity}</TableCell>
                                 <TableCell className={cn(tdClass)}>{row.sender}</TableCell>
                                 <TableCell className={cn(tdClass)}>{row.receiver}</TableCell>
+                                <TableCell className={cn(tdClass)}>{row.itemDescription}</TableCell>
                                 <TableCell className={cn(tdClass, 'font-semibold')}>{row.status}</TableCell>
                             </TableRow>
                         ))}
