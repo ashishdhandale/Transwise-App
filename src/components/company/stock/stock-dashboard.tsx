@@ -38,6 +38,7 @@ const tdClass = "whitespace-nowrap";
 
 const statusColors: { [key: string]: string } = {
   'In Stock': 'text-green-600 border-green-600/40',
+  'In Loading': 'text-orange-600 border-orange-600/40',
   'In Transit': 'text-blue-600 border-blue-600/40',
   'Delivered': 'text-gray-500 border-gray-500/40',
   'Cancelled': 'text-red-600 border-red-600/40',
@@ -172,8 +173,8 @@ export function StockDashboard() {
     const allBookings = getBookings();
     const updatedBookings = allBookings.map(b => {
         if (selectedLrs.has(b.trackingId)) {
-            addHistoryLog(b.lrNo, 'In Transit', 'System', `Added to loading challan ${newChallanId}`);
-            return { ...b, status: 'In Transit' as const };
+            addHistoryLog(b.lrNo, 'In Loading', 'System', `Added to loading challan ${newChallanId}`);
+            return { ...b, status: 'In Loading' as const };
         }
         return b;
     });

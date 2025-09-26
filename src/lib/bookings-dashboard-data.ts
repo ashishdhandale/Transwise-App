@@ -29,7 +29,7 @@ export interface Booking {
   qty: number;
   chgWt: number;
   totalAmount: number;
-  status: 'In Stock' | 'In Transit' | 'Cancelled' | 'In HOLD' | 'Delivered';
+  status: 'In Stock' | 'In Loading' | 'In Transit' | 'Cancelled' | 'In HOLD' | 'Delivered';
   dispatchStatus?: 'Short Dispatched' | 'Extra Dispatched';
   itemRows: ItemRow[];
   additionalCharges?: { [key: string]: number };
@@ -56,7 +56,7 @@ export const getBookings = (): Booking[] => {
 
             const correctedBookings = parsedBookings.map(booking => {
                 // If a booking is "In Transit" but isn't on any challan, its status is wrong. Correct it.
-                if (booking.status === 'In Transit' && !lrsOnChallan.has(booking.lrNo)) {
+                if ((booking.status === 'In Transit' || booking.status === 'In Loading') && !lrsOnChallan.has(booking.lrNo)) {
                     dataWasCorrected = true;
                     return { ...booking, status: 'In Stock' as const };
                 }

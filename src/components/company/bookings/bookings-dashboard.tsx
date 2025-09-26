@@ -64,6 +64,7 @@ const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
 const statusColors: { [key: string]: string } = {
   'In Stock': 'text-green-600',
+  'In Loading': 'text-orange-600',
   'In Transit': 'text-blue-600',
   Cancelled: 'text-red-600',
   'In HOLD': 'text-yellow-600',

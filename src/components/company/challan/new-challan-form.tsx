@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -226,14 +227,23 @@ export function NewChallanForm() {
         saveLrDetailsData(allLrDetails);
 
         const allBookings = getBookings();
+        const addedLrNos = new Set(tempLrDetails.map(lr => lr.lrNo));
+
         const updatedBookings = allBookings.map(b => {
-             const isInThisChallan = tempLrDetails.some(lr => lr.lrNo === b.lrNo);
-             if(isInThisChallan && b.status !== 'In Transit') {
-                return { ...b, status: 'In Transit' as const };
+             // If a booking is now in the temp challan, set its status to "In Loading"
+             if (addedLrNos.has(b.lrNo)) {
+                if (b.status !== 'In Loading') {
+                    addHistoryLog(b.lrNo, 'In Loading', companyProfile?.companyName || 'System', `Added to temporary challan ${challanId}`);
+                    return { ...b, status: 'In Loading' as const };
+                }
              }
-             const wasInThisChallan = !isInThisChallan && b.status === 'In Transit' && getLrDetailsData().find(l => l.lrNo === b.lrNo)?.challanId === challanId;
-             if(wasInThisChallan) {
-                 return { ...b, status: 'In Stock' as const };
+             // If a booking was previously in this temp challan but is now removed, set back to "In Stock"
+             else {
+                 const lrDetail = getLrDetailsData().find(l => l.lrNo === b.lrNo);
+                 if (lrDetail && lrDetail.challanId === challanId) {
+                     addHistoryLog(b.lrNo, 'In Stock', companyProfile?.companyName || 'System', `Removed from temporary challan ${challanId}`);
+                     return { ...b, status: 'In Stock' as const };
+                 }
              }
              return b;
         });
@@ -284,7 +294,7 @@ export function NewChallanForm() {
         const addedLrNos = new Set(finalLrDetails.map(lr => lr.lrNo));
         const updatedBookings = allBookings.map(b => {
             if (addedLrNos.has(b.lrNo)) {
-                addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'System', `Dispatched via Challan ${newChallanId}`);
+                addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'System', `Dispatched from ${finalChallan.fromStation} via Challan ${newChallanId}`);
                 return { ...b, status: 'In Transit' as const };
             }
             return b;

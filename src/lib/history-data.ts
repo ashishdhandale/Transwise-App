@@ -6,6 +6,8 @@ export interface LogEntry {
     | 'Booking Created'
     | 'Booking Updated'
     | 'Booking Cancelled'
+    | 'Booking Partially Cancelled'
+    | 'In Loading'
     | 'Dispatched from Warehouse'
     | 'In Transit'
     | 'Arrived at Hub'
