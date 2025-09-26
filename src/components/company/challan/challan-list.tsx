@@ -147,7 +147,6 @@ export function ChallanList() {
         return amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     };
 
-
     return (
         <div className="space-y-4">
             <header className="flex items-center justify-between">
@@ -346,5 +345,4 @@ export function ChallanList() {
         </div>
     );
 }
-
     
