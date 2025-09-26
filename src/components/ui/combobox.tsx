@@ -129,6 +129,7 @@ export function Combobox({
             e.preventDefault();
             inputRef.current?.focus();
           }}
+          onCloseAutoFocus={(e) => e.preventDefault()}
         >
           <Command onKeyDown={handleKeyDown}>
             <CommandInput
