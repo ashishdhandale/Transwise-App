@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -221,7 +222,7 @@ export function RateListManagement() {
                                     </DropdownMenuContent>
                                  </DropdownMenu>
                             </TableCell>
-                            <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
+                            <TableCell className={cn(tdClass, "font-medium")}>{list.name.replace('Quotation No. ', '')}</TableCell>
                             <TableCell className={cn(tdClass)}>{customer?.name || 'Standard'}</TableCell>
                             <TableCell className={cn(tdClass)}>{list.quotationDate ? format(new Date(list.quotationDate), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
                             <TableCell className={cn(tdClass, !isValid && 'text-red-600 font-semibold')}>{list.validTill ? format(new Date(list.validTill), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
@@ -251,7 +252,7 @@ export function RateListManagement() {
                 <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
                     <div ref={printRef}>
                        <PrintableQuotation 
-                            quotationNo={quotationToPrint.name}
+                            quotationNo={quotationToPrint.name.replace('Quotation No. ', '')}
                             quotationDate={new Date(quotationToPrint.quotationDate || Date.now())}
                             validTill={new Date(quotationToPrint.validTill || Date.now())}
                             party={quotationToPrint.customerIds.length > 0 ? findCustomer(quotationToPrint.customerIds[0]) : undefined}

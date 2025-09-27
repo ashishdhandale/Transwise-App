@@ -293,7 +293,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
                                     <Label>Description</Label>
                                     <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional"/>
                                 </div>
-                                <div className="space-y-1">
+                                 <div className="space-y-1">
                                     <Label>Wt./Unit</Label>
                                     <Input type="number" value={wtPerUnit} onChange={(e) => setWtPerUnit(Number(e.target.value))} />
                                 </div>
