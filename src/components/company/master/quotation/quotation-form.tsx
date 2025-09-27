@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -49,8 +49,14 @@ interface QuotationItem extends StationRate {
 
 let nextId = 1;
 
-export function NewQuotationForm() {
-    const [quotationNo, setQuotationNo] = useState('001');
+interface QuotationFormProps {
+    quotationId?: number;
+}
+
+
+export function QuotationForm({ quotationId }: QuotationFormProps) {
+    const isEditMode = !!quotationId;
+    const [quotationNo, setQuotationNo] = useState('');
     const [quotationDate, setQuotationDate] = useState<Date | undefined>(new Date());
     const [validTill, setValidTill] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() + 1)));
     const [partyName, setPartyName] = useState<string | undefined>(undefined);
@@ -88,18 +94,43 @@ export function NewQuotationForm() {
         async function loadData() {
             setCities(getCities());
             setMasterItems(getItems());
-            setCustomers(getCustomers());
+            const loadedCustomers = getCustomers();
+            setCustomers(loadedCustomers);
             const profile = await getCompanyProfile();
             setCompanyProfile(profile);
 
             const allRateLists = getRateLists();
-            const lastQuoteNo = allRateLists
-                .filter(rl => rl.name.startsWith('Quotation for'))
-                .length;
-            setQuotationNo(String(lastQuoteNo + 1).padStart(4, '0'));
+
+            if (isEditMode) {
+                const quoteToEdit = allRateLists.find(rl => rl.id === quotationId);
+                if (quoteToEdit) {
+                    setQuotationNo(quoteToEdit.name.replace('Quotation No. ', ''));
+                    setQuotationDate(quoteToEdit.quotationDate ? new Date(quoteToEdit.quotationDate) : undefined);
+                    setValidTill(quoteToEdit.validTill ? new Date(quoteToEdit.validTill) : undefined);
+                    
+                    if (quoteToEdit.isStandard) {
+                        setPartyName('Default Rate List');
+                    } else if (quoteToEdit.customerIds && quoteToEdit.customerIds.length > 0) {
+                        const customer = loadedCustomers.find(c => c.id === quoteToEdit.customerIds[0]);
+                        setPartyName(customer?.name);
+                    }
+
+                    const loadedItems = quoteToEdit.stationRates.map(sr => ({...sr, id: nextId++ }));
+                    setItems(loadedItems);
+                } else {
+                     toast({ title: 'Error', description: 'Quotation not found.', variant: 'destructive'});
+                }
+            } else {
+                 const lastQuoteNo = allRateLists
+                    .filter(rl => rl.name.startsWith('Quotation No.'))
+                    .map(rl => parseInt(rl.name.replace('Quotation No. ', ''), 10))
+                    .filter(num => !isNaN(num))
+                    .reduce((max, current) => Math.max(max, current), 0);
+                setQuotationNo(String(lastQuoteNo + 1).padStart(4, '0'));
+            }
         }
         loadData();
-    }, []);
+    }, [isEditMode, quotationId, toast]);
     
     useEffect(() => {
         setLrType(defaultLrType);
@@ -163,15 +194,21 @@ export function NewQuotationForm() {
             itemRates: [],
         };
 
-        const allRateLists = getRateLists();
-        const newId = allRateLists.length > 0 ? Math.max(...allRateLists.map(rl => rl.id)) + 1 : 1;
+        let allRateLists = getRateLists();
         
-        saveRateLists([...allRateLists, { id: newId, ...newRateList }]);
+        if (isEditMode) {
+             allRateLists = allRateLists.map(rl => rl.id === quotationId ? { id: quotationId, ...newRateList } : rl);
+        } else {
+             const newId = allRateLists.length > 0 ? Math.max(...allRateLists.map(rl => rl.id)) + 1 : 1;
+             allRateLists.push({ id: newId, ...newRateList });
+        }
+        
+        saveRateLists(allRateLists);
         
         setSavedQuotationData({ party: customer, items, quotationDate: quotationDate!, validTill: validTill! });
         setIsPreviewOpen(true);
         
-        toast({ title: "Quotation Saved", description: "The new quotation has been saved as a Rate List."});
+        toast({ title: isEditMode ? "Quotation Updated" : "Quotation Saved", description: "The quotation has been saved successfully."});
     };
 
     const handleDownloadPdf = async () => {
@@ -248,8 +285,8 @@ export function NewQuotationForm() {
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-dashed space-y-4">
-                             <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr] gap-4 items-end">
+                        <div className="p-4 border-t border-dashed">
+                             <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
                                 <div className="space-y-1">
                                     <Label>Item Name</Label>
                                     <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
@@ -284,12 +321,10 @@ export function NewQuotationForm() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            </div>
-                             <div className="flex justify-end">
-                                <Button onClick={handleAddToList}>
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Item to List
+                                <Button onClick={handleAddToList} size="icon" className="mb-1">
+                                    <PlusCircle className="h-5 w-5" />
                                 </Button>
-                             </div>
+                            </div>
                         </div>
                      </div>
 
@@ -344,7 +379,7 @@ export function NewQuotationForm() {
 
             <div className="flex justify-end">
                 <Button size="lg" onClick={handleSaveQuotation}>
-                    <Save className="mr-2 h-4 w-4"/> Save Quotation
+                    <Save className="mr-2 h-4 w-4"/> {isEditMode ? 'Update Quotation' : 'Save Quotation'}
                 </Button>
             </div>
 

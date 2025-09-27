@@ -14,14 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlusCircle, Search, MoreHorizontal, Pencil, Printer, Trash2, Download, Loader2 } from 'lucide-react';
-import type { RateList, Customer, City, Item } from '@/lib/types';
+import type { RateList, Customer } from '@/lib/types';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getCustomers } from '@/lib/customer-data';
-import { getCities } from '@/lib/city-data';
-import { getItems } from '@/lib/item-data';
 import { format, isAfter, startOfToday } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -44,7 +42,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { AddRateListDialog } from './add-rate-list-dialog';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PrintableQuotation } from './quotation/printable-quotation';
@@ -59,13 +56,9 @@ const tdClass = "whitespace-nowrap";
 export function RateListManagement() {
   const [rateLists, setRateLists] = useState<RateList[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentRateList, setCurrentRateList] = useState<RateList | null>(null);
   
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [quotationToPrint, setQuotationToPrint] = useState<RateList | null>(null);
@@ -80,8 +73,6 @@ export function RateListManagement() {
         try {
             setRateLists(getRateLists());
             setCustomers(getCustomers());
-            setCities(getCities());
-            setItems(getItems());
             const profile = await getCompanyProfile();
             setCompanyProfile(profile);
         } catch (error) {
@@ -95,13 +86,7 @@ export function RateListManagement() {
     return customers.find(c => c.id === customerId);
   }
 
-  const handleEdit = (list: RateList) => {
-    setCurrentRateList(list);
-    setIsDialogOpen(true);
-  };
-  
   const handleAddNew = () => {
-    setCurrentRateList(null);
     router.push('/company/master/quotation/new');
   };
 
@@ -110,36 +95,6 @@ export function RateListManagement() {
     saveRateLists(updatedLists);
     setRateLists(updatedLists);
     toast({ title: "Quotation Deleted", description: "The quotation has been successfully deleted.", variant: "destructive" });
-  };
-  
-  const handleSave = (rateListData: Omit<RateList, 'id'>, isStandard: boolean) => {
-    let updatedLists;
-    if (currentRateList) {
-        updatedLists = rateLists.map(list => 
-            list.id === currentRateList.id ? { ...currentRateList, ...rateListData, isStandard } : list
-        );
-        toast({ title: 'Quotation Updated', description: `"${rateListData.name}" has been updated.` });
-    } else {
-      // This case is handled by the new quotation form, but keep for safety.
-       const newList: RateList = {
-        id: rateLists.length > 0 ? Math.max(...rateLists.map(c => c.id)) + 1 : 1,
-        ...rateListData
-      };
-      updatedLists = [newList, ...rateLists];
-      toast({ title: 'Quotation Added', description: `"${rateListData.name}" has been added.` });
-    }
-    
-    // If a new list is set as standard, unset the old one.
-    if (isStandard) {
-        updatedLists = updatedLists.map(list => ({
-            ...list,
-            isStandard: list.id === (currentRateList?.id || updatedLists.find(l => l.name === rateListData.name)?.id)
-        }));
-    }
-
-    saveRateLists(updatedLists);
-    setRateLists(updatedLists);
-    return true;
   };
   
    const handlePrint = (list: RateList) => {
@@ -238,8 +193,8 @@ export function RateListManagement() {
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => handleEdit(list)}>
-                                            <Pencil className="mr-2 h-4 w-4" />Update
+                                        <DropdownMenuItem asChild>
+                                            <Link href={`/company/master/quotation/${list.id}/edit`}><Pencil className="mr-2 h-4 w-4" />Update</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handlePrint(list)}>
                                             <Printer className="mr-2 h-4 w-4" />Print
@@ -287,15 +242,6 @@ export function RateListManagement() {
             )}
         </div>
       </CardContent>
-       <AddRateListDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSave={handleSave}
-        rateList={currentRateList}
-        cities={cities}
-        items={items}
-        customers={customers}
-      />
       {quotationToPrint && (
         <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
             <DialogContent className="max-w-4xl">
