@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -42,9 +43,6 @@ const rateOnOptions: { label: string; value: RateOnType }[] = [
 
 interface QuotationItem extends StationRate {
     id: number;
-    itemName?: string;
-    description?: string;
-    wtPerUnit?: number;
 }
 
 let nextId = 1;
@@ -286,7 +284,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
                         </div>
 
                         <div className="p-4 border-t border-dashed">
-                             <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
+                             <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
                                 <div className="space-y-1">
                                     <Label>Item Name</Label>
                                     <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
