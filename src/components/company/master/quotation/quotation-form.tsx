@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, PlusCircle, Save, Printer, Download, Loader2 } from 'lucide-react';
+import { Trash2, PlusCircle, Save, Printer, Download, Loader2, Pencil, XCircle, RefreshCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { City, Customer, Item, RateList, RateOnType, StationRate } from '@/lib/types';
 import { getCities } from '@/lib/city-data';
@@ -67,7 +67,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     
-    // Current item entry
+    // Current item entry state
     const [fromStation, setFromStation] = useState<string | undefined>();
     const [toStation, setToStation] = useState<string | undefined>();
     const [itemName, setItemName] = useState<string | undefined>();
@@ -76,7 +76,9 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
     const [rate, setRate] = useState<number | ''>('');
     const [rateOn, setRateOn] = useState<RateOnType>('Chg.wt');
     const [lrType, setLrType] = useState(defaultLrType);
-
+    
+    // Edit state for item entry
+    const [editingItemId, setEditingItemId] = useState<number | null>(null);
 
     // Preview Dialog
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -134,7 +136,60 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name, value: c.name })), [cities]);
     const itemOptions = useMemo(() => masterItems.map(i => ({ label: i.name, value: i.name })), [masterItems]);
-    const customerOptions = useMemo(() => customers.map(c => ({ label: c.name, value: c.name })), [customers]);
+    const customerOptions = useMemo(() => {
+        return customers.map(c => ({
+            label: c.name,
+            value: c.name
+        }));
+    }, [customers]);
+    
+    const resetEntryFields = () => {
+        setFromStation(undefined);
+        setToStation(undefined);
+        setItemName(undefined);
+        setDescription('');
+        setWtPerUnit('');
+        setRate('');
+        setRateOn('Chg.wt');
+        setLrType(defaultLrType);
+        setEditingItemId(null);
+    }
+    
+    const handleEditItem = (itemToEdit: QuotationItem) => {
+        setEditingItemId(itemToEdit.id);
+        setFromStation(itemToEdit.fromStation);
+        setToStation(itemToEdit.toStation);
+        setItemName(itemToEdit.itemName === 'Any' ? undefined : itemToEdit.itemName);
+        setDescription(itemToEdit.description || '');
+        setWtPerUnit(itemToEdit.wtPerUnit || '');
+        setRate(itemToEdit.rate);
+        setRateOn(itemToEdit.rateOn);
+        setLrType(itemToEdit.lrType || defaultLrType);
+    };
+    
+    const handleUpdateItem = () => {
+        if (editingItemId === null) return;
+
+        setItems(prev => prev.map(item => {
+            if (item.id === editingItemId) {
+                return {
+                    ...item,
+                    fromStation: fromStation!,
+                    toStation: toStation!,
+                    rate: Number(rate),
+                    rateOn,
+                    itemName: itemName || 'Any',
+                    description,
+                    wtPerUnit: Number(wtPerUnit) || undefined,
+                    lrType,
+                };
+            }
+            return item;
+        }));
+        
+        toast({ title: 'Item Updated', description: 'The quotation item has been updated.' });
+        resetEntryFields();
+    };
 
     const handleAddToList = () => {
         if (!fromStation || !toStation || rate === '') {
@@ -158,15 +213,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
         resetEntryFields();
     };
     
-    const resetEntryFields = () => {
-        setItemName(undefined);
-        setDescription('');
-        setWtPerUnit('');
-        setRate('');
-        setRateOn('Chg.wt');
-        setLrType(defaultLrType);
-    }
-    
+
     const handleSaveQuotation = () => {
         if (!partyName) {
             toast({ title: 'Party Name Required', description: 'Please select a party name for this quotation.', variant: "destructive" });
@@ -182,11 +229,11 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
         
         const newRateList: Omit<RateList, 'id'> = {
             name: `Quotation No. ${quotationNo}`,
-            isStandard: false, // This form is only for customer quotations
+            isStandard: false,
             customerIds: customer ? [customer.id] : [],
             quotationDate: quotationDate?.toISOString(),
             validTill: validTill?.toISOString(),
-            stationRates: items.map(({ fromStation, toStation, rate, rateOn, lrType, itemName, description, wtPerUnit }) => ({ fromStation, toStation, rate, rateOn, lrType, itemName, description, wtPerUnit })),
+            stationRates: items.map(({ id, ...rest }) => rest), // Exclude temporary client-side ID
             itemRates: [],
         };
 
@@ -282,7 +329,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
                         </div>
 
                         <div className="p-4 border-t border-dashed">
-                             <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
+                             <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
                                 <div className="space-y-1">
                                     <Label>Item Name</Label>
                                     <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
@@ -317,9 +364,22 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <Button onClick={handleAddToList} size="icon" className="mb-1">
-                                    <PlusCircle className="h-5 w-5" />
-                                </Button>
+                                <div className="flex items-center gap-2 mb-1">
+                                    {editingItemId !== null ? (
+                                        <>
+                                            <Button onClick={handleUpdateItem} size="icon">
+                                                <RefreshCcw className="h-5 w-5" />
+                                            </Button>
+                                             <Button onClick={resetEntryFields} size="icon" variant="ghost" className="text-destructive">
+                                                <XCircle className="h-5 w-5" />
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button onClick={handleAddToList} size="icon">
+                                            <PlusCircle className="h-5 w-5" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                      </div>
@@ -349,9 +409,14 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
                                         <TableCell>{item.rate} / {rateOnOptions.find(o => o.value === item.rateOn)?.label}</TableCell>
                                         <TableCell>{item.lrType}</TableCell>
                                         <TableCell>
-                                            <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setItems(prev => prev.filter(p => p.id !== item.id))}>
-                                                <Trash2 className="h-4 w-4"/>
-                                            </Button>
+                                            <div className="flex items-center gap-1">
+                                                <Button variant="ghost" size="icon" className="text-blue-600 h-8 w-8" onClick={() => handleEditItem(item)}>
+                                                    <Pencil className="h-4 w-4"/>
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setItems(prev => prev.filter(p => p.id !== item.id))}>
+                                                    <Trash2 className="h-4 w-4"/>
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -416,3 +481,4 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
         </div>
     )
 }
+
