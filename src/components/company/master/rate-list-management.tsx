@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, Search, MoreHorizontal, Pencil, Printer, Trash2, Download, Loader2 } from 'lucide-react';
 import type { RateList, Customer } from '@/lib/types';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
@@ -49,6 +49,8 @@ import { PrintableQuotation } from './quotation/printable-quotation';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StandardRateListEditor } from './standard-rate-list-editor';
 
 
 const thClass = "bg-cyan-500 text-white font-semibold";
@@ -127,11 +129,13 @@ export function RateListManagement() {
   };
 
 
-  const filteredRateLists = useMemo(() => {
+  const filteredQuotations = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
-    if (!searchLower) return rateLists;
+    const quotations = rateLists.filter(list => !list.isStandard);
 
-    return rateLists.filter(list => {
+    if (!searchLower) return quotations;
+
+    return quotations.filter(list => {
       const customer = list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null;
       return list.name.toLowerCase().includes(searchLower) ||
              (customer && customer.name.toLowerCase().includes(searchLower));
@@ -141,107 +145,118 @@ export function RateListManagement() {
   return (
     <Card>
       <CardContent className="pt-6">
-         <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
-            <div>
-              <Label htmlFor="search-quotation" className="text-sm font-semibold">Search By Name / Quote No,</Label>
-               <div className="relative w-full max-w-xs mt-1">
-                  <Input
-                    id="search-quotation"
-                    placeholder="Search..."
-                    className="pl-4 pr-10 border-gray-400"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center justify-center w-10 border-l bg-gray-100 rounded-r-md">
-                     <Search className="h-5 w-5 text-gray-500" />
+        <Tabs defaultValue="quotations">
+          <TabsList className="mb-4">
+            <TabsTrigger value="quotations">Quotations</TabsTrigger>
+            <TabsTrigger value="standardRate">Standard Rate List</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="quotations">
+              <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
+                  <div>
+                    <Label htmlFor="search-quotation" className="text-sm font-semibold">Search By Name / Quote No,</Label>
+                    <div className="relative w-full max-w-xs mt-1">
+                        <Input
+                          id="search-quotation"
+                          placeholder="Search..."
+                          className="pl-4 pr-10 border-gray-400"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center justify-center w-10 border-l bg-gray-100 rounded-r-md">
+                          <Search className="h-5 w-5 text-gray-500" />
+                        </div>
+                    </div>
                   </div>
+                  <Button onClick={handleAddNew}>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Generate New Quotation
+                  </Button>
               </div>
-            </div>
-            <Button onClick={handleAddNew}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Generate New Quotation
-            </Button>
-        </div>
-        <div className="overflow-x-auto border rounded-md">
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead className={thClass}>Action</TableHead>
-                    <TableHead className={thClass}>Quotation No</TableHead>
-                    <TableHead className={thClass}>Customer Name</TableHead>
-                    <TableHead className={thClass}>Quotation Date</TableHead>
-                    <TableHead className={thClass}>Valid Till</TableHead>
-                    <TableHead className={thClass}>Status</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {filteredRateLists.map((list) => {
-                    const customer = list.isStandard ? null : (list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null);
-                    const isValid = list.validTill ? isAfter(new Date(list.validTill), startOfToday()) : true;
-                    const status = list.isStandard ? 'Standard' : isValid ? 'Active' : 'Expired';
-                    let statusClass = '';
-                    if (status === 'Standard' || status === 'Active') statusClass = 'bg-green-600';
-                    if (status === 'Expired') statusClass = 'bg-red-600';
-                    
-                    return (
-                        <TableRow key={list.id}>
-                             <TableCell className={cn(tdClass)}>
-                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem asChild>
-                                            <Link href={`/company/master/quotation/${list.id}/edit`}><Pencil className="mr-2 h-4 w-4" />Update</Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handlePrint(list)}>
-                                            <Printer className="mr-2 h-4 w-4" />Print
-                                        </DropdownMenuItem>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive" disabled={list.isStandard}>
-                                                    <Trash2 className="mr-2 h-4 w-4" />Delete
-                                                </DropdownMenuItem>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        This action cannot be undone and will permanently delete this quotation.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDelete(list.id)}>Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </DropdownMenuContent>
-                                 </DropdownMenu>
-                            </TableCell>
-                            <TableCell className={cn(tdClass, "font-medium")}>{list.name.replace('Quotation No. ', '')}</TableCell>
-                            <TableCell className={cn(tdClass)}>{customer?.name || (list.isStandard ? 'STANDARD RATE' : 'N/A')}</TableCell>
-                            <TableCell className={cn(tdClass)}>{list.quotationDate ? format(new Date(list.quotationDate), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
-                            <TableCell className={cn(tdClass, !isValid && !list.isStandard ? 'text-red-600 font-semibold' : '')}>{list.validTill ? format(new Date(list.validTill), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
-                            <TableCell className={cn(tdClass)}>
-                                 <Badge variant={list.isStandard ? 'default' : 'secondary'} className={statusClass}>
-                                    {status}
-                                </Badge>
-                            </TableCell>
-                        </TableRow>
-                    );
-                })}
-                </TableBody>
-            </Table>
-            {filteredRateLists.length === 0 && (
-                <div className="text-center p-8 text-muted-foreground">
-                    No quotations found.
-                </div>
-            )}
-        </div>
+              <div className="overflow-x-auto border rounded-md">
+                  <Table>
+                      <TableHeader>
+                      <TableRow>
+                          <TableHead className={thClass}>Action</TableHead>
+                          <TableHead className={thClass}>Quotation No</TableHead>
+                          <TableHead className={thClass}>Customer Name</TableHead>
+                          <TableHead className={thClass}>Quotation Date</TableHead>
+                          <TableHead className={thClass}>Valid Till</TableHead>
+                          <TableHead className={thClass}>Status</TableHead>
+                      </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                      {filteredQuotations.map((list) => {
+                          const customer = list.isStandard ? null : (list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null);
+                          const isValid = list.validTill ? isAfter(new Date(list.validTill), startOfToday()) : true;
+                          const status = isValid ? 'Active' : 'Expired';
+                          const statusClass = status === 'Active' ? 'bg-green-600' : 'bg-red-600';
+                          
+                          return (
+                              <TableRow key={list.id}>
+                                  <TableCell className={cn(tdClass)}>
+                                      <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                  <MoreHorizontal className="h-4 w-4" />
+                                              </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                              <DropdownMenuSeparator />
+                                              <DropdownMenuItem asChild>
+                                                  <Link href={`/company/master/quotation/${list.id}/edit`}><Pencil className="mr-2 h-4 w-4" />Update</Link>
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => handlePrint(list)}>
+                                                  <Printer className="mr-2 h-4 w-4" />Print
+                                              </DropdownMenuItem>
+                                              <AlertDialog>
+                                                  <AlertDialogTrigger asChild>
+                                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                                          <Trash2 className="mr-2 h-4 w-4" />Delete
+                                                      </DropdownMenuItem>
+                                                  </AlertDialogTrigger>
+                                                  <AlertDialogContent>
+                                                      <AlertDialogHeader>
+                                                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                          <AlertDialogDescription>
+                                                              This action cannot be undone and will permanently delete this quotation.
+                                                          </AlertDialogDescription>
+                                                      </AlertDialogHeader>
+                                                      <AlertDialogFooter>
+                                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                          <AlertDialogAction onClick={() => handleDelete(list.id)}>Delete</AlertDialogAction>
+                                                      </AlertDialogFooter>
+                                                  </AlertDialogContent>
+                                              </AlertDialog>
+                                          </DropdownMenuContent>
+                                      </DropdownMenu>
+                                  </TableCell>
+                                  <TableCell className={cn(tdClass, "font-medium")}>{list.name.replace('Quotation No. ', '')}</TableCell>
+                                  <TableCell className={cn(tdClass)}>{customer?.name || 'N/A'}</TableCell>
+                                  <TableCell className={cn(tdClass)}>{list.quotationDate ? format(new Date(list.quotationDate), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
+                                  <TableCell className={cn(tdClass, !isValid ? 'text-red-600 font-semibold' : '')}>{list.validTill ? format(new Date(list.validTill), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
+                                  <TableCell className={cn(tdClass)}>
+                                      <Badge variant="secondary" className={statusClass}>
+                                          {status}
+                                      </Badge>
+                                  </TableCell>
+                              </TableRow>
+                          );
+                      })}
+                      </TableBody>
+                  </Table>
+                  {filteredQuotations.length === 0 && (
+                      <div className="text-center p-8 text-muted-foreground">
+                          No quotations found.
+                      </div>
+                  )}
+              </div>
+          </TabsContent>
+
+          <TabsContent value="standardRate">
+              <StandardRateListEditor />
+          </TabsContent>
+        </Tabs>
       </CardContent>
       {quotationToPrint && (
         <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
