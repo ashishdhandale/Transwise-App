@@ -42,6 +42,7 @@ export interface ItemRow {
   ewbNo: string;
   itemName: string;
   description: string;
+  wtPerUnit: string;
   qty: string;
   actWt: string;
   chgWt: string;
@@ -68,6 +69,7 @@ const createEmptyRow = (): ItemRow => ({
     ewbNo: '',
     itemName: DEFAULT_ITEM_NAME,
     description: '',
+    wtPerUnit: '',
     qty: '',
     actWt: '',
     chgWt: '',
@@ -204,9 +206,14 @@ export function ItemDetailsTable({
     let processedValue = value;
     
     newRow[columnId] = processedValue;
-
-    if (columnId === 'actWt') {
-        newRow.chgWt = processedValue;
+    
+    // Automatic calculation for Actual Weight
+    if (columnId === 'qty' || columnId === 'wtPerUnit') {
+        const qty = parseFloat(newRow.qty) || 0;
+        const wtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
+        const actWt = qty * wtPerUnit;
+        newRow.actWt = actWt > 0 ? actWt.toFixed(2) : '';
+        newRow.chgWt = actWt > 0 ? actWt.toFixed(2) : ''; // Also update chgWt
         newRow.freightOn = 'Act.wt';
     }
     
@@ -337,6 +344,7 @@ export function ItemDetailsTable({
                 <TableHead className={cn(thClass, 'w-[160px]')}>EWB No</TableHead>
                 <TableHead className={cn(thClass, 'w-[160px]')}>Item Name*</TableHead>
                 <TableHead className={cn(thClass, 'w-[160px]')}>Description*</TableHead>
+                <TableHead className={cn(thClass, 'w-[80px]')}>Wt/Unit</TableHead>
                 <TableHead className={cn(thClass, 'w-[60px]')}>Qty*</TableHead>
                 <TableHead className={cn(thClass, 'w-[60px]')}>Act.wt*</TableHead>
                 <TableHead className={cn(thClass, 'w-[60px]')}>Chg.wt*</TableHead>
@@ -358,8 +366,9 @@ export function ItemDetailsTable({
                         <Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Select item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} disabled={isViewOnly} />
                     </TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} readOnly={isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.wtPerUnit} onChange={(e) => handleInputChange(index, 'wtPerUnit', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} readOnly={isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={cn(inputClass, 'bg-muted')} value={row.actWt} readOnly /></TableCell>
                     <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed' || isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)} disabled={isViewOnly}><SelectTrigger className={inputClass}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Act.wt">Act.wt</SelectItem><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Fixed">Fixed</SelectItem><SelectItem value="Quantity">Quantity</SelectItem></SelectContent></Select></TableCell>
@@ -381,7 +390,7 @@ export function ItemDetailsTable({
           </TableBody>
           <TableFooter>
               <TableRow>
-                <TableCell className={`${tfClass} text-right`} colSpan={4}>
+                <TableCell className={`${tfClass} text-right`} colSpan={5}>
                     <span>TOTAL ITEM: {totals.itemCount}</span>
                 </TableCell>
                 <TableCell className={`${tfClass} text-center`}>{totals.qty}</TableCell>
@@ -425,3 +434,4 @@ export function ItemDetailsTable({
     </ClientOnly>
   );
 }
+
