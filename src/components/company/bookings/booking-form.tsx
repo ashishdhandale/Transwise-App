@@ -160,21 +160,19 @@ const isRowPartiallyFilled = (row: ItemRow) => {
 };
 
 // --- Auto-Learn Standard Rate Logic ---
-const updateStandardRateList = (booking: Booking, sender: Customer) => {
+const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Customer) => {
     const allRateLists = getRateLists();
     
     // Check if the sender has a specific quotation
     const hasQuotation = allRateLists.some(rl => !rl.isStandard && rl.customerIds.includes(sender.id));
     
     if (hasQuotation) {
-        // This customer has a quotation, so we don't learn from their bookings.
         return;
     }
     
     const standardRateList = allRateLists.find(rl => rl.isStandard);
     
     if (!standardRateList) {
-        // Should not happen, but a safeguard.
         console.error("Standard Rate List not found.");
         return;
     }
@@ -190,15 +188,19 @@ const updateStandardRateList = (booking: Booking, sender: Customer) => {
             rate: Number(item.rate),
             rateOn: item.freightOn as StationRate['rateOn'],
             itemName: item.itemName || 'Any',
-            wtPerUnit: Number(item.wtPerUnit) || undefined
+            wtPerUnit: Number(item.wtPerUnit) || undefined,
+            senderName: sender.name,
+            receiverName: receiver.name,
+            lrType: booking.lrType
         };
 
-        // Check if a virtually identical rate already exists
         const exists = standardRateList.stationRates.some(existing => 
             existing.fromStation.toLowerCase() === newRate.fromStation.toLowerCase() &&
             existing.toStation.toLowerCase() === newRate.toStation.toLowerCase() &&
             (existing.itemName || 'Any').toLowerCase() === newRate.itemName.toLowerCase() &&
-            (existing.wtPerUnit || 0) === (newRate.wtPerUnit || 0)
+            (existing.wtPerUnit || 0) === (newRate.wtPerUnit || 0) &&
+            existing.senderName?.toLowerCase() === newRate.senderName?.toLowerCase() &&
+            existing.receiverName?.toLowerCase() === newRate.receiverName?.toLowerCase()
         );
 
         if (!exists) {
@@ -343,8 +345,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 }
 
             } else {
-                let grnPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
-                setCurrentLrNumber(generateLrNumber(parsedBookings, grnPrefix));
+                let lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
+                setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                 setBookingDate(new Date());
             }
@@ -460,11 +462,9 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 saveBookings(updatedBookings);
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
-                // --- Auto-Learn Standard Rate ---
-                if (sender) {
-                    updateStandardRateList(newBooking, sender);
+                if (sender && receiver) {
+                    updateStandardRateList(newBooking, sender, receiver);
                 }
-                // -----------------------------
                 
                 if (newBooking.loadType === 'FTL') {
                     // For FTL, we create a pending challan immediately.
@@ -676,6 +676,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         onRowsChange={setItemRows} 
                         isViewOnly={isViewOnly}
                         sender={sender}
+                        receiver={receiver}
                         fromStation={fromStation}
                         toStation={toStation}
                         onQuotationApply={setBookingType}

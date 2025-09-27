@@ -83,6 +83,7 @@ interface ItemDetailsTableProps {
     onRowsChange: (rows: ItemRow[]) => void;
     isViewOnly?: boolean;
     sender: Customer | null;
+    receiver: Customer | null;
     fromStation: City | null;
     toStation: City | null;
     onQuotationApply: (lrType: string) => void;
@@ -93,6 +94,7 @@ export function ItemDetailsTable({
     onRowsChange, 
     isViewOnly = false,
     sender,
+    receiver,
     fromStation,
     toStation,
     onQuotationApply,
@@ -125,7 +127,6 @@ export function ItemDetailsTable({
   const activeRateList = useMemo(() => {
     if (!rateLists.length) return null;
 
-    // Priority 1: Find a specific quotation for the selected customer.
     if (sender) {
         const customerRateList = rateLists.find(rl => 
             !rl.isStandard && rl.customerIds?.includes(sender.id)
@@ -135,7 +136,6 @@ export function ItemDetailsTable({
         }
     }
     
-    // Priority 2: Fallback to the standard rate list.
     return rateLists.find(rl => rl.isStandard) || null;
   }, [sender, rateLists]);
 
@@ -221,32 +221,42 @@ export function ItemDetailsTable({
         }
     }
     
-    // Auto-apply rate from quotation/standard list
-    const shouldApplyRate = ['itemName', 'wtPerUnit'].includes(columnId);
+    const shouldApplyRate = ['itemName', 'wtPerUnit', 'qty'].includes(columnId);
 
-    if (activeRateList && shouldApplyRate) {
-        const selectedItem = itemOptions.find(item => item.name.toLowerCase() === newRow.itemName.toLowerCase());
+    if (activeRateList && shouldApplyRate && fromStation && toStation && sender && receiver) {
+        const selectedItemName = newRow.itemName || 'Any';
         const wtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
 
-        let foundRate: StationRate | undefined;
-
-        // Try to find a matching rate
-        if (selectedItem && fromStation && toStation) {
-            foundRate = activeRateList.stationRates.find(sr => 
+        const findRate = (rateSource: StationRate[]): StationRate | undefined => {
+            const exactMatch = rateSource.find(sr => 
                 sr.fromStation === fromStation.name &&
                 sr.toStation === toStation.name &&
-                sr.itemName === selectedItem.name &&
-                sr.wtPerUnit === wtPerUnit
+                sr.senderName === sender.name &&
+                sr.receiverName === receiver.name &&
+                sr.itemName === selectedItemName &&
+                (sr.wtPerUnit || 0) === wtPerUnit
             );
-            if (!foundRate) {
-                foundRate = activeRateList.stationRates.find(sr => 
-                    sr.fromStation === fromStation.name &&
-                    sr.toStation === toStation.name &&
-                    sr.itemName === selectedItem.name &&
-                    !sr.wtPerUnit // fallback for item without specific weight
-                );
-            }
-        }
+            if (exactMatch) return exactMatch;
+
+            const routeItemMatch = rateSource.find(sr =>
+                sr.fromStation === fromStation.name &&
+                sr.toStation === toStation.name &&
+                sr.senderName === sender.name &&
+                sr.receiverName === receiver.name &&
+                sr.itemName === selectedItemName &&
+                !sr.wtPerUnit
+            );
+            if (routeItemMatch) return routeItemMatch;
+
+            const genericRouteMatch = rateSource.find(sr =>
+                sr.fromStation === fromStation.name &&
+                sr.toStation === toStation.name &&
+                sr.itemName === 'Any'
+            );
+            return genericRouteMatch;
+        };
+        
+        let foundRate = findRate(activeRateList.stationRates);
         
         if (foundRate) {
             newRow.rate = String(foundRate.rate);
@@ -254,8 +264,11 @@ export function ItemDetailsTable({
             if (foundRate.lrType && onQuotationApply) {
                 onQuotationApply(foundRate.lrType);
             }
-        } else if (activeRateList.isStandard && selectedItem) {
-            const itemRate = activeRateList.itemRates.find(ir => ir.itemId === String(selectedItem.id));
+        } else if (activeRateList.isStandard && selectedItemName !== 'Any') {
+            const itemRate = activeRateList.itemRates.find(ir => {
+                const item = itemOptions.find(i => i.id.toString() === ir.itemId);
+                return item?.name === selectedItemName;
+            });
             if (itemRate) {
                 newRow.rate = String(itemRate.rate);
                 newRow.freightOn = itemRate.rateOn;

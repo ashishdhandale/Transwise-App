@@ -177,6 +177,8 @@ export interface StationRate {
     itemName?: string;
     description?: string;
     wtPerUnit?: number;
+    senderName?: string;
+    receiverName?: string;
 }
 
 export interface ItemRate {

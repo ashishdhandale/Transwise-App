@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -51,7 +52,9 @@ export function StandardRateListEditor() {
         return rates.filter(rate => 
             rate.fromStation.toLowerCase().includes(lowerQuery) ||
             rate.toStation.toLowerCase().includes(lowerQuery) ||
-            (rate.itemName && rate.itemName.toLowerCase().includes(lowerQuery))
+            (rate.itemName && rate.itemName.toLowerCase().includes(lowerQuery)) ||
+            (rate.senderName && rate.senderName.toLowerCase().includes(lowerQuery)) ||
+            (rate.receiverName && rate.receiverName.toLowerCase().includes(lowerQuery))
         );
     }, [rates, searchTerm]);
 
@@ -112,7 +115,7 @@ export function StandardRateListEditor() {
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by station or item..."
+                            placeholder="Search by station, item, or party..."
                             className="pl-8"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -128,6 +131,8 @@ export function StandardRateListEditor() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>#</TableHead>
+                                <TableHead>Sender</TableHead>
+                                <TableHead>Receiver</TableHead>
                                 <TableHead>From</TableHead>
                                 <TableHead>To</TableHead>
                                 <TableHead>Item Name</TableHead>
@@ -142,6 +147,8 @@ export function StandardRateListEditor() {
                             {filteredRates.map((rate, index) => (
                                 <TableRow key={index}>
                                     <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{rate.senderName || 'Any'}</TableCell>
+                                    <TableCell>{rate.receiverName || 'Any'}</TableCell>
                                     <TableCell>{rate.fromStation}</TableCell>
                                     <TableCell>{rate.toStation}</TableCell>
                                     <TableCell>{rate.itemName}</TableCell>
@@ -186,7 +193,7 @@ export function StandardRateListEditor() {
                             ))}
                              {filteredRates.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                                         No standard rates found. They will be added automatically as you create new bookings.
                                     </TableCell>
                                 </TableRow>
