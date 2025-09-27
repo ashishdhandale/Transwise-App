@@ -44,6 +44,7 @@ interface QuotationItem extends StationRate {
     id: number;
     itemName?: string;
     description?: string;
+    wtPerUnit?: number;
 }
 
 let nextId = 1;
@@ -66,6 +67,7 @@ export function NewQuotationForm() {
     const [toStation, setToStation] = useState<string | undefined>();
     const [itemName, setItemName] = useState<string | undefined>();
     const [description, setDescription] = useState('');
+    const [wtPerUnit, setWtPerUnit] = useState<number | ''>('');
     const [rate, setRate] = useState<number | ''>('');
     const [rateOn, setRateOn] = useState<RateOnType>('Chg.wt');
     const [lrType, setLrType] = useState(defaultLrType);
@@ -120,6 +122,7 @@ export function NewQuotationForm() {
             rateOn,
             itemName: itemName || 'Any',
             description,
+            wtPerUnit: Number(wtPerUnit) || undefined,
             lrType,
         };
 
@@ -130,6 +133,7 @@ export function NewQuotationForm() {
     const resetEntryFields = () => {
         setItemName(undefined);
         setDescription('');
+        setWtPerUnit('');
         setRate('');
         setRateOn('Chg.wt');
         setLrType(defaultLrType);
@@ -152,7 +156,7 @@ export function NewQuotationForm() {
             name: `Quotation for ${partyName} - ${new Date().toLocaleDateString()}`,
             isStandard: partyName === 'Default Rate List',
             customerIds: customer ? [customer.id] : [],
-            stationRates: items.map(({ fromStation, toStation, rate, rateOn, lrType, itemName, description }) => ({ fromStation, toStation, rate, rateOn, lrType, itemName, description })),
+            stationRates: items.map(({ fromStation, toStation, rate, rateOn, lrType, itemName, description, wtPerUnit }) => ({ fromStation, toStation, rate, rateOn, lrType, itemName, description, wtPerUnit })),
             itemRates: [],
         };
 
@@ -238,7 +242,7 @@ export function NewQuotationForm() {
                         </div>
 
                         <div className="p-4 border-t border-dashed space-y-4">
-                             <div className="grid grid-cols-1 md:grid-cols-[1.5fr_2fr_1fr_1fr_1fr_auto] gap-4 items-end">
+                             <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
                                 <div className="space-y-1">
                                     <Label>Item Name</Label>
                                     <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
@@ -246,6 +250,10 @@ export function NewQuotationForm() {
                                 <div className="space-y-1">
                                     <Label>Description</Label>
                                     <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional"/>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Wt./Unit</Label>
+                                    <Input type="number" value={wtPerUnit} onChange={(e) => setWtPerUnit(Number(e.target.value))} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Rate</Label>
@@ -284,6 +292,7 @@ export function NewQuotationForm() {
                                     <TableHead>From</TableHead>
                                     <TableHead>To</TableHead>
                                     <TableHead>Item</TableHead>
+                                    <TableHead>Wt./Unit</TableHead>
                                     <TableHead>Rate</TableHead>
                                     <TableHead>Booking Type</TableHead>
                                     <TableHead>Action</TableHead>
@@ -296,6 +305,7 @@ export function NewQuotationForm() {
                                         <TableCell>{item.fromStation}</TableCell>
                                         <TableCell>{item.toStation}</TableCell>
                                         <TableCell>{item.itemName}</TableCell>
+                                        <TableCell>{item.wtPerUnit || 'N/A'}</TableCell>
                                         <TableCell>{item.rate} / {rateOnOptions.find(o => o.value === item.rateOn)?.label}</TableCell>
                                         <TableCell>{item.lrType}</TableCell>
                                         <TableCell>
@@ -307,7 +317,7 @@ export function NewQuotationForm() {
                                 ))}
                                 {items.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">No items added to the quotation yet.</TableCell>
+                                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">No items added to the quotation yet.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>

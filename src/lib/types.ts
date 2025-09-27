@@ -1,5 +1,4 @@
 
-
 export type DeliveryStatus =
   | 'Pending'
   | 'In Transit'
@@ -176,6 +175,7 @@ export interface StationRate {
     lrType?: string;
     itemName?: string;
     description?: string;
+    wtPerUnit?: number;
 }
 
 export interface ItemRate {

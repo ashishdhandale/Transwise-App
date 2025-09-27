@@ -53,6 +53,7 @@ export function PrintableQuotation({ quotationNo, quotationDate, party, items, p
                             <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Item</TableHead>
+                            <TableHead className={thClass}>Wt./Unit</TableHead>
                             <TableHead className={thClass}>Rate</TableHead>
                             <TableHead className={thClass}>Per</TableHead>
                             <TableHead className={thClass}>Booking Type</TableHead>
@@ -65,6 +66,7 @@ export function PrintableQuotation({ quotationNo, quotationDate, party, items, p
                                 <TableCell className={tdClass}>{item.fromStation}</TableCell>
                                 <TableCell className={tdClass}>{item.toStation}</TableCell>
                                 <TableCell className={tdClass}>{item.itemName || 'Any'}</TableCell>
+                                <TableCell className={tdClass}>{item.wtPerUnit || 'N/A'}</TableCell>
                                 <TableCell className={tdClass}>{item.rate}</TableCell>
                                 <TableCell className={tdClass}>{item.rateOn}</TableCell>
                                 <TableCell className={tdClass}>{item.lrType}</TableCell>
