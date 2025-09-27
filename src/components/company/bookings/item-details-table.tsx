@@ -60,14 +60,11 @@ const tdClass = "p-1";
 const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs whitespace-nowrap";
 const inputClass = "h-8 text-xs px-1";
 
-const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
-const DEFAULT_ITEM_NAME = 'Frm MAS';
-
 let nextId = 1;
 const createEmptyRow = (): ItemRow => ({
     id: nextId++,
     ewbNo: '',
-    itemName: DEFAULT_ITEM_NAME,
+    itemName: '',
     description: '',
     wtPerUnit: '',
     qty: '',
@@ -109,16 +106,9 @@ export function ItemDetailsTable({
 
   const loadItemsAndRates = useCallback(() => {
     try {
-        const savedItems = localStorage.getItem(LOCAL_STORAGE_KEY_ITEMS);
+        const savedItems = localStorage.getItem('transwise_items');
         if (savedItems) {
             setItemOptions(JSON.parse(savedItems));
-        } else {
-            const defaultItems: Item[] = [
-                { id: 1, name: 'Frm MAS', hsnCode: '', description: '' },
-                { id: 2, name: 'Electronics', hsnCode: '', description: '' },
-            ];
-            setItemOptions(defaultItems);
-            localStorage.setItem(LOCAL_STORAGE_KEY_ITEMS, JSON.stringify(defaultItems));
         }
         setRateLists(getRateLists());
     } catch (error) {
@@ -133,7 +123,6 @@ export function ItemDetailsTable({
   const activeRateList = useMemo(() => {
     if (!rateLists.length) return null;
 
-    // 1. Check for a customer-specific quotation
     if (sender) {
         const customerRateList = rateLists.find(rl => !rl.isStandard && rl.customerIds?.includes(sender.id));
         if (customerRateList) {
@@ -141,7 +130,6 @@ export function ItemDetailsTable({
         }
     }
 
-    // 2. Fallback to the standard rate list
     return rateLists.find(rl => rl.isStandard) || null;
   }, [sender, rateLists]);
 
@@ -299,7 +287,7 @@ export function ItemDetailsTable({
             const newId = itemOptions.length > 0 ? Math.max(...itemOptions.map(i => i.id)) + 1 : 1;
             const newItem: Item = { id: newId, ...itemData };
             const updatedItems = [newItem, ...itemOptions];
-            localStorage.setItem(LOCAL_STORAGE_KEY_ITEMS, JSON.stringify(updatedItems));
+            localStorage.setItem('transwise_items', JSON.stringify(updatedItems));
             setItemOptions(updatedItems);
             toast({ title: 'Item Added', description: `"${itemData.name}" has been added to your master list.` });
             return true;
@@ -325,7 +313,7 @@ export function ItemDetailsTable({
   }
   
   const totals = useMemo(() => {
-      const filledRows = rows.filter(row => row.itemName !== DEFAULT_ITEM_NAME || parseFloat(row.qty) > 0 || parseFloat(row.actWt) > 0);
+      const filledRows = rows.filter(row => row.itemName || parseFloat(row.qty) > 0 || parseFloat(row.actWt) > 0);
       return {
           itemCount: filledRows.length,
           qty: rows.reduce((sum, row) => sum + (parseFloat(row.qty) || 0), 0),
@@ -363,7 +351,7 @@ export function ItemDetailsTable({
                     <TableCell className={`${tdClass} text-center font-semibold text-red-500`}>{index + 1}*</TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="E-Way Bill No" className={inputClass} value={row.ewbNo} onChange={(e) => handleInputChange(index, 'ewbNo', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}>
-                        <Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Select item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} disabled={isViewOnly} />
+                        <Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Search item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} disabled={isViewOnly} />
                     </TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.wtPerUnit} onChange={(e) => handleInputChange(index, 'wtPerUnit', e.target.value)} readOnly={isViewOnly} /></TableCell>
@@ -434,4 +422,3 @@ export function ItemDetailsTable({
     </ClientOnly>
   );
 }
-
