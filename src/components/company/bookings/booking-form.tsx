@@ -12,7 +12,7 @@ import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking, FtlDetails } from '@/lib/bookings-dashboard-data';
-import type { City, Customer, Driver, VehicleMaster, Vendor } from '@/lib/types';
+import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
@@ -34,7 +34,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
@@ -48,6 +47,7 @@ import { FtlChallan } from '../challan-tracking/ftl-challan';
 import { PaymentDialog } from './payment-dialog';
 import { useSearchParams } from 'next/navigation';
 import { ClientOnly } from '@/components/ui/client-only';
+import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -158,6 +158,61 @@ const isRowPartiallyFilled = (row: ItemRow) => {
     const filledFields = [row.description, row.qty, row.actWt, row.chgWt].filter(Boolean);
     return filledFields.length > 0 && filledFields.length < 4;
 };
+
+// --- Auto-Learn Standard Rate Logic ---
+const updateStandardRateList = (booking: Booking, sender: Customer) => {
+    const allRateLists = getRateLists();
+    
+    // Check if the sender has a specific quotation
+    const hasQuotation = allRateLists.some(rl => !rl.isStandard && rl.customerIds.includes(sender.id));
+    
+    if (hasQuotation) {
+        // This customer has a quotation, so we don't learn from their bookings.
+        return;
+    }
+    
+    const standardRateList = allRateLists.find(rl => rl.isStandard);
+    
+    if (!standardRateList) {
+        // Should not happen, but a safeguard.
+        console.error("Standard Rate List not found.");
+        return;
+    }
+    
+    let wasUpdated = false;
+
+    booking.itemRows.forEach(item => {
+        if (!item.rate || Number(item.rate) <= 0) return;
+
+        const newRate: StationRate = {
+            fromStation: booking.fromCity,
+            toStation: booking.toCity,
+            rate: Number(item.rate),
+            rateOn: item.freightOn as StationRate['rateOn'],
+            itemName: item.itemName || 'Any',
+            wtPerUnit: Number(item.wtPerUnit) || undefined
+        };
+
+        // Check if a virtually identical rate already exists
+        const exists = standardRateList.stationRates.some(existing => 
+            existing.fromStation.toLowerCase() === newRate.fromStation.toLowerCase() &&
+            existing.toStation.toLowerCase() === newRate.toStation.toLowerCase() &&
+            (existing.itemName || 'Any').toLowerCase() === newRate.itemName.toLowerCase() &&
+            (existing.wtPerUnit || 0) === (newRate.wtPerUnit || 0)
+        );
+
+        if (!exists) {
+            standardRateList.stationRates.push(newRate);
+            wasUpdated = true;
+        }
+    });
+
+    if (wasUpdated) {
+        const updatedRateLists = allRateLists.map(rl => rl.id === standardRateList.id ? standardRateList : rl);
+        saveRateLists(updatedRateLists);
+    }
+};
+
 
 export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false }: BookingFormProps) {
     const searchParams = useSearchParams();
@@ -404,6 +459,12 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 const updatedBookings = [...allBookings, newBooking];
                 saveBookings(updatedBookings);
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
+                
+                // --- Auto-Learn Standard Rate ---
+                if (sender) {
+                    updateStandardRateList(newBooking, sender);
+                }
+                // -----------------------------
                 
                 if (newBooking.loadType === 'FTL') {
                     // For FTL, we create a pending challan immediately.
