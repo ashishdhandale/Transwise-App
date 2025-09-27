@@ -20,7 +20,7 @@ interface VehicleDetailsSectionProps {
     vehicles: VehicleMaster[];
     vendors: Vendor[];
     onMasterDataChange: () => void;
-    loadType: 'PTL' | 'FTL';
+    loadType: 'PTL' | 'FTL' | 'LTL';
     isViewOnly?: boolean;
 }
 

@@ -59,8 +59,9 @@ const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 const createEmptyRow = (id: number): ItemRow => ({
   id,
   ewbNo: '',
-  itemName: 'Frm MAS',
+  itemName: '',
   description: '',
+  wtPerUnit: '',
   qty: '',
   actWt: '',
   chgWt: '',
@@ -150,7 +151,7 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isParti
 }
 
 const isRowEmpty = (row: ItemRow) => {
-    return !row.description && !row.qty && !row.actWt && !row.chgWt && row.itemName === 'Frm MAS';
+    return !row.description && !row.qty && !row.actWt && !row.chgWt && row.itemName === '';
 };
 
 const isRowPartiallyFilled = (row: ItemRow) => {
@@ -166,7 +167,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
-    const [loadType, setLoadType] = useState('PTL');
+    const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('PTL');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
     const [sender, setSender] = useState<Customer | null>(null);

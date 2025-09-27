@@ -3,6 +3,7 @@ export const bookingOptions = {
     loadTypes: [
         { value: 'PTL', label: 'PTL [Part Truck]' },
         { value: 'FTL', label: 'FTL [Full Truck]' },
+        { value: 'LTL', label: 'LTL [Less Than Truck]' },
     ],
     stations: [],
     bookingTypes: [
