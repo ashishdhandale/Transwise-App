@@ -123,7 +123,7 @@ export function StandardRateListEditor() {
                 <CardHeader>
                     <CardTitle>Station-wise Rates</CardTitle>
                     <CardDescription>
-                        These are the default rates between two stations when no specific item rate or quotation applies.
+                        These are the default rates between two stations when no specific item rate or quotation applies. Edit the values directly in the rows.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -166,7 +166,7 @@ export function StandardRateListEditor() {
                 <CardHeader>
                     <CardTitle>Item-wise Rates</CardTitle>
                     <CardDescription>
-                        These rates are for specific items and will override station-wise rates if applicable.
+                        These rates are for specific items and will override station-wise rates if applicable. Edit the values directly in the rows.
                     </CardDescription>
                 </CardHeader>
                  <CardContent>
