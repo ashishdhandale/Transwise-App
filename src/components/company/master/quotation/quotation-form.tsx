@@ -106,9 +106,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
                     setQuotationDate(quoteToEdit.quotationDate ? new Date(quoteToEdit.quotationDate) : undefined);
                     setValidTill(quoteToEdit.validTill ? new Date(quoteToEdit.validTill) : undefined);
                     
-                    if (quoteToEdit.isStandard) {
-                        setPartyName('Default Rate List');
-                    } else if (quoteToEdit.customerIds && quoteToEdit.customerIds.length > 0) {
+                    if (quoteToEdit.customerIds && quoteToEdit.customerIds.length > 0) {
                         const customer = loadedCustomers.find(c => c.id === quoteToEdit.customerIds[0]);
                         setPartyName(customer?.name);
                     }
@@ -136,7 +134,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name, value: c.name })), [cities]);
     const itemOptions = useMemo(() => masterItems.map(i => ({ label: i.name, value: i.name })), [masterItems]);
-    const customerOptions = useMemo(() => [{label: 'Default Rate List', value: 'Default Rate List'}, ...customers.map(c => ({ label: c.name, value: c.name }))], [customers]);
+    const customerOptions = useMemo(() => customers.map(c => ({ label: c.name, value: c.name })), [customers]);
 
     const handleAddToList = () => {
         if (!fromStation || !toStation || rate === '') {
@@ -184,7 +182,7 @@ export function QuotationForm({ quotationId }: QuotationFormProps) {
         
         const newRateList: Omit<RateList, 'id'> = {
             name: `Quotation No. ${quotationNo}`,
-            isStandard: partyName === 'Default Rate List',
+            isStandard: false, // This form is only for customer quotations
             customerIds: customer ? [customer.id] : [],
             quotationDate: quotationDate?.toISOString(),
             validTill: validTill?.toISOString(),

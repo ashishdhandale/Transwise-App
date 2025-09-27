@@ -175,7 +175,7 @@ export function RateListManagement() {
                 </TableHeader>
                 <TableBody>
                 {filteredRateLists.map((list) => {
-                    const customer = list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null;
+                    const customer = list.isStandard ? null : (list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null);
                     const isValid = list.validTill ? isAfter(new Date(list.validTill), startOfToday()) : true;
                     const status = list.isStandard ? 'Standard' : isValid ? 'Active' : 'Expired';
                     let statusClass = '';
@@ -202,7 +202,7 @@ export function RateListManagement() {
                                         </DropdownMenuItem>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
-                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive" disabled={list.isStandard}>
                                                     <Trash2 className="mr-2 h-4 w-4" />Delete
                                                 </DropdownMenuItem>
                                             </AlertDialogTrigger>
@@ -223,9 +223,9 @@ export function RateListManagement() {
                                  </DropdownMenu>
                             </TableCell>
                             <TableCell className={cn(tdClass, "font-medium")}>{list.name.replace('Quotation No. ', '')}</TableCell>
-                            <TableCell className={cn(tdClass)}>{customer?.name || 'Standard'}</TableCell>
+                            <TableCell className={cn(tdClass)}>{customer?.name || (list.isStandard ? 'STANDARD RATE' : 'N/A')}</TableCell>
                             <TableCell className={cn(tdClass)}>{list.quotationDate ? format(new Date(list.quotationDate), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
-                            <TableCell className={cn(tdClass, !isValid && 'text-red-600 font-semibold')}>{list.validTill ? format(new Date(list.validTill), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
+                            <TableCell className={cn(tdClass, !isValid && !list.isStandard ? 'text-red-600 font-semibold' : '')}>{list.validTill ? format(new Date(list.validTill), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
                             <TableCell className={cn(tdClass)}>
                                  <Badge variant={list.isStandard ? 'default' : 'secondary'} className={statusClass}>
                                     {status}

@@ -25,7 +25,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -123,13 +122,17 @@ export function ItemDetailsTable({
   const activeRateList = useMemo(() => {
     if (!rateLists.length) return null;
 
+    // Priority 1: Find a specific quotation for the selected customer.
     if (sender) {
-        const customerRateList = rateLists.find(rl => !rl.isStandard && rl.customerIds?.includes(sender.id));
+        const customerRateList = rateLists.find(rl => 
+            !rl.isStandard && rl.customerIds?.includes(sender.id)
+        );
         if (customerRateList) {
             return customerRateList;
         }
     }
-
+    
+    // Priority 2: Fallback to the standard rate list.
     return rateLists.find(rl => rl.isStandard) || null;
   }, [sender, rateLists]);
 
