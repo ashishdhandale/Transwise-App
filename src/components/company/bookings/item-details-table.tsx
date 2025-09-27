@@ -85,7 +85,7 @@ interface ItemDetailsTableProps {
     sender: Customer | null;
     fromStation: City | null;
     toStation: City | null;
-    onQuotationApply?: (lrType: string) => void;
+    onQuotationApply: (lrType: string) => void;
 }
 
 export function ItemDetailsTable({ 
