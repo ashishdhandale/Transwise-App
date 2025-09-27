@@ -167,7 +167,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
-    const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('PTL');
+    const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('LTL');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
     const [sender, setSender] = useState<Customer | null>(null);
@@ -267,7 +267,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                     setCurrentLrNumber(bookingToLoad.lrNo);
                     setBookingDate(new Date(bookingToLoad.bookingDate));
                     setBookingType(bookingToLoad.lrType);
-                    setLoadType(bookingToLoad.loadType || 'PTL');
+                    setLoadType(bookingToLoad.loadType || 'LTL');
                     setFromStation({ id: 0, name: bookingToLoad.fromCity, aliasCode: '', pinCode: '' });
                     setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
                     setSender(senderProfile);
@@ -313,7 +313,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         let keyCounter = 1;
         setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
-        setLoadType('PTL');
+        setLoadType('LTL');
         setFromStation(null);
         setToStation(null);
         setSender(null);
