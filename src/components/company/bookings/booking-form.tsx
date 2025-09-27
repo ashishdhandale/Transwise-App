@@ -617,6 +617,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         sender={sender}
                         fromStation={fromStation}
                         toStation={toStation}
+                        onQuotationApply={setBookingType}
                     />
                     
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">

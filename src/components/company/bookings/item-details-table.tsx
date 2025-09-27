@@ -30,7 +30,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@/components/ui/combobox';
-import type { City, Customer, Item, RateList } from '@/lib/types';
+import type { City, Customer, Item, RateList, StationRate } from '@/lib/types';
 import { AddItemDialog } from '../master/add-item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ClientOnly } from '@/components/ui/client-only';
@@ -85,6 +85,7 @@ interface ItemDetailsTableProps {
     sender: Customer | null;
     fromStation: City | null;
     toStation: City | null;
+    onQuotationApply?: (lrType: string) => void;
 }
 
 export function ItemDetailsTable({ 
@@ -94,6 +95,7 @@ export function ItemDetailsTable({
     sender,
     fromStation,
     toStation,
+    onQuotationApply,
 }: ItemDetailsTableProps) {
   const [itemOptions, setItemOptions] = useState<Item[]>([]);
   const [rateLists, setRateLists] = useState<RateList[]>([]);
@@ -193,7 +195,7 @@ export function ItemDetailsTable({
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
     const newRows = [...rows];
-    const newRow = { ...newRows[rowIndex] };
+    let newRow = { ...newRows[rowIndex] };
     
     let processedValue = value;
     
@@ -219,26 +221,44 @@ export function ItemDetailsTable({
         }
     }
     
-    if (columnId === 'itemName') {
-        const selectedItem = itemOptions.find(item => item.name.toLowerCase() === value.toLowerCase());
-        if (selectedItem) {
-            if (selectedItem.description) {
-                newRow.description = selectedItem.description;
+    // Auto-apply rate from quotation/standard list
+    const shouldApplyRate = ['itemName', 'wtPerUnit'].includes(columnId);
+
+    if (activeRateList && shouldApplyRate) {
+        const selectedItem = itemOptions.find(item => item.name.toLowerCase() === newRow.itemName.toLowerCase());
+        const wtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
+
+        let foundRate: StationRate | undefined;
+
+        // Try to find a matching rate
+        if (selectedItem && fromStation && toStation) {
+            foundRate = activeRateList.stationRates.find(sr => 
+                sr.fromStation === fromStation.name &&
+                sr.toStation === toStation.name &&
+                sr.itemName === selectedItem.name &&
+                sr.wtPerUnit === wtPerUnit
+            );
+            if (!foundRate) {
+                foundRate = activeRateList.stationRates.find(sr => 
+                    sr.fromStation === fromStation.name &&
+                    sr.toStation === toStation.name &&
+                    sr.itemName === selectedItem.name &&
+                    !sr.wtPerUnit // fallback for item without specific weight
+                );
             }
-            if (activeRateList) {
-                // Priority 1: Item-specific rate
-                const itemRate = activeRateList.itemRates?.find(ir => ir.itemId === String(selectedItem.id));
-                if (itemRate) {
-                    newRow.rate = String(itemRate.rate);
-                    newRow.freightOn = itemRate.rateOn;
-                } else if (fromStation && toStation) {
-                    // Priority 2: Station-wise rate
-                    const stationRate = activeRateList.stationRates?.find(sr => sr.fromStation === fromStation.name && sr.toStation === toStation.name);
-                    if (stationRate) {
-                        newRow.rate = String(stationRate.rate);
-                        newRow.freightOn = stationRate.rateOn;
-                    }
-                }
+        }
+        
+        if (foundRate) {
+            newRow.rate = String(foundRate.rate);
+            newRow.freightOn = foundRate.rateOn;
+            if (foundRate.lrType && onQuotationApply) {
+                onQuotationApply(foundRate.lrType);
+            }
+        } else if (activeRateList.isStandard && selectedItem) {
+            const itemRate = activeRateList.itemRates.find(ir => ir.itemId === String(selectedItem.id));
+            if (itemRate) {
+                newRow.rate = String(itemRate.rate);
+                newRow.freightOn = itemRate.rateOn;
             }
         }
     }
