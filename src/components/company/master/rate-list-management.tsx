@@ -45,6 +45,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { AddRateListDialog } from './add-rate-list-dialog';
+import { useRouter } from 'next/navigation';
 
 
 const thClass = "bg-cyan-500 text-white font-semibold";
@@ -60,6 +61,7 @@ export function RateListManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentRateList, setCurrentRateList] = useState<RateList | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     try {
@@ -122,9 +124,6 @@ export function RateListManagement() {
     setRateLists(updatedLists);
     return true;
   };
-
-
-  const router = useRouter();
 
   const filteredRateLists = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
