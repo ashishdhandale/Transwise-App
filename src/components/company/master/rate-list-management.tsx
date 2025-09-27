@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getCustomers } from '@/lib/customer-data';
 import type { Customer } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, isAfter, startOfToday } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -116,7 +116,6 @@ export function RateListManagement() {
                     <TableHead className={thClass}>Action</TableHead>
                     <TableHead className={thClass}>Quotation No</TableHead>
                     <TableHead className={thClass}>Customer Name</TableHead>
-                    <TableHead className={thClass}>GST No</TableHead>
                     <TableHead className={thClass}>Quotation Date</TableHead>
                     <TableHead className={thClass}>Valid Till</TableHead>
                     <TableHead className={thClass}>Status</TableHead>
@@ -125,6 +124,12 @@ export function RateListManagement() {
                 <TableBody>
                 {filteredRateLists.map((list) => {
                     const customer = list.customerIds.length > 0 ? findCustomer(list.customerIds[0]) : null;
+                    const isValid = list.validTill ? isAfter(new Date(list.validTill), startOfToday()) : true;
+                    const status = list.isStandard ? 'Standard' : isValid ? 'Active' : 'Expired';
+                    let statusClass = '';
+                    if (status === 'Standard' || status === 'Active') statusClass = 'bg-green-600';
+                    if (status === 'Expired') statusClass = 'bg-red-600';
+                    
                     return (
                         <TableRow key={list.id}>
                              <TableCell className={cn(tdClass)}>
@@ -161,14 +166,13 @@ export function RateListManagement() {
                                     </DropdownMenuContent>
                                  </DropdownMenu>
                             </TableCell>
-                            <TableCell className={cn(tdClass, "font-medium")}>{list.name.split('-')[0]}</TableCell>
+                            <TableCell className={cn(tdClass, "font-medium")}>{list.name}</TableCell>
                             <TableCell className={cn(tdClass)}>{customer?.name || 'Standard'}</TableCell>
-                            <TableCell className={cn(tdClass)}>{customer?.gstin || 'N/A'}</TableCell>
-                            <TableCell className={cn(tdClass)}>{format(new Date(), 'dd-MMM-yyyy')}</TableCell>
-                            <TableCell className={cn(tdClass)}>{format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'dd-MMM-yyyy')}</TableCell>
+                            <TableCell className={cn(tdClass)}>{list.quotationDate ? format(new Date(list.quotationDate), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
+                            <TableCell className={cn(tdClass, !isValid && 'text-red-600 font-semibold')}>{list.validTill ? format(new Date(list.validTill), 'dd-MMM-yyyy') : 'N/A'}</TableCell>
                             <TableCell className={cn(tdClass)}>
-                                 <Badge variant={list.isStandard ? 'default' : 'secondary'} className={list.isStandard ? 'bg-green-600' : ''}>
-                                    {list.isStandard ? 'Standard' : 'Active'}
+                                 <Badge variant={list.isStandard ? 'default' : 'secondary'} className={statusClass}>
+                                    {status}
                                 </Badge>
                             </TableCell>
                         </TableRow>

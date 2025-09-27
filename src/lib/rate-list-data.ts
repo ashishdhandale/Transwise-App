@@ -8,6 +8,7 @@ const initialRateLists: RateList[] = [
     {
         id: 1,
         name: 'Standard Rate List',
+        isStandard: true,
         customerIds: [],
         stationRates: [
             { fromStation: 'Nagpur', toStation: 'Pune', rate: 12, rateOn: 'Chg.wt' },

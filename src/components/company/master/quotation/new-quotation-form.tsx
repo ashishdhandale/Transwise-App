@@ -52,6 +52,7 @@ let nextId = 1;
 export function NewQuotationForm() {
     const [quotationNo, setQuotationNo] = useState('001');
     const [quotationDate, setQuotationDate] = useState<Date | undefined>(new Date());
+    const [validTill, setValidTill] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() + 1)));
     const [partyName, setPartyName] = useState<string | undefined>(undefined);
     const [defaultLrType, setDefaultLrType] = useState('TOPAY');
     const [items, setItems] = useState<QuotationItem[]>([]);
@@ -75,7 +76,7 @@ export function NewQuotationForm() {
 
     // Preview Dialog
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [savedQuotationData, setSavedQuotationData] = useState<{ party?: Customer, items: QuotationItem[] } | null>(null);
+    const [savedQuotationData, setSavedQuotationData] = useState<{ party?: Customer, items: QuotationItem[], quotationDate: Date, validTill: Date } | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -153,9 +154,11 @@ export function NewQuotationForm() {
         const customer = customers.find(c => c.name === partyName);
         
         const newRateList: Omit<RateList, 'id'> = {
-            name: `Quotation for ${partyName} - ${new Date().toLocaleDateString()}`,
+            name: `Quotation No. ${quotationNo}`,
             isStandard: partyName === 'Default Rate List',
             customerIds: customer ? [customer.id] : [],
+            quotationDate: quotationDate?.toISOString(),
+            validTill: validTill?.toISOString(),
             stationRates: items.map(({ fromStation, toStation, rate, rateOn, lrType, itemName, description, wtPerUnit }) => ({ fromStation, toStation, rate, rateOn, lrType, itemName, description, wtPerUnit })),
             itemRates: [],
         };
@@ -165,7 +168,7 @@ export function NewQuotationForm() {
         
         saveRateLists([...allRateLists, { id: newId, ...newRateList }]);
         
-        setSavedQuotationData({ party: customer, items });
+        setSavedQuotationData({ party: customer, items, quotationDate: quotationDate!, validTill: validTill! });
         setIsPreviewOpen(true);
         
         toast({ title: "Quotation Saved", description: "The new quotation has been saved as a Rate List."});
@@ -197,7 +200,7 @@ export function NewQuotationForm() {
     return (
         <div className="space-y-4">
             <Card>
-                <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                     <div>
                         <Label>Quotation No:</Label>
                         <p className="text-2xl font-bold text-red-600">{quotationNo}</p>
@@ -205,6 +208,10 @@ export function NewQuotationForm() {
                     <div>
                         <Label>Quotation Date</Label>
                         <DatePicker date={quotationDate} setDate={setQuotationDate} />
+                    </div>
+                     <div>
+                        <Label>Valid Till</Label>
+                        <DatePicker date={validTill} setDate={setValidTill} />
                     </div>
                     <div>
                         <Label>Select Party Name</Label>
@@ -242,7 +249,7 @@ export function NewQuotationForm() {
                         </div>
 
                         <div className="p-4 border-t border-dashed space-y-4">
-                             <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr_auto] gap-4 items-end">
+                             <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_1fr] gap-4 items-end">
                                 <div className="space-y-1">
                                     <Label>Item Name</Label>
                                     <Combobox options={itemOptions} value={itemName} onChange={setItemName} placeholder="All Items"/>
@@ -277,10 +284,12 @@ export function NewQuotationForm() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                 <Button onClick={handleAddToList} size="icon" className="h-10 w-10">
-                                    <PlusCircle className="h-5 w-5" />
-                                </Button>
                             </div>
+                             <div className="flex justify-end">
+                                <Button onClick={handleAddToList}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Item to List
+                                </Button>
+                             </div>
                         </div>
                      </div>
 
@@ -354,7 +363,8 @@ export function NewQuotationForm() {
                             <div ref={printRef}>
                                <PrintableQuotation 
                                     quotationNo={quotationNo}
-                                    quotationDate={quotationDate!}
+                                    quotationDate={savedQuotationData.quotationDate}
+                                    validTill={savedQuotationData.validTill}
                                     party={savedQuotationData.party}
                                     items={savedQuotationData.items}
                                     profile={companyProfile}

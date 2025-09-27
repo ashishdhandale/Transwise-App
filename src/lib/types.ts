@@ -188,6 +188,8 @@ export interface RateList {
   id: number;
   name: string;
   isStandard?: boolean;
+  quotationDate?: string;
+  validTill?: string;
   // Associations
   customerIds: number[];
   // Rate structures

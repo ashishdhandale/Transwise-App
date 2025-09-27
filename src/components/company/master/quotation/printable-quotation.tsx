@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 interface PrintableQuotationProps {
     quotationNo: string;
     quotationDate: Date;
+    validTill: Date;
     party?: Customer;
     items: StationRate[];
     profile: CompanyProfileFormValues | null;
@@ -17,7 +18,7 @@ interface PrintableQuotationProps {
 const thClass = "text-left text-xs font-bold text-black border border-black";
 const tdClass = "text-xs border border-black p-1";
 
-export function PrintableQuotation({ quotationNo, quotationDate, party, items, profile }: PrintableQuotationProps) {
+export function PrintableQuotation({ quotationNo, quotationDate, validTill, party, items, profile }: PrintableQuotationProps) {
     const totalRate = items.reduce((sum, item) => sum + item.rate, 0);
 
     return (
@@ -33,6 +34,7 @@ export function PrintableQuotation({ quotationNo, quotationDate, party, items, p
                 <div>
                     <p><span className="font-semibold">Quotation No:</span> {quotationNo}</p>
                     <p><span className="font-semibold">Date:</span> {format(quotationDate, 'dd-MMM-yyyy')}</p>
+                    <p><span className="font-semibold">Valid Till:</span> {format(validTill, 'dd-MMM-yyyy')}</p>
                 </div>
                 <div>
                     <p className="font-semibold">To,</p>
@@ -80,7 +82,7 @@ export function PrintableQuotation({ quotationNo, quotationDate, party, items, p
                 <h3 className="font-bold underline">Terms & Conditions:</h3>
                 <ol className="list-decimal list-inside text-xs space-y-1">
                     <li>GST will be charged extra as applicable.</li>
-                    <li>Rates are valid for a period of 30 days.</li>
+                    <li>Rates are valid until the date specified above.</li>
                     <li>All disputes subject to Nagpur jurisdiction only.</li>
                     <li>Goods will be carried at owner's risk.</li>
                 </ol>
