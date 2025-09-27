@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Search, MoreHorizontal, Pencil, Printer, Trash2 } from 'lucide-react';
+import { PlusCircle, Search, MoreHorizontal, Pencil, Printer, Trash2, Download, Loader2 } from 'lucide-react';
 import type { RateList, Customer, City, Item } from '@/lib/types';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import Link from 'next/link';
@@ -46,6 +46,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { AddRateListDialog } from './add-rate-list-dialog';
 import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PrintableQuotation } from './quotation/printable-quotation';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 
 const thClass = "bg-cyan-500 text-white font-semibold";
@@ -56,22 +61,34 @@ export function RateListManagement() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentRateList, setCurrentRateList] = useState<RateList | null>(null);
+  
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [quotationToPrint, setQuotationToPrint] = useState<RateList | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
+
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    try {
-        setRateLists(getRateLists());
-        setCustomers(getCustomers());
-        setCities(getCities());
-        setItems(getItems());
-    } catch (error) {
-      console.error("Failed to load master data", error);
+    async function loadData() {
+        try {
+            setRateLists(getRateLists());
+            setCustomers(getCustomers());
+            setCities(getCities());
+            setItems(getItems());
+            const profile = await getCompanyProfile();
+            setCompanyProfile(profile);
+        } catch (error) {
+          console.error("Failed to load master data", error);
+        }
     }
+    loadData();
   }, []);
   
   const findCustomer = (customerId: number) => {
@@ -124,6 +141,35 @@ export function RateListManagement() {
     setRateLists(updatedLists);
     return true;
   };
+  
+   const handlePrint = (list: RateList) => {
+    setQuotationToPrint(list);
+    setIsPrintDialogOpen(true);
+  };
+  
+  const handleDownloadPdf = async () => {
+    const input = printRef.current;
+    if (!input || !quotationToPrint) return;
+
+    setIsDownloading(true);
+
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgProps= pdf.getImageProperties(imgData);
+    const imgWidth = imgProps.width;
+    const imgHeight = imgProps.height;
+    const ratio = imgWidth / imgHeight;
+    const finalImgWidth = pdfWidth - 20;
+    const finalImgHeight = finalImgWidth / ratio;
+    
+    pdf.addImage(imgData, 'PNG', 10, 10, finalImgWidth, finalImgHeight);
+    pdf.save(`quotation-${quotationToPrint.name}.pdf`);
+    setIsDownloading(false);
+  };
+
 
   const filteredRateLists = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
@@ -195,7 +241,9 @@ export function RateListManagement() {
                                         <DropdownMenuItem onClick={() => handleEdit(list)}>
                                             <Pencil className="mr-2 h-4 w-4" />Update
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem><Printer className="mr-2 h-4 w-4" />Print</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handlePrint(list)}>
+                                            <Printer className="mr-2 h-4 w-4" />Print
+                                        </DropdownMenuItem>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
                                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
@@ -248,6 +296,35 @@ export function RateListManagement() {
         items={items}
         customers={customers}
       />
+      {quotationToPrint && (
+        <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>Print Preview: {quotationToPrint.name}</DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
+                    <div ref={printRef}>
+                       <PrintableQuotation 
+                            quotationNo={quotationToPrint.name}
+                            quotationDate={new Date(quotationToPrint.quotationDate || Date.now())}
+                            validTill={new Date(quotationToPrint.validTill || Date.now())}
+                            party={quotationToPrint.customerIds.length > 0 ? findCustomer(quotationToPrint.customerIds[0]) : undefined}
+                            items={quotationToPrint.stationRates}
+                            profile={companyProfile}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="secondary" onClick={() => setIsPrintDialogOpen(false)}>Close</Button>
+                    <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                        Download PDF
+                    </Button>
+                    <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 }
