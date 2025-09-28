@@ -16,6 +16,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { PreviousBookingDialog } from '../company/bookings/previous-booking-dialog';
 
 const notifications = [
   { id: 1, message: 'New user request received from John Doe.' },
@@ -56,10 +57,12 @@ export function AppHeader() {
       </div>
       <div className="flex items-center gap-4">
         {isNewBookingPage && (
-          <Button variant="ghost" className="hover:bg-primary-foreground/10">
-            <BookCopy className="mr-2 h-4 w-4" />
-            View Previous Booking
-          </Button>
+          <PreviousBookingDialog>
+            <Button variant="ghost" className="hover:bg-primary-foreground/10">
+              <BookCopy className="mr-2 h-4 w-4" />
+              View Previous Booking
+            </Button>
+          </PreviousBookingDialog>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
