@@ -167,6 +167,11 @@ export interface VehicleMaster {
 
 export type RateOnType = 'Chg.wt' | 'Act.wt' | 'Quantity' | 'Fixed';
 
+export interface ChargeDetail {
+    value: number;
+    per: RateOnType;
+}
+
 export interface StationRate {
     fromStation: string;
     toStation: string;
@@ -178,9 +183,9 @@ export interface StationRate {
     wtPerUnit?: number;
     senderName?: string;
     receiverName?: string;
-    doorDelivery?: number;
-    collectionCharge?: number;
-    loadingLabourCharge?: number;
+    doorDelivery?: ChargeDetail;
+    collectionCharge?: ChargeDetail;
+    loadingLabourCharge?: ChargeDetail;
 }
 
 export interface ItemRate {

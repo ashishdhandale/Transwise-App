@@ -192,9 +192,9 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
             senderName: sender.name,
             receiverName: receiver.name,
             lrType: booking.lrType,
-            doorDelivery: booking.additionalCharges?.doorDelivery,
-            collectionCharge: booking.additionalCharges?.collectionCharge,
-            loadingLabourCharge: booking.additionalCharges?.loadingLabourCharge,
+            doorDelivery: booking.additionalCharges?.doorDelivery ? { value: booking.additionalCharges.doorDelivery, per: 'Fixed' } : undefined,
+            collectionCharge: booking.additionalCharges?.collectionCharge ? { value: booking.additionalCharges.collectionCharge, per: 'Fixed' } : undefined,
+            loadingLabourCharge: booking.additionalCharges?.loadingLabourCharge ? { value: booking.additionalCharges.loadingLabourCharge, per: 'Fixed' } : undefined,
         };
 
         const exists = standardRateList.stationRates.some(existing => 
@@ -685,7 +685,10 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         receiver={receiver}
                         fromStation={fromStation}
                         toStation={toStation}
-                        onQuotationApply={setBookingType}
+                        onQuotationApply={(newLrType, newCharges) => {
+                            setBookingType(newLrType);
+                            setAdditionalCharges(prev => ({...prev, ...newCharges}));
+                        }}
                     />
                     
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
