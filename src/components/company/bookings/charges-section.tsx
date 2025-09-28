@@ -9,15 +9,62 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { ChargeSetting } from '@/components/company/settings/additional-charges-settings';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import type { ItemRow } from './item-details-table';
+import { Button } from '@/components/ui/button';
+import { Calculator } from 'lucide-react';
+import { CalculatorDialog } from './calculator-dialog';
 
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
-const ChargeInput = ({ label, value, readOnly = false, type = 'number', onChange }: { label: string, value: string | number, readOnly?: boolean, type?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
-    <div className="grid grid-cols-[1fr_100px] items-center gap-2">
-        <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">{label}</Label>
-        <Input type={type} value={value} readOnly={readOnly} className="h-7 text-sm w-full" onChange={onChange} />
-    </div>
-)
+interface ChargeInputProps {
+    label: string;
+    value: string | number;
+    readOnly?: boolean;
+    onChange?: (value: string) => void;
+}
+
+const ChargeInput = ({ label, value, readOnly = false, onChange }: ChargeInputProps) => {
+    const [isCalcOpen, setIsCalcOpen] = useState(false);
+    
+    // This state will hold the value for the calculator
+    const [calcValue, setCalcValue] = useState('0');
+
+    const handleCalcOpen = () => {
+        setCalcValue(String(value || '0'));
+        setIsCalcOpen(true);
+    };
+
+    const handleCalcConfirm = (newValue: string) => {
+        if (onChange) {
+            onChange(newValue);
+        }
+        setIsCalcOpen(false);
+    };
+
+    return (
+        <div className="grid grid-cols-[1fr_auto_100px] items-center gap-1">
+            <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">{label}</Label>
+            {!readOnly && onChange ? (
+                <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={handleCalcOpen}>
+                    <Calculator className="h-4 w-4" />
+                </Button>
+            ) : <div />}
+            <Input 
+                type="number" 
+                value={value} 
+                readOnly={readOnly} 
+                className="h-7 text-sm w-full" 
+                onChange={(e) => onChange?.(e.target.value)}
+            />
+            <CalculatorDialog 
+                isOpen={isCalcOpen} 
+                onOpenChange={setIsCalcOpen} 
+                initialValue={calcValue}
+                onConfirm={handleCalcConfirm}
+            />
+        </div>
+    );
+};
+
 
 interface ChargesSectionProps {
     basicFreight: number;
@@ -142,21 +189,26 @@ export function ChargesSection({
     <Card className="p-2 border-cyan-200 h-full flex flex-col">
         <h3 className="text-center font-semibold text-blue-600 mb-2 border-b-2 border-dotted border-cyan-300 pb-1 text-sm">Additional Charges</h3>
         <div className="space-y-1.5 flex-grow">
-             <ChargeInput label="Basic Freight" value={basicFreight.toFixed(2)} readOnly={true} />
+             <div className="grid grid-cols-[1fr_auto_100px] items-center gap-1">
+                <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">Basic Freight</Label>
+                <div />
+                <Input type="number" value={basicFreight.toFixed(2)} readOnly className="h-7 text-sm w-full bg-muted" />
+             </div>
             {chargeSettings.filter(c => c.isVisible).map((charge) => (
                 <ChargeInput 
                     key={charge.id} 
                     label={charge.name} 
                     value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
                     readOnly={!charge.isEditable || isViewOnly}
-                    onChange={(e) => handleChargeChange(charge.id, e.target.value)}
+                    onChange={(val) => handleChargeChange(charge.id, val)}
                 />
             ))}
         </div>
         <Separator />
         <div className="space-y-1.5 mt-1.5">
-             <div className="grid grid-cols-[1fr_100px] items-center gap-2">
+             <div className="grid grid-cols-[1fr_auto_100px] items-center gap-1">
                 <Label className="text-sm text-left font-bold">Total</Label>
+                <div />
                 <Input type="number" value={total.toFixed(2)} className="h-7 text-sm font-bold bg-muted w-full" readOnly />
             </div>
             <div className="grid grid-cols-[auto_1fr_100px] items-center gap-2">
@@ -179,8 +231,9 @@ export function ChargesSection({
                 />
             </div>
             <Separator />
-            <div className="grid grid-cols-[1fr_100px] items-center gap-2">
+            <div className="grid grid-cols-[1fr_auto_100px] items-center gap-1">
                 <Label className="text-sm text-left font-bold">Grand Total:</Label>
+                <div />
                 <Input value={grandTotal.toFixed(2)} className="h-8 text-sm font-bold text-red-600 bg-red-50 border-red-200 text-center w-full" readOnly />
             </div>
         </div>

@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,13 +15,24 @@ import { Input } from '@/components/ui/input';
 interface CalculatorDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  initialValue?: string;
+  onConfirm: (value: string) => void;
 }
 
-export function CalculatorDialog({ isOpen, onOpenChange }: CalculatorDialogProps) {
-  const [display, setDisplay] = useState('0');
+export function CalculatorDialog({ isOpen, onOpenChange, initialValue = '0', onConfirm }: CalculatorDialogProps) {
+  const [display, setDisplay] = useState(initialValue);
   const [currentValue, setCurrentValue] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
   const [waitingForOperand, setWaitingForOperand] = useState(true);
+
+  React.useEffect(() => {
+    if (isOpen) {
+        setDisplay(initialValue);
+        setCurrentValue(null);
+        setOperator(null);
+        setWaitingForOperand(true);
+    }
+  }, [isOpen, initialValue]);
 
   const inputDigit = (digit: string) => {
     if (waitingForOperand) {
@@ -67,7 +79,7 @@ export function CalculatorDialog({ isOpen, onOpenChange }: CalculatorDialogProps
       case '+': return firstOperand + secondOperand;
       case '-': return firstOperand - secondOperand;
       case '*': return firstOperand * secondOperand;
-      case '/': return firstOperand / secondOperand;
+      case '/': return secondOperand === 0 ? NaN : firstOperand / secondOperand; // Handle division by zero
       case '=': return secondOperand;
       default: return secondOperand;
     }
@@ -77,8 +89,12 @@ export function CalculatorDialog({ isOpen, onOpenChange }: CalculatorDialogProps
     const inputValue = parseFloat(display);
     if (operator && currentValue !== null) {
       const result = calculate(currentValue, inputValue, operator);
-      setCurrentValue(result);
-      setDisplay(String(result));
+      if (isNaN(result)) {
+        setDisplay('Error');
+      } else {
+        setCurrentValue(result);
+        setDisplay(String(result));
+      }
       setOperator(null);
       setWaitingForOperand(true);
     }
@@ -92,6 +108,9 @@ export function CalculatorDialog({ isOpen, onOpenChange }: CalculatorDialogProps
   ];
 
   const handleButtonClick = (btn: string) => {
+     if (display === 'Error') {
+        clearDisplay();
+     }
     if (btn >= '0' && btn <= '9') {
       inputDigit(btn);
     } else if (btn === '.') {
@@ -102,6 +121,12 @@ export function CalculatorDialog({ isOpen, onOpenChange }: CalculatorDialogProps
       performOperation(btn);
     }
   };
+  
+  const handleConfirm = () => {
+      if (display !== 'Error') {
+          onConfirm(display);
+      }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -126,7 +151,7 @@ export function CalculatorDialog({ isOpen, onOpenChange }: CalculatorDialogProps
             {buttons.map((btn) => (
               <Button
                 key={btn}
-                variant="outline"
+                variant={['/', '*', '-', '+', '='].includes(btn) ? 'secondary' : 'outline'}
                 className="h-14 text-xl"
                 onClick={() => handleButtonClick(btn)}
               >
@@ -135,6 +160,11 @@ export function CalculatorDialog({ isOpen, onOpenChange }: CalculatorDialogProps
             ))}
           </div>
         </div>
+         <DialogFooter>
+          <Button onClick={handleConfirm} className="w-full">
+            Confirm & Use Value
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
