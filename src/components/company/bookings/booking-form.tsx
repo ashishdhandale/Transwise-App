@@ -48,12 +48,14 @@ import { PaymentDialog } from './payment-dialog';
 import { useSearchParams } from 'next/navigation';
 import { ClientOnly } from '@/components/ui/client-only';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
+import type { ChargeSetting } from '../settings/additional-charges-settings';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
 const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
+const LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES = 'transwise_additional_charges_settings';
 
 
 const createEmptyRow = (id: number): ItemRow => ({
@@ -162,6 +164,8 @@ const isRowPartiallyFilled = (row: ItemRow) => {
 // --- Auto-Learn Standard Rate Logic ---
 const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Customer) => {
     const allRateLists = getRateLists();
+    const chargeSettingsJSON = localStorage.getItem(LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES);
+    const chargeSettings: { charges: ChargeSetting[] } = chargeSettingsJSON ? JSON.parse(chargeSettingsJSON) : { charges: [] };
     
     // Check if the sender has a specific quotation
     const hasQuotation = allRateLists.some(rl => !rl.isStandard && rl.customerIds.includes(sender.id));
@@ -182,6 +186,15 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     booking.itemRows.forEach(item => {
         if (!item.rate || Number(item.rate) <= 0) return;
 
+        const getChargeDetail = (chargeId: string): { value: number, per: 'Fixed' | 'Chg.wt' | 'Act.wt' | 'Quantity' } | undefined => {
+            const chargeValue = booking.additionalCharges?.[chargeId];
+            const setting = chargeSettings.charges.find(c => c.id === chargeId);
+            if (chargeValue && setting) {
+                return { value: chargeValue, per: setting.calculationType };
+            }
+            return undefined;
+        }
+
         const newRate: StationRate = {
             fromStation: booking.fromCity,
             toStation: booking.toCity,
@@ -192,9 +205,9 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
             senderName: sender.name,
             receiverName: receiver.name,
             lrType: booking.lrType,
-            doorDelivery: booking.additionalCharges?.doorDelivery ? { value: booking.additionalCharges.doorDelivery, per: 'Fixed' } : undefined,
-            collectionCharge: booking.additionalCharges?.collectionCharge ? { value: booking.additionalCharges.collectionCharge, per: 'Fixed' } : undefined,
-            loadingLabourCharge: booking.additionalCharges?.loadingLabourCharge ? { value: booking.additionalCharges.loadingLabourCharge, per: 'Fixed' } : undefined,
+            doorDelivery: getChargeDetail('doorDelivery'),
+            collectionCharge: getChargeDetail('collectionCharge'),
+            loadingLabourCharge: getChargeDetail('loadingLabourCharge'),
         };
 
         const exists = standardRateList.stationRates.some(existing => 
