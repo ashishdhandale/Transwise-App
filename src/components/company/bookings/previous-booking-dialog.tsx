@@ -11,13 +11,13 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings } from '@/lib/bookings-dashboard-data';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PreviousBookingHeader } from './previous-booking-header';
 import { ItemDetailsTable } from './item-details-table';
+import { format, parseISO } from 'date-fns';
 
 interface PreviousBookingDialogProps {
     children: React.ReactNode;
@@ -37,11 +37,16 @@ export function PreviousBookingDialog({ children }: PreviousBookingDialogProps) 
     useEffect(() => {
         const bookings = getBookings();
         if (bookings.length > 0) {
-            // Sort by date to get the most recent one
             const sorted = [...bookings].sort((a,b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
             setPreviousBooking(sorted[0]);
         }
     }, []);
+    
+    const basicFreight = useMemo(() => {
+        if (!previousBooking) return 0;
+        return previousBooking.itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+    }, [previousBooking]);
+
 
     return (
         <Dialog>
@@ -54,14 +59,18 @@ export function PreviousBookingDialog({ children }: PreviousBookingDialogProps) 
                 <div className="p-4 space-y-4">
                     {previousBooking ? (
                         <>
-                           <PreviousBookingHeader 
-                                lrNo={previousBooking.lrNo}
-                                type={previousBooking.lrType}
-                                sender={previousBooking.sender}
-                                receiver={previousBooking.receiver}
-                                qty={previousBooking.qty}
-                                toCity={previousBooking.toCity}
-                           />
+                           <div className="p-4 border rounded-lg bg-muted/50 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <DetailItem label="LR No" value={previousBooking.lrNo} />
+                                <DetailItem label="Booking Date" value={format(parseISO(previousBooking.bookingDate), 'dd-MMM-yyyy')} />
+                                <DetailItem label="From Station" value={previousBooking.fromCity} />
+                                <DetailItem label="To Station" value={previousBooking.toCity} />
+                                <DetailItem label="Sender" value={previousBooking.sender} />
+                                <DetailItem label="Receiver" value={previousBooking.receiver} />
+                                <DetailItem label="Booking Type" value={previousBooking.lrType} />
+                                <DetailItem label="Load Type" value={previousBooking.loadType} />
+                                <DetailItem label="Basic Freight" value={basicFreight.toFixed(2)} />
+                                <DetailItem label="Grand Total" value={previousBooking.totalAmount.toFixed(2)} />
+                           </div>
                             <Separator />
                             <ItemDetailsTable 
                                 rows={previousBooking.itemRows}
