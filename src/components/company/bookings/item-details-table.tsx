@@ -195,22 +195,28 @@ export function ItemDetailsTable({
 
   const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
     const newRows = [...rows];
-    let newRow = { ...newRows[rowIndex] };
-    
-    let processedValue = value;
-    
-    newRow[columnId] = processedValue;
-    
-    // Automatic calculation for Actual Weight
+    let newRow = { ...newRows[rowIndex], ...{ [columnId]: value } };
+
+    // --- Bi-directional Weight Calculation ---
+    const qty = parseFloat(newRow.qty) || 0;
+    const wtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
+    const actWt = parseFloat(newRow.actWt) || 0;
+
     if (columnId === 'qty' || columnId === 'wtPerUnit') {
-        const qty = parseFloat(newRow.qty) || 0;
-        const wtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
-        if(qty === 0 || wtPerUnit === 0) {
-            newRow.wtPerUnit = '';
-        }
-        const actWt = qty * wtPerUnit;
-        newRow.actWt = actWt > 0 ? actWt.toFixed(2) : '';
-        newRow.chgWt = actWt > 0 ? actWt.toFixed(2) : ''; // Also update chgWt
+        const newActWt = qty * wtPerUnit;
+        newRow.actWt = newActWt > 0 ? newActWt.toFixed(2) : '';
+        newRow.chgWt = newActWt > 0 ? newActWt.toFixed(2) : '';
+    } else if (columnId === 'actWt') {
+        const newWtPerUnit = qty > 0 ? actWt / qty : 0;
+        newRow.wtPerUnit = newWtPerUnit > 0 ? newWtPerUnit.toFixed(2) : '';
+        // Also update chargeable weight when actual is changed manually
+        newRow.chgWt = actWt > 0 ? actWt.toFixed(2) : '';
+    }
+    
+    // Clear dependent fields if a primary field is cleared
+    if ((columnId === 'qty' || columnId === 'wtPerUnit') && !value) {
+        newRow.actWt = '';
+        newRow.chgWt = '';
     }
     
     if (columnId === 'freightOn') {
@@ -227,8 +233,7 @@ export function ItemDetailsTable({
 
     if (activeRateList && shouldApplyRate && fromStation && toStation && sender && receiver) {
         const selectedItemName = newRow.itemName || 'Any';
-        const wtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
-
+        
         const findRate = (rateSource: StationRate[]): StationRate | undefined => {
             const exactMatch = rateSource.find(sr => 
                 sr.fromStation === fromStation.name &&
@@ -236,7 +241,7 @@ export function ItemDetailsTable({
                 sr.senderName === sender.name &&
                 sr.receiverName === receiver.name &&
                 sr.itemName === selectedItemName &&
-                (sr.wtPerUnit || 0) === wtPerUnit
+                (sr.wtPerUnit || 0) === (parseFloat(newRow.wtPerUnit) || 0)
             );
             if (exactMatch) return exactMatch;
 
@@ -391,7 +396,7 @@ export function ItemDetailsTable({
                     <TableCell className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.wtPerUnit} onChange={(e) => handleInputChange(index, 'wtPerUnit', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={cn(inputClass, 'bg-muted')} value={row.actWt} readOnly /></TableCell>
+                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed' || isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)} disabled={isViewOnly}><SelectTrigger className={inputClass}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Act.wt">Act.wt</SelectItem><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Fixed">Fixed</SelectItem><SelectItem value="Quantity">Quantity</SelectItem></SelectContent></Select></TableCell>
