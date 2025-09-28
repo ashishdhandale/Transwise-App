@@ -98,9 +98,11 @@ export function ChargesSection({
         chargeSettings.forEach(charge => {
             if (liveCalc[charge.id]) {
                 newBookingCharges[charge.id] = calculateLiveCharge(charge.id);
-            } else if (charge.isEditable && initialCharges && initialCharges[charge.id] !== undefined) {
+            } else if (initialCharges && initialCharges[charge.id] !== undefined) {
+                 // If loading an existing booking, use its saved charges
                  newBookingCharges[charge.id] = initialCharges[charge.id];
             } else {
+                 // Otherwise, use the default calculation from settings
                  newBookingCharges[charge.id] = calculateCharge(charge);
             }
         });
@@ -157,37 +159,42 @@ export function ChargesSection({
             {chargeSettings.filter(c => c.isVisible).map((charge) => {
                 const isLiveEditing = liveCalc[charge.id] !== undefined;
                 return (
-                    <div key={charge.id} className="grid grid-cols-[1fr_auto_auto_100px] items-center gap-1.5">
-                        <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">{charge.name}</Label>
+                    <div key={charge.id} className="grid grid-cols-[1fr_auto] items-start gap-1">
+                        <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis self-center">{charge.name}</Label>
                         
-                        {charge.isEditable && !isViewOnly ? (
-                            <>
-                                <Input 
-                                    type="number"
-                                    placeholder="Rate"
-                                    value={liveCalc[charge.id]?.rate || ''}
-                                    onChange={(e) => setLiveCalc(prev => ({...prev, [charge.id]: { ...prev[charge.id], rate: Number(e.target.value) || 0 } }))}
-                                    className="h-7 text-xs w-20"
-                                />
-                                 <Select 
-                                    value={liveCalc[charge.id]?.type || 'fixed'}
-                                    onValueChange={(v) => setLiveCalc(prev => ({...prev, [charge.id]: { rate: prev[charge.id]?.rate || 0, type: v as any } }))}
-                                 >
-                                    <SelectTrigger className="h-7 text-xs w-[100px]"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        {calculationTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </>
-                        ) : <div className="col-span-2"></div>}
-                        
-                        <Input 
-                            type="number" 
-                            value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
-                            readOnly={!charge.isEditable || isViewOnly || isLiveEditing} 
-                            className="h-7 text-sm w-full bg-muted/50" 
-                            onChange={(e) => setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))}
-                        />
+                        <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-1 pl-4">
+                            {charge.isEditable && !isViewOnly ? (
+                                <>
+                                    <Input 
+                                        type="number"
+                                        placeholder="Rate"
+                                        value={liveCalc[charge.id]?.rate || ''}
+                                        onChange={(e) => setLiveCalc(prev => ({...prev, [charge.id]: { ...prev[charge.id], rate: Number(e.target.value) || 0 } }))}
+                                        className="h-7 text-xs"
+                                    />
+                                    <Select 
+                                        value={liveCalc[charge.id]?.type || 'fixed'}
+                                        onValueChange={(v) => setLiveCalc(prev => ({...prev, [charge.id]: { rate: prev[charge.id]?.rate || 0, type: v as any } }))}
+                                    >
+                                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {calculationTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </>
+                            ) : <div className="col-span-2"></div>}
+                            
+                            <Input 
+                                type="number" 
+                                value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
+                                readOnly={charge.isEditable ? true : !charge.isEditable && isViewOnly}
+                                className="h-7 text-sm w-full bg-muted/50" 
+                                onChange={(e) => {
+                                    if (!charge.isEditable || isLiveEditing) return;
+                                    setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))
+                                }}
+                            />
+                        </div>
                     </div>
                 )
             })}
@@ -226,3 +233,5 @@ export function ChargesSection({
     </Card>
   );
 }
+
+    

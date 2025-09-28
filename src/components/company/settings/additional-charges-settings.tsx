@@ -33,7 +33,7 @@ const chargeSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Charge name is required.'),
   calculationType: z.enum(['fixed', 'per_kg_actual', 'per_kg_charge', 'per_quantity']),
-  value: z.coerce.number().min(0, 'Value must be a positive number.'),
+  value: z.coerce.number().min(0, 'Value must be a positive number.').optional().default(0),
   isVisible: z.boolean(),
   isEditable: z.boolean(),
   isCustom: z.boolean(),
@@ -271,3 +271,5 @@ export function AdditionalChargesSettings() {
     </Card>
   );
 }
+
+    
