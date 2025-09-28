@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -62,7 +63,7 @@ export function StandardRateListEditor() {
         const updatedRates = [...rates];
         const rateToUpdate = { ...updatedRates[index] };
 
-        if (field === 'rate' || field === 'wtPerUnit') {
+        if (['rate', 'wtPerUnit', 'doorDelivery', 'collectionCharge', 'loadingLabourCharge'].includes(field)) {
             (rateToUpdate[field] as number | undefined) = Number(value) || undefined;
         } else {
             (rateToUpdate[field] as any) = value;
@@ -140,6 +141,9 @@ export function StandardRateListEditor() {
                                 <TableHead>Rate</TableHead>
                                 <TableHead>Per</TableHead>
                                 <TableHead>Booking Type</TableHead>
+                                <TableHead>Door Del.</TableHead>
+                                <TableHead>Collect.</TableHead>
+                                <TableHead>Labour</TableHead>
                                 <TableHead>Action</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -185,6 +189,15 @@ export function StandardRateListEditor() {
                                         </Select>
                                     </TableCell>
                                     <TableCell>
+                                        <Input type="number" value={rate.doorDelivery || ''} onChange={(e) => handleRateChange(index, 'doorDelivery', e.target.value)} className="h-8 w-24" />
+                                    </TableCell>
+                                     <TableCell>
+                                        <Input type="number" value={rate.collectionCharge || ''} onChange={(e) => handleRateChange(index, 'collectionCharge', e.target.value)} className="h-8 w-24" />
+                                    </TableCell>
+                                     <TableCell>
+                                        <Input type="number" value={rate.loadingLabourCharge || ''} onChange={(e) => handleRateChange(index, 'loadingLabourCharge', e.target.value)} className="h-8 w-24" />
+                                    </TableCell>
+                                    <TableCell>
                                         <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDeleteRate(index)}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
@@ -193,7 +206,7 @@ export function StandardRateListEditor() {
                             ))}
                              {filteredRates.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={14} className="h-24 text-center text-muted-foreground">
                                         No standard rates found. They will be added automatically as you create new bookings.
                                     </TableCell>
                                 </TableRow>

@@ -191,7 +191,10 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
             wtPerUnit: Number(item.wtPerUnit) || undefined,
             senderName: sender.name,
             receiverName: receiver.name,
-            lrType: booking.lrType
+            lrType: booking.lrType,
+            doorDelivery: booking.additionalCharges?.doorDelivery,
+            collectionCharge: booking.additionalCharges?.collectionCharge,
+            loadingLabourCharge: booking.additionalCharges?.loadingLabourCharge,
         };
 
         const exists = standardRateList.stationRates.some(existing => 
@@ -264,6 +267,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const [isDownloading, setIsDownloading] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStationAlertOpen, setIsStationAlertOpen] = useState(false);
+    const [rateLists, setRateLists] = useState<RateList[]>([]);
 
 
     const generateLrNumber = (bookings: Booking[], prefix: string) => {
@@ -297,6 +301,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
             const savedVendors = localStorage.getItem(LOCAL_STORAGE_KEY_VENDORS);
             if (savedVendors) setVendors(JSON.parse(savedVendors));
+
+            setRateLists(getRateLists());
         } catch (error) {
             console.error("Failed to load master data", error);
         }

@@ -1,5 +1,4 @@
 
-
 export type DeliveryStatus =
   | 'Pending'
   | 'In Transit'
@@ -179,6 +178,9 @@ export interface StationRate {
     wtPerUnit?: number;
     senderName?: string;
     receiverName?: string;
+    doorDelivery?: number;
+    collectionCharge?: number;
+    loadingLabourCharge?: number;
 }
 
 export interface ItemRate {
@@ -199,5 +201,3 @@ export interface RateList {
   stationRates: StationRate[];
   itemRates: ItemRate[];
 }
-
-    
