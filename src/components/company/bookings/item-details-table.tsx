@@ -205,10 +205,12 @@ export function ItemDetailsTable({
     if (columnId === 'qty' || columnId === 'wtPerUnit') {
         const qty = parseFloat(newRow.qty) || 0;
         const wtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
+        if(qty === 0 || wtPerUnit === 0) {
+            newRow.wtPerUnit = '';
+        }
         const actWt = qty * wtPerUnit;
         newRow.actWt = actWt > 0 ? actWt.toFixed(2) : '';
         newRow.chgWt = actWt > 0 ? actWt.toFixed(2) : ''; // Also update chgWt
-        newRow.freightOn = 'Act.wt';
     }
     
     if (columnId === 'freightOn') {
@@ -287,10 +289,6 @@ export function ItemDetailsTable({
 
         if (chgWt > 0 && chgWt < actWt) {
             setWeightWarning({ rowIndex, value: row.chgWt });
-        } else if (chgWt > actWt) {
-            updateRow(rowIndex, { freightOn: 'Chg.wt' });
-        } else {
-            updateRow(rowIndex, { freightOn: 'Act.wt' });
         }
     }
 

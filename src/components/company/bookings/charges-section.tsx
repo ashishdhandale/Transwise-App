@@ -9,28 +9,18 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { ChargeSetting } from '@/components/company/settings/additional-charges-settings';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import type { ItemRow } from './item-details-table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button }from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
-interface ChargeInputProps {
-    label: string;
-    value: string | number;
-    readOnly?: boolean;
-    onChange?: (value: string) => void;
-}
-
-const ChargeInput = ({ label, value, readOnly = false, onChange }: ChargeInputProps) => (
-  <div className="grid grid-cols-[1fr_100px] items-center gap-1">
-    <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">{label}</Label>
-    <Input 
-      type="number" 
-      value={value} 
-      readOnly={readOnly} 
-      className="h-7 text-sm w-full" 
-      onChange={(e) => onChange?.(e.target.value)}
-    />
-  </div>
-);
+const calculationTypes: { value: ChargeSetting['calculationType'], label: string }[] = [
+    { value: 'fixed', label: 'Fixed' },
+    { value: 'per_kg_actual', label: 'Per Kg (Act. Wt)' },
+    { value: 'per_kg_charge', label: 'Per Kg (Chg. Wt)' },
+    { value: 'per_quantity', label: 'Per Pkg' },
+];
 
 interface ChargesSectionProps {
     basicFreight: number;
@@ -56,9 +46,12 @@ export function ChargesSection({
     itemRows,
 }: ChargesSectionProps) {
     const [chargeSettings, setChargeSettings] = useState<ChargeSetting[]>([]);
-    const [bookingCharges, setBookingCharges] = useState<{ [key: string]: number }>({});
+    const [bookingCharges, setBookingCharges] = useState<{ [key:string]: number }>({});
     const [gstValue, setGstValue] = useState(0);
     const [gstAmount, setGstAmount] = useState(0);
+    
+    // State for on-the-fly calculations
+    const [liveCalc, setLiveCalc] = useState<{[key: string]: { rate: number; type: ChargeSetting['calculationType'] } }>({});
 
     useEffect(() => {
         try {
@@ -79,26 +72,33 @@ export function ChargesSection({
     const calculateCharge = useCallback((charge: ChargeSetting) => {
         const rate = charge.value || 0;
         switch (charge.calculationType) {
-            case 'fixed':
-                return rate;
-            case 'per_kg_actual':
-                const totalActWt = itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0);
-                return totalActWt * rate;
-            case 'per_kg_charge':
-                const totalChgWt = itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0);
-                return totalChgWt * rate;
-            case 'per_quantity':
-                 const totalQty = itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0);
-                return totalQty * rate;
-            default:
-                return 0;
+            case 'fixed': return rate;
+            case 'per_kg_actual': return itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0) * rate;
+            case 'per_kg_charge': return itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0) * rate;
+            case 'per_quantity': return itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate;
+            default: return 0;
         }
     }, [itemRows]);
+    
+    const calculateLiveCharge = useCallback((chargeId: string) => {
+        const calc = liveCalc[chargeId];
+        if (!calc) return 0;
+        
+        switch (calc.type) {
+            case 'fixed': return calc.rate;
+            case 'per_kg_actual': return itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0) * calc.rate;
+            case 'per_kg_charge': return itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0) * calc.rate;
+            case 'per_quantity': return itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * calc.rate;
+            default: return 0;
+        }
+    }, [itemRows, liveCalc]);
 
     useEffect(() => {
         const newBookingCharges: { [key: string]: number } = {};
         chargeSettings.forEach(charge => {
-            if (charge.isEditable && initialCharges && initialCharges[charge.id] !== undefined) {
+            if (liveCalc[charge.id]) {
+                newBookingCharges[charge.id] = calculateLiveCharge(charge.id);
+            } else if (charge.isEditable && initialCharges && initialCharges[charge.id] !== undefined) {
                  newBookingCharges[charge.id] = initialCharges[charge.id];
             } else {
                  newBookingCharges[charge.id] = calculateCharge(charge);
@@ -106,18 +106,11 @@ export function ChargesSection({
         });
         setBookingCharges(newBookingCharges);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [chargeSettings, itemRows, calculateCharge, initialCharges]);
+    }, [chargeSettings, itemRows, calculateCharge, initialCharges, liveCalc, calculateLiveCharge]);
     
     useEffect(() => {
         notifyParentOfChanges(bookingCharges);
     }, [bookingCharges, notifyParentOfChanges]);
-    
-    const handleChargeChange = (chargeId: string, value: string) => {
-        setBookingCharges(prev => ({
-            ...prev,
-            [chargeId]: Number(value) || 0
-        }));
-    };
     
     const additionalChargesTotal = useMemo(() => {
         return Object.values(bookingCharges).reduce((sum, charge) => sum + charge, 0);
@@ -146,14 +139,12 @@ export function ChargesSection({
             if (initialGrandTotal > 0 && currentSubTotal > 0) {
                  const inferredGstAmount = initialGrandTotal - currentSubTotal;
                  const inferredGstRate = (inferredGstAmount / currentSubTotal) * 100;
-                 if (inferredGstRate > 0 && inferredGstRate < 100) { // Plausibility check
+                 if (inferredGstRate > 0 && inferredGstRate < 100) {
                      setGstValue(Math.round(inferredGstRate));
                  }
             }
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialGrandTotal, basicFreight, additionalChargesTotal, isGstApplicable]);
-
+    }, [initialGrandTotal, isGstApplicable, basicFreight, additionalChargesTotal]);
 
   return (
     <Card className="p-2 border-cyan-200 h-full flex flex-col">
@@ -163,15 +154,52 @@ export function ChargesSection({
                 <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">Basic Freight</Label>
                 <Input type="number" value={basicFreight.toFixed(2)} readOnly className="h-7 text-sm w-full bg-muted" />
              </div>
-            {chargeSettings.filter(c => c.isVisible).map((charge) => (
-                <ChargeInput 
-                    key={charge.id} 
-                    label={charge.name} 
-                    value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
-                    readOnly={!charge.isEditable || isViewOnly}
-                    onChange={(val) => handleChargeChange(charge.id, val)}
-                />
-            ))}
+            {chargeSettings.filter(c => c.isVisible).map((charge) => {
+                const isLiveEditing = liveCalc[charge.id] !== undefined;
+                return (
+                    <div key={charge.id} className="space-y-1">
+                         <div className="grid grid-cols-[1fr_100px] items-center gap-1">
+                            <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">{charge.name}</Label>
+                            <Input 
+                                type="number" 
+                                value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
+                                readOnly={!charge.isEditable || isViewOnly || isLiveEditing} 
+                                className={`h-7 text-sm w-full ${isLiveEditing ? 'bg-muted' : ''}`} 
+                                onChange={(e) => setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))}
+                            />
+                        </div>
+                        {charge.isEditable && !isViewOnly && (
+                             <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-1 pl-4">
+                                <Input 
+                                    type="number"
+                                    placeholder="Rate"
+                                    value={liveCalc[charge.id]?.rate || ''}
+                                    onChange={(e) => setLiveCalc(prev => ({...prev, [charge.id]: { ...prev[charge.id], rate: Number(e.target.value) || 0 } }))}
+                                    className="h-7 text-xs"
+                                />
+                                 <Select 
+                                    value={liveCalc[charge.id]?.type || 'fixed'}
+                                    onValueChange={(v) => setLiveCalc(prev => ({...prev, [charge.id]: { rate: prev[charge.id]?.rate || 0, type: v as any } }))}
+                                 >
+                                    <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {calculationTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                {isLiveEditing && (
+                                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => {
+                                        const newLiveCalc = {...liveCalc};
+                                        delete newLiveCalc[charge.id];
+                                        setLiveCalc(newLiveCalc);
+                                     }}>
+                                        <X className="h-4 w-4" />
+                                     </Button>
+                                )}
+                             </div>
+                        )}
+                    </div>
+                )
+            })}
         </div>
         <Separator />
         <div className="space-y-1.5 mt-1.5">
