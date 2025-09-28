@@ -136,7 +136,7 @@ export function AdditionalChargesSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Additional Charges Preferences</CardTitle>
-        <CardDescription>Drag to reorder, set defaults, and control which charges are visible and editable on the booking form.</CardDescription>
+        <CardDescription>Drag to reorder, set defaults, and control which charges are visible and how they behave on the booking form.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -173,7 +173,7 @@ export function AdditionalChargesSettings() {
                             name={`charges.${index}.calculationType`}
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Calculation Type</FormLabel>
+                                    <FormLabel>Default Calculation</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
@@ -228,12 +228,12 @@ export function AdditionalChargesSettings() {
                           name={`charges.${index}.isEditable`}
                           render={({ field }) => (
                               <FormItem className="flex flex-col items-center gap-2">
-                                  <FormLabel>Editable</FormLabel>
+                                  <FormLabel>Dynamic</FormLabel>
                                   <FormControl>
                                       <Switch
                                           checked={field.value}
                                           onCheckedChange={field.onChange}
-                                          aria-label="Toggle charge edibility"
+                                          aria-label="Toggle dynamic calculation"
                                       />
                                   </FormControl>
                               </FormItem>
