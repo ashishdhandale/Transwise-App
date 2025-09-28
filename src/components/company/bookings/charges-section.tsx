@@ -59,7 +59,7 @@ export function ChargesSection({
             if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);
                 if (parsed.charges) {
-                    setChargeSettings(parsed.charges);
+                    setChargeSettings(parsed.charges.filter((c: ChargeSetting) => c.isVisible));
                 }
             } else {
                 setChargeSettings([]);
@@ -68,6 +68,19 @@ export function ChargesSection({
             console.error("Failed to load additional charges settings", error);
         }
     }, []);
+    
+    const handleLiveCalcChange = (chargeId: string, field: 'rate' | 'type', value: string | number) => {
+         setLiveCalc(prev => {
+            const current = prev[chargeId] || { 
+                rate: chargeSettings.find(c => c.id === chargeId)?.value || 0,
+                type: chargeSettings.find(c => c.id === chargeId)?.calculationType || 'fixed'
+            };
+            return {
+                ...prev,
+                [chargeId]: { ...current, [field]: value }
+            };
+        });
+    }
 
     const calculateCharge = useCallback((charge: ChargeSetting) => {
         const calcDetails = liveCalc[charge.id];
@@ -141,53 +154,49 @@ export function ChargesSection({
                 <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">Basic Freight</Label>
                 <Input type="number" value={basicFreight.toFixed(2)} readOnly className="h-7 text-sm w-full bg-muted" />
              </div>
-            {chargeSettings.filter(c => c.isVisible).map((charge) => {
-                const isLiveEditing = liveCalc[charge.id] !== undefined;
-                return (
-                    <div key={charge.id} className="grid grid-cols-1 items-start gap-1">
-                        <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-                            <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis">{charge.name}</Label>
-                            {charge.isEditable && !isViewOnly ? (
-                                <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-1">
-                                    <Input
-                                        type="number"
-                                        placeholder="Rate"
-                                        value={liveCalc[charge.id]?.rate ?? ''}
-                                        onChange={(e) => setLiveCalc(prev => ({...prev, [charge.id]: { ...prev[charge.id], rate: Number(e.target.value) || 0 } }))}
-                                        className="h-7 text-xs"
-                                    />
-                                    <Select 
-                                        value={liveCalc[charge.id]?.type || charge.calculationType}
-                                        onValueChange={(v) => setLiveCalc(prev => ({...prev, [charge.id]: { rate: prev[charge.id]?.rate || charge.value || 0, type: v as any } }))}
-                                    >
-                                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            {calculationTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <Input 
-                                        type="number" 
-                                        value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
-                                        readOnly
-                                        className="h-7 text-sm w-[100px] bg-muted" 
-                                    />
-                                </div>
-                            ) : (
-                                <Input 
-                                    type="number" 
-                                    value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
-                                    readOnly={isViewOnly}
-                                    className="h-7 text-sm w-[100px] bg-muted/50" 
-                                    onChange={(e) => {
-                                        if (isViewOnly) return;
-                                        setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))
-                                    }}
-                                />
-                            )}
+            {chargeSettings.map((charge) => (
+                <div key={charge.id} className="grid grid-cols-[1fr_auto] items-start gap-x-2">
+                    <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis h-7 flex items-center">{charge.name}</Label>
+                    
+                    {charge.isEditable && !isViewOnly ? (
+                        <div className="grid grid-cols-[80px_100px_100px] items-center gap-1">
+                            <Input
+                                type="number"
+                                placeholder="Rate"
+                                value={liveCalc[charge.id]?.rate ?? ''}
+                                onChange={(e) => handleLiveCalcChange(charge.id, 'rate', e.target.value)}
+                                className="h-7 text-xs"
+                            />
+                            <Select
+                                value={liveCalc[charge.id]?.type ?? charge.calculationType}
+                                onValueChange={(v) => handleLiveCalcChange(charge.id, 'type', v)}
+                            >
+                                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    {calculationTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Input 
+                                type="number" 
+                                value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
+                                readOnly
+                                className="h-7 text-sm w-full bg-muted" 
+                            />
                         </div>
-                    </div>
-                )
-            })}
+                    ) : (
+                        <Input 
+                            type="number" 
+                            value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
+                            readOnly={isViewOnly}
+                            className="h-7 text-sm w-[100px] bg-muted/50 justify-self-end" 
+                            onChange={(e) => {
+                                if (isViewOnly) return;
+                                setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))
+                            }}
+                        />
+                    )}
+                </div>
+            ))}
         </div>
         <Separator />
         <div className="space-y-1.5 mt-1.5">
