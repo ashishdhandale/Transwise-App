@@ -53,8 +53,8 @@ const defaultCharges: ChargeSetting[] = [
     { id: 'doorDelivery', name: 'Door Delivery', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
     { id: 'collectionCharge', name: 'Collection Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
     { id: 'loadingLabourCharge', name: 'Loading Labour Charge', calculationType: 'per_kg_actual', value: 0, isVisible: true, isEditable: true, isCustom: false },
-    { id: 'pfCharge', name: 'P.F. Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
-    { id: 'othersCharge', name: 'Others Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: false, isCustom: false },
+    { id: 'pfCharge', name: 'P.F. Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: false, isCustom: false },
+    { id: 'othersCharge', name: 'Others Charge', calculationType: 'fixed', value: 0, isVisible: true, isEditable: true, isCustom: false },
 ];
 
 
@@ -271,5 +271,3 @@ export function AdditionalChargesSettings() {
     </Card>
   );
 }
-
-    
