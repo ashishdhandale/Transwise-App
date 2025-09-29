@@ -230,57 +230,85 @@ export function ItemDetailsTable({
     
     const shouldApplyRate = ['itemName', 'wtPerUnit', 'qty'].includes(columnId);
 
-    if (activeRateList && shouldApplyRate && fromStation && toStation && sender && receiver) {
+    if (shouldApplyRate && fromStation && toStation && sender && receiver) {
         const selectedItemName = newRow.itemName || 'Any';
+        const standardRateList = rateLists.find(rl => rl.isStandard);
         
-        const findRate = (rateSource: StationRate[]): StationRate | undefined => {
-             // 1. Most specific: Route, Sender, Receiver, Item, Wt/Unit
-            const exactMatch = rateSource.find(sr => 
+        const findRate = (rateSource: StationRate[], isStandardCheck = false): StationRate | undefined => {
+            const currentWtPerUnit = parseFloat(newRow.wtPerUnit) || 0;
+
+            const matches = rateSource.filter(sr => 
                 sr.fromStation === fromStation.name &&
-                sr.toStation === toStation.name &&
+                sr.toStation === toStation.name
+            );
+
+            // 1. Most specific: Sender, Receiver, Item, Wt/Unit
+            let found = matches.find(sr => 
                 sr.senderName === sender.name &&
                 sr.receiverName === receiver.name &&
                 sr.itemName === selectedItemName &&
-                (sr.wtPerUnit || 0) === (parseFloat(newRow.wtPerUnit) || 0)
+                (sr.wtPerUnit || 0) === currentWtPerUnit
             );
-            if (exactMatch) return exactMatch;
+            if (found) return found;
 
-            // 2. Route, Sender, Receiver, Item
-            const routePartyItemMatch = rateSource.find(sr =>
-                sr.fromStation === fromStation.name &&
-                sr.toStation === toStation.name &&
+            // 2. Route, Sender, Receiver, Item (any wt)
+            found = matches.find(sr =>
                 sr.senderName === sender.name &&
                 sr.receiverName === receiver.name &&
                 sr.itemName === selectedItemName &&
                 !sr.wtPerUnit
             );
-            if (routePartyItemMatch) return routePartyItemMatch;
+            if (found) return found;
             
-            // 3. Route, Item
-            const routeItemMatch = rateSource.find(sr =>
-                sr.fromStation === fromStation.name &&
-                sr.toStation === toStation.name &&
-                sr.itemName === selectedItemName
+            // 3. Route, Item, Wt/Unit
+            found = matches.find(sr =>
+                !sr.senderName && !sr.receiverName &&
+                sr.itemName === selectedItemName &&
+                (sr.wtPerUnit || 0) === currentWtPerUnit
             );
-            if (routeItemMatch) return routeItemMatch;
+            if (found) return found;
 
-            // 4. Generic Route (Any item)
-            const genericRouteMatch = rateSource.find(sr =>
-                sr.fromStation === fromStation.name &&
-                sr.toStation === toStation.name &&
-                sr.itemName === 'Any'
+            // 4. Route, Item (any wt)
+            found = matches.find(sr =>
+                !sr.senderName && !sr.receiverName &&
+                sr.itemName === selectedItemName &&
+                !sr.wtPerUnit
             );
-            return genericRouteMatch;
+            if (found) return found;
+
+            // 5. Generic Route, any item, specific wt
+            found = matches.find(sr =>
+                sr.itemName === 'Any' &&
+                (sr.wtPerUnit || 0) === currentWtPerUnit
+            );
+            if (found) return found;
+            
+            // 6. Generic Route, any item, any wt
+            found = matches.find(sr =>
+                sr.itemName === 'Any' && !sr.wtPerUnit
+            );
+
+            // If we are checking a customer quotation and find a match without wt/unit,
+            // we should still check the standard list for a more specific wt/unit match.
+            if (found && !isStandardCheck && !found.wtPerUnit && standardRateList) {
+                const specificStandardRate = findRate(standardRateList.stationRates, true);
+                if (specificStandardRate && specificStandardRate.wtPerUnit) {
+                    return specificStandardRate;
+                }
+            }
+
+            return found;
         };
         
-        let foundRate = findRate(activeRateList.stationRates);
+        let foundRate: StationRate | undefined;
 
-        // If not found in customer quotation, and the current list is not standard, check standard list
-        if (!foundRate && !activeRateList.isStandard) {
-            const standardRateList = rateLists.find(rl => rl.isStandard);
-            if (standardRateList) {
-                foundRate = findRate(standardRateList.stationRates);
-            }
+        if (activeRateList) {
+            foundRate = findRate(activeRateList.stationRates, activeRateList.isStandard);
+        }
+        
+        // If not found in customer quotation, check standard list
+        if (!foundRate && activeRateList && !activeRateList.isStandard && standardRateList) {
+            foundRate = findRate(standardRateList.stationRates, true);
         }
         
         if (foundRate) {
