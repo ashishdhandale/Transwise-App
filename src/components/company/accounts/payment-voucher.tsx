@@ -25,6 +25,7 @@ import type { Customer, Vendor } from '@/lib/types';
 import { DatePicker } from '@/components/ui/date-picker';
 import { addVoucher } from '@/lib/accounts-data';
 import { getVendors } from '@/lib/vendor-data';
+import { ClientOnly } from '@/components/ui/client-only';
 
 const paymentEntrySchema = z.object({
   accountId: z.string().min(1, 'Account is required'),
@@ -47,12 +48,21 @@ export function PaymentVoucher() {
   const form = useForm<PaymentVoucherValues>({
     resolver: zodResolver(paymentVoucherSchema),
     defaultValues: {
-      voucherNo: `PAY-${Date.now()}`,
-      date: new Date(),
+      voucherNo: '',
       cashBankAccountId: 'Cash',
       entries: [{ accountId: '', amount: 0, narration: '' }],
     },
   });
+
+  useEffect(() => {
+    // Set default values on the client side to avoid hydration mismatch
+    form.reset({
+      voucherNo: `PAY-${Date.now()}`,
+      date: new Date(),
+      cashBankAccountId: 'Cash',
+      entries: [{ accountId: '', amount: 0, narration: '' }],
+    });
+  }, [form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -91,7 +101,7 @@ export function PaymentVoucher() {
             date: data.date.toISOString(),
             account: entry.accountId,
             amount: entry.amount,
-            narration: `Payment from ${data.cashBankAccountId}. ${entry.narration}`
+            narration: `Payment from ${data.cashBankAccountId}. ${entry.narration || ''}`
         });
     });
 
@@ -113,71 +123,73 @@ export function PaymentVoucher() {
         <CardDescription>Record cash or bank payments made to various accounts.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField control={form.control} name="voucherNo" render={({ field }) => (
-                    <FormItem><FormLabel>Voucher No</FormLabel><FormControl><Input {...field} readOnly /></FormControl></FormItem>
-                )}/>
-                <FormField control={form.control} name="date" render={({ field }) => (
-                    <FormItem><FormLabel>Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
-                )}/>
-                <FormField control={form.control} name="cashBankAccountId" render={({ field }) => (
-                    <FormItem><FormLabel>Payment From</FormLabel><Combobox options={cashBankOptions} {...field} placeholder="Select Account..."/></FormItem>
-                )}/>
-             </div>
+        <ClientOnly>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField control={form.control} name="voucherNo" render={({ field }) => (
+                      <FormItem><FormLabel>Voucher No</FormLabel><FormControl><Input {...field} readOnly /></FormControl></FormItem>
+                  )}/>
+                  <FormField control={form.control} name="date" render={({ field }) => (
+                      <FormItem><FormLabel>Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
+                  )}/>
+                  <FormField control={form.control} name="cashBankAccountId" render={({ field }) => (
+                      <FormItem><FormLabel>Payment From</FormLabel><Combobox options={cashBankOptions} {...field} placeholder="Select Account..."/></FormItem>
+                  )}/>
+              </div>
 
-            <div className="border rounded-md">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Paid To Account</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Narration</TableHead>
-                            <TableHead className="w-12">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {fields.map((field, index) => (
-                            <TableRow key={field.id}>
-                                <TableCell>
-                                    <FormField control={form.control} name={`entries.${index}.accountId`} render={({ field }) => (
-                                        <Combobox options={accountOptions} {...field} placeholder="Select Account..."/>
-                                    )}/>
-                                </TableCell>
-                                <TableCell>
-                                    <FormField control={form.control} name={`entries.${index}.amount`} render={({ field }) => (
-                                        <Input type="number" {...field} />
-                                    )}/>
-                                </TableCell>
-                                <TableCell>
-                                    <FormField control={form.control} name={`entries.${index}.narration`} render={({ field }) => (
-                                        <Input {...field} placeholder="Optional narration"/>
-                                    )}/>
-                                </TableCell>
-                                <TableCell>
-                                    <Button variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                    <TableFooter>
-                        <TableRow>
-                            <TableCell className="text-right font-bold">Total</TableCell>
-                            <TableCell className="font-bold">{totalAmount.toFixed(2)}</TableCell>
-                            <TableCell colSpan={2}>
-                                <Button type="button" variant="outline" size="sm" onClick={() => append({ accountId: '', amount: 0, narration: '' })}><PlusCircle className="h-4 w-4 mr-2"/>Add Row</Button>
-                            </TableCell>
-                        </TableRow>
-                    </TableFooter>
-                </Table>
-            </div>
-            
-            <div className="flex justify-end">
-                <Button type="submit"><Save className="h-4 w-4 mr-2"/>Save Voucher</Button>
-            </div>
-          </form>
-        </Form>
+              <div className="border rounded-md">
+                  <Table>
+                      <TableHeader>
+                          <TableRow>
+                              <TableHead>Paid To Account</TableHead>
+                              <TableHead>Amount</TableHead>
+                              <TableHead>Narration</TableHead>
+                              <TableHead className="w-12">Action</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {fields.map((field, index) => (
+                              <TableRow key={field.id}>
+                                  <TableCell>
+                                      <FormField control={form.control} name={`entries.${index}.accountId`} render={({ field }) => (
+                                          <Combobox options={accountOptions} {...field} placeholder="Select Account..."/>
+                                      )}/>
+                                  </TableCell>
+                                  <TableCell>
+                                      <FormField control={form.control} name={`entries.${index}.amount`} render={({ field }) => (
+                                          <Input type="number" {...field} />
+                                      )}/>
+                                  </TableCell>
+                                  <TableCell>
+                                      <FormField control={form.control} name={`entries.${index}.narration`} render={({ field }) => (
+                                          <Input {...field} placeholder="Optional narration"/>
+                                      )}/>
+                                  </TableCell>
+                                  <TableCell>
+                                      <Button variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                  </TableCell>
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                      <TableFooter>
+                          <TableRow>
+                              <TableCell className="text-right font-bold">Total</TableCell>
+                              <TableCell className="font-bold">{totalAmount.toFixed(2)}</TableCell>
+                              <TableCell colSpan={2}>
+                                  <Button type="button" variant="outline" size="sm" onClick={() => append({ accountId: '', amount: 0, narration: '' })}><PlusCircle className="h-4 w-4 mr-2"/>Add Row</Button>
+                              </TableCell>
+                          </TableRow>
+                      </TableFooter>
+                  </Table>
+              </div>
+              
+              <div className="flex justify-end">
+                  <Button type="submit"><Save className="h-4 w-4 mr-2"/>Save Voucher</Button>
+              </div>
+            </form>
+          </Form>
+        </ClientOnly>
       </CardContent>
     </Card>
   );
