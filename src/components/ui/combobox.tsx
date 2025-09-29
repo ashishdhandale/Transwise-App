@@ -91,6 +91,13 @@ export function Combobox({
       }
   };
 
+  const filteredOptions = React.useMemo(() => {
+    if (!searchQuery) return options;
+    return options.filter(option =>
+      option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [options, searchQuery]);
+
   return (
     <ClientOnly>
       <Popover open={open} onOpenChange={handleOpenChange}>
@@ -122,6 +129,7 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
+              value={searchQuery}
               onValueChange={setSearchQuery}
             />
             <CommandList>
@@ -137,7 +145,7 @@ export function Combobox({
                   </div>
               </CommandEmpty>
               <CommandGroup>
-                {options.map((option) => (
+                {filteredOptions.map((option) => (
                   <CommandItem
                     key={option.value}
                     value={option.label}
