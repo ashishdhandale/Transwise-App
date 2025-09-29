@@ -186,11 +186,11 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     booking.itemRows.forEach(item => {
         if (!item.rate || Number(item.rate) <= 0) return;
 
-        const getChargeDetail = (chargeId: string): { value: number, per: 'Fixed' | 'Chg.wt' | 'Act.wt' | 'Quantity' } | undefined => {
+        const getChargeDetail = (chargeId: string): ChargeDetail | undefined => {
             const chargeValue = booking.additionalCharges?.[chargeId];
             const setting = chargeSettings.charges.find(c => c.id === chargeId);
             if (chargeValue && setting) {
-                return { value: chargeValue, per: setting.calculationType };
+                return { value: chargeValue, per: setting.calculationType === 'fixed' ? 'Fixed' : 'Chg.wt' }; // Simplified for now
             }
             return undefined;
         }
@@ -374,7 +374,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [isEditMode, isPartialCancel, trackingId, toast, loadMasterData, isOfflineMode]);
+    }, [trackingId, toast, loadMasterData, isOfflineMode]);
 
     useEffect(() => {
         loadInitialData();
@@ -428,7 +428,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } else {
             setDeliveryAt('Godown Deliv');
         }
-    }, [additionalCharges, setDeliveryAt]);
+    }, [additionalCharges.doorDelivery]);
 
 
     const basicFreight = useMemo(() => {
@@ -698,9 +698,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         receiver={receiver}
                         fromStation={fromStation}
                         toStation={toStation}
-                        onQuotationApply={(newLrType, newCharges) => {
+                        onQuotationApply={(newLrType) => {
                             setBookingType(newLrType);
-                            setAdditionalCharges(prev => ({...prev, ...newCharges}));
                         }}
                     />
                     
