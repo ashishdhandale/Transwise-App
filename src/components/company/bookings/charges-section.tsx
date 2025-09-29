@@ -10,11 +10,6 @@ import type { ChargeSetting } from '@/components/company/settings/additional-cha
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import type { ItemRow } from './item-details-table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-const LOCAL_STORAGE_KEY = 'transwise_additional_charges_settings';
 
 const calculationTypes: { value: ChargeSetting['calculationType'], label: string }[] = [
     { value: 'fixed', label: 'Fixed' },
@@ -55,14 +50,12 @@ export function ChargesSection({
 
     useEffect(() => {
         try {
-            const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY);
+            const savedSettings = localStorage.getItem('transwise_additional_charges_settings');
             if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);
                 if (parsed.charges) {
                     setChargeSettings(parsed.charges.filter((c: ChargeSetting) => c.isVisible));
                 }
-            } else {
-                setChargeSettings([]);
             }
         } catch (error) {
             console.error("Failed to load additional charges settings", error);
@@ -75,18 +68,24 @@ export function ChargesSection({
                 rate: chargeSettings.find(c => c.id === chargeId)?.value || 0,
                 type: chargeSettings.find(c => c.id === chargeId)?.calculationType || 'fixed'
             };
+            const numericValue = field === 'rate' ? Number(value) : value;
             return {
                 ...prev,
-                [chargeId]: { ...current, [field]: value }
+                [chargeId]: { ...current, [field]: numericValue }
             };
         });
     }
 
     const calculateCharge = useCallback((charge: ChargeSetting) => {
+        if (!charge.isDynamic) {
+            // For simple charges, just return the value or the initial value if set
+            return bookingCharges[charge.id] ?? initialCharges?.[charge.id] ?? charge.value ?? 0;
+        }
+
         const calcDetails = liveCalc[charge.id];
         const rate = calcDetails ? calcDetails.rate : charge.value || 0;
         const type = calcDetails ? calcDetails.type : charge.calculationType;
-
+        
         switch (type) {
             case 'fixed': return rate;
             case 'per_kg_actual': return itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0) * rate;
@@ -94,26 +93,35 @@ export function ChargesSection({
             case 'per_quantity': return itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate;
             default: return 0;
         }
-    }, [itemRows, liveCalc]);
+    }, [itemRows, liveCalc, bookingCharges, initialCharges]);
 
     useEffect(() => {
         const newBookingCharges: { [key: string]: number } = {};
+        let chargesInitialized = false;
+
         chargeSettings.forEach(charge => {
-            if (initialCharges && initialCharges[charge.id] !== undefined && Object.keys(liveCalc).length === 0) {
-                 newBookingCharges[charge.id] = initialCharges[charge.id];
+            if (initialCharges && initialCharges[charge.id] !== undefined && !chargesInitialized) {
+                newBookingCharges[charge.id] = initialCharges[charge.id];
             } else {
-                 newBookingCharges[charge.id] = calculateCharge(charge);
+                newBookingCharges[charge.id] = calculateCharge(charge);
             }
         });
-        setBookingCharges(newBookingCharges);
-    }, [chargeSettings, itemRows, calculateCharge, initialCharges, liveCalc]);
+        
+        if (initialCharges && !chargesInitialized) {
+             setBookingCharges(initialCharges);
+             chargesInitialized = true;
+        } else {
+             setBookingCharges(newBookingCharges);
+        }
+
+    }, [chargeSettings, itemRows, calculateCharge, initialCharges]);
     
     useEffect(() => {
         notifyParentOfChanges(bookingCharges);
     }, [bookingCharges, notifyParentOfChanges]);
     
     const additionalChargesTotal = useMemo(() => {
-        return Object.values(bookingCharges).reduce((sum, charge) => sum + charge, 0);
+        return Object.values(bookingCharges).reduce((sum, charge) => sum + Number(charge || 0), 0);
     }, [bookingCharges]);
 
     const total = useMemo(() => {
@@ -155,15 +163,15 @@ export function ChargesSection({
                 <Input type="number" value={basicFreight.toFixed(2)} readOnly className="h-7 text-sm w-full bg-muted" />
              </div>
             {chargeSettings.map((charge) => (
-                <div key={charge.id} className="grid grid-cols-[1fr_auto] items-start gap-x-2">
+                 <div key={charge.id} className="grid grid-cols-[1fr_auto] items-center gap-x-2">
                     <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis h-7 flex items-center">{charge.name}</Label>
                     
-                    {charge.isEditable && !isViewOnly ? (
+                    {charge.isDynamic && !isViewOnly ? (
                         <div className="grid grid-cols-[80px_100px_100px] items-center gap-1">
                             <Input
                                 type="number"
                                 placeholder="Rate"
-                                value={liveCalc[charge.id]?.rate ?? ''}
+                                value={liveCalc[charge.id]?.rate ?? charge.value ?? ''}
                                 onChange={(e) => handleLiveCalcChange(charge.id, 'rate', e.target.value)}
                                 className="h-7 text-xs"
                             />
@@ -178,7 +186,7 @@ export function ChargesSection({
                             </Select>
                             <Input 
                                 type="number" 
-                                value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
+                                value={Number(bookingCharges[charge.id] || 0).toFixed(2)}
                                 readOnly
                                 className="h-7 text-sm w-full bg-muted" 
                             />
@@ -186,7 +194,7 @@ export function ChargesSection({
                     ) : (
                         <Input 
                             type="number" 
-                            value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
+                            value={Number(bookingCharges[charge.id] || 0).toFixed(2)}
                             readOnly={isViewOnly}
                             className="h-7 text-sm w-[100px] bg-muted/50 justify-self-end" 
                             onChange={(e) => {
