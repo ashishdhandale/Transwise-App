@@ -261,7 +261,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                     <FormItem><FormLabel>From</FormLabel><FormControl><Input placeholder="Enter Origin" {...field} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="toStation" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>To</FormLabel><FormControl><Input placeholder="Enter Destination" {...field} /></FormControl></FormItem>
+                                    <FormItem className="md:col-span-3"><FormLabel>To</FormLabel><FormControl><Textarea placeholder="Enter destination(s), use commas for multiple points" {...field} /></FormControl></FormItem>
                                 )}/>
                             </div>
                             <Card className="p-4 bg-muted/50">

@@ -50,7 +50,7 @@ export function LorryHireChallan({ receipt, profile }: LorryHireChallanProps) {
             
              <div className="mt-4">
                 <p className="font-semibold">Remarks:</p>
-                <p className="text-xs min-h-[40px]">{receipt.remarks}</p>
+                <p className="text-xs min-h-[40px] whitespace-pre-line">{receipt.remarks}</p>
             </div>
 
             <footer className="grid grid-cols-2 gap-4 mt-16 pt-16 text-sm">
