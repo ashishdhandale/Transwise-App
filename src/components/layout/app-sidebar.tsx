@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -285,13 +286,8 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/accounts/customer-ledger" size="sm" isActive={pathname.startsWith('/company/accounts/customer-ledger')} tooltip="Customer Ledger">
-                  <Users /> Customer Ledger
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="/company/accounts/vendor-ledger" size="sm" isActive={pathname.startsWith('/company/accounts/vendor-ledger')} tooltip="Vendor Ledger">
-                  <Handshake /> Vendor Ledger
+                <SidebarMenuButton href="/company/accounts/ledger" size="sm" isActive={pathname.startsWith('/company/accounts/ledger')} tooltip="Ledger">
+                  <Notebook /> Ledger
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -323,6 +319,9 @@ export function AppSidebar() {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/master/account" size="sm" isActive={pathname === '/company/master/account'} tooltip="Accounts"><Wallet />Accounts</SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="/company/master/city" size="sm" isActive={pathname === '/company/master/city'} tooltip="Stations"><MapPin />Stations</SidebarMenuButton>
               </SidebarMenuItem>

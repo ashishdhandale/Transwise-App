@@ -3,21 +3,21 @@
 
 import { Suspense } from 'react';
 import DashboardLayout from '../../../(dashboard)/layout';
-import { VendorLedgerDashboard } from '@/components/company/accounts/vendor-ledger-dashboard';
+import { AccountsDashboard } from '@/components/company/accounts/accounts-dashboard';
 
 
-function VendorLedgerPage() {
+function LedgerPage() {
   return (
     <DashboardLayout>
-      <VendorLedgerDashboard />
+      <AccountsDashboard />
     </DashboardLayout>
   );
 }
 
-export default function VendorLedgerRootPage() {
+export default function LedgerRootPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <VendorLedgerPage />
+      <LedgerPage />
     </Suspense>
   );
 }

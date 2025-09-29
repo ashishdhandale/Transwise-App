@@ -1,4 +1,5 @@
 
+
 export type DeliveryStatus =
   | 'Pending'
   | 'In Transit'
@@ -206,3 +207,20 @@ export interface RateList {
   stationRates: StationRate[];
   itemRates: ItemRate[];
 }
+
+export type AccountType = 'Asset' | 'Liability' | 'Income' | 'Expense' | 'Capital' | 'Customer' | 'Vendor' | 'Bank' | 'Cash';
+export const accountTypes: AccountType[] = ['Asset', 'Liability', 'Income', 'Expense', 'Capital', 'Customer', 'Vendor', 'Bank', 'Cash'];
+
+
+export interface Account {
+  id: string; // Can be 'customer-1', 'vendor-2', 'account-3'
+  name: string;
+  type: AccountType;
+  openingBalance: number;
+  // Additional details for specific types
+  gstin?: string;
+  address?: string;
+  mobile?: string;
+  email?: string;
+}
+

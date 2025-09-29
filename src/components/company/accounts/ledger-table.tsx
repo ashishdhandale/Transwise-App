@@ -15,19 +15,19 @@ import { cn } from '@/lib/utils';
 
 interface LedgerTableProps {
     entries: LedgerEntry[];
-    customerName: string;
+    accountName: string;
 }
 
 const thClass = "bg-primary/10 text-primary font-semibold";
 
-export function LedgerTable({ entries, customerName }: LedgerTableProps) {
+export function LedgerTable({ entries, accountName }: LedgerTableProps) {
     let runningBalance = 0;
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="text-lg font-headline">
-                    Ledger for: <span className="text-primary">{customerName}</span>
+                    Ledger for: <span className="text-primary">{accountName}</span>
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -72,7 +72,7 @@ export function LedgerTable({ entries, customerName }: LedgerTableProps) {
                     </Table>
                     {entries.length === 0 && (
                         <div className="text-center p-8 text-muted-foreground">
-                            No transactions found for this customer.
+                            No transactions found for this account.
                         </div>
                     )}
                 </div>

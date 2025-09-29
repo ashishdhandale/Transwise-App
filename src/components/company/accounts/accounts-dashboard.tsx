@@ -1,23 +1,23 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CustomerSearch } from './customer-search';
+import { AccountSearch } from './account-search';
 import { LedgerTable } from './ledger-table';
 import { LedgerSummary } from './ledger-summary';
-import type { Customer } from '@/lib/types';
+import type { Account } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
-import { getLedgerForCustomer } from '@/lib/accounts-data';
+import { getLedgerForAccount } from '@/lib/accounts-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
-
-const CUSTOMERS_KEY = 'transwise_customers';
+import { getAccounts } from '@/lib/account-data';
 
 export function AccountsDashboard() {
-    const [customers, setCustomers] = useState<Customer[]>([]);
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
@@ -26,10 +26,7 @@ export function AccountsDashboard() {
             try {
                 const profile = await getCompanyProfile();
                 setCompanyProfile(profile);
-                const savedCustomers = localStorage.getItem(CUSTOMERS_KEY);
-                if (savedCustomers) {
-                    setCustomers(JSON.parse(savedCustomers));
-                }
+                setAccounts(getAccounts());
             } catch (error) {
                 console.error("Failed to load initial data", error);
             }
@@ -37,21 +34,19 @@ export function AccountsDashboard() {
         loadData();
     }, []);
 
-    const handleCustomerSelect = (customerName: string | null) => {
-        if (!customerName) {
-            setSelectedCustomer(null);
+    const handleAccountSelect = (accountId: string | null) => {
+        if (!accountId) {
+            setSelectedAccount(null);
             setLedger([]);
             return;
         }
 
-        const customer = customers.find(c => c.name === customerName);
-        if (customer) {
-            setSelectedCustomer(customer);
-            // In a real app, you'd fetch this from a server.
-            // For this prototype, we now generate it from local storage bookings.
-            setLedger(getLedgerForCustomer(customer));
+        const account = accounts.find(c => c.id === accountId);
+        if (account) {
+            setSelectedAccount(account);
+            setLedger(getLedgerForAccount(account));
         } else {
-            setSelectedCustomer(null);
+            setSelectedAccount(null);
             setLedger([]);
         }
     };
@@ -75,19 +70,19 @@ export function AccountsDashboard() {
             <header className="mb-4">
                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                     <Wallet className="h-8 w-8" />
-                    Customer Accounts
+                    Accounts Ledger
                 </h1>
             </header>
 
             <div className="space-y-4">
-                <CustomerSearch customers={customers} onSelectCustomer={handleCustomerSelect} />
+                <AccountSearch accounts={accounts} onSelectAccount={handleAccountSelect} />
 
                 <Card>
                     <CardContent className="p-4">
-                        {selectedCustomer && companyProfile ? (
+                        {selectedAccount && companyProfile ? (
                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div className="lg:col-span-2">
-                                    <LedgerTable entries={ledger} customerName={selectedCustomer.name} />
+                                    <LedgerTable entries={ledger} accountName={selectedAccount.name} />
                                 </div>
                                 <div className="lg:col-span-1">
                                     <LedgerSummary
@@ -101,7 +96,7 @@ export function AccountsDashboard() {
                             </div>
                         ) : (
                             <div className="flex h-64 items-center justify-center border-dashed border-2 rounded-md">
-                                <p className="text-muted-foreground">Select a customer to view their ledger.</p>
+                                <p className="text-muted-foreground">Select an account to view its ledger.</p>
                             </div>
                         )}
                     </CardContent>
