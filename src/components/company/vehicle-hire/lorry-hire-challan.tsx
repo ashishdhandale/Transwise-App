@@ -29,7 +29,7 @@ export function LorryHireChallan({ receipt, profile }: LorryHireChallanProps) {
 
             <div className="grid grid-cols-2 gap-x-4 border-y-2 border-black py-2 my-4">
                 <div>
-                    <DetailRow label="Challan No" value={receipt.receiptNo} />
+                    <DetailRow label="Receipt No" value={receipt.receiptNo} />
                     <DetailRow label="Date" value={format(new Date(receipt.date), 'dd-MMM-yyyy')} />
                     <DetailRow label="Vehicle No" value={receipt.vehicleNo} />
                     <DetailRow label="Driver Name" value={receipt.driverName} />
