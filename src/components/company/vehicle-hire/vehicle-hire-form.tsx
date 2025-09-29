@@ -14,7 +14,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Combobox } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, X } from 'lucide-react';
-import { getVendors, type Vendor } from '@/lib/vendor-data';
+import { getVendors, saveVendors, type Vendor } from '@/lib/vendor-data';
 import { getDrivers, type Driver } from '@/lib/driver-data';
 import { getVehicles, type VehicleMaster } from '@/lib/vehicle-data';
 import { getCities, type City } from '@/lib/city-data';
@@ -26,6 +26,7 @@ import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/
 import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { AddVendorDialog } from '../master/add-vendor-dialog';
 
 const hireSchema = z.object({
   receiptNo: z.string(),
@@ -60,6 +61,10 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
     const [cities, setCities] = useState<City[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
+    // Dialog State
+    const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+    const [initialVendorData, setInitialVendorData] = useState<Partial<Vendor> | null>(null);
+
     // Preview
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<VehicleHireReceipt | null>(null);
@@ -79,12 +84,16 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
         },
     });
     
+    const loadMasterData = () => {
+        setVendors(getVendors().filter(v => v.type === 'Vehicle Supplier'));
+        setDrivers(getDrivers());
+        setVehicles(getVehicles());
+        setCities(getCities());
+    };
+
     useEffect(() => {
-        async function loadData() {
-            setVendors(getVendors().filter(v => v.type === 'Vehicle Supplier'));
-            setDrivers(getDrivers());
-            setVehicles(getVehicles());
-            setCities(getCities());
+        async function loadInitial() {
+            loadMasterData();
             const profile = await getCompanyProfile();
             setCompanyProfile(profile);
 
@@ -100,7 +109,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                  form.setValue('receiptNo', `VH-${String(lastReceiptNo + 1).padStart(4, '0')}`);
             }
         }
-        loadData();
+        loadInitial();
     }, [form, existingReceipt]);
 
     const freight = form.watch('freight');
@@ -120,6 +129,25 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
             }
         }
     }
+
+    const handleOpenAddVendor = (query?: string) => {
+        setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null);
+        setIsAddVendorOpen(true);
+    };
+
+    const handleSaveVendor = (vendorData: Omit<Vendor, 'id'>) => {
+        const allVendors = getVendors();
+        const newVendor: Vendor = { 
+            id: allVendors.length > 0 ? Math.max(...allVendors.map(v => v.id)) + 1 : 1,
+            ...vendorData
+        };
+        const updatedVendors = [newVendor, ...allVendors];
+        saveVendors(updatedVendors);
+        loadMasterData(); // Refresh vendor list
+        form.setValue('supplierId', String(newVendor.id));
+        toast({ title: 'Supplier Added', description: `Supplier "${newVendor.name}" has been created.`});
+        return true;
+    };
 
 
     const onSubmit = (data: HireFormValues) => {
@@ -225,7 +253,16 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                     <FormItem><FormLabel>Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="supplierId" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>Supplier</FormLabel><Combobox options={vendorOptions} placeholder="Select Supplier" {...field} /></FormItem>
+                                    <FormItem>
+                                        <FormLabel>Supplier</FormLabel>
+                                        <Combobox 
+                                            options={vendorOptions} 
+                                            placeholder="Select Supplier" 
+                                            {...field} 
+                                            addMessage="Add New Supplier"
+                                            onAdd={handleOpenAddVendor}
+                                        />
+                                    </FormItem>
                                 )}/>
                                 <FormField name="vehicleNo" control={form.control} render={({ field }) => (
                                     <FormItem><FormLabel>Vehicle No.</FormLabel><Combobox options={vehicleOptions} placeholder="Select Vehicle" {...field} onChange={handleVehicleSelect} /></FormItem>
@@ -267,6 +304,14 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                     </Form>
                 </CardContent>
             </Card>
+
+            <AddVendorDialog 
+                isOpen={isAddVendorOpen}
+                onOpenChange={setIsAddVendorOpen}
+                onSave={handleSaveVendor}
+                vendor={initialVendorData}
+            />
+
             {previewData && companyProfile && (
                 <Dialog open={isPreviewOpen} onOpenChange={(isOpen) => {
                     if (!isOpen) { onSaveSuccess(); }

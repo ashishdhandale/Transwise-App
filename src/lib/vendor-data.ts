@@ -15,3 +15,14 @@ export const getVendors = (): Vendor[] => {
         return [];
     }
 };
+
+export const saveVendors = (vendors: Vendor[]) => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_VENDORS, JSON.stringify(vendors));
+    } catch (error) {
+        console.error("Failed to save vendors to localStorage", error);
+    }
+}
