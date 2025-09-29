@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UserRole } from "@/lib/types";
+import { ClientOnly } from "@/components/ui/client-only";
 
 export default function LoginForm() {
   const [userId, setUserId] = useState('');
@@ -74,6 +75,7 @@ export default function LoginForm() {
         </div>
 
         <div className="w-full max-w-sm mx-auto">
+          <ClientOnly>
             <Card className="border-2 border-primary rounded-lg overflow-hidden">
                 <header className="bg-primary text-primary-foreground p-4">
                     <div className="flex flex-col items-center text-center">
@@ -146,6 +148,7 @@ export default function LoginForm() {
                     </form>
                 </CardContent>
               </Card>
+            </ClientOnly>
           </div>
       </main>
     </div>
