@@ -10,7 +10,8 @@ import { LedgerTable } from './ledger-table';
 import { LedgerSummary } from './ledger-summary';
 import type { Account } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
-import { getLedgerForAccount } from '@/lib/accounts-data';
+import { getLedgerForCustomer } from '@/lib/accounts-data';
+import { getLedgerForVendor } from '@/lib/vendor-accounts-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { getAccounts } from '@/lib/account-data';
@@ -44,7 +45,20 @@ export function AccountsDashboard() {
         const account = accounts.find(c => c.id === accountId);
         if (account) {
             setSelectedAccount(account);
-            setLedger(getLedgerForAccount(account));
+            if (account.type === 'Customer') {
+                 // The `getLedgerForCustomer` expects a `Customer` object, but our `Account` object has the same shape.
+                 // We can cast it for now. In a more complex app, we might fetch the full customer object.
+                setLedger(getLedgerForCustomer(account as any));
+            } else if (account.type === 'Vendor') {
+                // Similarly, casting for vendor.
+                setLedger(getLedgerForVendor(account as any));
+            } else {
+                // For other account types (Cash, Bank, Expense), we'll show a placeholder for now.
+                // A future implementation would generate their ledgers too.
+                setLedger([
+                     { date: '2024-04-01', particulars: 'Opening Balance', balance: account.openingBalance },
+                ]);
+            }
         } else {
             setSelectedAccount(null);
             setLedger([]);
@@ -52,7 +66,8 @@ export function AccountsDashboard() {
     };
     
     const openingBalance = useMemo(() => {
-        return ledger.find(entry => entry.particulars === 'Opening Balance')?.balance || 0;
+        const obEntry = ledger.find(entry => entry.particulars === 'Opening Balance');
+        return obEntry?.balance || 0;
     }, [ledger]);
     
     const totalDebit = useMemo(() => {
