@@ -508,20 +508,6 @@ export function NewChallanForm() {
                             <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted/50">
-                         <div className="space-y-1">
-                            <Label>Vehicle Hire Freight</Label>
-                            <Input value={vehicleHireFreight} readOnly />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Advance Paid</Label>
-                            <Input value={advance} readOnly />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Balance</Label>
-                            <Input value={balance} readOnly />
-                        </div>
-                    </div>
                 </CardContent>
             </Card>
 
@@ -548,6 +534,21 @@ export function NewChallanForm() {
                 })}
             </div>
             
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted/50">
+                 <div className="space-y-1">
+                    <Label>Vehicle Hire Freight</Label>
+                    <Input value={vehicleHireFreight} readOnly />
+                </div>
+                <div className="space-y-1">
+                    <Label>Advance Paid</Label>
+                    <Input value={advance} readOnly />
+                </div>
+                <div className="space-y-1">
+                    <Label>Balance</Label>
+                    <Input value={balance} readOnly />
+                </div>
+            </div>
+
             <div className="flex justify-end gap-2">
                 <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> Save as Temp &amp; Exit</Button>
                 <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
