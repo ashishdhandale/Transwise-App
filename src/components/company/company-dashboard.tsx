@@ -58,13 +58,13 @@ export function CompanyDashboard() {
     const destinationDeliveries: { [key: string]: number } = {};
 
     allBookings.forEach(booking => {
-      // Stock by current station (assuming 'fromCity' is the current location for 'In Stock')
-      if (booking.status === 'In Stock') {
+      // Stock by current station (items not yet in transit)
+      if (['In Stock', 'In Loading', 'In HOLD'].includes(booking.status)) {
         stationStock[booking.fromCity] = (stationStock[booking.fromCity] || 0) + 1;
       }
       
-      // Undelivered stock
-      if (booking.status === 'In Stock' || booking.status === 'In Transit') {
+      // Undelivered stock (all items not yet delivered)
+      if (booking.status !== 'Delivered' && booking.status !== 'Cancelled') {
         undeliveredStock[booking.fromCity] = (undeliveredStock[booking.fromCity] || 0) + 1;
       }
 
