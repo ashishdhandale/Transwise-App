@@ -135,8 +135,6 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
-              value={searchQuery}
-              onValueChange={setSearchQuery}
             />
             <CommandList>
               <CommandEmpty>
