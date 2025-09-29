@@ -53,6 +53,7 @@ export function VehicleHireList({ receipts, onEdit, reloadReceipts }: VehicleHir
                                 <TableHead className={thClass}>Date</TableHead>
                                 <TableHead className={thClass}>Supplier</TableHead>
                                 <TableHead className={thClass}>Vehicle No.</TableHead>
+                                <TableHead className={thClass}>Vehicle Type</TableHead>
                                 <TableHead className={thClass}>Capacity</TableHead>
                                 <TableHead className={thClass}>Route</TableHead>
                                 <TableHead className={`${thClass} text-right`}>Freight</TableHead>
@@ -68,6 +69,7 @@ export function VehicleHireList({ receipts, onEdit, reloadReceipts }: VehicleHir
                                     <TableCell>{format(new Date(r.date), 'dd-MMM-yyyy')}</TableCell>
                                     <TableCell>{r.supplierName}</TableCell>
                                     <TableCell>{r.vehicleNo}</TableCell>
+                                    <TableCell>{r.vehicleType || 'N/A'}</TableCell>
                                     <TableCell>{r.capacity ? `${r.capacity} Kg` : 'N/A'}</TableCell>
                                     <TableCell>{r.fromStation} to {r.toStation}</TableCell>
                                     <TableCell className="text-right">{r.freight.toFixed(2)}</TableCell>
@@ -80,7 +82,7 @@ export function VehicleHireList({ receipts, onEdit, reloadReceipts }: VehicleHir
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={10} className="h-24 text-center">No vehicle hire receipts found.</TableCell>
+                                    <TableCell colSpan={11} className="h-24 text-center">No vehicle hire receipts found.</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>

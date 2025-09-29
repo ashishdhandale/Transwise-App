@@ -30,6 +30,7 @@ const hireSchema = z.object({
   date: z.date(),
   supplierId: z.string().min(1, 'Supplier is required'),
   vehicleNo: z.string().min(1, 'Vehicle number is required'),
+  vehicleType: z.string().optional(),
   driverName: z.string().min(1, 'Driver name is required'),
   capacity: z.coerce.number().optional(),
   overloadCapacity: z.coerce.number().optional(),
@@ -234,7 +235,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                     <FormItem><FormLabel>Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="supplierId" control={form.control} render={({ field }) => (
-                                    <FormItem>
+                                    <FormItem className="md:col-span-2">
                                         <FormLabel>Supplier</FormLabel>
                                         <Combobox 
                                             options={vendorOptions} 
@@ -248,8 +249,11 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                 <FormField name="vehicleNo" control={form.control} render={({ field }) => (
                                     <FormItem><FormLabel>Vehicle No.</FormLabel><FormControl><Input placeholder="Enter Vehicle No." {...field} /></FormControl></FormItem>
                                 )}/>
+                                <FormField name="vehicleType" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel>Vehicle Type</FormLabel><FormControl><Input placeholder="e.g. Truck, Trailer" {...field} /></FormControl></FormItem>
+                                )}/>
                                 <FormField name="driverName" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Enter Driver Name" {...field} /></FormControl></FormItem>
+                                    <FormItem className="md:col-span-2"><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Enter Driver Name" {...field} /></FormControl></FormItem>
                                 )}/>
                                  <FormField name="capacity" control={form.control} render={({ field }) => (
                                     <FormItem><FormLabel>Vehicle Capacity (Kg)</FormLabel><FormControl><Input type="number" placeholder="e.g. 10000" {...field} /></FormControl></FormItem>
@@ -261,7 +265,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                     <FormItem><FormLabel>From</FormLabel><FormControl><Input placeholder="Enter Origin" {...field} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="toStation" control={form.control} render={({ field }) => (
-                                    <FormItem className="md:col-span-3"><FormLabel>To</FormLabel><FormControl><Textarea placeholder="Enter destination(s), use commas for multiple points" {...field} /></FormControl></FormItem>
+                                    <FormItem><FormLabel>To</FormLabel><FormControl><Textarea placeholder="Enter destination(s), use commas for multiple points" {...field} /></FormControl></FormItem>
                                 )}/>
                             </div>
                             <Card className="p-4 bg-muted/50">

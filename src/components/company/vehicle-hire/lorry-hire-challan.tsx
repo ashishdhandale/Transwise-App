@@ -32,6 +32,7 @@ export function LorryHireChallan({ receipt, profile }: LorryHireChallanProps) {
                     <DetailRow label="Receipt No" value={receipt.receiptNo} />
                     <DetailRow label="Date" value={format(new Date(receipt.date), 'dd-MMM-yyyy')} />
                     <DetailRow label="Vehicle No" value={receipt.vehicleNo} />
+                    <DetailRow label="Vehicle Type" value={receipt.vehicleType} />
                     <DetailRow label="Driver Name" value={receipt.driverName} />
                 </div>
                 <div>
