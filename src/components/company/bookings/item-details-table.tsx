@@ -60,9 +60,8 @@ const tdClass = "p-1";
 const tfClass = "p-1.5 h-9 bg-primary/10 text-primary font-bold text-xs whitespace-nowrap";
 const inputClass = "h-8 text-xs px-1";
 
-let nextId = 1;
 const createEmptyRow = (): ItemRow => ({
-    id: nextId++,
+    id: Date.now() + Math.random(),
     ewbNo: '',
     itemName: '',
     description: '',
