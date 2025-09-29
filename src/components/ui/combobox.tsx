@@ -32,7 +32,6 @@ interface ComboboxProps {
     addMessage?: string;
     onAdd?: (query?: string) => void;
     disabled?: boolean;
-    allowFreeform?: boolean;
     autoOpenOnFocus?: boolean;
 }
 
@@ -47,7 +46,6 @@ export function Combobox({
     addMessage = "Add new",
     onAdd,
     disabled = false,
-    allowFreeform = false,
     autoOpenOnFocus = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
@@ -59,18 +57,10 @@ export function Combobox({
   const handleSelect = (currentValue: string) => {
     const newValue = currentValue === value ? "" : currentValue;
     onChange(newValue);
-    setSearchQuery('');
     setOpen(false);
     triggerRef.current?.focus();
   }
   
-  const handleInputChange = (query: string) => {
-      setSearchQuery(query);
-      if (allowFreeform) {
-          onChange(query);
-      }
-  }
-
   const handleAdd = () => {
     if (onAdd) {
         setOpen(false); // Close the popover first
@@ -84,9 +74,6 @@ export function Combobox({
       setOpen(isOpen);
       if (!isOpen && onBlur) {
           onBlur();
-      }
-      if (!isOpen) {
-          setSearchQuery(''); // Clear search on close
       }
   }
 
@@ -135,6 +122,7 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
+              onValueChange={setSearchQuery}
             />
             <CommandList>
               <CommandEmpty>
