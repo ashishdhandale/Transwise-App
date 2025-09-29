@@ -234,6 +234,7 @@ export function ItemDetailsTable({
         const selectedItemName = newRow.itemName || 'Any';
         
         const findRate = (rateSource: StationRate[]): StationRate | undefined => {
+             // 1. Most specific: Route, Sender, Receiver, Item, Wt/Unit
             const exactMatch = rateSource.find(sr => 
                 sr.fromStation === fromStation.name &&
                 sr.toStation === toStation.name &&
@@ -244,7 +245,8 @@ export function ItemDetailsTable({
             );
             if (exactMatch) return exactMatch;
 
-            const routeItemMatch = rateSource.find(sr =>
+            // 2. Route, Sender, Receiver, Item
+            const routePartyItemMatch = rateSource.find(sr =>
                 sr.fromStation === fromStation.name &&
                 sr.toStation === toStation.name &&
                 sr.senderName === sender.name &&
@@ -252,8 +254,17 @@ export function ItemDetailsTable({
                 sr.itemName === selectedItemName &&
                 !sr.wtPerUnit
             );
+            if (routePartyItemMatch) return routePartyItemMatch;
+            
+            // 3. Route, Item
+            const routeItemMatch = rateSource.find(sr =>
+                sr.fromStation === fromStation.name &&
+                sr.toStation === toStation.name &&
+                sr.itemName === selectedItemName
+            );
             if (routeItemMatch) return routeItemMatch;
 
+            // 4. Generic Route (Any item)
             const genericRouteMatch = rateSource.find(sr =>
                 sr.fromStation === fromStation.name &&
                 sr.toStation === toStation.name &&
@@ -263,21 +274,20 @@ export function ItemDetailsTable({
         };
         
         let foundRate = findRate(activeRateList.stationRates);
+
+        // If not found in customer quotation, and the current list is not standard, check standard list
+        if (!foundRate && !activeRateList.isStandard) {
+            const standardRateList = rateLists.find(rl => rl.isStandard);
+            if (standardRateList) {
+                foundRate = findRate(standardRateList.stationRates);
+            }
+        }
         
         if (foundRate) {
             newRow.rate = String(foundRate.rate);
             newRow.freightOn = foundRate.rateOn;
             if (foundRate.lrType && onQuotationApply) {
                 onQuotationApply(foundRate.lrType);
-            }
-        } else if (activeRateList.isStandard && selectedItemName !== 'Any') {
-            const itemRate = activeRateList.itemRates.find(ir => {
-                const item = itemOptions.find(i => i.id.toString() === ir.itemId);
-                return item?.name === selectedItemName;
-            });
-            if (itemRate) {
-                newRow.rate = String(itemRate.rate);
-                newRow.freightOn = itemRate.rateOn;
             }
         }
     }
