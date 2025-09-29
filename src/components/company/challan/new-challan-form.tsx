@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -72,7 +73,7 @@ export function NewChallanForm() {
     
     // Form fields
     const [challanId, setChallanId] = useState('');
-    const [dispatchDate, setDispatchDate] = useState<Date | undefined>(new Date());
+    const [dispatchDate, setDispatchDate] = useState<Date | undefined>(undefined);
     const [vehicleNo, setVehicleNo] = useState<string | undefined>(undefined);
     const [driverName, setDriverName] = useState<string | undefined>(undefined);
     const [fromStation, setFromStation] = useState<City | null>(null);
@@ -153,6 +154,13 @@ export function NewChallanForm() {
     useEffect(() => {
         loadInitialData();
     }, [loadInitialData]);
+    
+    // Set date on client mount to avoid hydration error
+    useEffect(() => {
+        if (!dispatchDate) {
+            setDispatchDate(new Date());
+        }
+    }, [dispatchDate]);
 
     const handleLoadFromHireReceipt = () => {
         if (!hireReceiptNo) {
@@ -534,8 +542,8 @@ export function NewChallanForm() {
                 })}
             </div>
             
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted/50">
-                 <div className="space-y-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted/50">
+                <div className="space-y-1">
                     <Label>Vehicle Hire Freight</Label>
                     <Input value={vehicleHireFreight} readOnly />
                 </div>

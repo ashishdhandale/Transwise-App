@@ -372,6 +372,14 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     useEffect(() => {
         loadInitialData();
     }, [loadInitialData]);
+    
+    // Set date on client mount to avoid hydration error
+    useEffect(() => {
+        if (!bookingDate) {
+            setBookingDate(new Date());
+        }
+    }, [bookingDate]);
+
 
     const handleReset = () => {
         const profile = companyProfile;

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -73,7 +74,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
         resolver: zodResolver(hireSchema),
         defaultValues: {
             receiptNo: '',
-            date: new Date(),
+            date: undefined,
             supplierId: '',
             vehicleNo: '',
             vehicleType: '',
@@ -109,6 +110,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                  const allReceipts = getVehicleHireReceipts();
                  const lastReceiptNo = allReceipts.map(r => parseInt(r.receiptNo.replace('VH-', ''), 10)).filter(n => !isNaN(n)).reduce((max, current) => Math.max(max, current), 0);
                  form.setValue('receiptNo', `VH-${String(lastReceiptNo + 1).padStart(4, '0')}`);
+                 form.setValue('date', new Date());
             }
         }
         loadInitial();

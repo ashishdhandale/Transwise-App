@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -49,6 +50,7 @@ export function ReceiptVoucher() {
     resolver: zodResolver(receiptVoucherSchema),
     defaultValues: {
       voucherNo: '',
+      date: undefined,
       cashBankAccountId: 'Cash',
       entries: [{ accountId: '', amount: 0, narration: '' }],
     },
