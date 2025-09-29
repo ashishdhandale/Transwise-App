@@ -135,23 +135,6 @@ export function AddVehicleDialog({ isOpen, onOpenChange, onSave, vehicle, vendor
         .filter(v => v.type === 'Vehicle Supplier')
         .map(v => ({ label: v.name, value: v.name }));
 
-    const handleVehicleNoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        let formattedValue = '';
-        
-        if (value.startsWith('BH', 2)) { // BH series check
-            if (value.length > 0) formattedValue += value.substring(0, 2);
-            if (value.length > 2) formattedValue += 'BH' + value.substring(4, 8);
-            if (value.length > 8) formattedValue += '-' + value.substring(8, 10);
-        } else { // Standard format
-            if (value.length > 0) formattedValue += value.substring(0, 2);
-            if (value.length > 2) formattedValue += '-' + value.substring(2, 4);
-            if (value.length > 4) formattedValue += '-' + value.substring(4, 6);
-            if (value.length > 6) formattedValue += '-' + value.substring(6, 10);
-        }
-        setVehicleNo(formattedValue);
-    };
-
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl">
@@ -161,7 +144,7 @@ export function AddVehicleDialog({ isOpen, onOpenChange, onSave, vehicle, vendor
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="vehicle-no">Vehicle Number</Label>
-                        <Input id="vehicle-no" value={vehicleNo} onChange={handleVehicleNoChange} autoFocus placeholder="e.g. MH-31-CQ-1234" />
+                        <Input id="vehicle-no" value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value.toUpperCase())} autoFocus placeholder="e.g. MH31CQ1234" />
                     </div>
                     <div>
                         <Label htmlFor="vehicle-type">Vehicle Type</Label>
@@ -222,3 +205,5 @@ export function AddVehicleDialog({ isOpen, onOpenChange, onSave, vehicle, vendor
         </Dialog>
     );
 }
+
+    

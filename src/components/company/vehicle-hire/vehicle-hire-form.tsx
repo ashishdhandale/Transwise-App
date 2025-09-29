@@ -15,9 +15,6 @@ import { Combobox } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, X } from 'lucide-react';
 import { getVendors, saveVendors, type Vendor } from '@/lib/vendor-data';
-import { getDrivers, type Driver } from '@/lib/driver-data';
-import { getVehicles, type VehicleMaster } from '@/lib/vehicle-data';
-import { getCities, type City } from '@/lib/city-data';
 import { type VehicleHireReceipt, saveVehicleHireReceipts, getVehicleHireReceipts } from '@/lib/vehicle-hire-data';
 import { addVoucher } from '@/lib/accounts-data';
 import { LorryHireChallan } from './lorry-hire-challan';
@@ -56,9 +53,6 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
     
     // Master Data
     const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [drivers, setDrivers] = useState<Driver[]>([]);
-    const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
-    const [cities, setCities] = useState<City[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
     // Dialog State
@@ -86,9 +80,6 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
     
     const loadMasterData = () => {
         setVendors(getVendors().filter(v => v.type === 'Vehicle Supplier'));
-        setDrivers(getDrivers());
-        setVehicles(getVehicles());
-        setCities(getCities());
     };
 
     useEffect(() => {
@@ -119,17 +110,6 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
         form.setValue('balance', freight - advance);
     }, [freight, advance, form]);
     
-    const handleVehicleSelect = (vehicleNo: string) => {
-        form.setValue('vehicleNo', vehicleNo);
-        const selectedVehicle = vehicles.find(v => v.vehicleNo === vehicleNo);
-        if (selectedVehicle) {
-            const supplier = vendors.find(v => v.name === selectedVehicle.supplierName);
-            if(supplier) {
-                form.setValue('supplierId', String(supplier.id));
-            }
-        }
-    }
-
     const handleOpenAddVendor = (query?: string) => {
         setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null);
         setIsAddVendorOpen(true);
@@ -232,9 +212,6 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
     };
 
     const vendorOptions = vendors.map(v => ({ label: v.name, value: String(v.id) }));
-    const vehicleOptions = vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
-    const driverOptions = drivers.map(d => ({ label: d.name, value: d.name }));
-    const cityOptions = cities.map(c => ({ label: c.name, value: c.name }));
 
     return (
         <>
@@ -265,16 +242,16 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                     </FormItem>
                                 )}/>
                                 <FormField name="vehicleNo" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>Vehicle No.</FormLabel><Combobox options={vehicleOptions} placeholder="Select Vehicle" {...field} onChange={handleVehicleSelect} /></FormItem>
+                                    <FormItem><FormLabel>Vehicle No.</FormLabel><FormControl><Input placeholder="Enter Vehicle No." {...field} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="driverName" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>Driver Name</FormLabel><Combobox options={driverOptions} placeholder="Select Driver" {...field} /></FormItem>
+                                    <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Enter Driver Name" {...field} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="fromStation" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>From</FormLabel><Combobox options={cityOptions} placeholder="Select Origin" {...field} /></FormItem>
+                                    <FormItem><FormLabel>From</FormLabel><FormControl><Input placeholder="Enter Origin" {...field} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="toStation" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>To</FormLabel><Combobox options={cityOptions} placeholder="Select Destination" {...field} /></FormItem>
+                                    <FormItem><FormLabel>To</FormLabel><FormControl><Input placeholder="Enter Destination" {...field} /></FormControl></FormItem>
                                 )}/>
                             </div>
                             <Card className="p-4 bg-muted/50">
@@ -334,3 +311,5 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
         </>
     );
 }
+
+    

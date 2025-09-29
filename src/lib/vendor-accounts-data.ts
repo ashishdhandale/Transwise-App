@@ -3,6 +3,7 @@ import type { Booking } from './bookings-dashboard-data';
 import { getBookings } from './bookings-dashboard-data';
 import type { Vendor } from './types';
 import { type LedgerEntry, getVouchers } from './accounts-data';
+import { getVehicleHireReceipts } from './vehicle-hire-data';
 
 // In a real application, this data would come from a database.
 const samplePaymentsToVendors: { [vendorName: string]: LedgerEntry[] } = {};
@@ -11,6 +12,7 @@ const samplePaymentsToVendors: { [vendorName: string]: LedgerEntry[] } = {};
 export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {
     const allBookings = getBookings();
     const allVouchers = getVouchers();
+    const allHireReceipts = getVehicleHireReceipts();
 
     const transactionEntries: LedgerEntry[] = [];
 
@@ -36,6 +38,27 @@ export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {
             }
         }
     });
+
+    allHireReceipts.forEach(receipt => {
+        if (receipt.supplierName === vendor.name) {
+            const receiptDate = new Date(receipt.date).toLocaleDateString('en-CA');
+            
+            transactionEntries.push({
+                date: receiptDate,
+                particulars: `By Lorry Hire - Challan #${receipt.receiptNo}`,
+                credit: receipt.freight,
+            });
+
+            if (receipt.advance > 0) {
+                transactionEntries.push({
+                    date: receiptDate,
+                    particulars: `To Advance Paid - Challan #${receipt.receiptNo}`,
+                    debit: receipt.advance,
+                });
+            }
+        }
+    });
+
 
     const openingBalance = vendor.openingBalance ?? 0;
 
@@ -66,3 +89,5 @@ export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {
 
     return ledger;
 };
+
+    
