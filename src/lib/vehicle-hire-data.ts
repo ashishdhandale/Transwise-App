@@ -7,6 +7,8 @@ export interface VehicleHireReceipt {
     supplierName: string;
     vehicleNo: string;
     driverName: string;
+    capacity?: number;
+    overloadCapacity?: number;
     fromStation: string;
     toStation: string;
     freight: number;

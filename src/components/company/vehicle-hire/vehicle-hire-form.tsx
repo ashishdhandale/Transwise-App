@@ -31,6 +31,8 @@ const hireSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
   vehicleNo: z.string().min(1, 'Vehicle number is required'),
   driverName: z.string().min(1, 'Driver name is required'),
+  capacity: z.coerce.number().optional(),
+  overloadCapacity: z.coerce.number().optional(),
   fromStation: z.string().min(1, 'From station is required'),
   toStation: z.string().min(1, 'To station is required'),
   freight: z.coerce.number().min(0),
@@ -75,6 +77,8 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
             advance: 0,
             balance: 0,
             remarks: '',
+            capacity: 0,
+            overloadCapacity: 0,
         },
     });
     
@@ -247,6 +251,12 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                 <FormField name="driverName" control={form.control} render={({ field }) => (
                                     <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Enter Driver Name" {...field} /></FormControl></FormItem>
                                 )}/>
+                                 <FormField name="capacity" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel>Vehicle Capacity (Kg)</FormLabel><FormControl><Input type="number" placeholder="e.g. 10000" {...field} /></FormControl></FormItem>
+                                )}/>
+                                <FormField name="overloadCapacity" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel>Overload Capacity (Kg)</FormLabel><FormControl><Input type="number" placeholder="e.g. 1000" {...field} /></FormControl></FormItem>
+                                )}/>
                                 <FormField name="fromStation" control={form.control} render={({ field }) => (
                                     <FormItem><FormLabel>From</FormLabel><FormControl><Input placeholder="Enter Origin" {...field} /></FormControl></FormItem>
                                 )}/>
@@ -311,5 +321,3 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
         </>
     );
 }
-
-    

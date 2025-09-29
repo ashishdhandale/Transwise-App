@@ -38,6 +38,7 @@ export function LorryHireChallan({ receipt, profile }: LorryHireChallanProps) {
                     <DetailRow label="Supplier" value={receipt.supplierName} />
                     <DetailRow label="From" value={receipt.fromStation} />
                     <DetailRow label="To" value={receipt.toStation} />
+                    <DetailRow label="Capacity" value={`${receipt.capacity || 0} Kg`} />
                 </div>
             </div>
 
