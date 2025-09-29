@@ -11,12 +11,37 @@ export interface LedgerEntry {
   balance?: number;
 }
 
+export interface Voucher {
+    type: 'Payment' | 'Receipt' | 'Journal';
+    date: string;
+    account: string;
+    amount: number;
+    narration: string;
+}
+
+const VOUCHER_STORAGE_KEY = 'transwise_vouchers';
+
+export const getVouchers = (): Voucher[] => {
+    if (typeof window === 'undefined') return [];
+    const data = localStorage.getItem(VOUCHER_STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+}
+
+export const addVoucher = (voucher: Voucher) => {
+    if (typeof window === 'undefined') return;
+    const vouchers = getVouchers();
+    vouchers.push(voucher);
+    localStorage.setItem(VOUCHER_STORAGE_KEY, JSON.stringify(vouchers));
+}
+
+
 // In a real application, this data would come from a database.
 const sampleCreditData: { [customerName: string]: LedgerEntry[] } = {};
 
 // This function now dynamically generates the ledger from bookings.
 export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
     const allBookings = getBookings();
+    const allVouchers = getVouchers();
 
     const transactionEntries: LedgerEntry[] = [];
 
@@ -58,12 +83,19 @@ export const getLedgerForCustomer = (customer: Customer): LedgerEntry[] => {
 
     const openingBalance = customer.openingBalance ?? 0;
 
-    const creditEntries = sampleCreditData[customer.name] || [];
+    const voucherEntries = allVouchers
+        .filter(v => v.account === customer.name && v.type === 'Receipt')
+        .map(v => ({
+            date: new Date(v.date).toLocaleDateString('en-CA'),
+            particulars: v.narration,
+            credit: v.amount,
+        }));
+
 
     const ledger: LedgerEntry[] = [
         { date: '2024-04-01', particulars: 'Opening Balance', balance: openingBalance },
         ...transactionEntries,
-        ...creditEntries,
+        ...voucherEntries
     ];
 
     // Sort entries by date

@@ -34,6 +34,7 @@ import {
   Package,
   PackageSearch,
   Settings,
+  Sheet,
   Truck,
   User,
   Users,
@@ -296,6 +297,11 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton href="/company/accounts/cashbook" size="sm" isActive={pathname.startsWith('/company/accounts/cashbook')} tooltip="Cashbook">
                   <Notebook /> Cashbook
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/accounts/voucher-entry" size="sm" isActive={pathname.startsWith('/company/accounts/voucher-entry')} tooltip="Voucher Entry">
+                  <Sheet /> Voucher Entry
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </div>

@@ -2,7 +2,7 @@
 import type { Booking } from './bookings-dashboard-data';
 import { getBookings } from './bookings-dashboard-data';
 import type { Vendor } from './types';
-import type { LedgerEntry } from './accounts-data';
+import { type LedgerEntry, getVouchers } from './accounts-data';
 
 // In a real application, this data would come from a database.
 const samplePaymentsToVendors: { [vendorName: string]: LedgerEntry[] } = {};
@@ -10,6 +10,7 @@ const samplePaymentsToVendors: { [vendorName: string]: LedgerEntry[] } = {};
 // This function generates the ledger for vendors (payables).
 export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {
     const allBookings = getBookings();
+    const allVouchers = getVouchers();
 
     const transactionEntries: LedgerEntry[] = [];
 
@@ -38,12 +39,19 @@ export const getLedgerForVendor = (vendor: Vendor): LedgerEntry[] => {
 
     const openingBalance = vendor.openingBalance ?? 0;
 
-    const paymentEntries = samplePaymentsToVendors[vendor.name] || [];
+    const voucherEntries = allVouchers
+        .filter(v => v.account === vendor.name && v.type === 'Payment')
+        .map(v => ({
+            date: new Date(v.date).toLocaleDateString('en-CA'),
+            particulars: v.narration,
+            debit: v.amount,
+        }));
+
 
     const ledger: LedgerEntry[] = [
         { date: '2024-04-01', particulars: 'Opening Balance', balance: openingBalance },
         ...transactionEntries,
-        ...paymentEntries,
+        ...voucherEntries
     ];
 
     // Sort entries by date
