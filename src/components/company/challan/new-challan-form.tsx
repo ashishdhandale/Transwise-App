@@ -79,6 +79,9 @@ export function NewChallanForm() {
     const [toStation, setToStation] = useState<City | null>(null);
     const [remark, setRemark] = useState('');
     const [hireReceiptNo, setHireReceiptNo] = useState('');
+    const [vehicleHireFreight, setVehicleHireFreight] = useState(0);
+    const [advance, setAdvance] = useState(0);
+    const [balance, setBalance] = useState(0);
 
 
     // Master data
@@ -125,6 +128,9 @@ export function NewChallanForm() {
                 setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
                 setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
                 setRemark(existingChallan.remark || '');
+                setVehicleHireFreight(existingChallan.vehicleHireFreight);
+                setAdvance(existingChallan.advance);
+                setBalance(existingChallan.balance);
 
                 const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
                 const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
@@ -162,6 +168,9 @@ export function NewChallanForm() {
             setDriverName(receipt.driverName);
             setFromStation(cities.find(c => c.name.toLowerCase() === receipt.fromStation.toLowerCase()) || null);
             setToStation(cities.find(c => c.name.toLowerCase() === receipt.toStation.toLowerCase()) || null);
+            setVehicleHireFreight(receipt.freight);
+            setAdvance(receipt.advance);
+            setBalance(receipt.balance);
             toast({ title: 'Details Loaded', description: `Details from hire receipt ${receipt.receiptNo} have been loaded.` });
         } else {
             toast({ title: 'Receipt Not Found', description: `No vehicle hire receipt found with number ${hireReceiptNo}.`, variant: "destructive" });
@@ -204,14 +213,16 @@ export function NewChallanForm() {
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
             totalActualWeight: addedLrs.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
             totalChargeWeight: addedLrs.reduce((sum, b) => sum + b.chgWt, 0),
-            vehicleHireFreight: 0, 
-            advance: 0,
-            balance: 0,
+            vehicleHireFreight,
+            advance,
+            balance,
             senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark: remark || '',
             summary: {
                 grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
                 totalTopayAmount: addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
-                commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0,
+                commission: 0, labour: 0, crossing: 0, carting: 0, 
+                balanceTruckHire: balance,
+                debitCreditAmount: 0,
             }
         };
 
@@ -495,6 +506,20 @@ export function NewChallanForm() {
                          <div className="md:col-span-2 space-y-1">
                             <Label>Remarks / Dispatch Note</Label>
                             <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted/50">
+                         <div className="space-y-1">
+                            <Label>Vehicle Hire Freight</Label>
+                            <Input value={vehicleHireFreight} readOnly />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Advance Paid</Label>
+                            <Input value={advance} readOnly />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Balance</Label>
+                            <Input value={balance} readOnly />
                         </div>
                     </div>
                 </CardContent>
