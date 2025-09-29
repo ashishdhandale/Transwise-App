@@ -93,7 +93,7 @@ export function ChargesSection({
             case 'per_quantity': return itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate;
             default: return 0;
         }
-    }, [itemRows, liveCalc, bookingCharges, initialCharges]);
+    }, [itemRows, liveCalc, chargeSettings]);
 
     useEffect(() => {
         const newBookingCharges: { [key: string]: number } = {};
