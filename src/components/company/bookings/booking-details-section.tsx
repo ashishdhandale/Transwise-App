@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Input } from '@/components/ui/input';
@@ -79,6 +80,22 @@ export function BookingDetailsSection({
         return bookingOptions.stations.map(name => ({ label: name.toUpperCase(), value: name }));
     }, [cityListSource, allCustomCities]);
 
+    const fromStationOptions = useMemo(() => {
+        // For offline or edit modes, show all stations.
+        if (isOfflineMode || isEditMode || isViewOnly) {
+            return stationOptions;
+        }
+
+        // For new online bookings, only show the default station.
+        if (companyProfile?.city) {
+            const defaultCityName = companyProfile.city.toUpperCase();
+            const defaultOption = stationOptions.find(opt => opt.label === defaultCityName);
+            return defaultOption ? [defaultOption] : [];
+        }
+
+        return [];
+    }, [isOfflineMode, isEditMode, isViewOnly, stationOptions, companyProfile?.city]);
+
     const loadCityData = useCallback(() => {
         try {
             const savedSource = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
@@ -130,9 +147,9 @@ export function BookingDetailsSection({
     }, [loadCityData]);
     
     useEffect(() => {
-        if (isEditMode || !companyProfile) return;
+        if (isEditMode || !companyProfile || fromStation) return;
         
-        if (companyProfile.city && !fromStation) {
+        if (companyProfile.city) {
             const defaultStation = allCustomCities.find(c => c.name.toLowerCase() === companyProfile.city.toLowerCase());
             if (defaultStation) {
                 onFromStationChange(defaultStation);
@@ -140,8 +157,7 @@ export function BookingDetailsSection({
                  onFromStationChange({ id: 0, name: companyProfile.city, aliasCode: '', pinCode: '' });
             }
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditMode, companyProfile, allCustomCities]);
+    }, [isEditMode, companyProfile, allCustomCities, onFromStationChange, fromStation]);
 
 
     const getCityObjectByName = (name: string): City | null => {
@@ -259,7 +275,7 @@ export function BookingDetailsSection({
                 <div className={cn('space-y-1 rounded-md', errors.fromStation && 'ring-2 ring-red-500/50')}>
                     <Label htmlFor="fromStation">From Station</Label>
                     <Combobox
-                        options={stationOptions}
+                        options={fromStationOptions}
                         value={fromStation?.name || ''}
                         onChange={handleFromStationChange}
                         placeholder="Select station..."
