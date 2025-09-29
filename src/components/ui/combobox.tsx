@@ -49,7 +49,6 @@ export function Combobox({
     autoOpenOnFocus = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
 
@@ -64,7 +63,7 @@ export function Combobox({
   const handleAdd = () => {
     if (onAdd) {
         setOpen(false); // Close the popover first
-        onAdd(searchQuery);
+        onAdd(value);
     }
   }
   
@@ -90,13 +89,6 @@ export function Combobox({
           triggerRef.current?.focus();
       }
   };
-
-  const filteredOptions = React.useMemo(() => {
-    if (!searchQuery) return options;
-    return options.filter(option =>
-      option.label.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [options, searchQuery]);
 
   return (
     <ClientOnly>
@@ -129,8 +121,8 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
-              value={searchQuery}
-              onValueChange={setSearchQuery}
+              value={value}
+              onValueChange={onChange}
             />
             <CommandList>
               <CommandEmpty>
@@ -139,13 +131,13 @@ export function Combobox({
                       {onAdd && (
                           <Button variant="link" size="sm" className="mt-2" onClick={handleAdd}>
                               <PlusCircle className="mr-2 h-4 w-4"/>
-                              {addMessage} "{searchQuery}"
+                              {addMessage} "{value}"
                           </Button>
                       )}
                   </div>
               </CommandEmpty>
               <CommandGroup>
-                {filteredOptions.map((option) => (
+                {options.map((option) => (
                   <CommandItem
                     key={option.value}
                     value={option.label}
