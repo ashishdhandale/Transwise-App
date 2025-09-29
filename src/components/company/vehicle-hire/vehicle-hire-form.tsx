@@ -74,6 +74,12 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
         defaultValues: {
             receiptNo: '',
             date: new Date(),
+            supplierId: '',
+            vehicleNo: '',
+            vehicleType: '',
+            driverName: '',
+            fromStation: '',
+            toStation: '',
             freight: 0,
             advance: 0,
             balance: 0,
