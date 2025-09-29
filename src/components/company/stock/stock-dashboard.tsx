@@ -61,10 +61,10 @@ export function StockDashboard() {
   const loadStock = () => {
      try {
         const allBookings = getBookings();
-        const inStockBookings = allBookings.filter(
-            (booking) => booking.status === 'In Stock'
+        const currentStockBookings = allBookings.filter(
+            (booking) => ['In Stock', 'In Loading', 'In HOLD'].includes(booking.status)
         );
-        setStock(inStockBookings);
+        setStock(currentStockBookings);
     } catch (error) {
         console.error("Failed to load stock from localStorage", error);
     }
@@ -93,7 +93,8 @@ export function StockDashboard() {
 
   const handleSelectAll = (checked: boolean | string) => {
     if (checked) {
-        setSelectedLrs(new Set(filteredStock.map(item => item.trackingId)));
+        const stockToSelect = filteredStock.filter(item => item.status === 'In Stock');
+        setSelectedLrs(new Set(stockToSelect.map(item => item.trackingId)));
     } else {
         setSelectedLrs(new Set());
     }
@@ -116,6 +117,14 @@ export function StockDashboard() {
     }
 
     const selectedBookings = stock.filter(item => selectedLrs.has(item.trackingId));
+    
+    // Ensure all selected items are 'In Stock'
+    const notInStock = selectedBookings.filter(item => item.status !== 'In Stock');
+    if (notInStock.length > 0) {
+      toast({ title: "Invalid Selection", description: `Cannot add items with status other than 'In Stock' to a challan.`, variant: "destructive" });
+      return;
+    }
+
     const allChallans = getChallanData();
     const newChallanId = `TEMP-CHLN-${Date.now()}`;
 
@@ -239,7 +248,7 @@ export function StockDashboard() {
                         <TableHead className="w-12">
                              <Checkbox 
                                 onCheckedChange={handleSelectAll}
-                                checked={filteredStock.length > 0 && selectedLrs.size === filteredStock.length}
+                                checked={filteredStock.length > 0 && selectedLrs.size === filteredStock.filter(s => s.status === 'In Stock').length && selectedLrs.size > 0}
                                 aria-label="Select all rows"
                             />
                         </TableHead>
@@ -269,6 +278,7 @@ export function StockDashboard() {
                                     checked={selectedLrs.has(item.trackingId)}
                                     onCheckedChange={(checked) => handleSelectRow(item.trackingId, checked)}
                                     aria-label={`Select row ${item.lrNo}`}
+                                    disabled={item.status !== 'In Stock'}
                                 />
                             </TableCell>
                             <TableCell className={cn(tdClass, "font-medium")}>{item.lrNo}</TableCell>
