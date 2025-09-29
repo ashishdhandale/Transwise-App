@@ -49,6 +49,7 @@ export function Combobox({
     autoOpenOnFocus = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
 
@@ -56,6 +57,7 @@ export function Combobox({
   const handleSelect = (currentValue: string) => {
     const newValue = currentValue === value ? "" : currentValue;
     onChange(newValue);
+    setInputValue('');
     setOpen(false);
     triggerRef.current?.focus();
   }
@@ -63,7 +65,7 @@ export function Combobox({
   const handleAdd = () => {
     if (onAdd) {
         setOpen(false); // Close the popover first
-        onAdd(value);
+        onAdd(inputValue);
     }
   }
   
@@ -71,8 +73,9 @@ export function Combobox({
   
   const handleOpenChange = (isOpen: boolean) => {
       setOpen(isOpen);
-      if (!isOpen && onBlur) {
-          onBlur();
+      if (!isOpen) {
+          if (onBlur) onBlur();
+          setInputValue('');
       }
   }
 
@@ -121,8 +124,8 @@ export function Combobox({
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
-              value={value}
-              onValueChange={onChange}
+              value={inputValue}
+              onValueChange={setInputValue}
             />
             <CommandList>
               <CommandEmpty>
@@ -131,13 +134,13 @@ export function Combobox({
                       {onAdd && (
                           <Button variant="link" size="sm" className="mt-2" onClick={handleAdd}>
                               <PlusCircle className="mr-2 h-4 w-4"/>
-                              {addMessage} "{value}"
+                              {addMessage} "{inputValue}"
                           </Button>
                       )}
                   </div>
               </CommandEmpty>
               <CommandGroup>
-                {options.map((option) => (
+                {options.filter(option => option.label.toLowerCase().includes(inputValue.toLowerCase())).map((option) => (
                   <CommandItem
                     key={option.value}
                     value={option.label}
