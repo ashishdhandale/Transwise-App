@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -13,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2, Eye, X } from 'lucide-react';
+import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2, Eye, X, Search as SearchIcon } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -39,6 +38,7 @@ import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getVehicleHireReceipts } from '@/lib/vehicle-hire-data';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -78,6 +78,7 @@ export function NewChallanForm() {
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
     const [remark, setRemark] = useState('');
+    const [hireReceiptNo, setHireReceiptNo] = useState('');
 
 
     // Master data
@@ -146,6 +147,27 @@ export function NewChallanForm() {
     useEffect(() => {
         loadInitialData();
     }, [loadInitialData]);
+
+    const handleLoadFromHireReceipt = () => {
+        if (!hireReceiptNo) {
+            toast({ title: 'No Receipt Number', description: 'Please enter a vehicle hire receipt number.', variant: "destructive" });
+            return;
+        }
+
+        const allHireReceipts = getVehicleHireReceipts();
+        const receipt = allHireReceipts.find(r => r.receiptNo.toLowerCase() === hireReceiptNo.toLowerCase());
+        
+        if (receipt) {
+            setVehicleNo(receipt.vehicleNo);
+            setDriverName(receipt.driverName);
+            setFromStation(cities.find(c => c.name.toLowerCase() === receipt.fromStation.toLowerCase()) || null);
+            setToStation(cities.find(c => c.name.toLowerCase() === receipt.toStation.toLowerCase()) || null);
+            toast({ title: 'Details Loaded', description: `Details from hire receipt ${receipt.receiptNo} have been loaded.` });
+        } else {
+            toast({ title: 'Receipt Not Found', description: `No vehicle hire receipt found with number ${hireReceiptNo}.`, variant: "destructive" });
+        }
+    };
+
 
     const handleAddToChallan = () => {
         const toAdd = inStockLrs.filter(lr => stockSelection.has(lr.trackingId));
@@ -430,34 +452,50 @@ export function NewChallanForm() {
                 <CardHeader>
                     <CardTitle>Challan Details</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
-                    <div className="space-y-1">
-                        <Label>Challan ID</Label>
-                        <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                        <div className="space-y-1 lg:col-span-2">
+                            <Label>Load from Hire Receipt</Label>
+                            <div className="flex items-center gap-2">
+                                <Input 
+                                    placeholder="Enter Hire Receipt No."
+                                    value={hireReceiptNo}
+                                    onChange={e => setHireReceiptNo(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleLoadFromHireReceipt()}
+                                />
+                                <Button type="button" onClick={handleLoadFromHireReceipt}><SearchIcon className="mr-2 h-4 w-4"/> Load</Button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="space-y-1">
-                        <Label>Dispatch Date</Label>
-                        <DatePicker date={dispatchDate} setDate={setDispatchDate} />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Vehicle No</Label>
-                        <Combobox options={vehicleOptions} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Driver Name</Label>
-                        <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                    </div>
-                     <div className="space-y-1">
-                        <Label>From Station</Label>
-                        <Combobox options={cityOptions} value={fromStation?.name} onChange={(val) => setFromStation(cities.find(c => c.name === val) || null)} placeholder="Select Origin..." />
-                    </div>
-                     <div className="space-y-1">
-                        <Label>To Station</Label>
-                        <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
-                    </div>
-                     <div className="md:col-span-2 lg:col-span-3 space-y-1">
-                        <Label>Remarks / Dispatch Note</Label>
-                        <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                        <div className="space-y-1">
+                            <Label>Challan ID</Label>
+                            <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Dispatch Date</Label>
+                            <DatePicker date={dispatchDate} setDate={setDispatchDate} />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Vehicle No</Label>
+                            <Combobox options={vehicleOptions} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Driver Name</Label>
+                            <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                        </div>
+                         <div className="space-y-1">
+                            <Label>From Station</Label>
+                            <Combobox options={cityOptions} value={fromStation?.name} onChange={(val) => setFromStation(cities.find(c => c.name === val) || null)} placeholder="Select Origin..." />
+                        </div>
+                         <div className="space-y-1">
+                            <Label>To Station</Label>
+                            <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
+                        </div>
+                         <div className="md:col-span-2 space-y-1">
+                            <Label>Remarks / Dispatch Note</Label>
+                            <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
+                        </div>
                     </div>
                 </CardContent>
             </Card>
