@@ -77,7 +77,7 @@ export function ChargesSection({
     }
 
     const calculateCharge = useCallback((charge: ChargeSetting) => {
-        if (!charge.isDynamic) {
+        if (!charge.isEditable) {
             // For simple charges, just return the value or the initial value if set
             return bookingCharges[charge.id] ?? initialCharges?.[charge.id] ?? charge.value ?? 0;
         }
@@ -166,7 +166,7 @@ export function ChargesSection({
                  <div key={charge.id} className="grid grid-cols-[1fr_auto] items-center gap-x-2">
                     <Label className="text-sm text-left whitespace-nowrap overflow-hidden text-ellipsis h-7 flex items-center">{charge.name}</Label>
                     
-                    {charge.isDynamic && !isViewOnly ? (
+                    {charge.isEditable && !isViewOnly ? (
                         <div className="grid grid-cols-[80px_100px_100px] items-center gap-1">
                             <Input
                                 type="number"
@@ -186,7 +186,7 @@ export function ChargesSection({
                             </Select>
                             <Input 
                                 type="number" 
-                                value={Number(bookingCharges[charge.id] || 0).toFixed(2)}
+                                value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
                                 readOnly
                                 className="h-7 text-sm w-full bg-muted" 
                             />
@@ -194,7 +194,7 @@ export function ChargesSection({
                     ) : (
                         <Input 
                             type="number" 
-                            value={Number(bookingCharges[charge.id] || 0).toFixed(2)}
+                            value={bookingCharges[charge.id] || ''}
                             readOnly={isViewOnly}
                             className="h-7 text-sm w-[100px] bg-muted/50 justify-self-end" 
                             onChange={(e) => {

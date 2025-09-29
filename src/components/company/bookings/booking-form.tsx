@@ -374,7 +374,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [trackingId, toast, loadMasterData, isOfflineMode]);
+    }, [trackingId, toast, loadMasterData]);
 
     useEffect(() => {
         loadInitialData();

@@ -184,7 +184,7 @@ export function ItemDetailsTable({
     if (hasChanged) {
         onRowsChange(updatedRows);
     }
-  }, [rows, calculateLumpsum]);
+  }, [rows, calculateLumpsum, onRowsChange]);
 
   const updateRow = (rowIndex: number, newRowData: Partial<ItemRow>) => {
     const newRows = [...rows];
@@ -462,4 +462,3 @@ export function ItemDetailsTable({
     </ClientOnly>
   );
 }
-
