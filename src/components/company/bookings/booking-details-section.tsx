@@ -141,7 +141,7 @@ export function BookingDetailsSection({
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [fromStation, isEditMode, companyProfile, allCustomCities]);
+    }, [isEditMode, companyProfile, allCustomCities]);
 
 
     const getCityObjectByName = (name: string): City | null => {
@@ -269,7 +269,6 @@ export function BookingDetailsSection({
                         onAdd={handleOpenAddCity}
                         disabled={isViewOnly}
                         autoOpenOnFocus
-                        allowFreeform
                     />
                 </div>
                 <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
@@ -285,7 +284,6 @@ export function BookingDetailsSection({
                         onAdd={handleOpenAddCity}
                         disabled={isViewOnly}
                         autoOpenOnFocus
-                        allowFreeform
                     />
                 </div>
                 <div className="space-y-1">
