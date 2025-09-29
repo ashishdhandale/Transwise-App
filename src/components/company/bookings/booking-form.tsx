@@ -12,7 +12,7 @@ import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking, FtlDetails } from '@/lib/bookings-dashboard-data';
-import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate } from '@/lib/types';
+import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate, ChargeDetail } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
@@ -166,13 +166,6 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     const allRateLists = getRateLists();
     const chargeSettingsJSON = localStorage.getItem(LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES);
     const chargeSettings: { charges: ChargeSetting[] } = chargeSettingsJSON ? JSON.parse(chargeSettingsJSON) : { charges: [] };
-    
-    // Check if the sender has a specific quotation
-    const hasQuotation = allRateLists.some(rl => !rl.isStandard && rl.customerIds.includes(sender.id));
-    
-    if (hasQuotation) {
-        return;
-    }
     
     const standardRateList = allRateLists.find(rl => rl.isStandard);
     
