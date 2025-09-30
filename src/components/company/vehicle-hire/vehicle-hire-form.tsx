@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -108,8 +108,8 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                 });
             } else {
                  const allReceipts = getVehicleHireReceipts();
-                 const lastReceiptNo = allReceipts.map(r => parseInt(r.receiptNo.replace('VH-', ''), 10)).filter(n => !isNaN(n)).reduce((max, current) => Math.max(max, current), 0);
-                 form.setValue('receiptNo', `VH-${String(lastReceiptNo + 1).padStart(4, '0')}`);
+                 const lastReceiptNo = allReceipts.map(r => parseInt(r.receiptNo, 10)).filter(n => !isNaN(n)).reduce((max, current) => Math.max(max, current), 0);
+                 form.setValue('receiptNo', String(lastReceiptNo + 1));
                  form.setValue('date', new Date());
             }
         }
