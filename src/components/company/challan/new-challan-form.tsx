@@ -162,14 +162,22 @@ export function NewChallanForm() {
         }
     }, [dispatchDate]);
 
-    const handleLoadFromHireReceipt = () => {
-        if (!hireReceiptNo) {
-            toast({ title: 'No Receipt Number', description: 'Please enter a vehicle hire receipt number.', variant: "destructive" });
+    const handleLoadFromHireReceipt = (receiptNo: string) => {
+        setHireReceiptNo(receiptNo);
+        if (!receiptNo) {
+            // Clear fields if input is empty
+            setVehicleNo('');
+            setDriverName('');
+            setFromStation(null);
+            setToStation(null);
+            setVehicleHireFreight(0);
+            setAdvance(0);
+            setBalance(0);
             return;
         }
 
         const allHireReceipts = getVehicleHireReceipts();
-        const receipt = allHireReceipts.find(r => r.receiptNo.toLowerCase() === hireReceiptNo.toLowerCase());
+        const receipt = allHireReceipts.find(r => r.receiptNo.toLowerCase() === receiptNo.toLowerCase());
         
         if (receipt) {
             setVehicleNo(receipt.vehicleNo);
@@ -181,7 +189,12 @@ export function NewChallanForm() {
             setBalance(receipt.balance);
             toast({ title: 'Details Loaded', description: `Details from hire receipt ${receipt.receiptNo} have been loaded.` });
         } else {
-            toast({ title: 'Receipt Not Found', description: `No vehicle hire receipt found with number ${hireReceiptNo}.`, variant: "destructive" });
+            // If not found, clear the details
+            setVehicleNo('');
+            setDriverName('');
+            setVehicleHireFreight(0);
+            setAdvance(0);
+            setBalance(0);
         }
     };
 
@@ -473,20 +486,6 @@ export function NewChallanForm() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                        <div className="space-y-1 lg:col-span-2">
-                            <Label>Load from Hire Receipt</Label>
-                            <div className="flex items-center gap-2">
-                                <Input 
-                                    placeholder="Enter Hire Receipt No."
-                                    value={hireReceiptNo}
-                                    onChange={e => setHireReceiptNo(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleLoadFromHireReceipt()}
-                                />
-                                <Button type="button" onClick={handleLoadFromHireReceipt}><SearchIcon className="mr-2 h-4 w-4"/> Load</Button>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                         <div className="space-y-1">
                             <Label>Challan ID</Label>
                             <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
@@ -494,6 +493,14 @@ export function NewChallanForm() {
                         <div className="space-y-1">
                             <Label>Dispatch Date</Label>
                             <DatePicker date={dispatchDate} setDate={setDispatchDate} />
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Load from Hire Receipt</Label>
+                            <Input 
+                                placeholder="Enter Hire Receipt No."
+                                value={hireReceiptNo}
+                                onChange={e => handleLoadFromHireReceipt(e.target.value)}
+                            />
                         </div>
                         <div className="space-y-1">
                             <Label>Vehicle No</Label>
@@ -511,7 +518,7 @@ export function NewChallanForm() {
                             <Label>To Station</Label>
                             <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
                         </div>
-                         <div className="md:col-span-2 space-y-1">
+                         <div className="md:col-span-2 lg:col-span-4 space-y-1">
                             <Label>Remarks / Dispatch Note</Label>
                             <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                         </div>
@@ -543,17 +550,17 @@ export function NewChallanForm() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted/50">
-                <div className="space-y-1">
+                 <div className="space-y-1">
                     <Label>Vehicle Hire Freight</Label>
-                    <Input value={vehicleHireFreight} readOnly />
+                    <Input value={vehicleHireFreight} readOnly className="font-semibold" />
                 </div>
                 <div className="space-y-1">
                     <Label>Advance Paid</Label>
-                    <Input value={advance} readOnly />
+                    <Input value={advance} readOnly className="font-semibold" />
                 </div>
                 <div className="space-y-1">
                     <Label>Balance</Label>
-                    <Input value={balance} readOnly />
+                    <Input value={balance} readOnly className="font-bold text-green-700" />
                 </div>
             </div>
 
