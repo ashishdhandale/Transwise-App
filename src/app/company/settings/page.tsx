@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { GeneralInstructionsSettings } from '@/components/company/settings/general-instructions-settings';
 import { CompanyProfileSettings } from '@/components/company/settings/company-profile-settings';
 import { PrintFormatSettings } from '@/components/company/settings/print-format-settings';
+import { ChallanFormatSettings } from '@/components/company/settings/challan-format-settings';
 import { BackButton } from '@/components/ui/back-button';
 
 function CompanySettingsPage() {
@@ -24,10 +25,11 @@ function CompanySettingsPage() {
             Company Settings
         </h1>
         <Tabs defaultValue="profile" className="space-y-4">
-            <TabsList>
+            <TabsList className="h-auto flex-wrap">
                 <TabsTrigger value="profile">Company Profile</TabsTrigger>
                 <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
                 <TabsTrigger value="print-formats">Print Formats</TabsTrigger>
+                <TabsTrigger value="challan-formats">Challan Formats</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
                 <CompanyProfileSettings />
@@ -59,6 +61,9 @@ function CompanySettingsPage() {
             </TabsContent>
              <TabsContent value="print-formats">
                 <PrintFormatSettings />
+            </TabsContent>
+             <TabsContent value="challan-formats">
+                <ChallanFormatSettings />
             </TabsContent>
         </Tabs>
       </div>
