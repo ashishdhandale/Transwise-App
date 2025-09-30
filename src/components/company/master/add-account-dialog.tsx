@@ -15,9 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Account, AccountType } from '@/lib/types';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { accountTypes } from '@/lib/types';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { accountGroups } from '@/lib/types';
 
 interface AddAccountDialogProps {
     isOpen: boolean;
@@ -78,11 +77,16 @@ export function AddAccountDialog({ isOpen, onOpenChange, onSave, account }: AddA
                         <Label htmlFor="account-type">Account Type</Label>
                         <Select value={type} onValueChange={(v) => setType(v as AccountType)}>
                             <SelectTrigger id="account-type">
-                                <SelectValue />
+                                <SelectValue placeholder="Select an account type" />
                             </SelectTrigger>
                             <SelectContent>
-                                {accountTypes.filter(t => !['Customer', 'Vendor'].includes(t)).map(t => (
-                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                {accountGroups.map(group => (
+                                    <SelectGroup key={group.label}>
+                                        <SelectLabel>{group.label}</SelectLabel>
+                                        {group.types.map(type => (
+                                             <SelectItem key={type} value={type}>{type}</SelectItem>
+                                        ))}
+                                    </SelectGroup>
                                 ))}
                             </SelectContent>
                         </Select>

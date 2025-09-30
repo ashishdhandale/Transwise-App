@@ -208,9 +208,20 @@ export interface RateList {
   itemRates: ItemRate[];
 }
 
-export type AccountType = 'Asset' | 'Liability' | 'Income' | 'Expense' | 'Capital' | 'Customer' | 'Vendor' | 'Bank' | 'Cash';
-export const accountTypes: AccountType[] = ['Asset', 'Liability', 'Income', 'Expense', 'Capital', 'Customer', 'Vendor', 'Bank', 'Cash'];
+export type AccountType = 
+  | 'Asset' | 'Liability' | 'Income' | 'Expense' | 'Capital' 
+  | 'Customer' | 'Vendor' | 'Bank' | 'Cash';
 
+export const accountGroups: { label: string; types: AccountType[] }[] = [
+    { label: 'Assets', types: ['Bank', 'Cash', 'Asset'] },
+    { label: 'Liabilities', types: ['Liability'] },
+    { label: 'Equity', types: ['Capital'] },
+    { label: 'Income', types: ['Income'] },
+    { label: 'Expense', types: ['Expense'] },
+];
+
+// Readonly types that are linked to other master data
+export const readOnlyAccountTypes: AccountType[] = ['Customer', 'Vendor'];
 
 export interface Account {
   id: string; // Can be 'customer-1', 'vendor-2', 'account-3'
@@ -223,4 +234,3 @@ export interface Account {
   mobile?: string;
   email?: string;
 }
-
