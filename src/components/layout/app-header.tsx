@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bell, BookCopy, ArrowLeft } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { PreviousBookingDialog } from '../company/bookings/previous-booking-dialog';
@@ -27,18 +27,46 @@ const notifications = [
 export function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const userRoleQuery = searchParams.get('role');
+
   const isAdmin = pathname.startsWith('/admin');
-  const isCompany = pathname.startsWith('/company');
-  const isNewBookingPage = pathname === '/company/bookings/new';
+  const isCompany = pathname.startsWith('/company') && userRoleQuery !== 'Branch';
+  const isBranch = pathname.startsWith('/company') && userRoleQuery === 'Branch';
 
   const handleLogout = () => {
     router.push('/');
   };
+  
+  let user, userRole, avatarSeed, avatarFallback;
 
-  const userRole = isAdmin ? 'Sup.Admin' : 'My Account';
-  const avatarSeed = isAdmin ? 'admin-avatar' : 'avatar';
-  const avatarFallback = isAdmin ? 'SA' : 'U';
-  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : '/';
+  if (isAdmin) {
+    user = 'Sup.Admin';
+    userRole = 'Sup.Admin';
+    avatarSeed = 'admin-avatar';
+    avatarFallback = 'SA';
+  } else if (isCompany) {
+    user = 'Company Manager';
+    userRole = 'My Account';
+    avatarSeed = 'company-avatar';
+    avatarFallback = 'CM';
+  } else if (isBranch) {
+    user = 'Branch Staff';
+    userRole = 'My Account';
+    avatarSeed = 'branch-avatar';
+    avatarFallback = 'BS';
+  } else {
+    user = 'Guest';
+    userRole = 'Guest';
+    avatarSeed = 'guest-avatar';
+    avatarFallback = 'G';
+  }
+
+
+  const isNewBookingPage = pathname === '/company/bookings/new';
+  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : (isBranch ? '/company?role=Branch' : '/');
+
 
   return (
     <header className="flex h-20 items-center gap-4 border-b bg-primary text-primary-foreground px-4 lg:px-6 sticky top-0 z-30">
@@ -64,6 +92,7 @@ export function AppHeader() {
             </Button>
           </PreviousBookingDialog>
         )}
+        <span className="text-sm font-medium">{user}</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative hover:bg-primary-foreground/10">
