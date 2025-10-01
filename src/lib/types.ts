@@ -234,3 +234,22 @@ export interface Account {
   mobile?: string;
   email?: string;
 }
+
+export type StaffRole = 
+  | 'Manager'
+  | 'Accountant'
+  | 'Booking Clerk'
+  | 'Loading Supervisor'
+  | 'Delivery Boy'
+  | 'Driver';
+
+export interface Staff {
+  id: number;
+  name: string;
+  role: StaffRole;
+  mobile: string;
+  address: string;
+  monthlySalary: number;
+  photo: string;
+  joiningDate: string;
+}

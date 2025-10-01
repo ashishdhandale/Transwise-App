@@ -83,7 +83,7 @@ export function AddDriverDialog({ isOpen, onOpenChange, onSave, driver }: AddDri
             address,
             bloodGroup,
             monthlySalary: Number(monthlySalary) || 0,
-            photo: photo || undefined,
+            photo: photo || '',
         });
 
         if (success) {

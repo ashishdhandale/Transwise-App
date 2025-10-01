@@ -1,8 +1,9 @@
 
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users } from 'lucide-react';
+import { StaffManagement } from './staff-management';
+
 
 export function StaffDashboard() {
   return (
@@ -13,14 +14,7 @@ export function StaffDashboard() {
               Staff Management
           </h1>
       </header>
-      <Card>
-          <CardHeader>
-              <CardTitle>Coming Soon</CardTitle>
-          </CardHeader>
-          <CardContent>
-              <p>Features like attendance, salary, leave, and performance analysis will be implemented here.</p>
-          </CardContent>
-      </Card>
+      <StaffManagement />
     </main>
   );
 }
