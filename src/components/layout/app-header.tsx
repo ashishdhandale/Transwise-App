@@ -47,15 +47,15 @@ export function AppHeader() {
     avatarSeed = 'admin-avatar';
     avatarFallback = 'SA';
   } else if (isCompany) {
-    user = 'Company Manager';
+    user = 'Amit Sharma';
     userRole = 'My Account';
     avatarSeed = 'company-avatar';
-    avatarFallback = 'CM';
+    avatarFallback = 'AS';
   } else if (isBranch) {
-    user = 'Branch Staff';
+    user = 'Priya Singh';
     userRole = 'My Account';
     avatarSeed = 'branch-avatar';
-    avatarFallback = 'BS';
+    avatarFallback = 'PS';
   } else {
     user = 'Guest';
     userRole = 'Guest';
@@ -65,7 +65,7 @@ export function AppHeader() {
 
 
   const isNewBookingPage = pathname === '/company/bookings/new';
-  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : (isBranch ? '/company?role=Branch' : '/');
+  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : (isBranch ? `/company?role=Branch` : '/');
 
 
   return (
