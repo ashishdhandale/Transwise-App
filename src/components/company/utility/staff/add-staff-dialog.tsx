@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { Staff, StaffRole, Branch } from '@/lib/types';
+import type { Staff, StaffRole, Branch, StaffPermissions } from '@/lib/types';
 import { getBranches } from '@/lib/branch-data';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -39,6 +40,19 @@ const staffRoles: StaffRole[] = [
 ];
 
 const idProofTypes = ['Aadhaar', 'PAN', 'Driving License'];
+
+const permissionLabels: { id: keyof StaffPermissions; label: string }[] = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'booking', label: 'Booking' },
+  { id: 'stock', label: 'Stock' },
+  { id: 'accounts', label: 'Accounts' },
+  { id: 'master', label: 'Master' },
+  { id: 'reports', label: 'Reports' },
+  { id: 'challan', label: 'Challan' },
+  { id: 'vehicleHire', label: 'Vehicle Hire' },
+  { id: 'vehicleExpense', label: 'Vehicle Expense' },
+  { id: 'utility', label: 'Utility' },
+];
 
 interface AddStaffDialogProps {
     isOpen: boolean;
@@ -73,6 +87,10 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     
+    const [permissions, setPermissions] = useState<StaffPermissions>({
+        dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true,
+    });
+
     const [branches, setBranches] = useState<Branch[]>([]);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +119,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setEmergencyContactNo(staff.emergencyContactNo || '');
                 setIdProofType(staff.idProofType);
                 setIdProofNo(staff.idProofNo || '');
+                setPermissions(staff.permissions || { dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true });
 
             } else {
                 // Reset all fields for new entry
@@ -121,6 +140,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setEmergencyContactNo('');
                 setIdProofType(undefined);
                 setIdProofNo('');
+                setPermissions({ dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true });
             }
         }
     }, [staff, isOpen]);
@@ -150,6 +170,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             emergencyContactNo,
             idProofType,
             idProofNo,
+            permissions,
         };
 
         if (staff && !password) {
@@ -172,6 +193,10 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             };
             reader.readAsDataURL(file);
         }
+    };
+    
+    const handlePermissionChange = (permissionId: keyof StaffPermissions, checked: boolean) => {
+        setPermissions(prev => ({ ...prev, [permissionId]: checked }));
     };
 
     return (
@@ -252,6 +277,21 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                             <div>
                                 <Label htmlFor="password">Password</Label>
                                 <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={staff ? "Enter new password to change" : "Set initial password"} />
+                            </div>
+                            <div>
+                                <Label>Module Permissions</Label>
+                                <div className="p-4 border rounded-md grid grid-cols-2 gap-4">
+                                    {permissionLabels.map(p => (
+                                        <div key={p.id} className="flex items-center space-x-2">
+                                            <Switch
+                                                id={`perm-${p.id}`}
+                                                checked={permissions[p.id]}
+                                                onCheckedChange={(checked) => handlePermissionChange(p.id, checked)}
+                                            />
+                                            <Label htmlFor={`perm-${p.id}`} className="font-normal">{p.label}</Label>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>

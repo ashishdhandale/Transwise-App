@@ -253,6 +253,19 @@ export type StaffRole =
   | 'Delivery Boy'
   | 'Driver';
 
+export interface StaffPermissions {
+  dashboard: boolean;
+  booking: boolean;
+  stock: boolean;
+  accounts: boolean;
+  master: boolean;
+  reports: boolean;
+  challan: boolean;
+  vehicleHire: boolean;
+  vehicleExpense: boolean;
+  utility: boolean;
+}
+
 export interface Staff {
   id: number;
   name: string;
@@ -272,4 +285,5 @@ export interface Staff {
   emergencyContactNo?: string;
   idProofType?: 'Aadhaar' | 'PAN' | 'Driving License';
   idProofNo?: string;
+  permissions: StaffPermissions;
 }
