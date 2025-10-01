@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, AlertTriangle, CalendarCheck, PackageWarning } from 'lucide-react';
+import { Bell, AlertTriangle, CalendarCheck, Package } from 'lucide-react';
 import { getVehicles } from '@/lib/vehicle-data';
 import type { VehicleMaster } from '@/lib/types';
 import { getBookings } from '@/lib/bookings-dashboard-data';
@@ -102,7 +102,7 @@ export function Reminders() {
     const getIcon = (type: Reminder['type'], level: Reminder['level']) => {
         if (level === 'error') return <AlertTriangle className="text-red-500" />;
         if (type === 'Vehicle') return <CalendarCheck className="text-yellow-500" />;
-        return <PackageWarning className="text-blue-500" />;
+        return <Package className="text-blue-500" />;
     }
 
     return (
