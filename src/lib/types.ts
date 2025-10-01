@@ -286,4 +286,5 @@ export interface Staff {
   idProofType?: 'Aadhaar' | 'PAN' | 'Driving License';
   idProofNo?: string;
   permissions: StaffPermissions;
+  forcePasswordChange?: boolean;
 }

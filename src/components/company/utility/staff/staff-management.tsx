@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal, CheckCircle, XCircle } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal, CheckCircle, XCircle, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddStaffDialog } from './add-staff-dialog';
 import type { Staff } from '@/lib/types';
@@ -85,6 +85,7 @@ export function StaffManagement() {
             ...currentStaff,
             ...staffData,
             password: staffData.password ? staffData.password : currentStaff.password,
+            forcePasswordChange: staffData.password ? true : currentStaff.forcePasswordChange,
         };
       updatedStaff = staff.map(member => (member.id === currentStaff.id ? finalData : member));
       toast({ title: 'Staff Member Updated', description: `"${staffData.name}" has been updated successfully.` });
@@ -101,6 +102,8 @@ export function StaffManagement() {
         username: staffData.username,
         password: staffData.password,
         branch: staffData.branch,
+        permissions: staffData.permissions || { dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true },
+        forcePasswordChange: true,
       };
       updatedStaff = [newStaff, ...staff];
       toast({ title: 'Staff Member Added', description: `"${staffData.name}" has been added.` });
@@ -108,6 +111,11 @@ export function StaffManagement() {
     saveStaff(updatedStaff);
     setStaff(updatedStaff);
     return true;
+  };
+  
+  const copyPassword = (password: string) => {
+    navigator.clipboard.writeText(password);
+    toast({ title: 'Copied!', description: 'Password copied to clipboard.'});
   };
 
   return (
@@ -136,10 +144,11 @@ export function StaffManagement() {
               <TableRow>
                 <TableHead className={thClass}>Photo</TableHead>
                 <TableHead className={thClass}>Name</TableHead>
+                <TableHead className={thClass}>Login ID</TableHead>
+                <TableHead className={thClass}>Password</TableHead>
                 <TableHead className={thClass}>Role</TableHead>
                 <TableHead className={thClass}>Branch</TableHead>
                 <TableHead className={thClass}>Mobile</TableHead>
-                <TableHead className={thClass}>Address</TableHead>
                 <TableHead className={thClass}>Joining Date</TableHead>
                 <TableHead className={cn(thClass, "text-right")}>Salary</TableHead>
                 <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
@@ -155,10 +164,20 @@ export function StaffManagement() {
                             </Avatar>
                         </TableCell>
                         <TableCell className={cn(tdClass, "font-medium")}>{member.name}</TableCell>
+                        <TableCell className={cn(tdClass)}>{member.username}</TableCell>
+                        <TableCell className={cn(tdClass, 'font-mono')}>
+                            {member.forcePasswordChange && member.password ? (
+                                <div className="flex items-center gap-2">
+                                    <span>{member.password}</span>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyPassword(member.password!)}>
+                                        <Copy className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            ) : '**********'}
+                        </TableCell>
                         <TableCell className={cn(tdClass)}><Badge variant="secondary">{member.role}</Badge></TableCell>
                         <TableCell className={cn(tdClass)}>{member.branch || 'N/A'}</TableCell>
                         <TableCell className={cn(tdClass)}>{member.mobile}</TableCell>
-                        <TableCell className={cn(tdClass, "max-w-xs truncate")}>{member.address}</TableCell>
                         <TableCell className={cn(tdClass)}>{format(new Date(member.joiningDate), 'dd-MMM-yyyy')}</TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>{member.monthlySalary.toLocaleString()}</TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>

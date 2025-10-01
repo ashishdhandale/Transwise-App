@@ -19,7 +19,7 @@ import { getBranches } from '@/lib/branch-data';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { X } from 'lucide-react';
+import { X, Copy } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
 const staffRoles: StaffRole[] = [
@@ -53,6 +52,16 @@ const permissionLabels: { id: keyof StaffPermissions; label: string }[] = [
   { id: 'vehicleExpense', label: 'Vehicle Expense' },
   { id: 'utility', label: 'Utility' },
 ];
+
+const generateRandomPassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let retVal = "";
+    for (let i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
+}
 
 interface AddStaffDialogProps {
     isOpen: boolean;
@@ -110,8 +119,6 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setPhoto(staff.photo || '');
                 setUsername(staff.username || '');
                 setPassword(''); // Always clear password on open for security
-
-                // New fields
                 setBankName(staff.bankName || '');
                 setAccountNo(staff.accountNo || '');
                 setIfscCode(staff.ifscCode || '');
@@ -120,7 +127,6 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setIdProofType(staff.idProofType);
                 setIdProofNo(staff.idProofNo || '');
                 setPermissions(staff.permissions || { dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true });
-
             } else {
                 // Reset all fields for new entry
                 setName('');
@@ -132,7 +138,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setJoiningDate(new Date());
                 setPhoto('');
                 setUsername('');
-                setPassword('');
+                setPassword(generateRandomPassword()); // Generate password for new user
                 setBankName('');
                 setAccountNo('');
                 setIfscCode('');
@@ -171,6 +177,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             idProofType,
             idProofNo,
             permissions,
+            forcePasswordChange: !staff, // Force change for new users
         };
 
         if (staff && !password) {
@@ -197,6 +204,11 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     
     const handlePermissionChange = (permissionId: keyof StaffPermissions, checked: boolean) => {
         setPermissions(prev => ({ ...prev, [permissionId]: checked }));
+    };
+
+    const copyPassword = () => {
+        navigator.clipboard.writeText(password);
+        toast({ title: 'Copied!', description: 'Password copied to clipboard.' });
     };
 
     return (
@@ -276,7 +288,14 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                             </div>
                             <div>
                                 <Label htmlFor="password">Password</Label>
-                                <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={staff ? "Enter new password to change" : "Set initial password"} />
+                                {staff ? (
+                                     <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter new password to change" />
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <Input id="password" type="text" value={password} readOnly className="font-mono bg-muted"/>
+                                        <Button type="button" variant="outline" size="icon" onClick={copyPassword}><Copy className="h-4 w-4" /></Button>
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <Label>Module Permissions</Label>
