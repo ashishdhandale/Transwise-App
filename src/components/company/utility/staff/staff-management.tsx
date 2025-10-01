@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -102,7 +101,6 @@ export function StaffManagement() {
         username: staffData.username,
         password: staffData.password,
         branch: staffData.branch,
-        canAuthorizePayments: staffData.canAuthorizePayments,
       };
       updatedStaff = [newStaff, ...staff];
       toast({ title: 'Staff Member Added', description: `"${staffData.name}" has been added.` });
@@ -144,7 +142,6 @@ export function StaffManagement() {
                 <TableHead className={thClass}>Address</TableHead>
                 <TableHead className={thClass}>Joining Date</TableHead>
                 <TableHead className={cn(thClass, "text-right")}>Salary</TableHead>
-                <TableHead className={cn(thClass, "text-center")}>Payment Auth.</TableHead>
                 <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -164,13 +161,6 @@ export function StaffManagement() {
                         <TableCell className={cn(tdClass, "max-w-xs truncate")}>{member.address}</TableCell>
                         <TableCell className={cn(tdClass)}>{format(new Date(member.joiningDate), 'dd-MMM-yyyy')}</TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>{member.monthlySalary.toLocaleString()}</TableCell>
-                        <TableCell className={cn(tdClass, "text-center")}>
-                            {member.canAuthorizePayments ? (
-                                <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
-                            ) : (
-                                <XCircle className="h-5 w-5 text-red-500 mx-auto" />
-                            )}
-                        </TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>
                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>

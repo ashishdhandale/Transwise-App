@@ -265,7 +265,6 @@ export interface Staff {
   username?: string;
   password?: string;
   branch?: string;
-  canAuthorizePayments?: boolean;
   bankName?: string;
   accountNo?: string;
   ifscCode?: string;

@@ -72,7 +72,6 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     // Login Details
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [canAuthorizePayments, setCanAuthorizePayments] = useState(false);
     
     const [branches, setBranches] = useState<Branch[]>([]);
     
@@ -93,7 +92,6 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setPhoto(staff.photo || '');
                 setUsername(staff.username || '');
                 setPassword(''); // Always clear password on open for security
-                setCanAuthorizePayments(staff.canAuthorizePayments || false);
 
                 // New fields
                 setBankName(staff.bankName || '');
@@ -116,7 +114,6 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setPhoto('');
                 setUsername('');
                 setPassword('');
-                setCanAuthorizePayments(false);
                 setBankName('');
                 setAccountNo('');
                 setIfscCode('');
@@ -146,7 +143,6 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             photo: photo || `https://picsum.photos/seed/${name.replace(/\s/g, '')}/200/200`,
             username,
             password,
-            canAuthorizePayments,
             bankName,
             accountNo,
             ifscCode,
@@ -256,10 +252,6 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                             <div>
                                 <Label htmlFor="password">Password</Label>
                                 <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={staff ? "Enter new password to change" : "Set initial password"} />
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Switch id="payment-auth" checked={canAuthorizePayments} onCheckedChange={setCanAuthorizePayments} />
-                                <Label htmlFor="payment-auth">Allow Payment Authorization</Label>
                             </div>
                         </div>
                     </div>
