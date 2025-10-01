@@ -67,6 +67,8 @@ export function AppSidebar() {
   const [openAccountsMenu, setOpenAccountsMenu] = React.useState(false);
   const [openMasterMenu, setOpenMasterMenu] = React.useState(false);
   const [openReportsMenu, setOpenReportsMenu] = React.useState(false);
+  const [openUtilityMenu, setOpenUtilityMenu] = React.useState(false);
+
 
   const isAdmin = pathname.startsWith('/admin');
   const isCompany = pathname.startsWith('/company');
@@ -93,6 +95,9 @@ export function AppSidebar() {
       if (pathname.startsWith('/company/reports')) {
       setOpenReportsMenu(true);
      }
+     if (pathname.startsWith('/company/vehicle-expenses')) {
+      setOpenUtilityMenu(true);
+     }
   }, [pathname]);
 
   React.useEffect(() => {
@@ -104,6 +109,7 @@ export function AppSidebar() {
       setOpenAccountsMenu(false);
       setOpenMasterMenu(false);
       setOpenReportsMenu(false);
+      setOpenUtilityMenu(false);
     }
   }, [state]);
 
@@ -261,9 +267,6 @@ export function AppSidebar() {
                <SidebarMenuItem>
                 <SidebarMenuButton href="/company/vehicle-hire" size="sm" isActive={pathname.startsWith('/company/vehicle-hire')} tooltip="Vehicle Hire"><Truck />Vehicle Hire</SidebarMenuButton>
               </SidebarMenuItem>
-               <SidebarMenuItem>
-                <SidebarMenuButton href="/company/vehicle-expenses" size="sm" isActive={pathname.startsWith('/company/vehicle-expenses')} tooltip="Vehicle Expenses"><Wrench />Vehicle Expenses</SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
               </SidebarMenuItem>
@@ -349,6 +352,28 @@ export function AppSidebar() {
               </SidebarMenuItem>
                <SidebarMenuItem>
                 <SidebarMenuButton href="/company/master/rate-list" size="sm" isActive={pathname.startsWith('/company/master/rate-list') || pathname.startsWith('/company/master/quotation')} tooltip="Quotation"><FileSignature />Quotation</SidebarMenuButton>
+              </SidebarMenuItem>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        
+        <Collapsible open={openUtilityMenu} onOpenChange={setOpenUtilityMenu}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Utility">
+              <Wrench />
+              <span>Utility</span>
+              <ChevronDown
+                className={cn(
+                  'size-4 transition-transform ml-auto',
+                  openUtilityMenu && 'rotate-180'
+                )}
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/vehicle-expenses" size="sm" isActive={pathname.startsWith('/company/vehicle-expenses')} tooltip="Vehicle Expenses"><Wrench />Vehicle Expenses</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
