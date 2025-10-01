@@ -13,6 +13,8 @@ const initialStaff: Staff[] = [
         monthlySalary: 50000,
         photo: 'https://picsum.photos/seed/amit/200/200',
         joiningDate: '2022-01-15T00:00:00.000Z',
+        username: 'amit.sharma',
+        password: 'password123',
     },
     {
         id: 2,
@@ -23,6 +25,8 @@ const initialStaff: Staff[] = [
         monthlySalary: 35000,
         photo: 'https://picsum.photos/seed/priya/200/200',
         joiningDate: '2023-03-01T00:00:00.000Z',
+        username: 'priya.singh',
+        password: 'password123',
     },
 ];
 

@@ -252,4 +252,6 @@ export interface Staff {
   monthlySalary: number;
   photo: string;
   joiningDate: string;
+  username?: string;
+  password?: string;
 }

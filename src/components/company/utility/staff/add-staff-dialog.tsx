@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 const staffRoles: StaffRole[] = [
     'Manager',
@@ -51,6 +52,8 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     const [monthlySalary, setMonthlySalary] = useState<number | ''>('');
     const [joiningDate, setJoiningDate] = useState<Date | undefined>(new Date());
     const [photo, setPhoto] = useState<string>('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
@@ -65,6 +68,8 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setMonthlySalary(staff.monthlySalary || '');
                 setJoiningDate(staff.joiningDate ? new Date(staff.joiningDate) : new Date());
                 setPhoto(staff.photo || '');
+                setUsername(staff.username || '');
+                setPassword(staff.password || '');
             } else {
                 setName('');
                 setRole('Booking Clerk');
@@ -73,6 +78,8 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setMonthlySalary('');
                 setJoiningDate(new Date());
                 setPhoto('');
+                setUsername('');
+                setPassword('');
             }
         }
     }, [staff, isOpen]);
@@ -92,6 +99,8 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             monthlySalary: Number(monthlySalary) || 0,
             joiningDate: joiningDate.toISOString(),
             photo: photo || `https://picsum.photos/seed/${name.replace(/\s/g, '')}/200/200`,
+            username,
+            password,
         });
 
         if (success) {
@@ -116,8 +125,8 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 <DialogHeader>
                     <DialogTitle>{staff ? 'Edit Staff Member' : 'Add New Staff Member'}</DialogTitle>
                 </DialogHeader>
-                <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2 flex items-center gap-4">
+                <div className="py-4 space-y-4">
+                     <div className="flex items-center gap-4">
                         <Avatar className="h-20 w-20">
                             <AvatarImage src={photo || undefined} alt={name} />
                             <AvatarFallback>{name.charAt(0) || 'S'}</AvatarFallback>
@@ -137,39 +146,58 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                             <Input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
                         </div>
                     </div>
-                    <div className="md:col-span-2">
-                        <Label htmlFor="staff-name">Staff Name</Label>
-                        <Input id="staff-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="staff-name">Staff Name</Label>
+                            <Input id="staff-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                        </div>
+                        <div>
+                            <Label htmlFor="staff-role">Job Role</Label>
+                             <Select value={role} onValueChange={(v) => setRole(v as StaffRole)}>
+                                <SelectTrigger id="staff-role">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {staffRoles.map(r => (
+                                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="mobile">Mobile No.</Label>
+                            <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Joining Date</Label>
+                            <DatePicker date={joiningDate} setDate={setJoiningDate} />
+                        </div>
+                        <div className="md:col-span-2">
+                            <Label htmlFor="address">Address</Label>
+                            <Textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor="salary">Monthly Salary</Label>
+                            <Input id="salary" type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(Number(e.target.value))} />
+                        </div>
                     </div>
-                    <div>
-                        <Label htmlFor="staff-role">Job Role</Label>
-                         <Select value={role} onValueChange={(v) => setRole(v as StaffRole)}>
-                            <SelectTrigger id="staff-role">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {staffRoles.map(r => (
-                                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label htmlFor="mobile">Mobile No.</Label>
-                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
-                    </div>
-                     <div className="md:col-span-2">
-                        <Label htmlFor="address">Address</Label>
-                        <Textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
-                    </div>
-                    <div>
-                        <Label htmlFor="salary">Monthly Salary</Label>
-                        <Input id="salary" type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(Number(e.target.value))} />
-                    </div>
-                    <div>
-                        <Label>Joining Date</Label>
-                        <DatePicker date={joiningDate} setDate={setJoiningDate} />
-                    </div>
+                    
+                    <Separator />
+                    
+                     <div className="space-y-2">
+                        <h3 className="text-sm font-medium text-muted-foreground">Login Credentials</h3>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="username">Login ID / Username</Label>
+                                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                            </div>
+                            <div>
+                                <Label htmlFor="password">Password</Label>
+                                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            </div>
+                         </div>
+                     </div>
                 </div>
                 <DialogFooter>
                     <DialogClose asChild>
