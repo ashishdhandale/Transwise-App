@@ -14,6 +14,7 @@ import { CompanyProfileSettings } from '@/components/company/settings/company-pr
 import { PrintFormatSettings } from '@/components/company/settings/print-format-settings';
 import { ChallanFormatSettings } from '@/components/company/settings/challan-format-settings';
 import { BackButton } from '@/components/ui/back-button';
+import { DashboardSettings } from '@/components/company/settings/dashboard-settings';
 
 function CompanySettingsPage() {
   return (
@@ -30,6 +31,7 @@ function CompanySettingsPage() {
                 <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
                 <TabsTrigger value="print-formats">Print Formats</TabsTrigger>
                 <TabsTrigger value="challan-formats">Challan Formats</TabsTrigger>
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
                 <CompanyProfileSettings />
@@ -64,6 +66,9 @@ function CompanySettingsPage() {
             </TabsContent>
              <TabsContent value="challan-formats">
                 <ChallanFormatSettings />
+            </TabsContent>
+             <TabsContent value="dashboard">
+                <DashboardSettings />
             </TabsContent>
         </Tabs>
       </div>

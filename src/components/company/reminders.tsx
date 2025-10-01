@@ -21,6 +21,8 @@ interface Reminder {
     link?: string;
 }
 
+const DASHBOARD_SETTINGS_KEY = 'transwise_dashboard_settings';
+
 export function Reminders() {
     const [reminders, setReminders] = useState<Reminder[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +31,18 @@ export function Reminders() {
         const generateReminders = () => {
             const newReminders: Reminder[] = [];
             const today = new Date();
-            const thirtyDaysFromNow = addDays(today, 30);
+            
+            let reminderDays = 30; // Default
+            try {
+                const savedSettings = localStorage.getItem(DASHBOARD_SETTINGS_KEY);
+                if (savedSettings) {
+                    reminderDays = JSON.parse(savedSettings).vehicleDocReminderDays || 30;
+                }
+            } catch (e) {
+                console.error("Could not parse dashboard settings.");
+            }
+            
+            const reminderThresholdDate = addDays(today, reminderDays);
 
             // 1. Check Vehicle Document Expiry
             const vehicles = getVehicles();
@@ -45,7 +58,7 @@ export function Reminders() {
                             level: 'error',
                             link: '/company/master/vehicle',
                         });
-                    } else if (isBefore(expiryDate, thirtyDaysFromNow)) {
+                    } else if (isBefore(expiryDate, reminderThresholdDate)) {
                         const daysLeft = differenceInDays(expiryDate, today);
                         newReminders.push({
                             type: 'Vehicle',
