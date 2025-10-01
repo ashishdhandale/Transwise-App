@@ -266,4 +266,11 @@ export interface Staff {
   password?: string;
   branch?: string;
   canAuthorizePayments?: boolean;
+  bankName?: string;
+  accountNo?: string;
+  ifscCode?: string;
+  emergencyContactName?: string;
+  emergencyContactNo?: string;
+  idProofType?: 'Aadhaar' | 'PAN' | 'Driving License';
+  idProofNo?: string;
 }
