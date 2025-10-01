@@ -227,7 +227,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                             </div>
                             <div>
                                 <Label htmlFor="password">Password</Label>
-                                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={staff ? "Enter new password to change" : "Set initial password"} />
+                                <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={staff ? "Enter new password to change" : "Set initial password"} />
                             </div>
                          </div>
                           <div className="flex items-center space-x-2">
