@@ -251,7 +251,8 @@ export type StaffRole =
   | 'Booking Clerk'
   | 'Loading Supervisor'
   | 'Delivery Boy'
-  | 'Driver';
+  | 'Driver'
+  | 'Branch User';
 
 export interface StaffPermissions {
   dashboard: boolean;
