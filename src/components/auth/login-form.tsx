@@ -29,7 +29,8 @@ export default function LoginForm() {
         router.push('/company');
         break;
       case 'Branch':
-        router.push('/company'); // For now, branch login redirects to company dashboard
+        // For branch user, pass a query param to simulate the role on the dashboard.
+        router.push('/company?role=Branch');
         break;
       default:
         // Default navigation if no role is selected, or handle error

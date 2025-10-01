@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -9,23 +10,30 @@ import {
 } from '@/components/ui/select';
 import { Card } from '../ui/card';
 
-export function DashboardFilters() {
+interface DashboardFiltersProps {
+    // A simple way to simulate role for now. In a real app, this would come from an auth context.
+    userRole?: 'Company' | 'Branch';
+}
+
+export function DashboardFilters({ userRole = 'Company' }: DashboardFiltersProps) {
   return (
     <Card className="p-2 border border-[#b2dfdb]">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Select Branch</label>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">ALL (Default)</SelectItem>
-              <SelectItem value="branch1">Branch 1</SelectItem>
-              <SelectItem value="branch2">Branch 2</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {userRole === 'Company' && (
+            <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Select Branch</label>
+            <Select defaultValue="all">
+                <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                <SelectItem value="all">ALL (Default)</SelectItem>
+                <SelectItem value="branch1">Branch 1</SelectItem>
+                <SelectItem value="branch2">Branch 2</SelectItem>
+                </SelectContent>
+            </Select>
+            </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <label className="text-sm font-medium">Monthly Statistics</label>
           <Select defaultValue="bookings">

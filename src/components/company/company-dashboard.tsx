@@ -12,10 +12,15 @@ import { isToday, subDays, format, parseISO } from 'date-fns';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from './settings/company-profile-settings';
 import { Reminders } from './reminders';
+import { useSearchParams } from 'next/navigation';
 
 export function CompanyDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+  
+  // This is a simulation. In a real app, you'd get the user role from an authentication context.
+  const searchParams = useSearchParams();
+  const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
 
   useEffect(() => {
     async function loadData() {
@@ -93,7 +98,7 @@ export function CompanyDashboard() {
           Dashboard
         </h1>
       </div>
-      <DashboardFilters />
+      <DashboardFilters userRole={userRole} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
         <div className="lg:col-span-2 flex flex-col gap-6">
           <Reminders />
