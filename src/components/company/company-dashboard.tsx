@@ -11,6 +11,7 @@ import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { isToday, subDays, format, parseISO } from 'date-fns';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from './settings/company-profile-settings';
+import { Reminders } from './reminders';
 
 export function CompanyDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -95,6 +96,7 @@ export function CompanyDashboard() {
       <DashboardFilters />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
         <div className="lg:col-span-2 flex flex-col gap-6">
+          <Reminders />
           <BookingsChart data={bookingsChartData} />
           <StockPieCharts {...stockPieChartData} />
         </div>
