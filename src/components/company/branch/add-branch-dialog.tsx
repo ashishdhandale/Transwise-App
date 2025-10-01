@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,9 +14,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { Branch, BranchType } from '@/lib/types';
+import type { Branch, BranchType, City } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getCities } from '@/lib/city-data';
+import { Combobox } from '@/components/ui/combobox';
 
 interface AddBranchDialogProps {
     isOpen: boolean;
@@ -37,30 +39,34 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
     const [email, setEmail] = useState('');
     const [gstin, setGstin] = useState('');
     const [lrPrefix, setLrPrefix] = useState('');
+    const [masterCities, setMasterCities] = useState<City[]>([]);
     
     const { toast } = useToast();
 
     useEffect(() => {
-        if (branch) {
-            setName(branch.name || '');
-            setType(branch.type || 'Owned');
-            setAddress(branch.address || '');
-            setCity(branch.city || '');
-            setState(branch.state || '');
-            setContactNo(branch.contactNo || '');
-            setEmail(branch.email || '');
-            setGstin(branch.gstin || '');
-            setLrPrefix(branch.lrPrefix || '');
-        } else {
-            setName('');
-            setType('Owned');
-            setAddress('');
-            setCity('');
-            setState('');
-            setContactNo('');
-            setEmail('');
-            setGstin('');
-            setLrPrefix('');
+        if (isOpen) {
+            setMasterCities(getCities());
+            if (branch) {
+                setName(branch.name || '');
+                setType(branch.type || 'Owned');
+                setAddress(branch.address || '');
+                setCity(branch.city || '');
+                setState(branch.state || '');
+                setContactNo(branch.contactNo || '');
+                setEmail(branch.email || '');
+                setGstin(branch.gstin || '');
+                setLrPrefix(branch.lrPrefix || '');
+            } else {
+                setName('');
+                setType('Owned');
+                setAddress('');
+                setCity('');
+                setState('');
+                setContactNo('');
+                setEmail('');
+                setGstin('');
+                setLrPrefix('');
+            }
         }
     }, [branch, isOpen]);
 
@@ -73,7 +79,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
         const success = onSave({
             name,
             type,
-            location: `${city}, ${state}`, // Combine for backward compatibility
+            location: `${city}, ${state}`,
             address,
             city,
             state,
@@ -87,6 +93,8 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             onOpenChange(false);
         }
     };
+    
+    const cityOptions = useMemo(() => masterCities.map(c => ({ label: c.name, value: c.name })), [masterCities]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -122,7 +130,14 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                     </div>
                      <div>
                         <Label htmlFor="city">City</Label>
-                         <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+                         <Combobox
+                            options={cityOptions}
+                            value={city}
+                            onChange={setCity}
+                            placeholder="Select a station..."
+                            searchPlaceholder="Search stations..."
+                            notFoundMessage="No station found in master."
+                        />
                     </div>
                      <div>
                         <Label htmlFor="state">State</Label>
