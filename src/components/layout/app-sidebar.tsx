@@ -40,6 +40,7 @@ import {
   User,
   Users,
   Wallet,
+  Wrench,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -259,6 +260,9 @@ export function AppSidebar() {
               </SidebarMenuItem>
                <SidebarMenuItem>
                 <SidebarMenuButton href="/company/vehicle-hire" size="sm" isActive={pathname.startsWith('/company/vehicle-hire')} tooltip="Vehicle Hire"><Truck />Vehicle Hire</SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="/company/vehicle-expenses" size="sm" isActive={pathname.startsWith('/company/vehicle-expenses')} tooltip="Vehicle Expenses"><Wrench />Vehicle Expenses</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
