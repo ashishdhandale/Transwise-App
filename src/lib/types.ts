@@ -67,6 +67,7 @@ export interface Branch {
   contactNo: string;
   email: string;
   gstin: string;
+  lrPrefix?: string;
   companyId: string;
 }
 

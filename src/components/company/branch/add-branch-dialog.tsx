@@ -36,6 +36,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
     const [contactNo, setContactNo] = useState('');
     const [email, setEmail] = useState('');
     const [gstin, setGstin] = useState('');
+    const [lrPrefix, setLrPrefix] = useState('');
     
     const { toast } = useToast();
 
@@ -49,6 +50,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             setContactNo(branch.contactNo || '');
             setEmail(branch.email || '');
             setGstin(branch.gstin || '');
+            setLrPrefix(branch.lrPrefix || '');
         } else {
             setName('');
             setType('Owned');
@@ -58,6 +60,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             setContactNo('');
             setEmail('');
             setGstin('');
+            setLrPrefix('');
         }
     }, [branch, isOpen]);
 
@@ -76,7 +79,8 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             state,
             contactNo,
             email,
-            gstin
+            gstin,
+            lrPrefix,
         });
 
         if (success) {
@@ -95,7 +99,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                         <Label htmlFor="branch-name">Branch Name</Label>
                         <Input id="branch-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
                     </div>
-                    <div className="md:col-span-2">
+                    <div>
                         <Label htmlFor="branch-type">Branch Type</Label>
                         <Select value={type} onValueChange={(v) => setType(v as BranchType)}>
                             <SelectTrigger id="branch-type">
@@ -107,6 +111,10 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                                 ))}
                             </SelectContent>
                         </Select>
+                    </div>
+                     <div>
+                        <Label htmlFor="lr-prefix">LR Prefix</Label>
+                        <Input id="lr-prefix" value={lrPrefix} onChange={(e) => setLrPrefix(e.target.value.toUpperCase())} placeholder="e.g. NGP, PUN" />
                     </div>
                      <div className="md:col-span-2">
                         <Label htmlFor="address">Full Address</Label>
