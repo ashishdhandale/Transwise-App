@@ -192,7 +192,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                                 </SelectTrigger>
                                 <SelectContent>
                                     {branches.map(b => (
-                                        <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
+                                        <SelectItem key={b.id} value={b.name}>{b.name} - {b.city}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
