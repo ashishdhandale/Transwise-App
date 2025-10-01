@@ -83,6 +83,9 @@ export function AppSidebar() {
      if (pathname.startsWith('/company')) {
       setOpenDashboardMenu(true);
     }
+     if (pathname.startsWith('/company/branch')) {
+      setOpenBranchMenu(true);
+    }
      if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan') || pathname.startsWith('/company/vehicle-hire')) {
       setOpenConsignmentMenu(true);
      }
@@ -234,10 +237,7 @@ export function AppSidebar() {
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Employees"><Users />Employees</SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="User Management"><Users />User Management</SidebarMenuButton>
+                <SidebarMenuButton href="/company/branch" size="sm" isActive={pathname.startsWith('/company/branch')} tooltip="Branch Management"><Building />Branch Management</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
