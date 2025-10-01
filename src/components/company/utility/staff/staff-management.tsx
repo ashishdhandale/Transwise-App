@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddStaffDialog } from './add-staff-dialog';
 import type { Staff } from '@/lib/types';
@@ -33,6 +33,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -122,10 +123,12 @@ export function StaffManagement() {
                 <TableHead className={thClass}>Photo</TableHead>
                 <TableHead className={thClass}>Name</TableHead>
                 <TableHead className={thClass}>Role</TableHead>
+                <TableHead className={thClass}>Branch</TableHead>
                 <TableHead className={thClass}>Mobile</TableHead>
                 <TableHead className={thClass}>Address</TableHead>
                 <TableHead className={thClass}>Joining Date</TableHead>
                 <TableHead className={cn(thClass, "text-right")}>Salary</TableHead>
+                <TableHead className={cn(thClass, "text-center")}>Payment Auth.</TableHead>
                 <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -139,11 +142,19 @@ export function StaffManagement() {
                             </Avatar>
                         </TableCell>
                         <TableCell className={cn(tdClass, "font-medium")}>{member.name}</TableCell>
-                        <TableCell className={cn(tdClass)}>{member.role}</TableCell>
+                        <TableCell className={cn(tdClass)}><Badge variant="secondary">{member.role}</Badge></TableCell>
+                        <TableCell className={cn(tdClass)}>{member.branch || 'N/A'}</TableCell>
                         <TableCell className={cn(tdClass)}>{member.mobile}</TableCell>
                         <TableCell className={cn(tdClass, "max-w-xs truncate")}>{member.address}</TableCell>
                         <TableCell className={cn(tdClass)}>{format(new Date(member.joiningDate), 'dd-MMM-yyyy')}</TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>{member.monthlySalary.toLocaleString()}</TableCell>
+                        <TableCell className={cn(tdClass, "text-center")}>
+                            {member.canAuthorizePayments ? (
+                                <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
+                            ) : (
+                                <XCircle className="h-5 w-5 text-red-500 mx-auto" />
+                            )}
+                        </TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>
                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>

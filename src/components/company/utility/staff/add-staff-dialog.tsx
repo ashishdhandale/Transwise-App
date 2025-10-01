@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
 const staffRoles: StaffRole[] = [
     'Manager',
@@ -36,6 +37,8 @@ const staffRoles: StaffRole[] = [
     'Delivery Boy',
     'Driver',
 ];
+
+const branches = ['Main Office', 'Pune Branch', 'Mumbai Branch'];
 
 interface AddStaffDialogProps {
     isOpen: boolean;
@@ -47,6 +50,7 @@ interface AddStaffDialogProps {
 export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaffDialogProps) {
     const [name, setName] = useState('');
     const [role, setRole] = useState<StaffRole>('Booking Clerk');
+    const [branch, setBranch] = useState<string>('');
     const [mobile, setMobile] = useState('');
     const [address, setAddress] = useState('');
     const [monthlySalary, setMonthlySalary] = useState<number | ''>('');
@@ -54,6 +58,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     const [photo, setPhoto] = useState<string>('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [canAuthorizePayments, setCanAuthorizePayments] = useState(false);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
@@ -63,6 +68,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             if (staff) {
                 setName(staff.name || '');
                 setRole(staff.role || 'Booking Clerk');
+                setBranch(staff.branch || '');
                 setMobile(staff.mobile || '');
                 setAddress(staff.address || '');
                 setMonthlySalary(staff.monthlySalary || '');
@@ -70,9 +76,11 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setPhoto(staff.photo || '');
                 setUsername(staff.username || '');
                 setPassword(staff.password || '');
+                setCanAuthorizePayments(staff.canAuthorizePayments || false);
             } else {
                 setName('');
                 setRole('Booking Clerk');
+                setBranch('');
                 setMobile('');
                 setAddress('');
                 setMonthlySalary('');
@@ -80,6 +88,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setPhoto('');
                 setUsername('');
                 setPassword('');
+                setCanAuthorizePayments(false);
             }
         }
     }, [staff, isOpen]);
@@ -94,6 +103,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
         const success = onSave({
             name,
             role,
+            branch,
             mobile,
             address,
             monthlySalary: Number(monthlySalary) || 0,
@@ -101,6 +111,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             photo: photo || `https://picsum.photos/seed/${name.replace(/\s/g, '')}/200/200`,
             username,
             password,
+            canAuthorizePayments,
         });
 
         if (success) {
@@ -165,17 +176,30 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                                 </SelectContent>
                             </Select>
                         </div>
+                         <div>
+                            <Label htmlFor="branch">Branch</Label>
+                             <Select value={branch} onValueChange={setBranch}>
+                                <SelectTrigger id="branch">
+                                    <SelectValue placeholder="Select a branch" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {branches.map(b => (
+                                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div>
                             <Label htmlFor="mobile">Mobile No.</Label>
                             <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
                         </div>
-                        <div>
-                            <Label>Joining Date</Label>
-                            <DatePicker date={joiningDate} setDate={setJoiningDate} />
-                        </div>
                         <div className="md:col-span-2">
                             <Label htmlFor="address">Address</Label>
                             <Textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Joining Date</Label>
+                            <DatePicker date={joiningDate} setDate={setJoiningDate} />
                         </div>
                         <div>
                             <Label htmlFor="salary">Monthly Salary</Label>
@@ -185,8 +209,8 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                     
                     <Separator />
                     
-                     <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">Login Credentials</h3>
+                     <div className="space-y-4">
+                        <h3 className="text-sm font-medium text-muted-foreground">Access & Permissions</h3>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="username">Login ID / Username</Label>
@@ -197,6 +221,10 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                             </div>
                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Switch id="payment-auth" checked={canAuthorizePayments} onCheckedChange={setCanAuthorizePayments} />
+                            <Label htmlFor="payment-auth">Allow Payment Authorization</Label>
+                        </div>
                      </div>
                 </div>
                 <DialogFooter>

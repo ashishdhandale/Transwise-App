@@ -254,4 +254,6 @@ export interface Staff {
   joiningDate: string;
   username?: string;
   password?: string;
+  branch?: string;
+  canAuthorizePayments?: boolean;
 }
