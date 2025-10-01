@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { Staff, StaffRole } from '@/lib/types';
+import type { Staff, StaffRole, Branch } from '@/lib/types';
+import { getBranches } from '@/lib/branch-data';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,8 +39,6 @@ const staffRoles: StaffRole[] = [
     'Driver',
 ];
 
-const branches = ['Main Office', 'Pune Branch', 'Mumbai Branch'];
-
 interface AddStaffDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
@@ -59,12 +58,14 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [canAuthorizePayments, setCanAuthorizePayments] = useState(false);
+    const [branches, setBranches] = useState<Branch[]>([]);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
     useEffect(() => {
         if (isOpen) {
+            setBranches(getBranches());
             if (staff) {
                 setName(staff.name || '');
                 setRole(staff.role || 'Booking Clerk');
@@ -110,12 +111,10 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             joiningDate: joiningDate.toISOString(),
             photo: photo || `https://picsum.photos/seed/${name.replace(/\s/g, '')}/200/200`,
             username,
-            password: password, // Pass the new password, or an empty string
+            password: password,
             canAuthorizePayments,
         };
 
-        // If the password field is empty during an edit, we don't update it.
-        // The parent `onSave` function will need to handle this logic.
         if (staff && !password) {
             delete (dataToSave as Partial<typeof dataToSave>).password;
         }
@@ -193,7 +192,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                                 </SelectTrigger>
                                 <SelectContent>
                                     {branches.map(b => (
-                                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                                        <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
