@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { Branch } from '@/lib/types';
+import type { Branch, BranchType } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -25,8 +25,11 @@ interface AddBranchDialogProps {
     branch?: Partial<Branch> | null;
 }
 
+const branchTypes: BranchType[] = ['Owned', 'Agency', 'Delivery Agency'];
+
 export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBranchDialogProps) {
     const [name, setName] = useState('');
+    const [type, setType] = useState<BranchType>('Owned');
     const [address, setAddress] = useState('');
     const [city, setCity] = useState('');
     const [state, setState] = useState('');
@@ -39,6 +42,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
     useEffect(() => {
         if (branch) {
             setName(branch.name || '');
+            setType(branch.type || 'Owned');
             setAddress(branch.address || '');
             setCity(branch.city || '');
             setState(branch.state || '');
@@ -47,6 +51,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             setGstin(branch.gstin || '');
         } else {
             setName('');
+            setType('Owned');
             setAddress('');
             setCity('');
             setState('');
@@ -64,6 +69,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
 
         const success = onSave({
             name,
+            type,
             location: `${city}, ${state}`, // Combine for backward compatibility
             address,
             city,
@@ -88,6 +94,19 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                     <div className="md:col-span-2">
                         <Label htmlFor="branch-name">Branch Name</Label>
                         <Input id="branch-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                    </div>
+                    <div className="md:col-span-2">
+                        <Label htmlFor="branch-type">Branch Type</Label>
+                        <Select value={type} onValueChange={(v) => setType(v as BranchType)}>
+                            <SelectTrigger id="branch-type">
+                                <SelectValue placeholder="Select a type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {branchTypes.map(t => (
+                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                      <div className="md:col-span-2">
                         <Label htmlFor="address">Full Address</Label>

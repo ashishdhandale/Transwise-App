@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -125,6 +126,7 @@ export function BranchDashboard() {
                     <TableHeader>
                     <TableRow>
                         <TableHead className={thClass}>Branch Name</TableHead>
+                        <TableHead className={thClass}>Type</TableHead>
                         <TableHead className={thClass}>Location</TableHead>
                         <TableHead className={thClass}>Contact</TableHead>
                         <TableHead className={thClass}>Email</TableHead>
@@ -135,6 +137,9 @@ export function BranchDashboard() {
                     {filteredBranches.map((branch) => (
                         <TableRow key={branch.id}>
                         <TableCell className={cn(tdClass, "font-medium")}>{branch.name}</TableCell>
+                        <TableCell className={cn(tdClass)}>
+                            <Badge variant={branch.type === 'Owned' ? 'default' : 'secondary'}>{branch.type}</Badge>
+                        </TableCell>
                         <TableCell className={cn(tdClass)}>{branch.city}, {branch.state}</TableCell>
                         <TableCell className={cn(tdClass)}>{branch.contactNo}</TableCell>
                         <TableCell className={cn(tdClass)}>{branch.email}</TableCell>

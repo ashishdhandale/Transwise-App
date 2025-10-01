@@ -54,9 +54,12 @@ export interface CompanyUser extends BaseUser {
   companyId: string;
 }
 
+export type BranchType = 'Owned' | 'Agency' | 'Delivery Agency';
+
 export interface Branch {
   id: string;
   name: string;
+  type: BranchType;
   location: string;
   address: string;
   city: string;
