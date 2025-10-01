@@ -2,7 +2,7 @@
 export interface VehicleExpense {
   id: number;
   vehicleNo: string;
-  expenseType: 'Fuel' | 'Maintenance' | 'Parts' | 'Insurance' | 'Other';
+  expenseType: 'Fuel' | 'Maintenance' | 'Parts' | 'Insurance' | 'Tyre Replacement' | 'Other';
   date: string;
   amount: number;
   description: string;

@@ -23,6 +23,7 @@ const typeColors: { [key: string]: string } = {
     Fuel: 'bg-orange-100 text-orange-800',
     Maintenance: 'bg-blue-100 text-blue-800',
     Parts: 'bg-purple-100 text-purple-800',
+    'Tyre Replacement': 'bg-teal-100 text-teal-800',
     Insurance: 'bg-green-100 text-green-800',
     Other: 'bg-gray-100 text-gray-800',
 };

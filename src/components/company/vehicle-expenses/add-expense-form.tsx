@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const expenseSchema = z.object({
   vehicleNo: z.string().min(1, 'Vehicle is required.'),
-  expenseType: z.enum(['Fuel', 'Maintenance', 'Parts', 'Insurance', 'Other']),
+  expenseType: z.enum(['Fuel', 'Maintenance', 'Parts', 'Insurance', 'Tyre Replacement', 'Other']),
   date: z.date({ required_error: 'Date is required.' }),
   amount: z.coerce.number().min(0.01, 'Amount must be positive.'),
   description: z.string().min(3, 'A brief description is required.'),
@@ -103,6 +103,7 @@ export function AddExpenseForm({ vehicles, onExpenseAdded }: AddExpenseFormProps
                                             <SelectItem value="Maintenance">Maintenance</SelectItem>
                                             <SelectItem value="Fuel">Fuel</SelectItem>
                                             <SelectItem value="Parts">Parts</SelectItem>
+                                            <SelectItem value="Tyre Replacement">Tyre Replacement</SelectItem>
                                             <SelectItem value="Insurance">Insurance</SelectItem>
                                             <SelectItem value="Other">Other</SelectItem>
                                         </SelectContent>
