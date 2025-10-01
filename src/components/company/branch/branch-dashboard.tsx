@@ -31,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-const thClass = "bg-primary/10 text-primary font-semibold";
+const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
 
 export function BranchDashboard() {
@@ -48,7 +48,9 @@ export function BranchDashboard() {
   const filteredBranches = useMemo(() => {
     return branches.filter(branch => 
         branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        branch.location.toLowerCase().includes(searchTerm.toLowerCase())
+        branch.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        branch.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        branch.state.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [branches, searchTerm]);
 
@@ -124,6 +126,8 @@ export function BranchDashboard() {
                     <TableRow>
                         <TableHead className={thClass}>Branch Name</TableHead>
                         <TableHead className={thClass}>Location</TableHead>
+                        <TableHead className={thClass}>Contact</TableHead>
+                        <TableHead className={thClass}>Email</TableHead>
                         <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
                     </TableRow>
                     </TableHeader>
@@ -131,7 +135,9 @@ export function BranchDashboard() {
                     {filteredBranches.map((branch) => (
                         <TableRow key={branch.id}>
                         <TableCell className={cn(tdClass, "font-medium")}>{branch.name}</TableCell>
-                        <TableCell className={cn(tdClass)}>{branch.location}</TableCell>
+                        <TableCell className={cn(tdClass)}>{branch.city}, {branch.state}</TableCell>
+                        <TableCell className={cn(tdClass)}>{branch.contactNo}</TableCell>
+                        <TableCell className={cn(tdClass)}>{branch.email}</TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>
                             <Button variant="ghost" size="icon" onClick={() => handleEdit(branch)}><Pencil className="h-4 w-4" /></Button>
                             <AlertDialog>

@@ -58,6 +58,12 @@ export interface Branch {
   id: string;
   name: string;
   location: string;
+  address: string;
+  city: string;
+  state: string;
+  contactNo: string;
+  email: string;
+  gstin: string;
   companyId: string;
 }
 
