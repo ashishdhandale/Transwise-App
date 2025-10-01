@@ -95,7 +95,7 @@ export function AppSidebar() {
       if (pathname.startsWith('/company/reports')) {
       setOpenReportsMenu(true);
      }
-     if (pathname.startsWith('/company/vehicle-expenses')) {
+     if (pathname.startsWith('/company/vehicle-expenses') || pathname.startsWith('/company/utility/staff')) {
       setOpenUtilityMenu(true);
      }
   }, [pathname]);
@@ -374,6 +374,9 @@ export function AppSidebar() {
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
               <SidebarMenuItem>
                 <SidebarMenuButton href="/company/vehicle-expenses" size="sm" isActive={pathname.startsWith('/company/vehicle-expenses')} tooltip="Vehicle Expenses"><Wrench />Vehicle Expenses</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/company/utility/staff" size="sm" isActive={pathname.startsWith('/company/utility/staff')} tooltip="Staff Management"><Users />Staff Management</SidebarMenuButton>
               </SidebarMenuItem>
             </div>
           </CollapsibleContent>
