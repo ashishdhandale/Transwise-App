@@ -16,7 +16,9 @@ export default function DashboardLayout({
         <AppSidebar />
       </ClientOnly>
       <SidebarInset>
-        <AppHeader />
+        <ClientOnly>
+          <AppHeader />
+        </ClientOnly>
         {children}
       </SidebarInset>
     </SidebarProvider>
