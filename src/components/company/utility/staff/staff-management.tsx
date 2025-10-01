@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal, CheckCircle, XCircle, Copy } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, MoreHorizontal, CheckCircle, XCircle, Copy, KeyRound, ShieldOff, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddStaffDialog } from './add-staff-dialog';
 import type { Staff } from '@/lib/types';
@@ -29,13 +29,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
+
+const generateRandomPassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let retVal = "";
+    for (let i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
+}
 
 export function StaffManagement() {
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -81,11 +90,12 @@ export function StaffManagement() {
     let updatedStaff;
     if (currentStaff) {
         // If password is not provided in the update, keep the old one
-        const finalData = {
+        const finalData: Staff = {
             ...currentStaff,
             ...staffData,
             password: staffData.password ? staffData.password : currentStaff.password,
             forcePasswordChange: staffData.password ? true : currentStaff.forcePasswordChange,
+            isActive: currentStaff.isActive,
         };
       updatedStaff = staff.map(member => (member.id === currentStaff.id ? finalData : member));
       toast({ title: 'Staff Member Updated', description: `"${staffData.name}" has been updated successfully.` });
@@ -104,6 +114,7 @@ export function StaffManagement() {
         branch: staffData.branch,
         permissions: staffData.permissions || { dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true },
         forcePasswordChange: true,
+        isActive: true,
       };
       updatedStaff = [newStaff, ...staff];
       toast({ title: 'Staff Member Added', description: `"${staffData.name}" has been added.` });
@@ -116,6 +127,40 @@ export function StaffManagement() {
   const copyPassword = (password: string) => {
     navigator.clipboard.writeText(password);
     toast({ title: 'Copied!', description: 'Password copied to clipboard.'});
+  };
+  
+  const handleToggleActive = (id: number) => {
+      const updatedStaff = staff.map(member => {
+          if (member.id === id) {
+              return { ...member, isActive: !member.isActive };
+          }
+          return member;
+      });
+      saveStaff(updatedStaff);
+      setStaff(updatedStaff);
+      const member = staff.find(s => s.id === id);
+      toast({
+          title: `Account ${member?.isActive ? 'Blocked' : 'Activated'}`,
+          description: `Access for ${member?.name} has been updated.`,
+      });
+  };
+
+  const handleResetPassword = (id: number) => {
+      const newPassword = generateRandomPassword();
+      const updatedStaff = staff.map(member => {
+          if (member.id === id) {
+              return { ...member, password: newPassword, forcePasswordChange: true };
+          }
+          return member;
+      });
+      saveStaff(updatedStaff);
+      setStaff(updatedStaff);
+      const member = staff.find(s => s.id === id);
+      toast({
+          title: 'Password Reset',
+          description: `New password for ${member?.name} is: ${newPassword}`,
+          duration: 10000, // Keep toast longer for copying
+      });
   };
 
   return (
@@ -148,9 +193,7 @@ export function StaffManagement() {
                 <TableHead className={thClass}>Password</TableHead>
                 <TableHead className={thClass}>Role</TableHead>
                 <TableHead className={thClass}>Branch</TableHead>
-                <TableHead className={thClass}>Mobile</TableHead>
-                <TableHead className={thClass}>Joining Date</TableHead>
-                <TableHead className={cn(thClass, "text-right")}>Salary</TableHead>
+                <TableHead className={thClass}>Status</TableHead>
                 <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -177,9 +220,11 @@ export function StaffManagement() {
                         </TableCell>
                         <TableCell className={cn(tdClass)}><Badge variant="secondary">{member.role}</Badge></TableCell>
                         <TableCell className={cn(tdClass)}>{member.branch || 'N/A'}</TableCell>
-                        <TableCell className={cn(tdClass)}>{member.mobile}</TableCell>
-                        <TableCell className={cn(tdClass)}>{format(new Date(member.joiningDate), 'dd-MMM-yyyy')}</TableCell>
-                        <TableCell className={cn(tdClass, "text-right")}>{member.monthlySalary.toLocaleString()}</TableCell>
+                        <TableCell className={cn(tdClass)}>
+                            <Badge variant={member.isActive ? 'default' : 'destructive'} className={cn(member.isActive ? 'bg-green-500' : 'bg-red-500')}>
+                                {member.isActive ? 'Active' : 'Blocked'}
+                            </Badge>
+                        </TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>
                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -193,6 +238,13 @@ export function StaffManagement() {
                                   <DropdownMenuItem onClick={() => handleEdit(member)}>
                                       <Pencil className="mr-2 h-4 w-4" /> Edit
                                   </DropdownMenuItem>
+                                   <DropdownMenuItem onClick={() => handleToggleActive(member.id)}>
+                                        {member.isActive ? <ShieldOff className="mr-2 h-4 w-4" /> : <Shield className="mr-2 h-4 w-4" />}
+                                        {member.isActive ? 'Block Access' : 'Unblock Access'}
+                                   </DropdownMenuItem>
+                                   <DropdownMenuItem onClick={() => handleResetPassword(member.id)}>
+                                        <KeyRound className="mr-2 h-4 w-4" /> Reset Password
+                                   </DropdownMenuItem>
                                   <AlertDialog>
                                       <AlertDialogTrigger asChild>
                                           <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">

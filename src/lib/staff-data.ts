@@ -1,4 +1,5 @@
 
+
 import type { Staff } from './types';
 
 const LOCAL_STORAGE_KEY = 'transwise_staff';
@@ -24,6 +25,7 @@ const initialStaff: Staff[] = [
         idProofType: 'Aadhaar',
         idProofNo: '1234 5678 9012',
         permissions: { dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true },
+        isActive: true,
     },
     {
         id: 2,
@@ -45,6 +47,7 @@ const initialStaff: Staff[] = [
         idProofType: 'PAN',
         idProofNo: 'ABCDE1234F',
         permissions: { dashboard: true, booking: false, stock: false, accounts: true, master: false, reports: true, challan: false, vehicleHire: false, vehicleExpense: false, utility: false },
+        isActive: true,
     },
 ];
 

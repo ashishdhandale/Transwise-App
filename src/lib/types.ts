@@ -283,8 +283,9 @@ export interface Staff {
   ifscCode?: string;
   emergencyContactName?: string;
   emergencyContactNo?: string;
-  idProofType?: 'Aadhaar' | 'PAN' | 'Driving License';
+  idProofType?: string;
   idProofNo?: string;
   permissions: StaffPermissions;
   forcePasswordChange?: boolean;
+  isActive: boolean;
 }
