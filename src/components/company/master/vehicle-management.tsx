@@ -40,6 +40,20 @@ const initialVehicles: VehicleMaster[] = [];
 
 const tdClass = "whitespace-nowrap";
 
+const DateCell = ({ dateString }: { dateString?: string }) => {
+    if (!dateString) return <TableCell className={tdClass}>N/A</TableCell>;
+    const isExpired = isBefore(new Date(dateString), startOfToday());
+    return (
+        <TableCell className={cn(tdClass, isExpired ? 'text-destructive font-semibold' : '')}>
+            <span className="flex items-center gap-2">
+                {isExpired && <Calendar className="h-4 w-4" />}
+                {format(new Date(dateString), 'dd-MMM-yyyy')}
+            </span>
+        </TableCell>
+    );
+};
+
+
 export function VehicleManagement() {
   const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -149,16 +163,14 @@ export function VehicleManagement() {
                 <TableHead>Type</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Supplier</TableHead>
-                <TableHead>Capacity (Kg)</TableHead>
-                <TableHead>Insurance Validity</TableHead>
-                <TableHead>RC No</TableHead>
+                <TableHead>Insurance</TableHead>
+                <TableHead>Fitness Cert.</TableHead>
+                <TableHead>PUC</TableHead>
                 <TableHead className="w-[120px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredVehicles.map((vehicle) => {
-                  const isExpired = vehicle.insuranceValidity && isBefore(new Date(vehicle.insuranceValidity), startOfToday());
-                  return (
+              {filteredVehicles.map((vehicle) => (
                     <TableRow key={vehicle.id}>
                         <TableCell className={cn(tdClass, "font-medium")}>{vehicle.vehicleNo}</TableCell>
                         <TableCell className={cn(tdClass)}>{vehicle.vehicleType}</TableCell>
@@ -166,16 +178,9 @@ export function VehicleManagement() {
                             <Badge variant={vehicle.ownerType === 'Own' ? 'default' : 'secondary'}>{vehicle.ownerType}</Badge>
                         </TableCell>
                         <TableCell className={cn(tdClass)}>{vehicle.supplierName || 'N/A'}</TableCell>
-                        <TableCell className={cn(tdClass)}>{vehicle.capacity?.toLocaleString()}</TableCell>
-                        <TableCell className={cn(tdClass, isExpired ? 'text-destructive' : '')}>
-                           {vehicle.insuranceValidity ? (
-                                <span className="flex items-center gap-2">
-                                    {isExpired && <Calendar className="h-4 w-4" />}
-                                    {format(new Date(vehicle.insuranceValidity), 'dd-MMM-yyyy')}
-                                </span>
-                            ) : 'N/A'}
-                        </TableCell>
-                        <TableCell className={cn(tdClass)}>{vehicle.rcNo}</TableCell>
+                        <DateCell dateString={vehicle.insuranceValidity} />
+                        <DateCell dateString={vehicle.fitnessCertificateValidity} />
+                        <DateCell dateString={vehicle.pucValidity} />
                         <TableCell className={cn(tdClass, "text-right")}>
                           <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -212,8 +217,8 @@ export function VehicleManagement() {
                           </DropdownMenu>
                         </TableCell>
                     </TableRow>
-                );
-              })}
+                )
+              )}
             </TableBody>
           </Table>
         </div>

@@ -205,5 +205,3 @@ export function AddVehicleDialog({ isOpen, onOpenChange, onSave, vehicle, vendor
         </Dialog>
     );
 }
-
-    
