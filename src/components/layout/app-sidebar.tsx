@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -472,6 +471,8 @@ export function AppSidebar() {
     );
   }
 
+  const settingsHref = isCompany ? "/company/settings" : isBranch ? "/company/branch/settings" : "/";
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b p-4">
@@ -495,9 +496,9 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              href={isBranch ? "/company/settings?role=Branch" : "/company/settings"}
+              href={settingsHref}
               tooltip="Settings"
-              isActive={pathname.startsWith('/admin/settings') || pathname.startsWith('/company/settings')}
+              isActive={pathname.startsWith('/admin/settings') || pathname.startsWith('/company/settings') || pathname.startsWith('/company/branch/settings')}
             >
               <Settings />
               <span>Settings</span>
