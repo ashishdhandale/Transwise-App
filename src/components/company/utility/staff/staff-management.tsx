@@ -78,15 +78,31 @@ export function StaffManagement() {
     });
   };
 
-  const handleSave = (staffData: Omit<Staff, 'id'>) => {
+  const handleSave = (staffData: Partial<Omit<Staff, 'id'>>) => {
     let updatedStaff;
     if (currentStaff) {
-      updatedStaff = staff.map(member => (member.id === currentStaff.id ? { ...member, ...staffData, id: currentStaff.id } : member));
+        // If password is not provided in the update, keep the old one
+        const finalData = {
+            ...currentStaff,
+            ...staffData,
+            password: staffData.password ? staffData.password : currentStaff.password,
+        };
+      updatedStaff = staff.map(member => (member.id === currentStaff.id ? finalData : member));
       toast({ title: 'Staff Member Updated', description: `"${staffData.name}" has been updated successfully.` });
     } else {
       const newStaff: Staff = {
         id: staff.length > 0 ? Math.max(...staff.map(s => s.id)) + 1 : 1,
-        ...staffData
+        name: staffData.name || '',
+        role: staffData.role || 'Booking Clerk',
+        mobile: staffData.mobile || '',
+        address: staffData.address || '',
+        monthlySalary: staffData.monthlySalary || 0,
+        photo: staffData.photo || '',
+        joiningDate: staffData.joiningDate || new Date().toISOString(),
+        username: staffData.username,
+        password: staffData.password,
+        branch: staffData.branch,
+        canAuthorizePayments: staffData.canAuthorizePayments,
       };
       updatedStaff = [newStaff, ...staff];
       toast({ title: 'Staff Member Added', description: `"${staffData.name}" has been added.` });

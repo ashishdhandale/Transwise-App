@@ -75,7 +75,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setJoiningDate(staff.joiningDate ? new Date(staff.joiningDate) : new Date());
                 setPhoto(staff.photo || '');
                 setUsername(staff.username || '');
-                setPassword(staff.password || '');
+                setPassword(''); // Always clear password on open for security
                 setCanAuthorizePayments(staff.canAuthorizePayments || false);
             } else {
                 setName('');
@@ -100,7 +100,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             return;
         }
 
-        const success = onSave({
+        const dataToSave: Omit<Staff, 'id'> = {
             name,
             role,
             branch,
@@ -110,9 +110,18 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
             joiningDate: joiningDate.toISOString(),
             photo: photo || `https://picsum.photos/seed/${name.replace(/\s/g, '')}/200/200`,
             username,
-            password,
+            password: password, // Pass the new password, or an empty string
             canAuthorizePayments,
-        });
+        };
+
+        // If the password field is empty during an edit, we don't update it.
+        // The parent `onSave` function will need to handle this logic.
+        if (staff && !password) {
+            delete (dataToSave as Partial<typeof dataToSave>).password;
+        }
+
+
+        const success = onSave(dataToSave);
 
         if (success) {
             onOpenChange(false);
@@ -218,7 +227,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                             </div>
                             <div>
                                 <Label htmlFor="password">Password</Label>
-                                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={staff ? "Enter new password to change" : "Set initial password"} />
                             </div>
                          </div>
                           <div className="flex items-center space-x-2">
