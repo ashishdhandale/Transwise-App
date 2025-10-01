@@ -32,7 +32,7 @@ export function AppHeader() {
   const isNewBookingPage = pathname === '/company/bookings/new';
 
   const handleLogout = () => {
-    router.push('/login');
+    router.push('/');
   };
 
   const userRole = isAdmin ? 'Sup.Admin' : 'My Account';
