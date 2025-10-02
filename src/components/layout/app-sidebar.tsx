@@ -195,10 +195,10 @@ export function AppSidebar() {
       </>
     );
   } else if (isCompany || isBranch) {
-    user = isCompany ? 'Amit Sharma' : 'Priya Singh';
+    user = isCompany ? 'Company User' : 'Priya Singh';
     email = isCompany ? 'manager@company.com' : 'staff@branch.com';
     avatarSeed = isCompany ? 'company-avatar' : 'branch-avatar';
-    avatarFallback = isCompany ? 'AS' : 'PS';
+    avatarFallback = isCompany ? 'CU' : 'PS';
     
     const consignmentMenu = (
         <Collapsible open={openConsignmentMenu} onOpenChange={setOpenConsignmentMenu}>

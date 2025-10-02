@@ -48,10 +48,10 @@ export function AppHeader() {
     avatarSeed = 'admin-avatar';
     avatarFallback = 'SA';
   } else if (isCompany) {
-    user = 'Amit Sharma';
+    user = 'Company User';
     userRole = 'My Account';
     avatarSeed = 'company-avatar';
-    avatarFallback = 'AS';
+    avatarFallback = 'CU';
   } else if (isBranch) {
     user = 'Priya Singh';
     userRole = 'My Account';
