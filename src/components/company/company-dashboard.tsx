@@ -22,6 +22,7 @@ export function CompanyDashboard() {
   
   const searchParams = useSearchParams();
   const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
+  const isCompany = userRole === 'Company';
   // In a real app, you'd get the actual branch name from the user's session
   const userBranchName = isCompany ? 'My Transwise Company' : 'Pune Hub'; 
 
