@@ -32,7 +32,7 @@ export interface Vehicle {
   };
 }
 
-export type UserRole = 'Admin' | 'Company' | 'Branch';
+export type UserRole = 'Admin' | 'Company' | 'Branch User';
 
 export interface BaseUser {
   id: string;

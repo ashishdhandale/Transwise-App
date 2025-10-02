@@ -46,5 +46,13 @@ This collection holds information about the individual branches associated with 
 | **`branchId`** | `string` | **(Primary Key)** Unique identifier for the branch. |
 | `companyId` | `string` | **(Foreign Key)** Links to a `companyId` in the `Companies` collection. |
 | `name` | `string` | The name of the branch (e.g., "Downtown Warehouse"). |
-| `location` | `string` | The physical address of the branch. |
+| `type` | `enum` | `Owned`, `Agency`, `Delivery Agency`. |
+| `address` | `string` | The full physical address of the branch. |
+| `city` | `string` | The city where the branch is located. |
+| `state` | `string` | The state where the branch is located. |
+| `contactNo` | `string` | Contact number for the branch. |
+| `email` | `string` | Contact email for the branch. |
+| `gstin` | `string` | Branch-specific GSTIN, if applicable. |
+| `lrPrefix` | `string` | Branch-specific prefix for LR numbers. |
 | `createdAt` | `timestamp` | The timestamp when the branch was created. |
+
