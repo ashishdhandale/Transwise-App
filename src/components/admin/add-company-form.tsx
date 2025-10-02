@@ -77,7 +77,7 @@ export default function AddCompanyForm() {
     });
 
     useEffect(() => {
-        // Generate and set the next company code when the component mounts
+        // Generate and set the next company code on the client side to avoid hydration mismatch
         form.setValue('companyCode', `CO${companyCounter}`);
     }, [form]);
 
