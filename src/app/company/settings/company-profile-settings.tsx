@@ -31,12 +31,13 @@ const profileSchema = z.object({
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   city: z.string().min(1, { message: 'City is required.'}),
-  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }).optional().or(z.literal('')),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }),
   gstNo: z.string().length(15, { message: 'GST Number must be 15 characters.' }).optional().or(z.literal('')),
   companyContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
   companyEmail: z.string().email({ message: 'Please enter a valid company email address.' }),
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
+  grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
 });
 
 export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
@@ -62,6 +63,7 @@ export function CompanyProfileSettings() {
             companyEmail: '',
             currency: 'INR',
             countryCode: 'en-IN',
+            grnFormat: 'with_char',
         },
     });
 
@@ -154,20 +156,6 @@ export function CompanyProfileSettings() {
                     />
                     <FormField
                         control={form.control}
-                        name="lrPrefix"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>LR Prefix</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., CONAG" {...field} />
-                                </FormControl>
-                                 <FormDescription>Prefix for new LR numbers.</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
                         name="challanPrefix"
                         render={({ field }) => (
                             <FormItem>
@@ -208,37 +196,74 @@ export function CompanyProfileSettings() {
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Head Office City (for Default Station)</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                    <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Head Office City (for Default Station)</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select your head office city" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Nagpur">Nagpur</SelectItem>
+                                        <SelectItem value="Mumbai">Mumbai</SelectItem>
+                                        <SelectItem value="Pune">Pune</SelectItem>
+                                        <SelectItem value="Delhi">Delhi</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            <FormDescription>This city will be the default "From Station" on new bookings.</FormDescription>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="lrPrefix"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>LR Prefix</FormLabel>
                                 <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select your head office city" />
-                                    </SelectTrigger>
+                                    <Input placeholder="e.g., CONAG" {...field} />
                                 </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="Nagpur">Nagpur</SelectItem>
-                                    <SelectItem value="Mumbai">Mumbai</SelectItem>
-                                    <SelectItem value="Pune">Pune</SelectItem>
-                                    <SelectItem value="Delhi">Delhi</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        <FormDescription>This city will be the default "From Station" on new bookings.</FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                                 <FormDescription>Prefix for new LR numbers.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="grnFormat"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>GRN Format</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select GRN format" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="with_char">With Character (CONAG01)</SelectItem>
+                                        <SelectItem value="plain">Plain Number (01)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="pan"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>PAN</FormLabel>
+                                <FormLabel>PAN*</FormLabel>
                                 <FormControl>
                                     <Input placeholder="ABCDE1234F" {...field} />
                                 </FormControl>
@@ -346,5 +371,3 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
-
-    

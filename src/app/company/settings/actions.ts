@@ -20,6 +20,7 @@ const defaultProfile: CompanyProfileFormValues = {
     companyEmail: 'contact@transwise.com',
     currency: 'INR',
     countryCode: 'en-IN',
+    grnFormat: 'with_char'
 };
 
 
