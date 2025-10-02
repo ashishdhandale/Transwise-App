@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AddBranchDialog } from './add-branch-dialog';
 import type { Branch } from '@/lib/types';
 import { getBranches, saveBranches } from '@/lib/branch-data';
+import { getStaff, saveStaff } from '@/lib/staff-data';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -66,12 +67,22 @@ export function BranchDashboard() {
   };
 
   const handleDelete = (id: string) => {
+    const branchToDelete = branches.find(branch => branch.id === id);
+    if (!branchToDelete) return;
+
+    // Delete associated staff
+    const allStaff = getStaff();
+    const staffToKeep = allStaff.filter(staff => staff.branch !== branchToDelete.name);
+    saveStaff(staffToKeep);
+
+    // Delete the branch
     const updatedBranches = branches.filter(branch => branch.id !== id);
     saveBranches(updatedBranches);
     setBranches(updatedBranches);
+
     toast({
       title: 'Branch Deleted',
-      description: 'The branch has been removed from your list.',
+      description: `"${branchToDelete.name}" and all its associated staff have been removed.`,
       variant: 'destructive',
     });
   };
@@ -153,7 +164,7 @@ export function BranchDashboard() {
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete this branch.
+                                            This action cannot be undone. This will permanently delete this branch and all of its associated staff members.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
