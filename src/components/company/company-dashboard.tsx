@@ -13,28 +13,41 @@ import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from './settings/company-profile-settings';
 import { Reminders } from './reminders';
 import { useSearchParams } from 'next/navigation';
+import { getBranches, type Branch } from '@/lib/branch-data';
 
 export function CompanyDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
-  // This is a simulation. In a real app, you'd get the user role from an authentication context.
   const searchParams = useSearchParams();
   const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
+  // In a real app, you'd get the actual branch name from the user's session
+  const userBranchName = isCompany ? 'My Transwise Company' : 'Pune Hub'; 
 
   useEffect(() => {
     async function loadData() {
         setAllBookings(getBookings());
+        setBranches(getBranches());
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
     }
     loadData();
   }, []);
 
+  const dashboardBookings = useMemo(() => {
+    if (userRole === 'Company') {
+      return allBookings; // Company user sees all bookings
+    }
+    // Branch user sees only their branch's bookings
+    return allBookings.filter(b => b.branchName === userBranchName);
+  }, [allBookings, userRole, userBranchName]);
+
+
   const todaysBusinessData = useMemo(() => {
-    const todaysBookings = allBookings.filter(b => isToday(parseISO(b.bookingDate)));
-    const todaysDeliveries = allBookings.filter(b => b.status === 'Delivered' && isToday(parseISO(b.bookingDate))); // Assuming delivery date is booking date for simplicity
-    const todaysCancellations = allBookings.filter(b => b.status === 'Cancelled' && isToday(parseISO(b.bookingDate)));
+    const todaysBookings = dashboardBookings.filter(b => isToday(parseISO(b.bookingDate)));
+    const todaysDeliveries = dashboardBookings.filter(b => b.status === 'Delivered' && isToday(parseISO(b.bookingDate))); // Assuming delivery date is booking date for simplicity
+    const todaysCancellations = dashboardBookings.filter(b => b.status === 'Cancelled' && isToday(parseISO(b.bookingDate)));
 
     const bookingsRevenue = todaysBookings.reduce((sum, b) => sum + b.totalAmount, 0);
 
@@ -46,24 +59,24 @@ export function CompanyDashboard() {
       { title: 'Vehicle Inward', value: '0' },
       { title: 'Revenue', value: bookingsRevenue.toString(), isCurrency: true },
     ];
-  }, [allBookings]);
+  }, [dashboardBookings]);
 
   const bookingsChartData = useMemo(() => {
     const last13Days = Array.from({ length: 13 }, (_, i) => subDays(new Date(), i)).reverse();
     return last13Days.map(date => {
       const dateString = format(date, 'yyyy-MM-dd');
       const day = format(date, 'dd');
-      const count = allBookings.filter(b => format(parseISO(b.bookingDate), 'yyyy-MM-dd') === dateString).length;
+      const count = dashboardBookings.filter(b => format(parseISO(b.bookingDate), 'yyyy-MM-dd') === dateString).length;
       return { name: day, count };
     });
-  }, [allBookings]);
+  }, [dashboardBookings]);
 
   const stockPieChartData = useMemo(() => {
     const stationStock: { [key: string]: number } = {};
     const undeliveredStock: { [key: string]: number } = {};
     const destinationDeliveries: { [key: string]: number } = {};
 
-    allBookings.forEach(booking => {
+    dashboardBookings.forEach(booking => {
       // Stock by current station (items not yet in transit)
       if (['In Stock', 'In Loading', 'In HOLD'].includes(booking.status)) {
         stationStock[booking.fromCity] = (stationStock[booking.fromCity] || 0) + 1;
@@ -87,7 +100,7 @@ export function CompanyDashboard() {
       undeliveredData: formatForChart(undeliveredStock),
       destinationData: formatForChart(destinationDeliveries),
     };
-  }, [allBookings]);
+  }, [dashboardBookings]);
 
 
   return (

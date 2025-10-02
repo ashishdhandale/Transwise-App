@@ -36,6 +36,7 @@ export interface Booking {
   taxPaidBy?: string;
   isGstApplicable?: boolean;
   ftlDetails?: FtlDetails;
+  branchName?: string; // Link to the branch that created the booking
 }
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';

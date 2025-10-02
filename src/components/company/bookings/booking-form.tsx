@@ -12,7 +12,7 @@ import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking, FtlDetails } from '@/lib/bookings-dashboard-data';
-import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate, ChargeDetail } from '@/lib/types';
+import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate, ChargeDetail, Branch } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
@@ -49,6 +49,7 @@ import { useSearchParams } from 'next/navigation';
 import { ClientOnly } from '@/components/ui/client-only';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import type { ChargeSetting } from '../settings/additional-charges-settings';
+import { getBranches } from '@/lib/branch-data';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -228,6 +229,7 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false }: BookingFormProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
+    const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
     const isEditMode = !!trackingId && !isViewOnly && !isPartialCancel;
     const isOfflineMode = mode === 'offline';
     
@@ -245,6 +247,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [branches, setBranches] = useState<Branch[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -309,6 +312,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             if (savedVendors) setVendors(JSON.parse(savedVendors));
 
             setRateLists(getRateLists());
+            setBranches(getBranches());
         } catch (error) {
             console.error("Failed to load master data", error);
         }
@@ -357,7 +361,15 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 }
 
             } else {
-                let lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
+                let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
+                if (userRole === 'Branch') {
+                    // For branch user, find their prefix. This is a simplified lookup.
+                    // In a real app, this would come from the user's session data.
+                    const userBranch = branches.find(b => b.name === 'Pune Hub'); // Hardcoded for prototype
+                    if(userBranch?.lrPrefix) {
+                        lrPrefix = userBranch.lrPrefix;
+                    }
+                }
                 setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                 setBookingDate(new Date());
@@ -367,7 +379,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [trackingId, toast, loadMasterData]);
+    }, [trackingId, toast, loadMasterData, userRole, branches]);
 
     useEffect(() => {
         loadInitialData();
@@ -385,6 +397,12 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         const profile = companyProfile;
         const parsedBookings = getBookings();
         let lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
+         if (userRole === 'Branch') {
+            const userBranch = branches.find(b => b.name === 'Pune Hub'); // Hardcoded
+            if(userBranch?.lrPrefix) {
+                lrPrefix = userBranch.lrPrefix;
+            }
+        }
         setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(parsedBookings, lrPrefix));
         
         let keyCounter = 1;
@@ -440,6 +458,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         const currentStatus: Booking['status'] = 'In Stock';
         const currentBooking = (isEditMode || isPartialCancel) ? allBookings.find(b => b.trackingId === trackingId) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
+        const userBranchName = userRole === 'Branch' ? 'Pune Hub' : companyProfile?.companyName; // Hardcoded branch for prototype
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
             lrNo: currentLrNumber,
@@ -459,6 +478,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
+            branchName: currentBooking?.branchName || userBranchName,
             ...(loadType === 'FTL' && { ftlDetails }),
         };
 
@@ -548,7 +568,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast]);
+    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
