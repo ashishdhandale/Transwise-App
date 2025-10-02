@@ -363,7 +363,7 @@ export function CompanyProfileSettings() {
 
                 <Button type="submit" disabled={isSubmitting || isLoading}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Server className="mr-2 h-4 w-4" />}
-                    Save Profile to Database
+                    Save Profile
                 </Button>
             </form>
             </Form>
@@ -371,3 +371,5 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
+
+    
