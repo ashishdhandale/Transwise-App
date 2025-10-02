@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -247,18 +248,9 @@ export default function AddCompanyForm() {
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>City</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a city" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="RAIPUR">RAIPUR</SelectItem>
-                                    <SelectItem value="BILASPUR">BILASPUR</SelectItem>
-                                    <SelectItem value="DURG">DURG</SelectItem>
-                                </SelectContent>
-                            </Select>
+                             <FormControl>
+                                <Input placeholder="Enter city name" {...field} />
+                            </FormControl>
                             <FormMessage />
                             </FormItem>
                         )}
