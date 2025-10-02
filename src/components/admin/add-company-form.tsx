@@ -122,8 +122,9 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>Company Code</FormLabel>
                             <FormControl>
-                                <Input {...field} disabled />
+                                <Input {...field} disabled className="font-bold text-muted-foreground bg-muted/50" />
                             </FormControl>
+                            <FormDescription>This code is auto-generated and used to identify the company.</FormDescription>
                             <FormMessage />
                             </FormItem>
                         )}
