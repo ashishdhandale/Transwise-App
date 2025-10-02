@@ -17,6 +17,9 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { PreviousBookingDialog } from '../company/bookings/previous-booking-dialog';
+import { useEffect, useState } from 'react';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '../company/settings/company-profile-settings';
 
 const notifications = [
   { id: 1, message: 'New user request received from John Doe.' },
@@ -28,6 +31,17 @@ export function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [profile, setProfile] = useState<CompanyProfileFormValues | null>(null);
+
+  useEffect(() => {
+    async function loadProfile() {
+      const profileData = await getCompanyProfile();
+      setProfile(profileData);
+    }
+    if(pathname.startsWith('/company')) {
+        loadProfile();
+    }
+  }, [pathname]);
 
   const userRoleQuery = searchParams.get('role');
 
@@ -48,10 +62,10 @@ export function AppHeader() {
     avatarSeed = 'admin-avatar';
     avatarFallback = 'SA';
   } else if (isCompany) {
-    user = 'Company User';
+    user = profile?.companyName || 'Company Admin';
     userRole = 'My Account';
     avatarSeed = 'company-avatar';
-    avatarFallback = 'CU';
+    avatarFallback = user.charAt(0) || 'C';
   } else if (isBranch) {
     user = 'Priya Singh';
     userRole = 'My Account';
