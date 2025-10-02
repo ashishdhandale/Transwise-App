@@ -73,8 +73,8 @@ export function AppSidebar() {
 
 
   const isAdmin = pathname.startsWith('/admin');
-  const isCompany = pathname.startsWith('/company') && userRoleQuery !== 'Branch';
   const isBranch = pathname.startsWith('/company') && userRoleQuery === 'Branch';
+  const isCompany = pathname.startsWith('/company') && !isBranch;
 
 
   React.useEffect(() => {
@@ -120,7 +120,7 @@ export function AppSidebar() {
     }
   }, [state]);
 
-  let menu, user, email, avatarSeed;
+  let menu, user, email, avatarSeed, avatarFallback;
   const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : (isBranch ? '/company?role=Branch' : '/');
 
 
@@ -128,6 +128,7 @@ export function AppSidebar() {
     user = 'Sup.Admin';
     email = 'admin@transwise.in';
     avatarSeed = 'admin-avatar';
+    avatarFallback = 'SA';
     menu = (
       <>
         <SidebarMenuItem>
@@ -194,9 +195,10 @@ export function AppSidebar() {
       </>
     );
   } else if (isCompany || isBranch) {
-    user = isCompany ? 'Company Manager' : 'Branch Staff';
+    user = isCompany ? 'Amit Sharma' : 'Priya Singh';
     email = isCompany ? 'manager@company.com' : 'staff@branch.com';
     avatarSeed = isCompany ? 'company-avatar' : 'branch-avatar';
+    avatarFallback = isCompany ? 'AS' : 'PS';
     
     const consignmentMenu = (
         <Collapsible open={openConsignmentMenu} onOpenChange={setOpenConsignmentMenu}>
@@ -225,9 +227,6 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Bills"><FileText />Bills</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
                 <SidebarMenuButton href={isBranch ? "/company/stock?role=Branch" : "/company/stock"} size="sm" isActive={pathname.startsWith('/company/stock')} tooltip="Stock"><Archive />Stock</SidebarMenuButton>
@@ -457,6 +456,7 @@ export function AppSidebar() {
     user = 'Guest';
     email = 'guest@transwise.in';
     avatarSeed = 'guest-avatar';
+    avatarFallback = 'G';
     menu = (
        <SidebarMenuItem>
           <SidebarMenuButton
@@ -511,7 +511,7 @@ export function AppSidebar() {
               src={`https://picsum.photos/seed/${avatarSeed}/40/40`}
               alt="User"
             />
-            <AvatarFallback>{user.substring(0, 2)}</AvatarFallback>
+            <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
            <div className={cn("flex-1 overflow-hidden", state === 'collapsed' && 'group-hover/sidebar-wrapper:block hidden', state === 'expanded' && 'block')}>
             <p className="text-sm font-medium truncate">{user}</p>

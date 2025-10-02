@@ -32,8 +32,9 @@ export function AppHeader() {
   const userRoleQuery = searchParams.get('role');
 
   const isAdmin = pathname.startsWith('/admin');
-  const isCompany = pathname.startsWith('/company') && userRoleQuery !== 'Branch';
   const isBranch = pathname.startsWith('/company') && userRoleQuery === 'Branch';
+  const isCompany = pathname.startsWith('/company') && !isBranch;
+
 
   const handleLogout = () => {
     router.push('/');
