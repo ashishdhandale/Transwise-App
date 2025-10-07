@@ -306,7 +306,8 @@ export function AppSidebar() {
         )}
 
         {consignmentMenu}
-        {accountsMenu}
+
+        {!isBranch && accountsMenu}
 
         {isCompany && (
             <>
