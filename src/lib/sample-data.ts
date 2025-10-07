@@ -14,7 +14,7 @@ export const onlineInquiries: OnlineInquiry[] = [
     { id: 2, name: 'Priya Patel', contact: '9876543210', source: 'Facebook', message: 'Do you offer FTL services?', status: 'Contacted', date: new Date().toISOString() },
 ];
 
-export const existingUsers: ExistingUser[] = [
+export const sampleExistingUsers: ExistingUser[] = [
     {
         id: 1,
         userId: 'CO101',

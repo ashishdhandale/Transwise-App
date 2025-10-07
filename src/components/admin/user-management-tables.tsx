@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Search, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
+import { MoreHorizontal, Search, ChevronLeft, ChevronRight, UserPlus, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { existingUsers, onlineInquiries as sampleInquiries } from '@/lib/sample-data';
+import { existingUsers as sampleExistingUsers, onlineInquiries as sampleInquiries } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { ExistingUser, OnlineInquiry, Staff, Branch } from '@/lib/types';
@@ -31,6 +31,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Link from 'next/link';
 import { getStaff } from '@/lib/staff-data';
 import { getBranches } from '@/lib/branch-data';
+import { EditUserDialog } from './edit-user-dialog';
 
 
 const thClass = "bg-primary text-primary-foreground";
@@ -46,9 +47,12 @@ export function UserManagementTables() {
   const [existingUsersRowsPerPage, setExistingUsersRowsPerPage] = useState(5);
   
   const [onlineInquiries, setOnlineInquiries] = useState<OnlineInquiry[]>(sampleInquiries);
-  const [localExistingUsers, setLocalExistingUsers] = useState<ExistingUser[]>(existingUsers);
+  const [localExistingUsers, setLocalExistingUsers] = useState<ExistingUser[]>(sampleExistingUsers);
   const [allStaff, setAllStaff] = useState<Staff[]>([]);
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<ExistingUser | null>(null);
 
   const { toast } = useToast();
   
@@ -56,6 +60,19 @@ export function UserManagementTables() {
     setAllStaff(getStaff());
     setAllBranches(getBranches());
   }, []);
+  
+  const handleOpenEditDialog = (user: ExistingUser) => {
+    setEditingUser(user);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleSaveUser = (updatedUser: ExistingUser) => {
+    const updatedUsers = localExistingUsers.map(u => u.id === updatedUser.id ? updatedUser : u);
+    setLocalExistingUsers(updatedUsers);
+    // In a real app, you'd save this to a database. For now, we don't persist it.
+    toast({ title: "User Updated", description: `${updatedUser.companyName}'s details have been updated.`});
+    setIsEditDialogOpen(false);
+  }
 
   const handleDeactivate = (user: ExistingUser) => {
       // In a real app, this would likely set a status to 'inactive'
@@ -91,13 +108,10 @@ export function UserManagementTables() {
   }, [existingUserSearch, localExistingUsers]);
   
   const getSubIdCount = (user: ExistingUser): number => {
-    // For now, we assume companyName is unique and can be used to link.
-    // A better approach would be a companyId.
     const companyBranches = allBranches.filter(b => b.companyId === String(user.id));
     const branchNames = companyBranches.map(b => b.name);
     
-    // Also include staff at the 'Main Office' if it belongs to the company (simplified logic)
-    if (user.companyName.toLowerCase().includes('transwise')) { // Example logic for main company
+    if (user.companyName.toLowerCase().includes('transwise')) { 
         branchNames.push('Main Office');
     }
 
@@ -130,220 +144,232 @@ export function UserManagementTables() {
   }, [existingUserSearch, existingUsersRowsPerPage]);
 
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-headline">Online Inquiries</CardTitle>
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search inquiries..."
-              className="pl-8"
-              value={inquirySearch}
-              onChange={(e) => setInquirySearch(e.target.value)}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={thClass}>#</TableHead>
-                  <TableHead className={thClass}>Name</TableHead>
-                  <TableHead className={thClass}>Contact</TableHead>
-                  <TableHead className={thClass}>Source</TableHead>
-                  <TableHead className={thClass}>Message</TableHead>
-                  <TableHead className={thClass}>Status</TableHead>
-                  <TableHead className={`${thClass} text-center`}>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedInquiries.map((req, index) => (
-                  <TableRow key={req.id}>
-                    <TableCell className={cn(tdClass)}>{(inquiriesPage - 1) * inquiriesRowsPerPage + index + 1}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.name}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.contact}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.source}</TableCell>
-                    <TableCell className="max-w-xs truncate">{req.message}</TableCell>
-                    <TableCell className={cn(tdClass)}><Badge variant={req.status === 'New' ? 'default' : 'secondary'}>{req.status}</Badge></TableCell>
-                    <TableCell className={cn(tdClass, "text-center")}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Mark as Contacted</DropdownMenuItem>
-                          <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-             {paginatedInquiries.length === 0 && (
-                <div className="text-center p-4 text-muted-foreground">No inquiries found.</div>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Rows per page:</span>
-                <Select value={`${inquiriesRowsPerPage}`} onValueChange={(value) => setInquiriesRowsPerPage(Number(value))}>
-                    <SelectTrigger className="w-20">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="20">20</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-                <span className="text-muted-foreground">
-                    Page {inquiriesTotalPages > 0 ? inquiriesPage: 0} of {inquiriesTotalPages}
-                </span>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => setInquiriesPage(p => p - 1)} disabled={inquiriesPage === 1}>
-                        <ChevronLeft className="h-4 w-4" />
-                        <span className="sr-only">Previous page</span>
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={() => setInquiriesPage(p => p + 1)} disabled={inquiriesPage === inquiriesTotalPages || inquiriesTotalPages === 0}>
-                        <ChevronRight className="h-4 w-4" />
-                        <span className="sr-only">Next page</span>
-                    </Button>
-                </div>
-            </div>
-        </CardFooter>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-headline">Existing User List</CardTitle>
-          <div className="flex items-center gap-4">
-             <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
+    <>
+      <div className="space-y-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="font-headline">Online Inquiries</CardTitle>
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
                 type="search"
-                placeholder="Search users..."
+                placeholder="Search inquiries..."
                 className="pl-8"
-                value={existingUserSearch}
-                onChange={(e) => setExistingUserSearch(e.target.value)}
-                />
+                value={inquirySearch}
+                onChange={(e) => setInquirySearch(e.target.value)}
+              />
             </div>
-             <Button asChild>
-                <Link href="/admin/add-company">
-                    <UserPlus className="mr-2 h-4 w-4"/>
-                    Add New User/Company
-                </Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={thClass}>#</TableHead>
-                  <TableHead className={thClass}>USER ID</TableHead>
-                  <TableHead className={thClass}>Company Name</TableHead>
-                  <TableHead className={thClass}>User IDs</TableHead>
-                  <TableHead className={thClass}>Branches</TableHead>
-                  <TableHead className={thClass}>Licence Type</TableHead>
-                  <TableHead className={thClass}>Valid Till</TableHead>
-                  <TableHead className={`${thClass} text-center`}>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedExistingUsers.map((user, index) => (
-                  <TableRow key={user.id}>
-                    <TableCell className={cn(tdClass)}>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
-                    <TableCell className={cn(tdClass, "font-semibold text-center")}>{getSubIdCount(user)} / {user.maxUsers}</TableCell>
-                     <TableCell className={cn(tdClass, "font-semibold text-center")}>{getBranchCount(user)} / {user.maxBranches}</TableCell>
-                    <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>
-                    <TableCell className={cn(tdClass)}>{user.validTill}</TableCell>
-                    <TableCell className={cn(tdClass, "text-center")}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit User</DropdownMenuItem>
-                          <DropdownMenuItem>Manage Subscription</DropdownMenuItem>
-                          <DropdownMenuItem>Backup</DropdownMenuItem>
-                          <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-red-500">Deactivate</DropdownMenuItem>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                      <AlertDialogDescription>This will deactivate {user.companyName}'s account.</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeactivate(user)}>Deactivate</AlertDialogAction>
-                                  </AlertDialogFooter>
-                              </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className={thClass}>#</TableHead>
+                    <TableHead className={thClass}>Name</TableHead>
+                    <TableHead className={thClass}>Contact</TableHead>
+                    <TableHead className={thClass}>Source</TableHead>
+                    <TableHead className={thClass}>Message</TableHead>
+                    <TableHead className={thClass}>Status</TableHead>
+                    <TableHead className={`${thClass} text-center`}>Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {paginatedExistingUsers.length === 0 && (
-                <div className="text-center p-4 text-muted-foreground">No users found.</div>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Rows per page:</span>
-                <Select value={`${existingUsersRowsPerPage}`} onValueChange={(value) => setExistingUsersRowsPerPage(Number(value))}>
-                    <SelectTrigger className="w-20">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="20">20</SelectItem>
-                    </SelectContent>
-                </Select>
+                </TableHeader>
+                <TableBody>
+                  {paginatedInquiries.map((req, index) => (
+                    <TableRow key={req.id}>
+                      <TableCell className={cn(tdClass)}>{(inquiriesPage - 1) * inquiriesRowsPerPage + index + 1}</TableCell>
+                      <TableCell className={cn(tdClass)}>{req.name}</TableCell>
+                      <TableCell className={cn(tdClass)}>{req.contact}</TableCell>
+                      <TableCell className={cn(tdClass)}>{req.source}</TableCell>
+                      <TableCell className="max-w-xs truncate">{req.message}</TableCell>
+                      <TableCell className={cn(tdClass)}><Badge variant={req.status === 'New' ? 'default' : 'secondary'}>{req.status}</Badge></TableCell>
+                      <TableCell className={cn(tdClass, "text-center")}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem>Mark as Contacted</DropdownMenuItem>
+                            <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {paginatedInquiries.length === 0 && (
+                  <div className="text-center p-4 text-muted-foreground">No inquiries found.</div>
+              )}
             </div>
-            <div className="flex items-center gap-4 text-sm">
-                <span className="text-muted-foreground">
-                    Page {existingUsersTotalPages > 0 ? existingUsersPage: 0} of {existingUsersTotalPages}
-                </span>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => setExistingUsersPage(p => p - 1)} disabled={existingUsersPage === 1}>
-                        <ChevronLeft className="h-4 w-4" />
-                        <span className="sr-only">Previous page</span>
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={() => setExistingUsersPage(p => p + 1)} disabled={existingUsersPage === existingUsersTotalPages || existingUsersTotalPages === 0}>
-                        <ChevronRight className="h-4 w-4" />
-                        <span className="sr-only">Next page</span>
-                    </Button>
-                </div>
+          </CardContent>
+          <CardFooter className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Rows per page:</span>
+                  <Select value={`${inquiriesRowsPerPage}`} onValueChange={(value) => setInquiriesRowsPerPage(Number(value))}>
+                      <SelectTrigger className="w-20">
+                          <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                  <span className="text-muted-foreground">
+                      Page {inquiriesTotalPages > 0 ? inquiriesPage: 0} of {inquiriesTotalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                      <Button variant="outline" size="icon" onClick={() => setInquiriesPage(p => p - 1)} disabled={inquiriesPage === 1}>
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="sr-only">Previous page</span>
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={() => setInquiriesPage(p => p + 1)} disabled={inquiriesPage === inquiriesTotalPages || inquiriesTotalPages === 0}>
+                          <ChevronRight className="h-4 w-4" />
+                          <span className="sr-only">Next page</span>
+                      </Button>
+                  </div>
+              </div>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="font-headline">Existing User List</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                  type="search"
+                  placeholder="Search users..."
+                  className="pl-8"
+                  value={existingUserSearch}
+                  onChange={(e) => setExistingUserSearch(e.target.value)}
+                  />
+              </div>
+              <Button asChild>
+                  <Link href="/admin/add-company">
+                      <UserPlus className="mr-2 h-4 w-4"/>
+                      Add New User/Company
+                  </Link>
+              </Button>
             </div>
-        </CardFooter>
-      </Card>
-    </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className={thClass}>#</TableHead>
+                    <TableHead className={thClass}>USER ID</TableHead>
+                    <TableHead className={thClass}>Company Name</TableHead>
+                    <TableHead className={thClass}>User IDs</TableHead>
+                    <TableHead className={thClass}>Branches</TableHead>
+                    <TableHead className={thClass}>Licence Type</TableHead>
+                    <TableHead className={thClass}>Valid Till</TableHead>
+                    <TableHead className={`${thClass} text-center`}>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedExistingUsers.map((user, index) => (
+                    <TableRow key={user.id}>
+                      <TableCell className={cn(tdClass)}>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
+                      <TableCell className={cn(tdClass, "font-semibold text-center")}>{getSubIdCount(user)} / {user.maxUsers}</TableCell>
+                      <TableCell className={cn(tdClass, "font-semibold text-center")}>{getBranchCount(user)} / {user.maxBranches}</TableCell>
+                      <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>
+                      <TableCell className={cn(tdClass)}>{user.validTill}</TableCell>
+                      <TableCell className={cn(tdClass, "text-center")}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenEditDialog(user)}>
+                              <Pencil className="mr-2 h-4 w-4" /> Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>Manage Subscription</DropdownMenuItem>
+                            <DropdownMenuItem>Backup</DropdownMenuItem>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-red-500">Deactivate</DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>This will deactivate {user.companyName}'s account.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeactivate(user)}>Deactivate</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {paginatedExistingUsers.length === 0 && (
+                  <div className="text-center p-4 text-muted-foreground">No users found.</div>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Rows per page:</span>
+                  <Select value={`${existingUsersRowsPerPage}`} onValueChange={(value) => setExistingUsersRowsPerPage(Number(value))}>
+                      <SelectTrigger className="w-20">
+                          <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                  <span className="text-muted-foreground">
+                      Page {existingUsersTotalPages > 0 ? existingUsersPage: 0} of {existingUsersTotalPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                      <Button variant="outline" size="icon" onClick={() => setExistingUsersPage(p => p - 1)} disabled={existingUsersPage === 1}>
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="sr-only">Previous page</span>
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={() => setExistingUsersPage(p => p + 1)} disabled={existingUsersPage === existingUsersTotalPages || existingUsersTotalPages === 0}>
+                          <ChevronRight className="h-4 w-4" />
+                          <span className="sr-only">Next page</span>
+                      </Button>
+                  </div>
+              </div>
+          </CardFooter>
+        </Card>
+      </div>
+      {editingUser && (
+        <EditUserDialog
+          user={editingUser}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSave={handleSaveUser}
+        />
+      )}
+    </>
   );
 }
