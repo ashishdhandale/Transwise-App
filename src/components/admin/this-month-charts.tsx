@@ -1,6 +1,17 @@
+
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { existingUsers } from '@/lib/sample-data';
+import { useMemo } from 'react';
 
 const amountData = [
   { name: 'Week 1', Amount: 4000 },
@@ -10,17 +21,34 @@ const amountData = [
 ];
 
 const salesData = [
-    { name: 'Week 1', Sale: 20 },
-    { name: 'Week 2', Sale: 15 },
-    { name: 'Week 3', Sale: 25 },
-    { name: 'Week 4', Sale: 22 },
+  { name: 'Week 1', Sale: 20 },
+  { name: 'Week 2', Sale: 15 },
+  { name: 'Week 3', Sale: 25 },
+  { name: 'Week 4', Sale: 22 },
 ];
 
+const getLicenseValue = (licenseType: "Trial" | "Bronze" | "Gold" | "Platinum") => {
+    switch(licenseType) {
+        case 'Platinum': return 1000;
+        case 'Gold': return 500;
+        case 'Bronze': return 250;
+        case 'Trial': return 0;
+        default: return 0;
+    }
+}
+
 export function ThisMonthCharts() {
+
+  const { totalAmount, totalSales } = useMemo(() => {
+    const totalAmount = existingUsers.reduce((sum, user) => sum + getLicenseValue(user.licenceType), 0);
+    const totalSales = existingUsers.length;
+    return { totalAmount, totalSales };
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-center font-bold text-lg">Rs. 123456</h3>
+        <h3 className="text-center font-bold text-lg">Rs. {totalAmount.toLocaleString()}</h3>
         <div className="h-[150px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={amountData}>
@@ -35,7 +63,7 @@ export function ThisMonthCharts() {
         <p className="text-center text-sm text-muted-foreground mt-1">Amount</p>
       </div>
       <div>
-        <h3 className="text-center font-bold text-lg">10 IDs</h3>
+        <h3 className="text-center font-bold text-lg">{totalSales} IDs</h3>
         <div className="h-[150px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={salesData}>
