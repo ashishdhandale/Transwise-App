@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,33 +22,75 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { newRequests as sampleNewRequests, existingUsers as sampleExistingUsers } from '@/lib/sample-data';
+import { sampleNewRequests, sampleExistingUsers } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { NewRequest, ExistingUser } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 
 const thClass = "bg-primary text-primary-foreground";
 const tdClass = "whitespace-nowrap";
+
+let nextCompanyCode = 102;
 
 export function UserManagementTables() {
   const [newRequestSearch, setNewRequestSearch] = useState('');
   const [existingUserSearch, setExistingUserSearch] = useState('');
   
   const [newRequestsPage, setNewRequestsPage] = useState(1);
-  const [newRequestsRowsPerPage, setNewRequestsRowsPerPage] = useState(10);
+  const [newRequestsRowsPerPage, setNewRequestsRowsPerPage] = useState(5);
   const [existingUsersPage, setExistingUsersPage] = useState(1);
-  const [existingUsersRowsPerPage, setExistingUsersRowsPerPage] = useState(10);
-  const [isClient, setIsClient] = useState(false);
-  const [newRequests, setNewRequests] = useState<NewRequest[]>([]);
-  const [existingUsers, setExistingUsers] = useState<ExistingUser[]>([]);
+  const [existingUsersRowsPerPage, setExistingUsersRowsPerPage] = useState(5);
+  
+  const [newRequests, setNewRequests] = useState<NewRequest[]>(sampleNewRequests);
+  const [existingUsers, setExistingUsers] = useState<ExistingUser[]>(sampleExistingUsers);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    setIsClient(true);
-    // Directly use imported data. It will be populated after mount.
-    setNewRequests(sampleNewRequests);
-    setExistingUsers(sampleExistingUsers);
-  }, []);
+  const handleApprove = (request: NewRequest) => {
+    const newUser: ExistingUser = {
+      id: existingUsers.length + newRequests.length + 1,
+      userId: `CO${nextCompanyCode++}`,
+      subIds: 0,
+      companyName: request.companyName,
+      gstNo: request.gstNo,
+      transporterId: request.transporterId,
+      address: request.address,
+      contactNo: request.contactNo,
+      totalIssuedIds: 1,
+      licenceType: request.licenceType,
+      validTill: '2025-12-31' // Set a default validity
+    };
+    
+    setExistingUsers(prev => [newUser, ...prev]);
+    setNewRequests(prev => prev.filter(r => r.id !== request.id));
+    
+    toast({
+      title: 'User Approved',
+      description: `${request.companyName} has been added to the existing users list.`,
+    });
+  };
+
+  const handleReject = (request: NewRequest) => {
+    setNewRequests(prev => prev.filter(r => r.id !== request.id));
+     toast({
+      title: 'User Rejected',
+      description: `The request from ${request.companyName} has been rejected.`,
+      variant: 'destructive'
+    });
+  };
+  
+  const handleDeactivate = (user: ExistingUser) => {
+      // In a real app, this would likely set a status to 'inactive'
+      // For this prototype, we'll remove the user from the list.
+      setExistingUsers(prev => prev.filter(u => u.id !== user.id));
+      toast({
+        title: 'User Deactivated',
+        description: `${user.companyName} has been deactivated.`,
+        variant: 'destructive'
+      });
+  };
 
   const filteredNewRequests = useMemo(() => {
     const lowercasedQuery = newRequestSearch.toLowerCase();
@@ -94,16 +135,6 @@ export function UserManagementTables() {
     setExistingUsersPage(1);
   }, [existingUserSearch, existingUsersRowsPerPage]);
 
-  if (!isClient) {
-    // Render a skeleton or loading state on the server to avoid hydration errors
-    return (
-        <div className="space-y-8">
-            <Card><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>
-            <Card><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>
-        </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
       <Card>
@@ -129,8 +160,6 @@ export function UserManagementTables() {
                   <TableHead className={thClass}>Company Name</TableHead>
                   <TableHead className={thClass}>GST No</TableHead>
                   <TableHead className={thClass}>Transporter ID</TableHead>
-                  <TableHead className={thClass}>Address</TableHead>
-                  <TableHead className={thClass}>Contact No</TableHead>
                   <TableHead className={thClass}>Licence Type</TableHead>
                   <TableHead className={`${thClass} text-center`}>Action</TableHead>
                 </TableRow>
@@ -142,8 +171,6 @@ export function UserManagementTables() {
                     <TableCell className={cn(tdClass)}>{req.companyName}</TableCell>
                     <TableCell className={cn(tdClass)}>{req.gstNo}</TableCell>
                     <TableCell className={cn(tdClass)}>{req.transporterId}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.address}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.contactNo}</TableCell>
                     <TableCell className={cn(tdClass)}><Badge variant="secondary">{req.licenceType}</Badge></TableCell>
                     <TableCell className={cn(tdClass, "text-center")}>
                       <DropdownMenu>
@@ -156,8 +183,8 @@ export function UserManagementTables() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-green-600">Approve</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Reject</DropdownMenuItem>
+                          <DropdownMenuItem className="text-green-600" onClick={() => handleApprove(req)}>Approve</DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600" onClick={() => handleReject(req)}>Reject</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -178,9 +205,9 @@ export function UserManagementTables() {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
                         <SelectItem value="10">10</SelectItem>
                         <SelectItem value="20">20</SelectItem>
-                        <SelectItem value="30">30</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -225,11 +252,6 @@ export function UserManagementTables() {
                   <TableHead className={thClass}>USER ID</TableHead>
                   <TableHead className={thClass}>Sub IDs</TableHead>
                   <TableHead className={thClass}>Company Name</TableHead>
-                  <TableHead className={thClass}>GST No</TableHead>
-                  <TableHead className={thClass}>Transporter ID</TableHead>
-                  <TableHead className={thClass}>Address</TableHead>
-                  <TableHead className={thClass}>Contact No</TableHead>
-                  <TableHead className={thClass}>Total issued IDS</TableHead>
                   <TableHead className={thClass}>Licence Type</TableHead>
                   <TableHead className={thClass}>Valid Till</TableHead>
                   <TableHead className={`${thClass} text-center`}>Action</TableHead>
@@ -242,11 +264,6 @@ export function UserManagementTables() {
                     <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
                     <TableCell className={cn(tdClass)}>{user.subIds}</TableCell>
                     <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.gstNo}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.transporterId}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.address}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.contactNo}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.totalIssuedIds}</TableCell>
                     <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>
                     <TableCell className={cn(tdClass)}>{user.validTill}</TableCell>
                     <TableCell className={cn(tdClass, "text-center")}>
@@ -263,7 +280,21 @@ export function UserManagementTables() {
                           <DropdownMenuItem>Edit User</DropdownMenuItem>
                           <DropdownMenuItem>Manage Subscription</DropdownMenuItem>
                           <DropdownMenuItem>Backup</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-500">Deactivate</DropdownMenuItem>
+                          <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-red-500">Deactivate</DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>This will deactivate {user.companyName}'s account.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeactivate(user)}>Deactivate</AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                          </AlertDialog>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -284,9 +315,9 @@ export function UserManagementTables() {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
                         <SelectItem value="10">10</SelectItem>
                         <SelectItem value="20">20</SelectItem>
-                        <SelectItem value="30">30</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
