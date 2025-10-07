@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -143,30 +144,16 @@ export function AppSidebar() {
           </SidebarMenuButton>
         </SidebarMenuItem>
         
-        <Collapsible open={openUserMenu} onOpenChange={setOpenUserMenu}>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Users">
-              <Users />
-              <span>Users</span>
-              <ChevronDown
-                className={cn(
-                  'size-4 transition-transform ml-auto',
-                  openUserMenu && 'rotate-180'
-                )}
-              />
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
-               <SidebarMenuItem>
-                <SidebarMenuButton href="/admin/users" size="sm" isActive={pathname.startsWith('/admin/users')} tooltip="User List"><Users />User List</SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="/admin/add-company" size="sm" isActive={pathname.startsWith('/admin/add-company')} tooltip="Add New User"><UserPlus />Add New User</SidebarMenuButton>
-              </SidebarMenuItem>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            href="/admin/users"
+            tooltip="Users"
+            isActive={pathname.startsWith('/admin/users') || pathname.startsWith('/admin/add-company')}
+          >
+            <Users />
+            <span>Users</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
 
         <SidebarMenuItem>
           <SidebarMenuButton

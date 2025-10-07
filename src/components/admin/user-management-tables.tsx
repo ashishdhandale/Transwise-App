@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MoreHorizontal, Search, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import type { NewRequest, ExistingUser } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import Link from 'next/link';
 
 
 const thClass = "bg-primary text-primary-foreground";
@@ -232,15 +233,23 @@ export function UserManagementTables() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-headline">Existing User List</CardTitle>
-           <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search users..."
-              className="pl-8"
-              value={existingUserSearch}
-              onChange={(e) => setExistingUserSearch(e.target.value)}
-            />
+          <div className="flex items-center gap-4">
+             <div className="relative w-full max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                type="search"
+                placeholder="Search users..."
+                className="pl-8"
+                value={existingUserSearch}
+                onChange={(e) => setExistingUserSearch(e.target.value)}
+                />
+            </div>
+             <Button asChild>
+                <Link href="/admin/add-company">
+                    <UserPlus className="mr-2 h-4 w-4"/>
+                    Add New User/Company
+                </Link>
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -341,5 +350,3 @@ export function UserManagementTables() {
     </div>
   );
 }
-
-    
