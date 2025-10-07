@@ -60,8 +60,12 @@ export function NewInwardChallanForm() {
         }
         loadData();
         // Set date on client to avoid hydration mismatch
-        setInwardDate(new Date());
-        setOriginalChallanDate(new Date());
+        if (!inwardDate) {
+            setInwardDate(new Date());
+        }
+        if (!originalChallanDate) {
+            setOriginalChallanDate(new Date());
+        }
     }, []);
 
     const handleSearchChallan = () => {
@@ -342,3 +346,5 @@ export function NewInwardChallanForm() {
       </div>
     );
 }
+
+    
