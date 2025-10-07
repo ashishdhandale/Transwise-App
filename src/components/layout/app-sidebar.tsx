@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import {
   Archive,
+  Award,
   BarChart3,
   BookCopy,
   Building,
@@ -181,6 +182,17 @@ export function AppSidebar() {
             </div>
           </CollapsibleContent>
         </Collapsible>
+        
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            href="/admin/licence"
+            tooltip="Licence"
+            isActive={pathname === '/admin/licence'}
+          >
+            <Award />
+            <span>Licence Management</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
 
         <SidebarMenuItem>
           <SidebarMenuButton
@@ -515,7 +527,7 @@ export function AppSidebar() {
           </Avatar>
            <div className={cn("flex-1 overflow-hidden", state === 'collapsed' && 'group-hover/sidebar-wrapper:block hidden', state === 'expanded' && 'block')}>
             <p className="text-sm font-medium truncate">{user}</p>
-            <p className="text-xs text-muted-foreground truncate">{email}</p>
+            <p className="text-sm text-muted-foreground truncate">{email}</p>
           </div>
           <MoreHorizontal className={cn("size-5", state === 'collapsed' && 'group-hover/sidebar-wrapper:block hidden', state === 'expanded' && 'block')} />
         </div>
