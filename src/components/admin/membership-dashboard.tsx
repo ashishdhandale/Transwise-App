@@ -1,29 +1,40 @@
-import { Card, CardContent } from '@/components/ui/card';
 
-const summaryData = [
-  {
-    value: '250',
-    label: 'Registered Users',
-    color: 'bg-primary',
-  },
-  {
-    value: '100',
-    label: 'Active users',
-    color: 'bg-primary',
-  },
-  {
-    value: '50',
-    label: 'Pending Request',
-    color: 'bg-accent',
-  },
-  {
-    value: '90',
-    label: 'Active Membership',
-    color: 'bg-accent',
-  },
-];
+'use client';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { newRequests } from '@/lib/sample-data';
+import { existingUsers } from '@/lib/sample-data';
 
 export function MembershipDashboard() {
+
+  const registeredUsers = newRequests.length + existingUsers.length;
+  const activeUsers = existingUsers.length;
+  const pendingRequests = newRequests.length;
+  const activeMemberships = existingUsers.filter(u => u.licenceType !== 'Trial').length;
+
+  const summaryData = [
+    {
+      value: registeredUsers.toString(),
+      label: 'Registered Users',
+      color: 'bg-primary',
+    },
+    {
+      value: activeUsers.toString(),
+      label: 'Active users',
+      color: 'bg-primary',
+    },
+    {
+      value: pendingRequests.toString(),
+      label: 'Pending Request',
+      color: 'bg-accent',
+    },
+    {
+      value: activeMemberships.toString(),
+      label: 'Active Membership',
+      color: 'bg-accent',
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Membership Dashboard</h2>
