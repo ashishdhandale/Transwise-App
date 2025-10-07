@@ -19,11 +19,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { sampleExistingUsers } from '@/lib/sample-data';
 import type { LicenceType, ExistingUser } from '@/lib/types';
 import { getLicenceTypes } from '@/lib/licence-data';
+import { ClientOnly } from '../ui/client-only';
 
 const formSchema = z.object({
   // Company Details
@@ -67,25 +68,7 @@ export default function AddCompanyForm() {
     
     const isViewMode = !!userId && mode !== 'edit';
     const isEditMode = !!userId && mode === 'edit';
-    const isNewMode = !userId;
     
-    const [allUsers, setAllUsers] = useState<ExistingUser[]>([]);
-
-    const refinedFormSchema = useMemo(() => {
-        return formSchema.superRefine((data, ctx) => {
-            if (isNewMode) {
-                const nameExists = allUsers.some(user => user.companyName.toLowerCase() === data.companyName.toLowerCase());
-                if (nameExists) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        path: ['companyName'],
-                        message: `A company named "${data.companyName}" already exists.`,
-                    });
-                }
-            }
-        });
-    }, [isNewMode, allUsers]);
-
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,11 +78,10 @@ export default function AddCompanyForm() {
 
     useEffect(() => {
         setLicenceTypes(getLicenceTypes());
-        setAllUsers(sampleExistingUsers);
     }, []);
 
     const form = useForm<AddCompanyFormValues>({
-        resolver: zodResolver(refinedFormSchema),
+        resolver: zodResolver(formSchema),
         defaultValues: {
             companyCode: '',
             companyName: '',
@@ -123,30 +105,14 @@ export default function AddCompanyForm() {
     });
 
     const handleResetForm = React.useCallback(() => {
-        form.reset({
-            companyName: '',
-            licenceType: 'Trial',
-            maxBranches: 1,
-            maxUsers: 5,
-            headOfficeAddress: '',
-            officeAddress2: '',
-            state: '',
-            city: '',
-            transportId: '',
-            pan: '',
-            gstNo: '',
-            companyContactNo: '',
-            companyEmail: '',
-            authPersonName: '',
-            authContactNo: '',
-            authEmail: '',
-            password: generateRandomPassword(),
-        });
+        form.reset();
         setSelectedFileName(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
+        // Set client-side only values after resetting
         setCompanyCode(generateCompanyCode());
+        form.setValue('password', generateRandomPassword());
     }, [form]);
 
 
@@ -208,368 +174,370 @@ export default function AddCompanyForm() {
     const isDisabled = isViewMode || isSubmitting;
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">{formTitle}</CardTitle>
-                <CardDescription>
-                  {isViewMode ? 'Viewing company details.' : isEditMode ? 'Modify the company information and resource limits.' : 'Enter the information for the new company.'}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                    <FormField
-                        control={form.control}
-                        name="companyCode"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Company Code</FormLabel>
-                            <FormControl>
-                                <Input {...field} value={companyCode} disabled className="font-bold text-muted-foreground bg-muted/50" />
-                            </FormControl>
-                            <FormDescription>This code is auto-generated.</FormDescription>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    <FormField
-                        control={form.control}
-                        name="companyName"
-                        render={({ field }) => (
-                            <FormItem className="lg:col-span-2">
-                            <FormLabel>Company Name</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Example: Transwise Logistics" {...field} disabled={isDisabled} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name="licenceType"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Licence Package</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a package" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {licenceTypes.map(lt => (
-                                        <SelectItem key={lt.id} value={lt.name}>{lt.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                     <FormField
-                        control={form.control}
-                        name="maxBranches"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>No. of Branches</FormLabel>
-                            <FormControl>
-                                <Input type="number" placeholder="e.g. 2" {...field} disabled={isDisabled} />
-                            </FormControl>
-                            <FormDescription>Branches allowed.</FormDescription>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="maxUsers"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>No. of User IDs</FormLabel>
-                            <FormControl>
-                                <Input type="number" placeholder="e.g. 5" {...field} disabled={isDisabled} />
-                            </FormControl>
-                            <FormDescription>Sub-user IDs allowed.</FormDescription>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                 <FormField
-                    control={form.control}
-                    name="companyLogo"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Company Logo</FormLabel>
-                             <div className="flex items-center gap-4">
-                                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isDisabled}>
-                                    Choose File
-                                </Button>
-                                <FormControl>
-                                     <Input 
-                                        type="file" 
-                                        className="hidden" 
-                                        ref={fileInputRef}
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            field.onChange(file);
-                                            setSelectedFileName(file?.name || null);
-                                        }}
-                                        disabled={isDisabled}
-                                    />
-                                </FormControl>
-                                {selectedFileName ? (
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <span>{selectedFileName}</span>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={() => {
-                                                field.onChange(null);
-                                                setSelectedFileName(null);
-                                                if (fileInputRef.current) {
-                                                    fileInputRef.current.value = '';
-                                                }
-                                            }}
-                                            disabled={isDisabled}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <span className="text-sm text-muted-foreground">No file selected</span>
-                                )}
-                            </div>
-                            <FormDescription>Upload the company's logo (optional).</FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="headOfficeAddress"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Head Office Add.</FormLabel>
-                        <FormControl>
-                            <Textarea placeholder="Head Office Address" {...field} disabled={isDisabled} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="officeAddress2"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Office Add. 2</FormLabel>
-                        <FormControl>
-                            <Textarea placeholder="Branch or secondary address" {...field} disabled={isDisabled} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>State</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a state" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="CHHATTISGARH">CHHATTISGARH</SelectItem>
-                                        <SelectItem value="MAHARASHTRA">MAHARASHTRA</SelectItem>
-                                        <SelectItem value="KARNATAKA">KARNATAKA</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>City</FormLabel>
-                             <FormControl>
-                                <Input placeholder="Enter city name" {...field} disabled={isDisabled} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="transportId"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Transport ID</FormLabel>
-                            <FormControl>
-                                <Input placeholder="12345678911" {...field} disabled={isDisabled} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    <FormField
-                        control={form.control}
-                        name="pan"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>PAN</FormLabel>
-                            <FormControl>
-                                <Input placeholder="ABCDE1234F" {...field} disabled={isDisabled} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                </div>
-                 <FormField
-                    control={form.control}
-                    name="gstNo"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>GST No</FormLabel>
-                        <FormControl>
-                            <Input placeholder="15-digit GSTIN" {...field} disabled={isDisabled} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="companyContactNo"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Contact No</FormLabel>
-                        <FormControl>
-                            <Input placeholder="9890356869, 8888822222" {...field} disabled={isDisabled} />
-                        </FormControl>
-                         <FormDescription>
-                            Put "," between numbers to separate them.
-                        </FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="companyEmail"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                            <Input type="email" placeholder="contact@company.com" {...field} disabled={isDisabled} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </CardContent>
-        </Card>
+    <ClientOnly>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <Card>
+              <CardHeader>
+                  <CardTitle className="font-headline">{formTitle}</CardTitle>
+                  <CardDescription>
+                    {isViewMode ? 'Viewing company details.' : isEditMode ? 'Modify the company information and resource limits.' : 'Enter the information for the new company.'}
+                  </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                      <FormField
+                          control={form.control}
+                          name="companyCode"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Company Code</FormLabel>
+                              <FormControl>
+                                  <Input {...field} value={companyCode} disabled className="font-bold text-muted-foreground bg-muted/50" />
+                              </FormControl>
+                              <FormDescription>This code is auto-generated.</FormDescription>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                      <FormField
+                          control={form.control}
+                          name="companyName"
+                          render={({ field }) => (
+                              <FormItem className="lg:col-span-2">
+                              <FormLabel>Company Name</FormLabel>
+                              <FormControl>
+                                  <Input placeholder="Example: Transwise Logistics" {...field} disabled={isDisabled} />
+                              </FormControl>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                      <FormField
+                          control={form.control}
+                          name="licenceType"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Licence Package</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
+                                  <FormControl>
+                                      <SelectTrigger>
+                                          <SelectValue placeholder="Select a package" />
+                                      </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                      {licenceTypes.map(lt => (
+                                          <SelectItem key={lt.id} value={lt.name}>{lt.name}</SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                      <FormField
+                          control={form.control}
+                          name="maxBranches"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>No. of Branches</FormLabel>
+                              <FormControl>
+                                  <Input type="number" placeholder="e.g. 2" {...field} disabled={isDisabled} />
+                              </FormControl>
+                              <FormDescription>Branches allowed.</FormDescription>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                      <FormField
+                          control={form.control}
+                          name="maxUsers"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>No. of User IDs</FormLabel>
+                              <FormControl>
+                                  <Input type="number" placeholder="e.g. 5" {...field} disabled={isDisabled} />
+                              </FormControl>
+                              <FormDescription>Sub-user IDs allowed.</FormDescription>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                  </div>
+                  <FormField
+                      control={form.control}
+                      name="companyLogo"
+                      render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Company Logo</FormLabel>
+                              <div className="flex items-center gap-4">
+                                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isDisabled}>
+                                      Choose File
+                                  </Button>
+                                  <FormControl>
+                                      <Input 
+                                          type="file" 
+                                          className="hidden" 
+                                          ref={fileInputRef}
+                                          onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              field.onChange(file);
+                                              setSelectedFileName(file?.name || null);
+                                          }}
+                                          disabled={isDisabled}
+                                      />
+                                  </FormControl>
+                                  {selectedFileName ? (
+                                      <div className="flex items-center gap-2 text-sm">
+                                          <span>{selectedFileName}</span>
+                                          <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-6 w-6"
+                                              onClick={() => {
+                                                  field.onChange(null);
+                                                  setSelectedFileName(null);
+                                                  if (fileInputRef.current) {
+                                                      fileInputRef.current.value = '';
+                                                  }
+                                              }}
+                                              disabled={isDisabled}
+                                          >
+                                              <X className="h-4 w-4" />
+                                          </Button>
+                                      </div>
+                                  ) : (
+                                      <span className="text-sm text-muted-foreground">No file selected</span>
+                                  )}
+                              </div>
+                              <FormDescription>Upload the company's logo (optional).</FormDescription>
+                              <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="headOfficeAddress"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Head Office Add.</FormLabel>
+                          <FormControl>
+                              <Textarea placeholder="Head Office Address" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="officeAddress2"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Office Add. 2</FormLabel>
+                          <FormControl>
+                              <Textarea placeholder="Branch or secondary address" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                          control={form.control}
+                          name="state"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>State</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
+                                      <FormControl>
+                                          <SelectTrigger>
+                                              <SelectValue placeholder="Select a state" />
+                                          </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                          <SelectItem value="CHHATTISGARH">CHHATTISGARH</SelectItem>
+                                          <SelectItem value="MAHARASHTRA">MAHARASHTRA</SelectItem>
+                                          <SelectItem value="KARNATAKA">KARNATAKA</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                      <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>City</FormLabel>
+                              <FormControl>
+                                  <Input placeholder="Enter city name" {...field} disabled={isDisabled} />
+                              </FormControl>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                          control={form.control}
+                          name="transportId"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Transport ID</FormLabel>
+                              <FormControl>
+                                  <Input placeholder="12345678911" {...field} disabled={isDisabled} />
+                              </FormControl>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                      <FormField
+                          control={form.control}
+                          name="pan"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>PAN</FormLabel>
+                              <FormControl>
+                                  <Input placeholder="ABCDE1234F" {...field} disabled={isDisabled} />
+                              </FormControl>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                          />
+                  </div>
+                  <FormField
+                      control={form.control}
+                      name="gstNo"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>GST No</FormLabel>
+                          <FormControl>
+                              <Input placeholder="15-digit GSTIN" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="companyContactNo"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Contact No</FormLabel>
+                          <FormControl>
+                              <Input placeholder="9890356869, 8888822222" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormDescription>
+                              Put "," between numbers to separate them.
+                          </FormDescription>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="companyEmail"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                              <Input type="email" placeholder="contact@company.com" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+              </CardContent>
+          </Card>
 
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Authorized Person Details</CardTitle>
-                <CardDescription>
-                    {isViewMode ? 'Details for the primary user account.' : isEditMode ? 'Modify primary user account details.' : "Create the primary user account for the company. This user will have the 'Company' role."}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <FormField
-                    control={form.control}
-                    name="authPersonName"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Auth. Person</FormLabel>
-                        <FormControl>
-                            <Input placeholder="John Doe" {...field} disabled={isDisabled} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="authContactNo"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Contact No (for Auth. Person)</FormLabel>
-                        <FormControl>
-                            <Input placeholder="9890356869, 8888822643" {...field} disabled={isDisabled} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="authEmail"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Login Email</FormLabel>
-                        <FormControl>
-                            <Input type="email" placeholder="owner@company.com" {...field} disabled={isDisabled} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                {!isViewMode && (
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>{isEditMode ? 'New Password' : 'Initial Password'}</FormLabel>
-                            <FormControl>
-                                <Input 
-                                    type={isNewMode ? 'text' : 'password'} 
-                                    {...field} 
-                                    disabled={isDisabled} 
-                                    readOnly={isNewMode}
-                                />
-                            </FormControl>
-                            <FormDescription>
-                                {isEditMode ? 'Leave blank to keep the current password.' : 'The owner can change this on first login.'}
-                            </FormDescription>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                )}
-            </CardContent>
-        </Card>
-        
-        {!isViewMode && (
-            <div className="flex gap-4">
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isEditMode ? 'Save Changes' : 'Add User'}
-                </Button>
-                <Button type="button" variant="outline" onClick={handleResetForm} disabled={isSubmitting || isEditMode}>
-                    Reset
-                </Button>
-            </div>
-        )}
-      </form>
-    </Form>
+          <Card>
+              <CardHeader>
+                  <CardTitle className="font-headline">Authorized Person Details</CardTitle>
+                  <CardDescription>
+                      {isViewMode ? 'Details for the primary user account.' : isEditMode ? 'Modify primary user account details.' : "Create the primary user account for the company. This user will have the 'Company' role."}
+                  </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  <FormField
+                      control={form.control}
+                      name="authPersonName"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Auth. Person</FormLabel>
+                          <FormControl>
+                              <Input placeholder="John Doe" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="authContactNo"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Contact No (for Auth. Person)</FormLabel>
+                          <FormControl>
+                              <Input placeholder="9890356869, 8888822643" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="authEmail"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Login Email</FormLabel>
+                          <FormControl>
+                              <Input type="email" placeholder="owner@company.com" {...field} disabled={isDisabled} />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  {!isViewMode && (
+                      <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>{isEditMode ? 'New Password' : 'Initial Password'}</FormLabel>
+                              <FormControl>
+                                  <Input 
+                                      type={isEditMode ? 'password' : 'text'} 
+                                      {...field} 
+                                      disabled={isDisabled} 
+                                      readOnly={!isEditMode}
+                                  />
+                              </FormControl>
+                              <FormDescription>
+                                  {isEditMode ? 'Leave blank to keep the current password.' : 'The owner can change this on first login.'}
+                              </FormDescription>
+                              <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                  )}
+              </CardContent>
+          </Card>
+          
+          {!isViewMode && (
+              <div className="flex gap-4">
+                  <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isEditMode ? 'Save Changes' : 'Add User'}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={handleResetForm} disabled={isSubmitting || isEditMode}>
+                      Reset
+                  </Button>
+              </div>
+          )}
+        </form>
+      </Form>
+    </ClientOnly>
   );
 }
