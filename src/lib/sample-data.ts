@@ -2,7 +2,6 @@
 import type { Customer, ExistingUser, OnlineInquiry } from './types';
 import type { Challan, LrDetail } from './challan-data';
 import type { Booking } from './bookings-dashboard-data';
-import { useEffect } from 'react';
 
 // --- CUSTOMERS ---
 export const initialCustomers: Customer[] = [];
