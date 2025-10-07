@@ -12,6 +12,7 @@ import { differenceInDays, format, parseISO, isBefore, addDays } from 'date-fns'
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import Link from 'next/link';
+import React from 'react';
 
 interface Reminder {
     type: 'Vehicle' | 'Consignment';
@@ -140,7 +141,7 @@ export function Reminders() {
                                 );
 
                                 if (reminder.link) {
-                                    return <Link key={index} href={reminder.link} legacyBehavior>{reminderContent}</Link>
+                                    return <Link key={index} href={reminder.link}>{reminderContent}</Link>
                                 }
                                 return React.cloneElement(reminderContent, { key: index });
                            })}
