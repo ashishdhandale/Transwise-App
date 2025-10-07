@@ -135,7 +135,7 @@ export type NewRequest = {
 
 export interface ExistingUser {
     id: number;
-    userId: string;
+    companyId: string; // Unique internal ID for the company
     subIds: number;
     companyName: string;
     gstNo: string;
@@ -153,7 +153,7 @@ export interface ExistingUser {
     companyEmail: string;
     authPersonName: string;
     authContactNo: string;
-    authEmail: string;
+    authEmail: string; // This is the User ID for login
 };
 
 export interface Driver {

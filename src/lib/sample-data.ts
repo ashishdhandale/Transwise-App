@@ -16,7 +16,7 @@ export const onlineInquiries: OnlineInquiry[] = [
 export const sampleExistingUsers: ExistingUser[] = [
     {
         id: 1,
-        userId: 'CO101',
+        companyId: 'COMP101',
         subIds: 3,
         companyName: 'Transwise Solutions',
         gstNo: '27ABCDE1234F1Z5',

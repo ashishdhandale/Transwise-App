@@ -98,7 +98,8 @@ export function UserManagementTables() {
     return localExistingUsers.filter(
       (item) =>
         item.companyName.toLowerCase().includes(lowercasedQuery) ||
-        item.userId.toLowerCase().includes(lowercasedQuery) ||
+        item.companyId.toLowerCase().includes(lowercasedQuery) ||
+        item.authEmail.toLowerCase().includes(lowercasedQuery) ||
         item.gstNo.toLowerCase().includes(lowercasedQuery) ||
         item.transporterId.toLowerCase().includes(lowercasedQuery)
     );
@@ -271,7 +272,7 @@ export function UserManagementTables() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className={thClass}>#</TableHead>
-                    <TableHead className={thClass}>USER ID</TableHead>
+                    <TableHead className={thClass}>Company ID</TableHead>
                     <TableHead className={thClass}>Company Name</TableHead>
                     <TableHead className={thClass}>Logo</TableHead>
                     <TableHead className={thClass}>Transporter ID</TableHead>
@@ -284,7 +285,7 @@ export function UserManagementTables() {
                     <TableHead className={thClass}>Company Email</TableHead>
                     <TableHead className={thClass}>Auth. Person</TableHead>
                     <TableHead className={thClass}>Auth. Contact</TableHead>
-                    <TableHead className={thClass}>Auth. Email</TableHead>
+                    <TableHead className={thClass}>Login ID (Email)</TableHead>
                     <TableHead className={thClass}>User IDs</TableHead>
                     <TableHead className={thClass}>Branches</TableHead>
                     <TableHead className={thClass}>Licence Type</TableHead>
@@ -296,7 +297,7 @@ export function UserManagementTables() {
                   {paginatedExistingUsers.map((user, index) => (
                     <TableRow key={user.id}>
                       <TableCell className={cn(tdClass)}>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
-                      <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.companyId}</TableCell>
                       <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
                       <TableCell className={cn(tdClass, "text-center")}>
                         {user.logo ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
