@@ -258,7 +258,14 @@ export function UserManagementTables() {
                     <TableHead className={thClass}>Transporter ID</TableHead>
                     <TableHead className={thClass}>Contact No</TableHead>
                     <TableHead className={thClass}>Address</TableHead>
+                    <TableHead className={thClass}>City</TableHead>
+                    <TableHead className={thClass}>State</TableHead>
                     <TableHead className={thClass}>GST No</TableHead>
+                    <TableHead className={thClass}>PAN</TableHead>
+                    <TableHead className={thClass}>Company Email</TableHead>
+                    <TableHead className={thClass}>Auth. Person</TableHead>
+                    <TableHead className={thClass}>Auth. Contact</TableHead>
+                    <TableHead className={thClass}>Auth. Email</TableHead>
                     <TableHead className={thClass}>User IDs</TableHead>
                     <TableHead className={thClass}>Branches</TableHead>
                     <TableHead className={thClass}>Licence Type</TableHead>
@@ -278,7 +285,14 @@ export function UserManagementTables() {
                       <TableCell className={cn(tdClass)}>{user.transporterId}</TableCell>
                       <TableCell className={cn(tdClass)}>{user.contactNo}</TableCell>
                       <TableCell className={cn(tdClass, 'max-w-xs truncate')}>{user.address}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.city}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.state}</TableCell>
                       <TableCell className={cn(tdClass)}>{user.gstNo}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.pan}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.companyEmail}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.authPersonName}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.authContactNo}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.authEmail}</TableCell>
                       <TableCell className={cn(tdClass, "font-semibold text-center")}>{getSubIdCount(user)} / {user.maxUsers}</TableCell>
                       <TableCell className={cn(tdClass, "font-semibold text-center")}>{getBranchCount(user)} / {user.maxBranches}</TableCell>
                       <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>

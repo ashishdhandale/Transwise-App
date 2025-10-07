@@ -22,13 +22,20 @@ export const sampleExistingUsers: ExistingUser[] = [
         companyName: 'Transwise Solutions',
         gstNo: '27ABCDE1234F1Z5',
         transporterId: 'T-12345',
-        address: '123 Tech Park, Silicon Valley',
+        address: '123 Tech Park, Silicon Valley, CA',
         contactNo: '9876543210',
         licenceType: 'Platinum',
         validTill: '2025-12-31',
         maxUsers: 10,
         maxBranches: 5,
         logo: true,
+        state: 'California',
+        city: 'Mountain View',
+        pan: 'ABCDE1234F',
+        companyEmail: 'contact@transwise.com',
+        authPersonName: 'Admin User',
+        authContactNo: '9876543210',
+        authEmail: 'admin@transwise.com',
     }
 ];
 

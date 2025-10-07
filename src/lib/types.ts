@@ -147,6 +147,13 @@ export interface ExistingUser {
     maxUsers: number;
     maxBranches: number;
     logo?: boolean;
+    state: string;
+    city: string;
+    pan: string;
+    companyEmail: string;
+    authPersonName: string;
+    authContactNo: string;
+    authEmail: string;
 };
 
 export interface Driver {
