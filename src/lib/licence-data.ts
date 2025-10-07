@@ -3,15 +3,16 @@ export interface LicenceType {
   id: string;
   name: "Trial" | "Bronze" | "Gold" | "Platinum" | string;
   fee: number;
+  validityDays: number;
 }
 
 const LOCAL_STORAGE_KEY = 'transwise_licence_types';
 
 const initialLicenceTypes: LicenceType[] = [
-    { id: 'licence-1', name: 'Trial', fee: 0 },
-    { id: 'licence-2', name: 'Bronze', fee: 250 },
-    { id: 'licence-3', name: 'Gold', fee: 500 },
-    { id: 'licence-4', name: 'Platinum', fee: 1000 },
+    { id: 'licence-1', name: 'Trial', fee: 0, validityDays: 5 },
+    { id: 'licence-2', name: 'Bronze', fee: 250, validityDays: 10 },
+    { id: 'licence-3', name: 'Gold', fee: 500, validityDays: 15 },
+    { id: 'licence-4', name: 'Platinum', fee: 1000, validityDays: 20 },
 ];
 
 export const getLicenceTypes = (): LicenceType[] => {
@@ -19,7 +20,16 @@ export const getLicenceTypes = (): LicenceType[] => {
     try {
         const data = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (data) {
-            return JSON.parse(data);
+            // Ensure existing data has validityDays
+            const parsedData = JSON.parse(data);
+            const migratedData = parsedData.map((lic: Partial<LicenceType>) => {
+                const initial = initialLicenceTypes.find(il => il.name === lic.name);
+                return {
+                    ...lic,
+                    validityDays: lic.validityDays ?? initial?.validityDays ?? 30,
+                };
+            });
+            return migratedData;
         }
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialLicenceTypes));
         return initialLicenceTypes;

@@ -35,6 +35,7 @@ export function LicenceManagement() {
   const [currentLicence, setCurrentLicence] = useState<Partial<LicenceType> | null>(null);
   const [name, setName] = useState('');
   const [fee, setFee] = useState<number | ''>('');
+  const [validityDays, setValidityDays] = useState<number | ''>('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export function LicenceManagement() {
     setCurrentLicence(licence || null);
     setName(licence?.name || '');
     setFee(licence?.fee || '');
+    setValidityDays(licence?.validityDays || 30);
     setIsDialogOpen(true);
   };
 
@@ -59,15 +61,15 @@ export function LicenceManagement() {
   };
 
   const handleSave = () => {
-    if (!name.trim() || fee === '') {
-        toast({ title: 'Validation Error', description: 'Name and Fee are required.', variant: 'destructive'});
+    if (!name.trim() || fee === '' || validityDays === '') {
+        toast({ title: 'Validation Error', description: 'Name, Fee, and Validity are required.', variant: 'destructive'});
         return;
     }
     
     let updatedLicences;
     if (currentLicence && currentLicence.id) {
       updatedLicences = licenceTypes.map(lt => 
-        lt.id === currentLicence.id ? { ...lt, name, fee: Number(fee) } : lt
+        lt.id === currentLicence.id ? { ...lt, name, fee: Number(fee), validityDays: Number(validityDays) } : lt
       );
       toast({ title: 'Licence Type Updated' });
     } else {
@@ -75,6 +77,7 @@ export function LicenceManagement() {
         id: `licence-${Date.now()}`,
         name,
         fee: Number(fee),
+        validityDays: Number(validityDays),
       };
       updatedLicences = [...licenceTypes, newLicence];
       toast({ title: 'Licence Type Added' });
@@ -103,6 +106,7 @@ export function LicenceManagement() {
                         <TableRow>
                             <TableHead className={thClass}>Licence Name</TableHead>
                             <TableHead className={thClass}>Fee</TableHead>
+                             <TableHead className={thClass}>Validity (Days)</TableHead>
                             <TableHead className={`${thClass} text-right`}>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -111,6 +115,7 @@ export function LicenceManagement() {
                         <TableRow key={licence.id}>
                             <TableCell className="font-medium">{licence.name}</TableCell>
                             <TableCell>{licence.fee.toLocaleString()}</TableCell>
+                            <TableCell>{licence.validityDays} days</TableCell>
                             <TableCell className="text-right">
                                 <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(licence)}>
                                     <Pencil className="h-4 w-4" />
@@ -131,14 +136,18 @@ export function LicenceManagement() {
                 <DialogHeader>
                     <DialogTitle>{currentLicence ? 'Edit Licence' : 'Add New Licence'}</DialogTitle>
                 </DialogHeader>
-                 <div className="py-4 space-y-4">
-                    <div>
+                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
                         <Label htmlFor="licence-name">Licence Name</Label>
                         <Input id="licence-name" value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                      <div>
                         <Label htmlFor="licence-fee">Fee</Label>
                         <Input id="licence-fee" type="number" value={fee} onChange={(e) => setFee(Number(e.target.value))} />
+                    </div>
+                     <div>
+                        <Label htmlFor="licence-validity">Validity (in days)</Label>
+                        <Input id="licence-validity" type="number" value={validityDays} onChange={(e) => setValidityDays(Number(e.target.value))} />
                     </div>
                  </div>
                 <DialogFooter>
