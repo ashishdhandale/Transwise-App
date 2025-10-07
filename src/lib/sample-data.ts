@@ -28,6 +28,7 @@ export const sampleExistingUsers: ExistingUser[] = [
         validTill: '2025-12-31',
         maxUsers: 10,
         maxBranches: 5,
+        logo: true,
     }
 ];
 

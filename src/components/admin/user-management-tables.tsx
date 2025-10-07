@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Search, ChevronLeft, ChevronRight, UserPlus, Pencil, Eye } from 'lucide-react';
+import { MoreHorizontal, Search, ChevronLeft, ChevronRight, UserPlus, Pencil, Eye, CheckCircle2, XCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -254,6 +254,11 @@ export function UserManagementTables() {
                     <TableHead className={thClass}>#</TableHead>
                     <TableHead className={thClass}>USER ID</TableHead>
                     <TableHead className={thClass}>Company Name</TableHead>
+                    <TableHead className={thClass}>Logo</TableHead>
+                    <TableHead className={thClass}>Transporter ID</TableHead>
+                    <TableHead className={thClass}>Contact No</TableHead>
+                    <TableHead className={thClass}>Address</TableHead>
+                    <TableHead className={thClass}>GST No</TableHead>
                     <TableHead className={thClass}>User IDs</TableHead>
                     <TableHead className={thClass}>Branches</TableHead>
                     <TableHead className={thClass}>Licence Type</TableHead>
@@ -267,6 +272,13 @@ export function UserManagementTables() {
                       <TableCell className={cn(tdClass)}>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
                       <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
                       <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
+                      <TableCell className={cn(tdClass, "text-center")}>
+                        {user.logo ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
+                      </TableCell>
+                      <TableCell className={cn(tdClass)}>{user.transporterId}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.contactNo}</TableCell>
+                      <TableCell className={cn(tdClass, 'max-w-xs truncate')}>{user.address}</TableCell>
+                      <TableCell className={cn(tdClass)}>{user.gstNo}</TableCell>
                       <TableCell className={cn(tdClass, "font-semibold text-center")}>{getSubIdCount(user)} / {user.maxUsers}</TableCell>
                       <TableCell className={cn(tdClass, "font-semibold text-center")}>{getBranchCount(user)} / {user.maxBranches}</TableCell>
                       <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>

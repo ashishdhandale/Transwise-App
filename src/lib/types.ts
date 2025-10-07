@@ -146,6 +146,7 @@ export interface ExistingUser {
     validTill: string;
     maxUsers: number;
     maxBranches: number;
+    logo?: boolean;
 };
 
 export interface Driver {
