@@ -72,6 +72,7 @@ export default function AddCompanyForm() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [formTitle, setFormTitle] = useState('Add New User Business Details');
     const [licenceTypes, setLicenceTypes] = useState<LicenceType[]>([]);
+    const [companyCode, setCompanyCode] = useState('');
 
     useEffect(() => {
         setLicenceTypes(getLicenceTypes());
@@ -107,7 +108,7 @@ export default function AddCompanyForm() {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
-        form.setValue('companyCode', generateCompanyCode());
+        setCompanyCode(generateCompanyCode());
     }, [form]);
 
 
@@ -116,8 +117,8 @@ export default function AddCompanyForm() {
         const userToView = sampleExistingUsers.find(u => String(u.id) === userId);
         if (userToView) {
             setFormTitle(isEditMode ? `Editing Details: ${userToView.companyName}` : `Viewing Details: ${userToView.companyName}`);
+            setCompanyCode(userToView.userId);
             form.reset({
-                companyCode: userToView.userId,
                 companyName: userToView.companyName,
                 licenceType: userToView.licenceType,
                 maxBranches: userToView.maxBranches,
@@ -134,12 +135,12 @@ export default function AddCompanyForm() {
                 authPersonName: 'Admin User',
                 authContactNo: userToView.contactNo,
                 authEmail: 'admin@example.com',
+                password: '' // Clear password field for security
             });
         }
       } else { // New mode
         setFormTitle('Add New User Business Details');
-        // Generate code only on the client-side after initial render to avoid hydration error
-        form.setValue('companyCode', generateCompanyCode());
+        setCompanyCode(generateCompanyCode());
       }
     }, [isViewMode, isEditMode, userId, form]);
 
@@ -186,7 +187,7 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>Company Code</FormLabel>
                             <FormControl>
-                                <Input {...field} disabled className="font-bold text-muted-foreground bg-muted/50" />
+                                <Input {...field} value={companyCode} disabled className="font-bold text-muted-foreground bg-muted/50" />
                             </FormControl>
                             <FormDescription>This code is auto-generated.</FormDescription>
                             <FormMessage />
@@ -528,3 +529,5 @@ export default function AddCompanyForm() {
     </Form>
   );
 }
+
+    
