@@ -2,14 +2,13 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { newRequests } from '@/lib/sample-data';
-import { existingUsers } from '@/lib/sample-data';
+import { onlineInquiries, existingUsers } from '@/lib/sample-data';
 
 export function MembershipDashboard() {
 
-  const registeredUsers = newRequests.length + existingUsers.length;
+  const registeredUsers = onlineInquiries.length + existingUsers.length;
   const activeUsers = existingUsers.length;
-  const pendingRequests = newRequests.length;
+  const pendingRequests = onlineInquiries.filter(i => i.status === 'New').length;
   const activeMemberships = existingUsers.filter(u => u.licenceType !== 'Trial').length;
 
   const summaryData = [

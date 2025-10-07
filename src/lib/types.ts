@@ -1,5 +1,4 @@
 
-
 export type DeliveryStatus =
   | 'Pending'
   | 'In Transit'
@@ -289,4 +288,14 @@ export interface Staff {
   permissions: StaffPermissions;
   forcePasswordChange?: boolean;
   isActive: boolean;
+}
+
+export interface OnlineInquiry {
+    id: number;
+    name: string;
+    contact: string;
+    source: 'Website' | 'Facebook' | 'Manual';
+    message: string;
+    status: 'New' | 'Contacted' | 'Resolved';
+    date: string;
 }

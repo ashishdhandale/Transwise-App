@@ -22,10 +22,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { newRequests as sampleNewRequests, existingUsers as sampleExistingUsers } from '@/lib/sample-data';
+import { existingUsers, onlineInquiries as sampleInquiries } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { NewRequest, ExistingUser } from '@/lib/types';
+import type { ExistingUser, OnlineInquiry } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import Link from 'next/link';
@@ -34,58 +34,22 @@ import Link from 'next/link';
 const thClass = "bg-primary text-primary-foreground";
 const tdClass = "whitespace-nowrap";
 
-let nextCompanyCode = 102;
-
 export function UserManagementTables() {
-  const [newRequestSearch, setNewRequestSearch] = useState('');
+  const [inquirySearch, setInquirySearch] = useState('');
   const [existingUserSearch, setExistingUserSearch] = useState('');
   
-  const [newRequestsPage, setNewRequestsPage] = useState(1);
-  const [newRequestsRowsPerPage, setNewRequestsRowsPerPage] = useState(5);
+  const [inquiriesPage, setInquiriesPage] = useState(1);
+  const [inquiriesRowsPerPage, setInquiriesRowsPerPage] = useState(5);
   const [existingUsersPage, setExistingUsersPage] = useState(1);
   const [existingUsersRowsPerPage, setExistingUsersRowsPerPage] = useState(5);
   
-  const [newRequests, setNewRequests] = useState<NewRequest[]>(sampleNewRequests);
-  const [existingUsers, setExistingUsers] = useState<ExistingUser[]>(sampleExistingUsers);
+  const [onlineInquiries, setOnlineInquiries] = useState<OnlineInquiry[]>(sampleInquiries);
+  const [localExistingUsers, setLocalExistingUsers] = useState<ExistingUser[]>(existingUsers);
   const { toast } = useToast();
-
-  const handleApprove = (request: NewRequest) => {
-    const newUser: ExistingUser = {
-      id: existingUsers.length + newRequests.length + 1,
-      userId: `CO${nextCompanyCode++}`,
-      subIds: 0,
-      companyName: request.companyName,
-      gstNo: request.gstNo,
-      transporterId: request.transporterId,
-      address: request.address,
-      contactNo: request.contactNo,
-      totalIssuedIds: 1,
-      licenceType: request.licenceType,
-      validTill: '2025-12-31' // Set a default validity
-    };
-    
-    setExistingUsers(prev => [newUser, ...prev]);
-    setNewRequests(prev => prev.filter(r => r.id !== request.id));
-    
-    toast({
-      title: 'User Approved',
-      description: `${request.companyName} has been added to the existing users list.`,
-    });
-  };
-
-  const handleReject = (request: NewRequest) => {
-    setNewRequests(prev => prev.filter(r => r.id !== request.id));
-     toast({
-      title: 'User Rejected',
-      description: `The request from ${request.companyName} has been rejected.`,
-      variant: 'destructive'
-    });
-  };
   
   const handleDeactivate = (user: ExistingUser) => {
       // In a real app, this would likely set a status to 'inactive'
-      // For this prototype, we'll remove the user from the list.
-      setExistingUsers(prev => prev.filter(u => u.id !== user.id));
+      setLocalExistingUsers(prev => prev.filter(u => u.id !== user.id));
       toast({
         title: 'User Deactivated',
         description: `${user.companyName} has been deactivated.`,
@@ -93,34 +57,34 @@ export function UserManagementTables() {
       });
   };
 
-  const filteredNewRequests = useMemo(() => {
-    const lowercasedQuery = newRequestSearch.toLowerCase();
-    if (!lowercasedQuery) return newRequests;
-    return newRequests.filter(
+  const filteredInquiries = useMemo(() => {
+    const lowercasedQuery = inquirySearch.toLowerCase();
+    if (!lowercasedQuery) return onlineInquiries;
+    return onlineInquiries.filter(
       (item) =>
-        item.companyName.toLowerCase().includes(lowercasedQuery) ||
-        item.gstNo.toLowerCase().includes(lowercasedQuery) ||
-        item.transporterId.toLowerCase().includes(lowercasedQuery)
+        item.name.toLowerCase().includes(lowercasedQuery) ||
+        item.contact.toLowerCase().includes(lowercasedQuery) ||
+        item.source.toLowerCase().includes(lowercasedQuery)
     );
-  }, [newRequestSearch, newRequests]);
+  }, [inquirySearch, onlineInquiries]);
 
   const filteredExistingUsers = useMemo(() => {
     const lowercasedQuery = existingUserSearch.toLowerCase();
-    if (!lowercasedQuery) return existingUsers;
-    return existingUsers.filter(
+    if (!lowercasedQuery) return localExistingUsers;
+    return localExistingUsers.filter(
       (item) =>
         item.companyName.toLowerCase().includes(lowercasedQuery) ||
         item.userId.toLowerCase().includes(lowercasedQuery) ||
         item.gstNo.toLowerCase().includes(lowercasedQuery) ||
         item.transporterId.toLowerCase().includes(lowercasedQuery)
     );
-  }, [existingUserSearch, existingUsers]);
+  }, [existingUserSearch, localExistingUsers]);
 
-  const newRequestsTotalPages = Math.ceil(filteredNewRequests.length / newRequestsRowsPerPage);
-  const paginatedNewRequests = useMemo(() => {
-    const startIndex = (newRequestsPage - 1) * newRequestsRowsPerPage;
-    return filteredNewRequests.slice(startIndex, startIndex + newRequestsRowsPerPage);
-  }, [filteredNewRequests, newRequestsPage, newRequestsRowsPerPage]);
+  const inquiriesTotalPages = Math.ceil(filteredInquiries.length / inquiriesRowsPerPage);
+  const paginatedInquiries = useMemo(() => {
+    const startIndex = (inquiriesPage - 1) * inquiriesRowsPerPage;
+    return filteredInquiries.slice(startIndex, startIndex + inquiriesRowsPerPage);
+  }, [filteredInquiries, inquiriesPage, inquiriesRowsPerPage]);
 
   const existingUsersTotalPages = Math.ceil(filteredExistingUsers.length / existingUsersRowsPerPage);
   const paginatedExistingUsers = useMemo(() => {
@@ -129,8 +93,8 @@ export function UserManagementTables() {
   }, [filteredExistingUsers, existingUsersPage, existingUsersRowsPerPage]);
 
   useEffect(() => {
-    setNewRequestsPage(1);
-  }, [newRequestSearch, newRequestsRowsPerPage]);
+    setInquiriesPage(1);
+  }, [inquirySearch, inquiriesRowsPerPage]);
   
   useEffect(() => {
     setExistingUsersPage(1);
@@ -140,15 +104,15 @@ export function UserManagementTables() {
     <div className="space-y-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-headline">New User Request</CardTitle>
+          <CardTitle className="font-headline">Online Inquiries</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search requests..."
+              placeholder="Search inquiries..."
               className="pl-8"
-              value={newRequestSearch}
-              onChange={(e) => setNewRequestSearch(e.target.value)}
+              value={inquirySearch}
+              onChange={(e) => setInquirySearch(e.target.value)}
             />
           </div>
         </CardHeader>
@@ -158,21 +122,23 @@ export function UserManagementTables() {
               <TableHeader>
                 <TableRow>
                   <TableHead className={thClass}>#</TableHead>
-                  <TableHead className={thClass}>Company Name</TableHead>
-                  <TableHead className={thClass}>GST No</TableHead>
-                  <TableHead className={thClass}>Transporter ID</TableHead>
-                  <TableHead className={thClass}>Licence Type</TableHead>
+                  <TableHead className={thClass}>Name</TableHead>
+                  <TableHead className={thClass}>Contact</TableHead>
+                  <TableHead className={thClass}>Source</TableHead>
+                  <TableHead className={thClass}>Message</TableHead>
+                  <TableHead className={thClass}>Status</TableHead>
                   <TableHead className={`${thClass} text-center`}>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedNewRequests.map((req, index) => (
+                {paginatedInquiries.map((req, index) => (
                   <TableRow key={req.id}>
-                    <TableCell className={cn(tdClass)}>{(newRequestsPage - 1) * newRequestsRowsPerPage + index + 1}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.companyName}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.gstNo}</TableCell>
-                    <TableCell className={cn(tdClass)}>{req.transporterId}</TableCell>
-                    <TableCell className={cn(tdClass)}><Badge variant="secondary">{req.licenceType}</Badge></TableCell>
+                    <TableCell className={cn(tdClass)}>{(inquiriesPage - 1) * inquiriesRowsPerPage + index + 1}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.name}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.contact}</TableCell>
+                    <TableCell className={cn(tdClass)}>{req.source}</TableCell>
+                    <TableCell className="max-w-xs truncate">{req.message}</TableCell>
+                    <TableCell className={cn(tdClass)}><Badge variant={req.status === 'New' ? 'default' : 'secondary'}>{req.status}</Badge></TableCell>
                     <TableCell className={cn(tdClass, "text-center")}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -184,8 +150,8 @@ export function UserManagementTables() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-green-600" onClick={() => handleApprove(req)}>Approve</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600" onClick={() => handleReject(req)}>Reject</DropdownMenuItem>
+                          <DropdownMenuItem>Mark as Contacted</DropdownMenuItem>
+                          <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -193,15 +159,15 @@ export function UserManagementTables() {
                 ))}
               </TableBody>
             </Table>
-             {paginatedNewRequests.length === 0 && (
-                <div className="text-center p-4 text-muted-foreground">No requests found.</div>
+             {paginatedInquiries.length === 0 && (
+                <div className="text-center p-4 text-muted-foreground">No inquiries found.</div>
             )}
           </div>
         </CardContent>
         <CardFooter className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Rows per page:</span>
-                <Select value={`${newRequestsRowsPerPage}`} onValueChange={(value) => setNewRequestsRowsPerPage(Number(value))}>
+                <Select value={`${inquiriesRowsPerPage}`} onValueChange={(value) => setInquiriesRowsPerPage(Number(value))}>
                     <SelectTrigger className="w-20">
                         <SelectValue />
                     </SelectTrigger>
@@ -214,14 +180,14 @@ export function UserManagementTables() {
             </div>
             <div className="flex items-center gap-4 text-sm">
                 <span className="text-muted-foreground">
-                    Page {newRequestsTotalPages > 0 ? newRequestsPage: 0} of {newRequestsTotalPages}
+                    Page {inquiriesTotalPages > 0 ? inquiriesPage: 0} of {inquiriesTotalPages}
                 </span>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => setNewRequestsPage(p => p - 1)} disabled={newRequestsPage === 1}>
+                    <Button variant="outline" size="icon" onClick={() => setInquiriesPage(p => p - 1)} disabled={inquiriesPage === 1}>
                         <ChevronLeft className="h-4 w-4" />
                         <span className="sr-only">Previous page</span>
                     </Button>
-                    <Button variant="outline" size="icon" onClick={() => setNewRequestsPage(p => p + 1)} disabled={newRequestsPage === newRequestsTotalPages || newRequestsTotalPages === 0}>
+                    <Button variant="outline" size="icon" onClick={() => setInquiriesPage(p => p + 1)} disabled={inquiriesPage === inquiriesTotalPages || inquiriesTotalPages === 0}>
                         <ChevronRight className="h-4 w-4" />
                         <span className="sr-only">Next page</span>
                     </Button>
