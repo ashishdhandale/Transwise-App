@@ -68,6 +68,18 @@ export function UserManagementTables() {
         variant: 'destructive'
       });
   };
+  
+  const handleInquiryStatusChange = (inquiryId: number, status: OnlineInquiry['status']) => {
+    setOnlineInquiries(prev => 
+      prev.map(inquiry => 
+        inquiry.id === inquiryId ? { ...inquiry, status } : inquiry
+      )
+    );
+    toast({
+      title: 'Inquiry Updated',
+      description: `Inquiry #${inquiryId} has been marked as ${status}.`
+    })
+  };
 
   const filteredInquiries = useMemo(() => {
     const lowercasedQuery = inquirySearch.toLowerCase();
@@ -178,9 +190,15 @@ export function UserManagementTables() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>Mark as Contacted</DropdownMenuItem>
-                            <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => toast({title: "Viewing Details", description: "This feature is coming soon."})}>
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleInquiryStatusChange(req.id, 'Contacted')}>
+                              Mark as Contacted
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleInquiryStatusChange(req.id, 'Resolved')}>
+                              Mark as Resolved
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
