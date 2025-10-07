@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -48,7 +47,7 @@ const formSchema = z.object({
   authPersonName: z.string().min(2, { message: 'Authorized person name is required.' }),
   authContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
   authEmail: z.string().email({ message: 'Please enter a valid email address for login.' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }).optional(),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }).optional().or(z.literal('')),
 });
 
 export type AddCompanyFormValues = z.infer<typeof formSchema>;
@@ -68,6 +67,7 @@ export default function AddCompanyForm() {
     
     const isViewMode = !!userId && mode !== 'edit';
     const isEditMode = !!userId && mode === 'edit';
+    const isNewMode = !userId;
 
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -105,13 +105,30 @@ export default function AddCompanyForm() {
     });
 
     const handleResetForm = React.useCallback(() => {
-        form.reset();
+        form.reset({
+            companyName: '',
+            licenceType: 'Trial',
+            maxBranches: 1,
+            maxUsers: 5,
+            headOfficeAddress: '',
+            officeAddress2: '',
+            state: '',
+            city: '',
+            transportId: '',
+            pan: '',
+            gstNo: '',
+            companyContactNo: '',
+            companyEmail: '',
+            authPersonName: '',
+            authContactNo: '',
+            authEmail: '',
+            password: generateRandomPassword(),
+        });
         setSelectedFileName(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
         setCompanyCode(generateCompanyCode());
-        form.setValue('password', generateRandomPassword());
     }, [form]);
 
 
@@ -505,7 +522,12 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>{isEditMode ? 'New Password' : 'Initial Password'}</FormLabel>
                             <FormControl>
-                                <Input type="password" {...field} disabled={isDisabled} readOnly={!isEditMode} />
+                                <Input 
+                                    type={isNewMode ? 'text' : 'password'} 
+                                    {...field} 
+                                    disabled={isDisabled} 
+                                    readOnly={isNewMode}
+                                />
                             </FormControl>
                             <FormDescription>
                                 {isEditMode ? 'Leave blank to keep the current password.' : 'The owner can change this on first login.'}
@@ -524,7 +546,7 @@ export default function AddCompanyForm() {
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isEditMode ? 'Save Changes' : 'Add User'}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isSubmitting}>
+                <Button type="button" variant="outline" onClick={handleResetForm} disabled={isSubmitting || isEditMode}>
                     Reset
                 </Button>
             </div>
