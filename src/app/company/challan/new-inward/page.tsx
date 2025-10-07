@@ -1,7 +1,6 @@
 
 'use client';
 
-import { Suspense } from 'react';
 import DashboardLayout from '../../../(dashboard)/layout';
 import { NewInwardChallanForm } from '@/components/company/challan/new-inward-challan-form';
 
@@ -16,9 +15,5 @@ function NewInwardChallanPage() {
 }
 
 export default function NewInwardChallanRootPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-        <NewInwardChallanPage />
-    </Suspense>
-  );
+  return <NewInwardChallanPage />;
 }
