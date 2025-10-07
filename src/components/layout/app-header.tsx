@@ -21,10 +21,8 @@ import { useEffect, useState } from 'react';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../company/settings/company-profile-settings';
 
-const notifications = [
-  { id: 1, message: 'New user request received from John Doe.' },
-  { id: 2, message: 'Membership payment received from Jane Smith.' },
-  { id: 3, message: 'Server maintenance scheduled for tomorrow.' },
+const notifications: {id: number, message: string}[] = [
+  // Notifications will be populated dynamically
 ];
 
 export function AppHeader() {

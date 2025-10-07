@@ -2,14 +2,8 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Jan', Trial: 4000, Bronze: 2400, Gold: 1400, Platinum: 500 },
-  { name: 'Feb', Trial: 3000, Bronze: 1398, Gold: 1210, Platinum: 800 },
-  { name: 'Mar', Trial: 2000, Bronze: 9800, Gold: 2290, Platinum: 1200 },
-  { name: 'Apr', Trial: 2780, Bronze: 3908, Gold: 2000, Platinum: 1500 },
-  { name: 'May', Trial: 1890, Bronze: 4800, Gold: 2181, Platinum: 1800 },
-  { name: 'Jun', Trial: 2390, Bronze: 3800, Gold: 2500, Platinum: 2100 },
-  { name: 'Jul', Trial: 3490, Bronze: 4300, Gold: 2100, Platinum: 2400 },
+const data: any[] = [
+  // Data will be populated dynamically
 ];
 
 export function SalesByMembershipChart() {
