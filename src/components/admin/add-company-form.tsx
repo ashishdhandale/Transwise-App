@@ -23,12 +23,15 @@ import { Loader2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { sampleExistingUsers } from '@/lib/sample-data';
+import type { LicenceType } from '@/lib/licence-data';
+import { getLicenceTypes } from '@/lib/licence-data';
 
 const formSchema = z.object({
   // Company Details
   companyCode: z.string().optional(),
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
   companyLogo: z.any().optional(),
+  licenceType: z.string().min(1, { message: 'Please select a licence package.' }),
   maxBranches: z.coerce.number().min(0, 'Cannot be negative.').default(1),
   maxUsers: z.coerce.number().min(1, 'At least 1 user ID is required.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
@@ -66,12 +69,18 @@ export default function AddCompanyForm() {
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [formTitle, setFormTitle] = useState('Add New User Business Details');
+    const [licenceTypes, setLicenceTypes] = useState<LicenceType[]>([]);
+
+    useEffect(() => {
+        setLicenceTypes(getLicenceTypes());
+    }, []);
 
     const form = useForm<AddCompanyFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             companyCode: '',
             companyName: '',
+            licenceType: 'Trial',
             maxBranches: 1,
             maxUsers: 5,
             headOfficeAddress: '',
@@ -98,13 +107,12 @@ export default function AddCompanyForm() {
             form.reset({
                 companyCode: userToView.userId,
                 companyName: userToView.companyName,
+                licenceType: userToView.licenceType,
                 maxBranches: userToView.maxBranches,
                 maxUsers: userToView.maxUsers,
                 headOfficeAddress: userToView.address,
                 gstNo: userToView.gstNo,
                 companyContactNo: userToView.contactNo,
-                // These fields are not in the ExistingUser type, so we'll leave them blank for now.
-                // In a real app, these would come from the full user record.
                 officeAddress2: '', 
                 state: 'MAHARASHTRA', // Placeholder
                 city: 'Nagpur', // Placeholder
@@ -118,8 +126,6 @@ export default function AddCompanyForm() {
         }
       } else { // New mode
         setFormTitle('Add New User Business Details');
-        // Generate and set the next company code only on the client side
-        // to avoid hydration mismatch errors.
         if (form.getValues('companyCode') === '') {
           form.setValue('companyCode', `CO${companyCounter}`);
         }
@@ -130,7 +136,6 @@ export default function AddCompanyForm() {
         setIsSubmitting(true);
         console.log('Form Submitted:', values);
         
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         if (isEditMode) {
@@ -143,20 +148,18 @@ export default function AddCompanyForm() {
                 title: "Company Created Successfully",
                 description: `${values.companyName} has been added and the owner account is ready.`,
             });
-            // Increment for the next form load and reset the current form
             companyCounter++;
             form.reset();
             setSelectedFileName(null);
             if (fileInputRef.current) {
               fileInputRef.current.value = '';
             }
-            form.setValue('companyCode', `CO${companyCounter}`); // set next code
+            form.setValue('companyCode', `CO${companyCounter}`);
         }
         
         setIsSubmitting(false);
     }
     
-    // In view mode, all fields should be disabled.
     const isDisabled = isViewMode || isSubmitting;
 
   return (
@@ -170,7 +173,7 @@ export default function AddCompanyForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                     <FormField
                         control={form.control}
                         name="companyCode"
@@ -189,7 +192,7 @@ export default function AddCompanyForm() {
                         control={form.control}
                         name="companyName"
                         render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="lg:col-span-2">
                             <FormLabel>Company Name</FormLabel>
                             <FormControl>
                                 <Input placeholder="Example: Transwise Logistics" {...field} disabled={isDisabled} />
@@ -198,6 +201,28 @@ export default function AddCompanyForm() {
                             </FormItem>
                         )}
                     />
+                     <FormField
+                        control={form.control}
+                        name="licenceType"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Licence Package</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a package" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {licenceTypes.map(lt => (
+                                        <SelectItem key={lt.id} value={lt.name}>{lt.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                      <FormField
                         control={form.control}
                         name="maxBranches"
