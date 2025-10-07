@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { existingUsers as sampleExistingUsers, onlineInquiries as sampleInquiries } from '@/lib/sample-data';
+import { sampleExistingUsers, onlineInquiries as sampleInquiries } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { ExistingUser, OnlineInquiry, Staff, Branch } from '@/lib/types';

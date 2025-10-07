@@ -10,7 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { existingUsers } from '@/lib/sample-data';
+import { sampleExistingUsers as existingUsers } from '@/lib/sample-data';
 import { useMemo } from 'react';
 
 const amountData = [

@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { onlineInquiries, existingUsers } from '@/lib/sample-data';
+import { onlineInquiries, sampleExistingUsers as existingUsers } from '@/lib/sample-data';
 
 export function MembershipDashboard() {
 
