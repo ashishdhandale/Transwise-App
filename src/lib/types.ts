@@ -31,7 +31,7 @@ export interface Vehicle {
   };
 }
 
-export type UserRole = 'Admin' | 'Company' | 'Branch User';
+export type UserRole = 'Admin' | 'Company' | 'Branch';
 
 export interface BaseUser {
   id: string;
@@ -250,8 +250,7 @@ export type StaffRole =
   | 'Booking Clerk'
   | 'Loading Supervisor'
   | 'Delivery Boy'
-  | 'Driver'
-  | 'Branch User';
+  | 'Driver';
 
 export interface StaffPermissions {
   dashboard: boolean;

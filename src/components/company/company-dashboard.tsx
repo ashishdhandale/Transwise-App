@@ -17,19 +17,16 @@ import { getBranches, type Branch } from '@/lib/branch-data';
 
 export function CompanyDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
   const searchParams = useSearchParams();
   const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
-  const isCompany = userRole === 'Company';
   // In a real app, you'd get the actual branch name from the user's session
-  const userBranchName = isCompany ? 'My Transwise Company' : 'Pune Hub'; 
+  const userBranchName = userRole === 'Company' ? undefined : 'Pune Hub'; 
 
   useEffect(() => {
     async function loadData() {
         setAllBookings(getBookings());
-        setBranches(getBranches());
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
     }

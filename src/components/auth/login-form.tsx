@@ -21,27 +21,26 @@ export default function LoginForm() {
 
   const handleSignin = () => {
     // Navigate based on the selected role
+    let path = '/';
     switch (role) {
       case 'Admin':
-        router.push('/admin');
+        path = '/admin';
         break;
       case 'Company':
-        router.push('/company');
+        path = '/company';
         break;
       case 'Branch':
-        // For branch user, pass a query param to simulate the role on the dashboard.
-        router.push('/company?role=Branch');
+        path = '/company?role=Branch';
         break;
       default:
         // Default navigation if no role is selected, or handle error
-        // For now, let's just prevent submission if no role is selected.
         if (!role) {
             alert("Please select a role.");
             return;
         }
-        router.push('/');
         break;
     }
+    router.push(path);
   };
 
   const handleReset = () => {

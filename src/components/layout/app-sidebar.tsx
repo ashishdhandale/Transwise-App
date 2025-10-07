@@ -61,10 +61,8 @@ export function AppSidebar() {
 
   const userRoleQuery = searchParams.get('role');
   
-  // Admin states
+  // Menu states
   const [openUserMenu, setOpenUserMenu] = React.useState(false);
-
-  // Company states
   const [openDashboardMenu, setOpenDashboardMenu] = React.useState(false);
   const [openBranchMenu, setOpenBranchMenu] = React.useState(false);
   const [openConsignmentMenu, setOpenConsignmentMenu] = React.useState(false);
@@ -80,33 +78,30 @@ export function AppSidebar() {
 
 
   React.useEffect(() => {
-    if (
-      pathname.startsWith('/admin/add-company') ||
-      pathname.startsWith('/admin/users')
-    ) {
-      setOpenUserMenu(true);
-    }
-     if (pathname.startsWith('/company')) {
-      setOpenDashboardMenu(true);
-    }
-     if (pathname.startsWith('/company/branch')) {
-      setOpenBranchMenu(true);
-    }
-     if (pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan') || pathname.startsWith('/company/vehicle-hire')) {
-      setOpenConsignmentMenu(true);
-     }
-      if (pathname.startsWith('/company/accounts')) {
-      setOpenAccountsMenu(true);
-     }
-     if (pathname.startsWith('/company/master')) {
-      setOpenMasterMenu(true);
-     }
-      if (pathname.startsWith('/company/reports')) {
-      setOpenReportsMenu(true);
-     }
-     if (pathname.startsWith('/company/vehicle-expenses') || pathname.startsWith('/company/utility/staff')) {
-      setOpenUtilityMenu(true);
-     }
+    const shouldOpenUserMenu = pathname.startsWith('/admin/users') || pathname.startsWith('/admin/add-company');
+    setOpenUserMenu(shouldOpenUserMenu);
+
+    const shouldOpenDashboard = pathname === '/company' || pathname.startsWith('/company/package-tracking') || pathname.startsWith('/company/challan-tracking') || pathname.startsWith('/company/history');
+    setOpenDashboardMenu(shouldOpenDashboard);
+
+    const shouldOpenBranchMenu = pathname.startsWith('/company/branch');
+    setOpenBranchMenu(shouldOpenBranchMenu);
+
+    const shouldOpenConsignmentMenu = pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan') || pathname.startsWith('/company/vehicle-hire');
+    setOpenConsignmentMenu(shouldOpenConsignmentMenu);
+
+    const shouldOpenAccountsMenu = pathname.startsWith('/company/accounts');
+    setOpenAccountsMenu(shouldOpenAccountsMenu);
+
+    const shouldOpenMasterMenu = pathname.startsWith('/company/master');
+    setOpenMasterMenu(shouldOpenMasterMenu);
+
+    const shouldOpenReportsMenu = pathname.startsWith('/company/reports');
+    setOpenReportsMenu(shouldOpenReportsMenu);
+
+    const shouldOpenUtilityMenu = pathname.startsWith('/company/vehicle-expenses') || pathname.startsWith('/company/utility/staff');
+    setOpenUtilityMenu(shouldOpenUtilityMenu);
+    
   }, [pathname]);
 
   React.useEffect(() => {
@@ -123,7 +118,7 @@ export function AppSidebar() {
   }, [state]);
 
   let menu, user, email, avatarSeed, avatarFallback;
-  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : (isBranch ? '/company?role=Branch' : '/');
+  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : (isBranch ? `/company?role=Branch` : '/');
 
 
   if (isAdmin) {
@@ -179,7 +174,7 @@ export function AppSidebar() {
       </>
     );
   } else if (isCompany || isBranch) {
-    user = isCompany ? 'Company User' : 'Priya Singh';
+    user = isCompany ? 'Company User' : 'Priya Singh (Branch)';
     email = isCompany ? 'manager@company.com' : 'staff@branch.com';
     avatarSeed = isCompany ? 'company-avatar' : 'branch-avatar';
     avatarFallback = isCompany ? 'CU' : 'PS';
@@ -260,7 +255,7 @@ export function AppSidebar() {
       <>
         <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
           <CollapsibleTrigger asChild>
-             <SidebarMenuButton href={homeHref} variant="ghost" className="w-full justify-start" isActive={pathname === '/company' && !pathname.includes('tracking') && !pathname.includes('history')} tooltip="Dashboard">
+             <SidebarMenuButton href={homeHref} variant="ghost" className="w-full justify-start" isActive={pathname === '/company'} tooltip="Dashboard">
               <Home />
               <span>Dashboard</span>
               <ChevronDown
@@ -455,7 +450,7 @@ export function AppSidebar() {
     );
   }
 
-  const settingsHref = isCompany ? "/company/settings" : isBranch ? "/company/branch/settings" : "/";
+  const settingsHref = isCompany ? "/company/settings" : isBranch ? "/company/branch/settings" : "/admin/settings";
 
   return (
     <Sidebar>
@@ -482,7 +477,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               href={settingsHref}
               tooltip="Settings"
-              isActive={pathname.startsWith('/admin/settings') || pathname.startsWith('/company/settings') || pathname.startsWith('/company/branch/settings')}
+              isActive={pathname.endsWith('/settings')}
             >
               <Settings />
               <span>Settings</span>

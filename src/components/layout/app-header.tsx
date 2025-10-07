@@ -67,7 +67,7 @@ export function AppHeader() {
     avatarSeed = 'company-avatar';
     avatarFallback = user.charAt(0) || 'C';
   } else if (isBranch) {
-    user = 'Priya Singh';
+    user = 'Priya Singh (Branch)';
     userRole = 'My Account';
     avatarSeed = 'branch-avatar';
     avatarFallback = 'PS';
@@ -80,7 +80,7 @@ export function AppHeader() {
 
 
   const isNewBookingPage = pathname === '/company/bookings/new';
-  const homeHref = isAdmin ? '/admin' : isCompany ? '/company' : (isBranch ? `/company?role=Branch` : '/');
+  const homeHref = isAdmin ? '/admin' : (isCompany ? '/company' : (isBranch ? `/company?role=Branch` : '/'));
 
 
   return (
