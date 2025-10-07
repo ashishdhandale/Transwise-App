@@ -16,29 +16,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
-import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
+import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { addHistoryLog } from '@/lib/history-data';
-
-
-let manualLrId = 0;
-
-const createEmptyManualLr = (): LrDetail & { manualId: number } => ({
-    manualId: manualLrId++,
-    challanId: '',
-    lrNo: '',
-    lrType: 'TOPAY',
-    sender: '',
-    receiver: '',
-    from: '',
-    to: '',
-    bookingDate: new Date().toISOString().split('T')[0],
-    itemDescription: '',
-    quantity: 0,
-    actualWeight: 0,
-    chargeWeight: 0,
-    grandTotal: 0,
-});
-
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { BookingForm } from '../bookings/booking-form';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function NewInwardChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
@@ -54,8 +36,9 @@ export function NewInwardChallanForm() {
     const [driverName, setDriverName] = useState('');
     const [fromStation, setFromStation] = useState('');
     
-    // Manual LR Entry
-    const [manualLrs, setManualLrs] = useState<(LrDetail & { manualId: number })[]>([createEmptyManualLr()]);
+    // Manual LR state
+    const [manualLrs, setManualLrs] = useState<Booking[]>([]);
+    const [isBookingFormOpen, setIsBookingFormOpen] = useState(false);
     
     // Import from System
     const [importQuery, setImportQuery] = useState('');
@@ -98,27 +81,39 @@ export function NewInwardChallanForm() {
         }
     };
     
-    const handleManualLrChange = (index: number, field: keyof LrDetail, value: any) => {
-        const updatedLrs = [...manualLrs];
-        (updatedLrs[index] as any)[field] = value;
-        setManualLrs(updatedLrs);
-    };
-
-    const addManualLrRow = () => {
-        setManualLrs(prev => [...prev, createEmptyManualLr()]);
-    };
-
-    const removeManualLrRow = (id: number) => {
-        setManualLrs(prev => prev.filter(lr => lr.manualId !== id));
-    };
+    const handleAddManualBooking = (bookingData: Booking) => {
+        setManualLrs(prev => [...prev, bookingData]);
+        setIsBookingFormOpen(false);
+        toast({ title: 'LR Added', description: `LR No. ${bookingData.lrNo} has been added to the inward challan.`});
+    }
 
     const handleSaveInwardChallan = (mode: 'manual' | 'import') => {
         const toStation = companyProfile?.city || 'N/A';
         
         let lrsToSave: LrDetail[] = [];
+        let bookingsToUpdate: Booking[] = [];
+
         if (mode === 'manual') {
-            lrsToSave = manualLrs.map(({ manualId, ...rest }) => ({...rest, challanId: inwardChallanId }));
+            if (manualLrs.length === 0) {
+                 toast({ title: 'Error', description: 'Please add at least one LR manually.', variant: 'destructive' });
+                 return;
+            }
+            // In manual mode, we create new bookings and their corresponding LR details
+            const allBookings = getBookings();
+            manualLrs.forEach(b => {
+                 const newBooking: Booking = { ...b, status: 'In Stock', trackingId: `TRK-${Date.now()}-${Math.random()}` };
+                 bookingsToUpdate.push(newBooking);
+                 lrsToSave.push({
+                     challanId: inwardChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver, from: b.fromCity, to: b.toCity, bookingDate: b.bookingDate, itemDescription: b.itemDescription, quantity: b.qty, actualWeight: b.itemRows.reduce((s,i) => s + Number(i.actWt), 0), chargeWeight: b.chgWt, grandTotal: b.totalAmount
+                 });
+            });
+            saveBookings([...allBookings, ...bookingsToUpdate]);
+
         } else if (mode === 'import' && selectedChallan) {
+             if (selectedChallanLrs.length === 0) {
+                 toast({ title: 'Error', description: 'No LRs to import from the selected challan.', variant: 'destructive' });
+                 return;
+            }
             lrsToSave = selectedChallanLrs.map(lr => ({...lr, challanId: inwardChallanId, from: fromStation, to: toStation }));
         }
 
@@ -141,7 +136,6 @@ export function NewInwardChallanForm() {
             totalPackages: lrsToSave.reduce((sum, lr) => sum + lr.quantity, 0),
             totalChargeWeight: lrsToSave.reduce((sum, lr) => sum + lr.chargeWeight, 0),
             receivedFromParty: receivedFrom,
-            // These fields are less relevant for inward challans but need defaults
             dispatchToParty: '', totalItems: 0, totalActualWeight: 0, vehicleHireFreight: 0, advance: 0, balance: 0, senderId: '', inwardId: '', summary: { grandTotal: 0, totalTopayAmount: 0, commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0 }
         };
         
@@ -152,7 +146,6 @@ export function NewInwardChallanForm() {
         saveLrDetailsData([...allLrDetails, ...lrsToSave]);
 
         if (mode === 'import') {
-            // Update the status of original bookings
             const lrNumbers = new Set(lrsToSave.map(lr => lr.lrNo));
             const allBookings = getBookings();
             const updatedBookings = allBookings.map(b => {
@@ -221,40 +214,50 @@ export function NewInwardChallanForm() {
                         </div>
                         
                         <div className="pt-4 space-y-2">
-                            <h3 className="font-semibold text-lg">Goods Details (Manual)</h3>
-                            <div className="overflow-x-auto border rounded-md">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-semibold text-lg">Goods Details (Manual)</h3>
+                                <Button type="button" onClick={() => setIsBookingFormOpen(true)}>
+                                    <PlusCircle className="mr-2 h-4 w-4"/>Add LR Manually
+                                </Button>
+                            </div>
+                             <div className="overflow-x-auto border rounded-md min-h-48">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>LR No</TableHead>
                                             <TableHead>Consignor</TableHead>
                                             <TableHead>Consignee</TableHead>
-                                            <TableHead>Description</TableHead>
                                             <TableHead>Qty</TableHead>
                                             <TableHead>Weight</TableHead>
                                             <TableHead>Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {manualLrs.map((lr, index) => (
-                                            <TableRow key={lr.manualId}>
-                                                <TableCell><Input value={lr.lrNo} onChange={e => handleManualLrChange(index, 'lrNo', e.target.value)}/></TableCell>
-                                                <TableCell><Input value={lr.sender} onChange={e => handleManualLrChange(index, 'sender', e.target.value)}/></TableCell>
-                                                <TableCell><Input value={lr.receiver} onChange={e => handleManualLrChange(index, 'receiver', e.target.value)}/></TableCell>
-                                                <TableCell><Input value={lr.itemDescription} onChange={e => handleManualLrChange(index, 'itemDescription', e.target.value)}/></TableCell>
-                                                <TableCell><Input type="number" value={lr.quantity} onChange={e => handleManualLrChange(index, 'quantity', e.target.value)}/></TableCell>
-                                                <TableCell><Input type="number" value={lr.chargeWeight} onChange={e => handleManualLrChange(index, 'chargeWeight', e.target.value)}/></TableCell>
-                                                <TableCell>
-                                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeManualLrRow(lr.manualId)} disabled={manualLrs.length <= 1}>
-                                                        <Trash2 className="h-4 w-4"/>
-                                                    </Button>
+                                         {manualLrs.length > 0 ? (
+                                            manualLrs.map((lr) => (
+                                                <TableRow key={lr.lrNo}>
+                                                    <TableCell>{lr.lrNo}</TableCell>
+                                                    <TableCell>{lr.sender}</TableCell>
+                                                    <TableCell>{lr.receiver}</TableCell>
+                                                    <TableCell>{lr.qty}</TableCell>
+                                                    <TableCell>{lr.chgWt}</TableCell>
+                                                    <TableCell>
+                                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setManualLrs(prev => prev.filter(item => item.lrNo !== lr.lrNo))}>
+                                                            <Trash2 className="h-4 w-4"/>
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                         ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                                    No LRs added yet. Click "Add LR Manually" to start.
                                                 </TableCell>
                                             </TableRow>
-                                        ))}
+                                         )}
                                     </TableBody>
                                 </Table>
                             </div>
-                             <Button type="button" variant="outline" size="sm" onClick={addManualLrRow}><PlusCircle className="mr-2 h-4 w-4"/>Add Row</Button>
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button variant="destructive" type="button" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/>Cancel</Button>
@@ -313,8 +316,26 @@ export function NewInwardChallanForm() {
                 </Card>
             </TabsContent>
         </Tabs>
+        
+        <Dialog open={isBookingFormOpen} onOpenChange={setIsBookingFormOpen}>
+            <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>Add Manual LR Details</DialogTitle>
+                    <DialogDescription>
+                        Fill out the booking details for the externally received LR. This will create a new booking in your system.
+                    </DialogDescription>
+                </DialogHeader>
+                 <ScrollArea className="flex-grow">
+                    <div className="pr-6">
+                        <BookingForm
+                            isOfflineMode={true}
+                            onSaveSuccess={(booking) => handleAddManualBooking(booking)}
+                            onClose={() => setIsBookingFormOpen(false)}
+                        />
+                    </div>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
       </div>
     );
 }
-
-    

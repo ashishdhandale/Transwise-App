@@ -79,10 +79,11 @@ const createEmptyRow = (id: number): ItemRow => ({
 
 interface BookingFormProps {
     bookingId?: string; // This is now trackingId
-    onSaveSuccess?: () => void;
+    onSaveSuccess?: (booking: Booking) => void;
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
+    isOfflineMode?: boolean; // New prop for special offline/inward mode
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -226,12 +227,12 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 
-export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false }: BookingFormProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
     const isEditMode = !!trackingId && !isViewOnly && !isPartialCancel;
-    const isOfflineMode = mode === 'offline';
+    const isOfflineMode = isOfflineModeProp || mode === 'offline';
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
@@ -495,9 +496,16 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 }
 
                 toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
-                if (onSaveSuccess) onSaveSuccess();
+                if (onSaveSuccess) onSaveSuccess(updatedBooking);
             } else {
                 const newBooking: Booking = { trackingId: `TRK-${Date.now()}`, ...newBookingData };
+                // If this form is used for manual inward challans, don't save to the main bookings list.
+                // Just pass the data back to the parent component.
+                if (isOfflineModeProp) {
+                     if (onSaveSuccess) onSaveSuccess(newBooking);
+                     return;
+                }
+
                 const updatedBookings = [...allBookings, newBooking];
                 saveBookings(updatedBookings);
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
@@ -568,7 +576,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName]);
+    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -598,7 +606,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             return;
         }
         
-        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode) {
+        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode && !isOfflineModeProp) {
             setIsPaymentDialogOpen(true);
             return;
         }
@@ -666,7 +674,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 {isEditMode ? `Edit Booking: ${currentLrNumber}` : 
                  isViewOnly ? `View Booking: ${currentLrNumber}` :
                  isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
-                 (isOfflineMode ? 'Add Offline Booking' : 'Create New Booking')}
+                 (isOfflineMode ? 'Add Offline/Manual Booking' : 'Create New Booking')}
             </h1>
             <Card className="border-2 border-green-200">
                 <CardContent className="p-4 space-y-4">
