@@ -362,25 +362,24 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 }
 
             } else {
-                let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
-                if (userRole === 'Branch') {
-                    // For branch user, find their prefix. This is a simplified lookup.
-                    // In a real app, this would come from the user's session data.
-                    const userBranch = branches.find(b => b.name === 'Pune Hub'); // Hardcoded for prototype
-                    if(userBranch?.lrPrefix) {
-                        lrPrefix = userBranch.lrPrefix;
+                if (!currentLrNumber && !isOfflineMode) {
+                    let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
+                    if (userRole === 'Branch') {
+                        const userBranch = branches.find(b => b.name === 'Pune Hub'); 
+                        if(userBranch?.lrPrefix) {
+                            lrPrefix = userBranch.lrPrefix;
+                        }
                     }
+                    setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 }
-                setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
-                setBookingDate(new Date());
             }
 
         } catch (error) {
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [trackingId, toast, loadMasterData, userRole, branches]);
+    }, [trackingId, toast, loadMasterData, userRole, branches, currentLrNumber, isOfflineMode]);
 
     useEffect(() => {
         loadInitialData();
