@@ -57,6 +57,8 @@ export type AddCompanyFormValues = z.infer<typeof formSchema>;
 let companyCounter = 11; 
 
 const generateCompanyCode = () => `CO${companyCounter++}`;
+const generateRandomPassword = () => Math.random().toString(36).substring(2, 10);
+
 
 export default function AddCompanyForm() {
     const { toast } = useToast();
@@ -109,6 +111,7 @@ export default function AddCompanyForm() {
             fileInputRef.current.value = '';
         }
         setCompanyCode(generateCompanyCode());
+        form.setValue('password', generateRandomPassword());
     }, [form]);
 
 
@@ -138,9 +141,10 @@ export default function AddCompanyForm() {
                 password: '' // Clear password field for security
             });
         }
-      } else { // New mode
+      } else { // New mode - set these values on mount for client only
         setFormTitle('Add New User Business Details');
         setCompanyCode(generateCompanyCode());
+        form.setValue('password', generateRandomPassword());
       }
     }, [isViewMode, isEditMode, userId, form]);
 
@@ -501,7 +505,7 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>{isEditMode ? 'New Password' : 'Initial Password'}</FormLabel>
                             <FormControl>
-                                <Input type="password" {...field} disabled={isDisabled} />
+                                <Input type="password" {...field} disabled={isDisabled} readOnly={!isEditMode} />
                             </FormControl>
                             <FormDescription>
                                 {isEditMode ? 'Leave blank to keep the current password.' : 'The owner can change this on first login.'}
@@ -529,5 +533,3 @@ export default function AddCompanyForm() {
     </Form>
   );
 }
-
-    
