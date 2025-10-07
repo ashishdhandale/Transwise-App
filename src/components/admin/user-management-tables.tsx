@@ -105,6 +105,10 @@ export function UserManagementTables() {
     return count;
   };
 
+   const getBranchCount = (user: ExistingUser): number => {
+      return allBranches.filter(b => b.companyId === String(user.id)).length;
+  }
+
   const inquiriesTotalPages = Math.ceil(filteredInquiries.length / inquiriesRowsPerPage);
   const paginatedInquiries = useMemo(() => {
     const startIndex = (inquiriesPage - 1) * inquiriesRowsPerPage;
@@ -250,8 +254,9 @@ export function UserManagementTables() {
                 <TableRow>
                   <TableHead className={thClass}>#</TableHead>
                   <TableHead className={thClass}>USER ID</TableHead>
-                  <TableHead className={thClass}>Sub IDs</TableHead>
                   <TableHead className={thClass}>Company Name</TableHead>
+                  <TableHead className={thClass}>User IDs</TableHead>
+                  <TableHead className={thClass}>Branches</TableHead>
                   <TableHead className={thClass}>Licence Type</TableHead>
                   <TableHead className={thClass}>Valid Till</TableHead>
                   <TableHead className={`${thClass} text-center`}>Action</TableHead>
@@ -262,8 +267,9 @@ export function UserManagementTables() {
                   <TableRow key={user.id}>
                     <TableCell className={cn(tdClass)}>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
                     <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
-                    <TableCell className={cn(tdClass, "font-semibold text-center")}>{getSubIdCount(user)}</TableCell>
                     <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
+                    <TableCell className={cn(tdClass, "font-semibold text-center")}>{getSubIdCount(user)} / {user.maxUsers}</TableCell>
+                     <TableCell className={cn(tdClass, "font-semibold text-center")}>{getBranchCount(user)} / {user.maxBranches}</TableCell>
                     <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>
                     <TableCell className={cn(tdClass)}>{user.validTill}</TableCell>
                     <TableCell className={cn(tdClass, "text-center")}>

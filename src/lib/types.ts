@@ -133,7 +133,7 @@ export type NewRequest = {
     licenceType: "Trial" | "Bronze" | "Gold" | "Platinum";
 };
 
-export type ExistingUser = {
+export interface ExistingUser {
     id: number;
     userId: string;
     subIds: number;
@@ -142,9 +142,10 @@ export type ExistingUser = {
     transporterId: string;
     address: string;
     contactNo: string;
-    totalIssuedIds: number;
     licenceType: "Trial" | "Bronze" | "Gold" | "Platinum";
     validTill: string;
+    maxUsers: number;
+    maxBranches: number;
 };
 
 export interface Driver {

@@ -27,7 +27,8 @@ const formSchema = z.object({
   companyCode: z.string().optional(),
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
   companyLogo: z.any().optional(),
-  noOfIdRequired: z.coerce.number().min(1, 'At least 1 ID is required.'),
+  noOfBranches: z.coerce.number().min(0, 'Cannot be negative.').default(1),
+  noOfUsers: z.coerce.number().min(1, 'At least 1 user ID is required.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   state: z.string().min(1, { message: 'State is required.'}),
@@ -61,7 +62,8 @@ export default function AddCompanyForm() {
         defaultValues: {
             companyCode: '',
             companyName: '',
-            noOfIdRequired: 1,
+            noOfBranches: 1,
+            noOfUsers: 5,
             headOfficeAddress: '',
             officeAddress2: '',
             state: '',
@@ -119,7 +121,7 @@ export default function AddCompanyForm() {
                 <CardDescription>Enter the information for the new company.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <FormField
                         control={form.control}
                         name="companyCode"
@@ -129,7 +131,7 @@ export default function AddCompanyForm() {
                             <FormControl>
                                 <Input {...field} disabled className="font-bold text-muted-foreground bg-muted/50" />
                             </FormControl>
-                            <FormDescription>This code is auto-generated and used to identify the company.</FormDescription>
+                            <FormDescription>This code is auto-generated.</FormDescription>
                             <FormMessage />
                             </FormItem>
                         )}
@@ -147,16 +149,30 @@ export default function AddCompanyForm() {
                             </FormItem>
                         )}
                     />
-                    <FormField
+                     <FormField
                         control={form.control}
-                        name="noOfIdRequired"
+                        name="noOfBranches"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>No. of ID Required</FormLabel>
+                            <FormLabel>No. of Branches</FormLabel>
+                            <FormControl>
+                                <Input type="number" placeholder="e.g. 2" {...field} />
+                            </FormControl>
+                            <FormDescription>Branches allowed.</FormDescription>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="noOfUsers"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>No. of User IDs</FormLabel>
                             <FormControl>
                                 <Input type="number" placeholder="e.g. 5" {...field} />
                             </FormControl>
-                            <FormDescription>Number of sub-user IDs needed.</FormDescription>
+                            <FormDescription>Sub-user IDs allowed.</FormDescription>
                             <FormMessage />
                             </FormItem>
                         )}
@@ -428,5 +444,3 @@ export default function AddCompanyForm() {
     </Form>
   );
 }
-
-    

@@ -24,9 +24,10 @@ export const existingUsers: ExistingUser[] = [
         transporterId: 'T-12345',
         address: '123 Tech Park, Silicon Valley',
         contactNo: '9876543210',
-        totalIssuedIds: 5,
         licenceType: 'Platinum',
         validTill: '2025-12-31',
+        maxUsers: 10,
+        maxBranches: 5,
     }
 ];
 
