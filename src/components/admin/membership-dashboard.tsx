@@ -23,7 +23,7 @@ export function MembershipDashboard() {
     },
     {
       value: activeMemberships.toString(),
-      label: 'Active Memberships',
+      label: 'Paid Subscriptions',
       color: 'bg-primary',
     },
   ];
