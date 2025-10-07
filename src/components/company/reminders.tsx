@@ -128,7 +128,7 @@ export function Reminders() {
                         <div className="space-y-3">
                            {reminders.map((reminder, index) => {
                                 const reminderContent = (
-                                    <div key={index} className="flex items-start gap-3 p-2 rounded-md hover:bg-yellow-100/50">
+                                    <div className="flex items-start gap-3 p-2 rounded-md hover:bg-yellow-100/50">
                                         <div className="mt-1">
                                             {getIcon(reminder.type, reminder.level)}
                                         </div>
@@ -140,9 +140,9 @@ export function Reminders() {
                                 );
 
                                 if (reminder.link) {
-                                    return <Link href={reminder.link} legacyBehavior>{reminderContent}</Link>
+                                    return <Link key={index} href={reminder.link} legacyBehavior>{reminderContent}</Link>
                                 }
-                                return reminderContent;
+                                return React.cloneElement(reminderContent, { key: index });
                            })}
                         </div>
                     )}
