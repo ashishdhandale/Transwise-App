@@ -22,7 +22,7 @@ import { Loader2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { sampleExistingUsers } from '@/lib/sample-data';
-import type { LicenceType } from '@/lib/licence-data';
+import type { LicenceType, ExistingUser } from '@/lib/types';
 import { getLicenceTypes } from '@/lib/licence-data';
 
 const formSchema = z.object({
@@ -68,6 +68,23 @@ export default function AddCompanyForm() {
     const isViewMode = !!userId && mode !== 'edit';
     const isEditMode = !!userId && mode === 'edit';
     const isNewMode = !userId;
+    
+    const [allUsers, setAllUsers] = useState<ExistingUser[]>([]);
+
+    const refinedFormSchema = useMemo(() => {
+        return formSchema.superRefine((data, ctx) => {
+            if (isNewMode) {
+                const nameExists = allUsers.some(user => user.companyName.toLowerCase() === data.companyName.toLowerCase());
+                if (nameExists) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        path: ['companyName'],
+                        message: `A company named "${data.companyName}" already exists.`,
+                    });
+                }
+            }
+        });
+    }, [isNewMode, allUsers]);
 
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -78,10 +95,11 @@ export default function AddCompanyForm() {
 
     useEffect(() => {
         setLicenceTypes(getLicenceTypes());
+        setAllUsers(sampleExistingUsers);
     }, []);
 
     const form = useForm<AddCompanyFormValues>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(refinedFormSchema),
         defaultValues: {
             companyCode: '',
             companyName: '',
