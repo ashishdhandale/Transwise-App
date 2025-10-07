@@ -21,14 +21,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { sampleExistingUsers } from '@/lib/sample-data';
 
 const formSchema = z.object({
   // Company Details
   companyCode: z.string().optional(),
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
   companyLogo: z.any().optional(),
-  noOfBranches: z.coerce.number().min(0, 'Cannot be negative.').default(1),
-  noOfUsers: z.coerce.number().min(1, 'At least 1 user ID is required.'),
+  maxBranches: z.coerce.number().min(0, 'Cannot be negative.').default(1),
+  maxUsers: z.coerce.number().min(1, 'At least 1 user ID is required.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   state: z.string().min(1, { message: 'State is required.'}),
@@ -43,7 +45,7 @@ const formSchema = z.object({
   authPersonName: z.string().min(2, { message: 'Authorized person name is required.' }),
   authContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
   authEmail: z.string().email({ message: 'Please enter a valid email address for login.' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters.' }).optional(),
 });
 
 export type AddCompanyFormValues = z.infer<typeof formSchema>;
@@ -53,17 +55,22 @@ let companyCounter = 11;
 
 export default function AddCompanyForm() {
     const { toast } = useToast();
+    const searchParams = useSearchParams();
+    const userId = searchParams.get('userId');
+    const isViewMode = !!userId;
+
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [formTitle, setFormTitle] = useState('Add New User Business Details');
 
     const form = useForm<AddCompanyFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             companyCode: '',
             companyName: '',
-            noOfBranches: 1,
-            noOfUsers: 5,
+            maxBranches: 1,
+            maxUsers: 5,
             headOfficeAddress: '',
             officeAddress2: '',
             state: '',
@@ -81,12 +88,39 @@ export default function AddCompanyForm() {
     });
 
     useEffect(() => {
+      if (isViewMode) {
+        const userToView = sampleExistingUsers.find(u => String(u.id) === userId);
+        if (userToView) {
+            setFormTitle(`Viewing Details: ${userToView.companyName}`);
+            form.reset({
+                companyCode: userToView.userId,
+                companyName: userToView.companyName,
+                maxBranches: userToView.maxBranches,
+                maxUsers: userToView.maxUsers,
+                headOfficeAddress: userToView.address,
+                gstNo: userToView.gstNo,
+                transporterId: userToView.transporterId,
+                companyContactNo: userToView.contactNo,
+                // These fields are not in the ExistingUser type, so we'll leave them blank for view mode.
+                // In a real app, these would come from the full user record.
+                officeAddress2: '', 
+                state: '',
+                city: '',
+                pan: '',
+                companyEmail: '',
+                authPersonName: 'Admin User',
+                authContactNo: userToView.contactNo,
+                authEmail: 'admin@example.com',
+            });
+        }
+      } else {
         // Generate and set the next company code only on the client side
         // to avoid hydration mismatch errors.
         if (form.getValues('companyCode') === '') {
           form.setValue('companyCode', `CO${companyCounter}`);
         }
-    }, [form]);
+      }
+    }, [isViewMode, userId, form]);
 
     async function onSubmit(values: AddCompanyFormValues) {
         setIsSubmitting(true);
@@ -111,14 +145,17 @@ export default function AddCompanyForm() {
         form.setValue('companyCode', `CO${companyCounter}`); // set next code
         setIsSubmitting(false);
     }
+    
+    // In view mode, all fields should be disabled.
+    const isDisabled = isViewMode || isSubmitting;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Company Business Details</CardTitle>
-                <CardDescription>Enter the information for the new company.</CardDescription>
+                <CardTitle className="font-headline">{formTitle}</CardTitle>
+                <CardDescription>{isViewMode ? 'Viewing company details.' : 'Enter the information for the new company.'}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -143,7 +180,7 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>Company Name</FormLabel>
                             <FormControl>
-                                <Input placeholder="Example: Transwise Logistics" {...field} />
+                                <Input placeholder="Example: Transwise Logistics" {...field} disabled={isDisabled} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -151,12 +188,12 @@ export default function AddCompanyForm() {
                     />
                      <FormField
                         control={form.control}
-                        name="noOfBranches"
+                        name="maxBranches"
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>No. of Branches</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 2" {...field} />
+                                <Input type="number" placeholder="e.g. 2" {...field} disabled={isDisabled} />
                             </FormControl>
                             <FormDescription>Branches allowed.</FormDescription>
                             <FormMessage />
@@ -165,12 +202,12 @@ export default function AddCompanyForm() {
                     />
                     <FormField
                         control={form.control}
-                        name="noOfUsers"
+                        name="maxUsers"
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>No. of User IDs</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="e.g. 5" {...field} />
+                                <Input type="number" placeholder="e.g. 5" {...field} disabled={isDisabled} />
                             </FormControl>
                             <FormDescription>Sub-user IDs allowed.</FormDescription>
                             <FormMessage />
@@ -185,7 +222,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                             <FormLabel>Company Logo</FormLabel>
                              <div className="flex items-center gap-4">
-                                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isDisabled}>
                                     Choose File
                                 </Button>
                                 <FormControl>
@@ -198,7 +235,7 @@ export default function AddCompanyForm() {
                                             field.onChange(file);
                                             setSelectedFileName(file?.name || null);
                                         }}
-                                        
+                                        disabled={isDisabled}
                                     />
                                 </FormControl>
                                 {selectedFileName ? (
@@ -216,6 +253,7 @@ export default function AddCompanyForm() {
                                                     fileInputRef.current.value = '';
                                                 }
                                             }}
+                                            disabled={isDisabled}
                                         >
                                             <X className="h-4 w-4" />
                                         </Button>
@@ -236,7 +274,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>Head Office Add.</FormLabel>
                         <FormControl>
-                            <Textarea placeholder="Head Office Address" {...field} />
+                            <Textarea placeholder="Head Office Address" {...field} disabled={isDisabled} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -249,7 +287,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>Office Add. 2</FormLabel>
                         <FormControl>
-                            <Textarea placeholder="Branch or secondary address" {...field} />
+                            <Textarea placeholder="Branch or secondary address" {...field} disabled={isDisabled} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -262,7 +300,7 @@ export default function AddCompanyForm() {
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>State</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select a state" />
@@ -285,7 +323,7 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>City</FormLabel>
                              <FormControl>
-                                <Input placeholder="Enter city name" {...field} />
+                                <Input placeholder="Enter city name" {...field} disabled={isDisabled} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -300,7 +338,7 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>Transport ID</FormLabel>
                             <FormControl>
-                                <Input placeholder="12345678911" {...field} />
+                                <Input placeholder="12345678911" {...field} disabled={isDisabled} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -313,7 +351,7 @@ export default function AddCompanyForm() {
                             <FormItem>
                             <FormLabel>PAN</FormLabel>
                             <FormControl>
-                                <Input placeholder="ABCDE1234F" {...field} />
+                                <Input placeholder="ABCDE1234F" {...field} disabled={isDisabled} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -327,7 +365,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>GST No</FormLabel>
                         <FormControl>
-                            <Input placeholder="15-digit GSTIN" {...field} />
+                            <Input placeholder="15-digit GSTIN" {...field} disabled={isDisabled} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -340,7 +378,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>Contact No</FormLabel>
                         <FormControl>
-                            <Input placeholder="9890356869, 8888822222" {...field} />
+                            <Input placeholder="9890356869, 8888822222" {...field} disabled={isDisabled} />
                         </FormControl>
                          <FormDescription>
                             Put "," between numbers to separate them.
@@ -356,7 +394,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                            <Input type="email" placeholder="contact@company.com" {...field} />
+                            <Input type="email" placeholder="contact@company.com" {...field} disabled={isDisabled} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -369,7 +407,7 @@ export default function AddCompanyForm() {
             <CardHeader>
                 <CardTitle className="font-headline">Authorized Person Details</CardTitle>
                 <CardDescription>
-                    Create the primary user account for the company. This user will have the 'Company' role.
+                    {isViewMode ? 'Details for the primary user account.' : "Create the primary user account for the company. This user will have the 'Company' role."}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -380,7 +418,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>Auth. Person</FormLabel>
                         <FormControl>
-                            <Input placeholder="John Doe" {...field} />
+                            <Input placeholder="John Doe" {...field} disabled={isDisabled} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -393,7 +431,7 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>Contact No (for Auth. Person)</FormLabel>
                         <FormControl>
-                            <Input placeholder="9890356869, 8888822643" {...field} />
+                            <Input placeholder="9890356869, 8888822643" {...field} disabled={isDisabled} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -406,41 +444,47 @@ export default function AddCompanyForm() {
                         <FormItem>
                         <FormLabel>Login Email</FormLabel>
                         <FormControl>
-                            <Input type="email" placeholder="owner@company.com" {...field} />
+                            <Input type="email" placeholder="owner@company.com" {...field} disabled={isDisabled} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Initial Password</FormLabel>
-                        <FormControl>
-                            <Input type="password" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                            The owner can change this on first login.
-                        </FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                {!isViewMode && (
+                    <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Initial Password</FormLabel>
+                            <FormControl>
+                                <Input type="password" {...field} disabled={isDisabled} />
+                            </FormControl>
+                            <FormDescription>
+                                The owner can change this on first login.
+                            </FormDescription>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
             </CardContent>
         </Card>
         
-        <div className="flex gap-4">
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add User
-            </Button>
-            <Button type="button" variant="outline" onClick={() => form.reset()}>
-                Reset
-            </Button>
-        </div>
+        {!isViewMode && (
+            <div className="flex gap-4">
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Add User
+                </Button>
+                <Button type="button" variant="outline" onClick={() => form.reset()}>
+                    Reset
+                </Button>
+            </div>
+        )}
       </form>
     </Form>
   );
 }
+
+    

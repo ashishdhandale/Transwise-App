@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Search, ChevronLeft, ChevronRight, UserPlus, Pencil } from 'lucide-react';
+import { MoreHorizontal, Search, ChevronLeft, ChevronRight, UserPlus, Pencil, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -297,7 +297,9 @@ export function UserManagementTables() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                               <Link href={`/admin/add-company?userId=${user.id}`}><Eye className="mr-2 h-4 w-4" /> View Details</Link>
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleOpenEditDialog(user)}>
                               <Pencil className="mr-2 h-4 w-4" /> Edit User
                             </DropdownMenuItem>
@@ -373,3 +375,5 @@ export function UserManagementTables() {
     </>
   );
 }
+
+    
