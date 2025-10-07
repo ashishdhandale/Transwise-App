@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { sampleNewRequests, sampleExistingUsers } from '@/lib/sample-data';
+import { newRequests as sampleNewRequests, existingUsers as sampleExistingUsers } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { NewRequest, ExistingUser } from '@/lib/types';
@@ -341,3 +341,5 @@ export function UserManagementTables() {
     </div>
   );
 }
+
+    
