@@ -25,10 +25,12 @@ import { Input } from '@/components/ui/input';
 import { existingUsers, onlineInquiries as sampleInquiries } from '@/lib/sample-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { ExistingUser, OnlineInquiry } from '@/lib/types';
+import type { ExistingUser, OnlineInquiry, Staff, Branch } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import Link from 'next/link';
+import { getStaff } from '@/lib/staff-data';
+import { getBranches } from '@/lib/branch-data';
 
 
 const thClass = "bg-primary text-primary-foreground";
@@ -45,8 +47,16 @@ export function UserManagementTables() {
   
   const [onlineInquiries, setOnlineInquiries] = useState<OnlineInquiry[]>(sampleInquiries);
   const [localExistingUsers, setLocalExistingUsers] = useState<ExistingUser[]>(existingUsers);
+  const [allStaff, setAllStaff] = useState<Staff[]>([]);
+  const [allBranches, setAllBranches] = useState<Branch[]>([]);
+
   const { toast } = useToast();
   
+  useEffect(() => {
+    setAllStaff(getStaff());
+    setAllBranches(getBranches());
+  }, []);
+
   const handleDeactivate = (user: ExistingUser) => {
       // In a real app, this would likely set a status to 'inactive'
       setLocalExistingUsers(prev => prev.filter(u => u.id !== user.id));
@@ -79,6 +89,21 @@ export function UserManagementTables() {
         item.transporterId.toLowerCase().includes(lowercasedQuery)
     );
   }, [existingUserSearch, localExistingUsers]);
+  
+  const getSubIdCount = (user: ExistingUser): number => {
+    // For now, we assume companyName is unique and can be used to link.
+    // A better approach would be a companyId.
+    const companyBranches = allBranches.filter(b => b.companyId === String(user.id));
+    const branchNames = companyBranches.map(b => b.name);
+    
+    // Also include staff at the 'Main Office' if it belongs to the company (simplified logic)
+    if (user.companyName.toLowerCase().includes('transwise')) { // Example logic for main company
+        branchNames.push('Main Office');
+    }
+
+    const count = allStaff.filter(s => s.branch && branchNames.includes(s.branch)).length;
+    return count;
+  };
 
   const inquiriesTotalPages = Math.ceil(filteredInquiries.length / inquiriesRowsPerPage);
   const paginatedInquiries = useMemo(() => {
@@ -237,7 +262,7 @@ export function UserManagementTables() {
                   <TableRow key={user.id}>
                     <TableCell className={cn(tdClass)}>{(existingUsersPage - 1) * existingUsersRowsPerPage + index + 1}</TableCell>
                     <TableCell className={cn(tdClass)}>{user.userId}</TableCell>
-                    <TableCell className={cn(tdClass)}>{user.subIds}</TableCell>
+                    <TableCell className={cn(tdClass, "font-semibold text-center")}>{getSubIdCount(user)}</TableCell>
                     <TableCell className={cn(tdClass)}>{user.companyName}</TableCell>
                     <TableCell className={cn(tdClass)}><Badge variant="default">{user.licenceType}</Badge></TableCell>
                     <TableCell className={cn(tdClass)}>{user.validTill}</TableCell>
