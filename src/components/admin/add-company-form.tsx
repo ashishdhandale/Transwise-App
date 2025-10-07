@@ -56,6 +56,8 @@ export type AddCompanyFormValues = z.infer<typeof formSchema>;
 // This would typically come from a database sequence or a counter service
 let companyCounter = 11; 
 
+const generateCompanyCode = () => `CO${companyCounter++}`;
+
 export default function AddCompanyForm() {
     const { toast } = useToast();
     const searchParams = useSearchParams();
@@ -99,6 +101,16 @@ export default function AddCompanyForm() {
         },
     });
 
+    const handleResetForm = React.useCallback(() => {
+        form.reset();
+        setSelectedFileName(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+        form.setValue('companyCode', generateCompanyCode());
+    }, [form]);
+
+
     useEffect(() => {
       if (userId) { // View or Edit mode
         const userToView = sampleExistingUsers.find(u => String(u.id) === userId);
@@ -126,9 +138,8 @@ export default function AddCompanyForm() {
         }
       } else { // New mode
         setFormTitle('Add New User Business Details');
-        if (form.getValues('companyCode') === '') {
-          form.setValue('companyCode', `CO${companyCounter}`);
-        }
+        // Generate code only on the client-side after initial render to avoid hydration error
+        form.setValue('companyCode', generateCompanyCode());
       }
     }, [isViewMode, isEditMode, userId, form]);
 
@@ -148,13 +159,7 @@ export default function AddCompanyForm() {
                 title: "Company Created Successfully",
                 description: `${values.companyName} has been added and the owner account is ready.`,
             });
-            companyCounter++;
-            form.reset();
-            setSelectedFileName(null);
-            if (fileInputRef.current) {
-              fileInputRef.current.value = '';
-            }
-            form.setValue('companyCode', `CO${companyCounter}`);
+            handleResetForm();
         }
         
         setIsSubmitting(false);
