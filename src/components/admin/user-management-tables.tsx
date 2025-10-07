@@ -31,7 +31,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Link from 'next/link';
 import { getStaff } from '@/lib/staff-data';
 import { getBranches } from '@/lib/branch-data';
-import { EditUserDialog } from './edit-user-dialog';
 
 
 const thClass = "bg-primary text-primary-foreground";
@@ -51,9 +50,6 @@ export function UserManagementTables() {
   const [allStaff, setAllStaff] = useState<Staff[]>([]);
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
 
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<ExistingUser | null>(null);
-
   const { toast } = useToast();
   
   useEffect(() => {
@@ -61,18 +57,6 @@ export function UserManagementTables() {
     setAllBranches(getBranches());
   }, []);
   
-  const handleOpenEditDialog = (user: ExistingUser) => {
-    setEditingUser(user);
-    setIsEditDialogOpen(true);
-  };
-  
-  const handleSaveUser = (updatedUser: ExistingUser) => {
-    const updatedUsers = localExistingUsers.map(u => u.id === updatedUser.id ? updatedUser : u);
-    setLocalExistingUsers(updatedUsers);
-    // In a real app, you'd save this to a database. For now, we don't persist it.
-    toast({ title: "User Updated", description: `${updatedUser.companyName}'s details have been updated.`});
-    setIsEditDialogOpen(false);
-  }
 
   const handleDeactivate = (user: ExistingUser) => {
       // In a real app, this would likely set a status to 'inactive'
@@ -300,8 +284,8 @@ export function UserManagementTables() {
                             <DropdownMenuItem asChild>
                                <Link href={`/admin/add-company?userId=${user.id}`}><Eye className="mr-2 h-4 w-4" /> View Details</Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleOpenEditDialog(user)}>
-                              <Pencil className="mr-2 h-4 w-4" /> Edit User
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/add-company?userId=${user.id}&mode=edit`}><Pencil className="mr-2 h-4 w-4" /> Edit User</Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem>Manage Subscription</DropdownMenuItem>
                             <DropdownMenuItem>Backup</DropdownMenuItem>
@@ -364,16 +348,6 @@ export function UserManagementTables() {
           </CardFooter>
         </Card>
       </div>
-      {editingUser && (
-        <EditUserDialog
-          user={editingUser}
-          isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onSave={handleSaveUser}
-        />
-      )}
     </>
   );
 }
-
-    

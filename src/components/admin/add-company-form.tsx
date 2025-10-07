@@ -57,7 +57,10 @@ export default function AddCompanyForm() {
     const { toast } = useToast();
     const searchParams = useSearchParams();
     const userId = searchParams.get('userId');
-    const isViewMode = !!userId;
+    const mode = searchParams.get('mode');
+    
+    const isViewMode = !!userId && mode !== 'edit';
+    const isEditMode = !!userId && mode === 'edit';
 
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -88,10 +91,10 @@ export default function AddCompanyForm() {
     });
 
     useEffect(() => {
-      if (isViewMode) {
+      if (userId) { // View or Edit mode
         const userToView = sampleExistingUsers.find(u => String(u.id) === userId);
         if (userToView) {
-            setFormTitle(`Viewing Details: ${userToView.companyName}`);
+            setFormTitle(isEditMode ? `Editing Details: ${userToView.companyName}` : `Viewing Details: ${userToView.companyName}`);
             form.reset({
                 companyCode: userToView.userId,
                 companyName: userToView.companyName,
@@ -99,13 +102,13 @@ export default function AddCompanyForm() {
                 maxUsers: userToView.maxUsers,
                 headOfficeAddress: userToView.address,
                 gstNo: userToView.gstNo,
-                transporterId: userToView.transporterId,
                 companyContactNo: userToView.contactNo,
-                // These fields are not in the ExistingUser type, so we'll leave them blank for view mode.
+                // These fields are not in the ExistingUser type, so we'll leave them blank for now.
                 // In a real app, these would come from the full user record.
                 officeAddress2: '', 
-                state: '',
-                city: '',
+                state: 'MAHARASHTRA', // Placeholder
+                city: 'Nagpur', // Placeholder
+                transportId: userToView.transporterId || '',
                 pan: '',
                 companyEmail: '',
                 authPersonName: 'Admin User',
@@ -113,14 +116,15 @@ export default function AddCompanyForm() {
                 authEmail: 'admin@example.com',
             });
         }
-      } else {
+      } else { // New mode
+        setFormTitle('Add New User Business Details');
         // Generate and set the next company code only on the client side
         // to avoid hydration mismatch errors.
         if (form.getValues('companyCode') === '') {
           form.setValue('companyCode', `CO${companyCounter}`);
         }
       }
-    }, [isViewMode, userId, form]);
+    }, [isViewMode, isEditMode, userId, form]);
 
     async function onSubmit(values: AddCompanyFormValues) {
         setIsSubmitting(true);
@@ -129,20 +133,26 @@ export default function AddCompanyForm() {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // On success:
-        toast({
-            title: "Company Created Successfully",
-            description: `${values.companyName} has been added and the owner account is ready.`,
-        });
-        
-        // Increment for the next form load and reset the current form
-        companyCounter++;
-        form.reset();
-        setSelectedFileName(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
+        if (isEditMode) {
+             toast({
+                title: "Company Updated Successfully",
+                description: `${values.companyName} has been updated.`,
+            });
+        } else {
+            toast({
+                title: "Company Created Successfully",
+                description: `${values.companyName} has been added and the owner account is ready.`,
+            });
+            // Increment for the next form load and reset the current form
+            companyCounter++;
+            form.reset();
+            setSelectedFileName(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+            form.setValue('companyCode', `CO${companyCounter}`); // set next code
         }
-        form.setValue('companyCode', `CO${companyCounter}`); // set next code
+        
         setIsSubmitting(false);
     }
     
@@ -155,7 +165,9 @@ export default function AddCompanyForm() {
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">{formTitle}</CardTitle>
-                <CardDescription>{isViewMode ? 'Viewing company details.' : 'Enter the information for the new company.'}</CardDescription>
+                <CardDescription>
+                  {isViewMode ? 'Viewing company details.' : isEditMode ? 'Modify the company information and resource limits.' : 'Enter the information for the new company.'}
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -407,7 +419,7 @@ export default function AddCompanyForm() {
             <CardHeader>
                 <CardTitle className="font-headline">Authorized Person Details</CardTitle>
                 <CardDescription>
-                    {isViewMode ? 'Details for the primary user account.' : "Create the primary user account for the company. This user will have the 'Company' role."}
+                    {isViewMode ? 'Details for the primary user account.' : isEditMode ? 'Modify primary user account details.' : "Create the primary user account for the company. This user will have the 'Company' role."}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -456,12 +468,12 @@ export default function AddCompanyForm() {
                         name="password"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Initial Password</FormLabel>
+                            <FormLabel>{isEditMode ? 'New Password' : 'Initial Password'}</FormLabel>
                             <FormControl>
                                 <Input type="password" {...field} disabled={isDisabled} />
                             </FormControl>
                             <FormDescription>
-                                The owner can change this on first login.
+                                {isEditMode ? 'Leave blank to keep the current password.' : 'The owner can change this on first login.'}
                             </FormDescription>
                             <FormMessage />
                             </FormItem>
@@ -475,9 +487,9 @@ export default function AddCompanyForm() {
             <div className="flex gap-4">
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add User
+                    {isEditMode ? 'Save Changes' : 'Add User'}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => form.reset()}>
+                <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isSubmitting}>
                     Reset
                 </Button>
             </div>
@@ -486,5 +498,3 @@ export default function AddCompanyForm() {
     </Form>
   );
 }
-
-    
