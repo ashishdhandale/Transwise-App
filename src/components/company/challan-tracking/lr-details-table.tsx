@@ -12,7 +12,7 @@ import {
 import type { LrDetail } from '@/lib/challan-data';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 const thClass = 'bg-primary/10 text-primary font-bold border-r';
 const tdClass = "whitespace-nowrap border-r";

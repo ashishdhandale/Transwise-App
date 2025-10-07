@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CompanyProfileFormValues } from './settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 interface SummaryItem {
     title: string;

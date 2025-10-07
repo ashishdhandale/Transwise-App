@@ -11,7 +11,7 @@ import type { Vendor } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
 import { getLedgerForVendor } from '@/lib/vendor-accounts-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 const VENDORS_KEY = 'transwise_vendors';
 

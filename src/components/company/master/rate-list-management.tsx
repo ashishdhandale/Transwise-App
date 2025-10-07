@@ -48,7 +48,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { PrintableQuotation } from './quotation/printable-quotation';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StandardRateListEditor } from './standard-rate-list-editor';
 

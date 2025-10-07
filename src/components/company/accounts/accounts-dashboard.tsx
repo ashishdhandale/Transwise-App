@@ -13,7 +13,7 @@ import type { LedgerEntry } from '@/lib/accounts-data';
 import { getLedgerForCustomer } from '@/lib/accounts-data';
 import { getLedgerForVendor } from '@/lib/vendor-accounts-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { getAccounts } from '@/lib/account-data';
 
 export function AccountsDashboard() {

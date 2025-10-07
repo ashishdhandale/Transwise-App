@@ -11,7 +11,7 @@ import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getHistoryLogs, type BookingHistory } from '@/lib/history-data';
 import { getBookings } from '@/lib/bookings-dashboard-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { Card } from '@/components/ui/card';
 
 export function PackageTracking() {

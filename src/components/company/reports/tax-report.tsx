@@ -20,7 +20,7 @@ import type { Customer } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";

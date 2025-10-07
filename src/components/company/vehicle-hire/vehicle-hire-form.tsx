@@ -20,7 +20,8 @@ import { type VehicleHireReceipt, saveVehicleHireReceipts, getVehicleHireReceipt
 import { addVoucher } from '@/lib/accounts-data';
 import { LorryHireChallan } from './lorry-hire-challan';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';

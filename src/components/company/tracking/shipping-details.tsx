@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import type { BookingHistory } from '@/lib/history-data';
 import { format, parseISO } from 'date-fns';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 const DetailRow = ({ label, value, children }: { label?: string; value?: string | number; children?: React.ReactNode }) => (
   <div className="grid grid-cols-[140px_1fr] text-sm items-start">

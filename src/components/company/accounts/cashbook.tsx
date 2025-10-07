@@ -5,7 +5,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { Notebook } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 

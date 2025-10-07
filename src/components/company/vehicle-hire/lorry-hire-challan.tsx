@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { VehicleHireReceipt } from '@/lib/vehicle-hire-data';

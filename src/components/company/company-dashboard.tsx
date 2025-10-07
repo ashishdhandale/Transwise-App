@@ -10,7 +10,7 @@ import { Monitor } from 'lucide-react';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { isToday, subDays, format, parseISO } from 'date-fns';
 import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from './settings/company-profile-settings';
+import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { Reminders } from './reminders';
 import { useSearchParams } from 'next/navigation';
 import { getBranches, type Branch } from '@/lib/branch-data';
