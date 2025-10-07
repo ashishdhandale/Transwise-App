@@ -26,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
-  lrPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
+  lrPrefix: z.string().optional(),
   challanPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
@@ -38,6 +38,14 @@ const profileSchema = z.object({
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
+}).superRefine((data, ctx) => {
+    if (data.grnFormat === 'with_char' && (!data.lrPrefix || data.lrPrefix.length < 2)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['lrPrefix'],
+            message: 'LR Prefix must be at least 2 characters when GRN format is "With Character".'
+        });
+    }
 });
 
 export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
@@ -196,7 +204,7 @@ export function CompanyProfileSettings() {
                         </FormItem>
                     )}
                 />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <FormField
                         control={form.control}
                         name="city"
@@ -221,20 +229,6 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
-                        name="lrPrefix"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>LR Prefix</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., CONAG" {...field} />
-                                </FormControl>
-                                 <FormDescription>Prefix for new LR numbers.</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
                      <FormField
                         control={form.control}
                         name="grnFormat"
@@ -252,6 +246,20 @@ export function CompanyProfileSettings() {
                                         <SelectItem value="plain">Plain Number (01)</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="lrPrefix"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>LR Prefix</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g., CONAG" {...field} />
+                                </FormControl>
+                                 <FormDescription>Prefix for new LR numbers.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -371,3 +379,5 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
+
+    
