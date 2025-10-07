@@ -6,31 +6,25 @@ import { onlineInquiries, sampleExistingUsers as existingUsers } from '@/lib/sam
 
 export function MembershipDashboard() {
 
-  const registeredUsers = onlineInquiries.length + existingUsers.length;
   const activeUsers = existingUsers.length;
   const pendingRequests = onlineInquiries.filter(i => i.status === 'New').length;
   const activeMemberships = existingUsers.filter(u => u.licenceType !== 'Trial').length;
 
   const summaryData = [
     {
-      value: registeredUsers.toString(),
-      label: 'Registered Users',
-      color: 'bg-primary',
-    },
-    {
       value: activeUsers.toString(),
-      label: 'Active users',
+      label: 'Active Companies',
       color: 'bg-primary',
     },
     {
       value: pendingRequests.toString(),
-      label: 'Pending Request',
+      label: 'Pending Inquiries',
       color: 'bg-accent',
     },
     {
       value: activeMemberships.toString(),
-      label: 'Active Membership',
-      color: 'bg-accent',
+      label: 'Active Memberships',
+      color: 'bg-primary',
     },
   ];
 
