@@ -207,7 +207,7 @@ export function NewInwardChallanForm() {
                                 <Input value={vehicleNo} onChange={(e) => setVehicleNo(e.target.value)} />
                             </div>
                              <div className="space-y-1">
-                                <Label>Original Challan No.</Label>
+                                <Label>Manual/External Challan No.</Label>
                                 <Input value={originalChallanNo} onChange={(e) => setOriginalChallanNo(e.target.value)} />
                             </div>
                             <div className="space-y-1">
@@ -316,3 +316,5 @@ export function NewInwardChallanForm() {
       </div>
     );
 }
+
+    
