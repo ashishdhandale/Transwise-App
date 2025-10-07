@@ -9,6 +9,7 @@ export function MembershipDashboard() {
   const activeUsers = existingUsers.length;
   const pendingRequests = onlineInquiries.filter(i => i.status === 'New').length;
   const activeMemberships = existingUsers.filter(u => u.licenceType !== 'Trial').length;
+  const trialSubscriptions = existingUsers.filter(u => u.licenceType === 'Trial').length;
 
   const summaryData = [
     {
@@ -26,6 +27,11 @@ export function MembershipDashboard() {
       label: 'Paid Subscriptions',
       color: 'bg-primary',
     },
+    {
+      value: trialSubscriptions.toString(),
+      label: 'Trial Subscriptions',
+      color: 'bg-yellow-500',
+    }
   ];
 
   return (
