@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -87,7 +86,7 @@ export function AppSidebar() {
     const shouldOpenBranchMenu = pathname.startsWith('/company/branch');
     setOpenBranchMenu(shouldOpenBranchMenu);
 
-    const shouldOpenConsignmentMenu = pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan') || pathname.startsWith('/company/vehicle-hire');
+    const shouldOpenConsignmentMenu = pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan') || pathname.startsWith('/company/vehicle-hire') || pathname.startsWith('/company/deliveries');
     setOpenConsignmentMenu(shouldOpenConsignmentMenu);
 
     const shouldOpenAccountsMenu = pathname.startsWith('/company/accounts');
@@ -205,7 +204,7 @@ export function AppSidebar() {
                 <SidebarMenuButton href={isBranch ? "/company/vehicle-hire?role=Branch" : "/company/vehicle-hire"} size="sm" isActive={pathname.startsWith('/company/vehicle-hire')} tooltip="Vehicle Hire"><Truck />Vehicle Hire</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href="#" size="sm" tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
+                <SidebarMenuButton href={isBranch ? "/company/deliveries?role=Branch" : "/company/deliveries"} size="sm" isActive={pathname.startsWith('/company/deliveries')} tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
               </SidebarMenuItem>
                <SidebarMenuItem>
                 <SidebarMenuButton href={isBranch ? "/company/stock?role=Branch" : "/company/stock"} size="sm" isActive={pathname.startsWith('/company/stock')} tooltip="Stock"><Archive />Stock</SidebarMenuButton>
