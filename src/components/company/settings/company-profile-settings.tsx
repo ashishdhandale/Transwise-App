@@ -21,24 +21,69 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Server } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getCompanyProfile, saveCompanyProfile } from '@/app/company/settings/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
-  grnPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
+  lrPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
+  challanPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   city: z.string().min(1, { message: 'City is required.'}),
-  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }).optional().or(z.literal('')),
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }),
   gstNo: z.string().length(15, { message: 'GST Number must be 15 characters.' }).optional().or(z.literal('')),
   companyContactNo: z.string().min(10, { message: 'Enter at least one valid contact number.' }),
   companyEmail: z.string().email({ message: 'Please enter a valid company email address.' }),
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
+  grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
 });
 
 export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
+
+const LOCAL_STORAGE_KEY = 'transwise_company_profile';
+
+const defaultProfile: CompanyProfileFormValues = {
+    companyName: 'My Transwise Company',
+    lrPrefix: 'CONAG',
+    challanPrefix: 'CHLN',
+    headOfficeAddress: '123 Logistics Lane, Transport City, 440001',
+    officeAddress2: '',
+    city: 'Nagpur',
+    pan: 'ABCDE1234F',
+    gstNo: '27ABCDE1234F1Z5',
+    companyContactNo: '9876543210',
+    companyEmail: 'contact@transwise.com',
+    currency: 'INR',
+    countryCode: 'en-IN',
+    grnFormat: 'with_char'
+};
+
+async function getCompanyProfile(): Promise<CompanyProfileFormValues> {
+    if (typeof window === 'undefined') return defaultProfile;
+    try {
+        const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedProfile) {
+            return JSON.parse(savedProfile);
+        }
+    } catch (error) {
+        console.error("Could not load profile from localStorage", error);
+    }
+    return defaultProfile;
+}
+
+async function saveCompanyProfile(data: CompanyProfileFormValues): Promise<{ success: boolean; message: string }> {
+    if (typeof window === 'undefined') {
+      return { success: false, message: 'LocalStorage is not available.' };
+    }
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        return { success: true, message: 'Profile saved successfully.' };
+    } catch (error) {
+        console.error('Failed to save profile:', error);
+        return { success: false, message: 'An unexpected error occurred.' };
+    }
+}
 
 
 export function CompanyProfileSettings() {
@@ -50,7 +95,8 @@ export function CompanyProfileSettings() {
         resolver: zodResolver(profileSchema),
         defaultValues: {
             companyName: '',
-            grnPrefix: '',
+            lrPrefix: '',
+            challanPrefix: '',
             headOfficeAddress: '',
             officeAddress2: '',
             city: '',
@@ -60,6 +106,7 @@ export function CompanyProfileSettings() {
             companyEmail: '',
             currency: 'INR',
             countryCode: 'en-IN',
+            grnFormat: 'with_char',
         },
     });
 
@@ -68,15 +115,12 @@ export function CompanyProfileSettings() {
             try {
                 setIsLoading(true);
                 const profileData = await getCompanyProfile();
-                const result = profileSchema.safeParse(profileData);
-                if (result.success) {
-                    form.reset(result.data);
-                }
+                form.reset(profileData);
             } catch (error) {
                 console.error("Failed to load company profile", error);
                  toast({
                     title: "Error Loading Profile",
-                    description: "Could not fetch company profile from the server.",
+                    description: "Could not fetch company profile from storage.",
                     variant: "destructive"
                 });
             } finally {
@@ -124,12 +168,12 @@ export function CompanyProfileSettings() {
     <Card>
         <CardHeader>
             <CardTitle className="font-headline">Company Profile</CardTitle>
-            <CardDescription>Manage your company's information. This will be used in reports, receipts, and GR numbers.</CardDescription>
+            <CardDescription>Manage your company's information. This will be used in reports, receipts, and document numbers.</CardDescription>
         </CardHeader>
         <CardContent>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <FormField
                         control={form.control}
                         name="companyName"
@@ -145,14 +189,14 @@ export function CompanyProfileSettings() {
                     />
                     <FormField
                         control={form.control}
-                        name="grnPrefix"
+                        name="challanPrefix"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>GRN Prefix</FormLabel>
+                                <FormLabel>Challan Prefix</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., CONAG" {...field} />
+                                    <Input placeholder="e.g., CHLN" {...field} />
                                 </FormControl>
-                                 <FormDescription>The prefix for all new GR numbers.</FormDescription>
+                                 <FormDescription>Prefix for new challan IDs.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -185,37 +229,74 @@ export function CompanyProfileSettings() {
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Head Office City (for Default Station)</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                    <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Head Office City (for Default Station)</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select your head office city" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Nagpur">Nagpur</SelectItem>
+                                        <SelectItem value="Mumbai">Mumbai</SelectItem>
+                                        <SelectItem value="Pune">Pune</SelectItem>
+                                        <SelectItem value="Delhi">Delhi</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            <FormDescription>This city will be the default "From Station" on new bookings.</FormDescription>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="lrPrefix"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>LR Prefix</FormLabel>
                                 <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select your head office city" />
-                                    </SelectTrigger>
+                                    <Input placeholder="e.g., CONAG" {...field} />
                                 </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="Nagpur">Nagpur</SelectItem>
-                                    <SelectItem value="Mumbai">Mumbai</SelectItem>
-                                    <SelectItem value="Pune">Pune</SelectItem>
-                                    <SelectItem value="Delhi">Delhi</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        <FormDescription>This city will be the default "From Station" on new bookings.</FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                                 <FormDescription>Prefix for new LR numbers.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="grnFormat"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>GRN Format</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select GRN format" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="with_char">With Character (CONAG01)</SelectItem>
+                                        <SelectItem value="plain">Plain Number (01)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="pan"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>PAN</FormLabel>
+                                <FormLabel>PAN*</FormLabel>
                                 <FormControl>
                                     <Input placeholder="ABCDE1234F" {...field} />
                                 </FormControl>
@@ -315,7 +396,7 @@ export function CompanyProfileSettings() {
 
                 <Button type="submit" disabled={isSubmitting || isLoading}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Server className="mr-2 h-4 w-4" />}
-                    Save Profile to Database
+                    Save Profile
                 </Button>
             </form>
             </Form>
