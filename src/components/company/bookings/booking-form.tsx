@@ -281,8 +281,6 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
 
     const generateLrNumber = (bookings: Booking[], prefix: string) => {
-        if (isOfflineMode || isEditMode || isPartialCancel) return '';
-
         const relevantLrNumbers = bookings
             .map(b => b.lrNo)
             .filter(lrNo => lrNo.startsWith(prefix));
@@ -362,7 +360,9 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 }
 
             } else {
-                if (!currentLrNumber && !isOfflineMode) {
+                if (isOfflineMode) {
+                    setCurrentLrNumber('');
+                } else if (!currentLrNumber) {
                     let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
                     if (userRole === 'Branch') {
                         const userBranch = branches.find(b => b.name === 'Pune Hub'); 
@@ -379,7 +379,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [trackingId, toast, loadMasterData, userRole, branches, currentLrNumber, isOfflineMode]);
+    }, [trackingId, toast, loadMasterData, userRole, branches, isOfflineMode, currentLrNumber]);
 
     useEffect(() => {
         loadInitialData();
