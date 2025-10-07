@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -76,7 +77,8 @@ export default function AddCompanyForm() {
     });
 
     useEffect(() => {
-        // Generate and set the next company code on the client side to avoid hydration mismatch
+        // Generate and set the next company code only on the client side
+        // to avoid hydration mismatch errors.
         form.setValue('companyCode', `CO${companyCounter}`);
     }, [form]);
 
@@ -408,3 +410,5 @@ export default function AddCompanyForm() {
     </Form>
   );
 }
+
+    
