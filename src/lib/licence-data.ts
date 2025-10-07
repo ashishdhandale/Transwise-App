@@ -9,10 +9,12 @@ export interface LicenceType {
 const LOCAL_STORAGE_KEY = 'transwise_licence_types';
 
 const initialLicenceTypes: LicenceType[] = [
-    { id: 'licence-1', name: 'Trial', fee: 0, validityDays: 5 },
-    { id: 'licence-2', name: 'Bronze', fee: 250, validityDays: 10 },
-    { id: 'licence-3', name: 'Gold', fee: 500, validityDays: 15 },
-    { id: 'licence-4', name: 'Platinum', fee: 1000, validityDays: 20 },
+    { id: 'licence-1', name: 'Single User', fee: 500, validityDays: 30 },
+    { id: 'licence-2', name: 'Multi Branch', fee: 2000, validityDays: 30 },
+    { id: 'licence-3', name: 'Booking Agent', fee: 300, validityDays: 30 },
+    { id: 'licence-4', name: 'Freight Forwarder', fee: 300, validityDays: 30 },
+    { id: 'licence-5', name: 'Delivery Agent', fee: 300, validityDays: 30 },
+    { id: 'licence-6', name: 'FTL', fee: 1000, validityDays: 30 },
 ];
 
 export const getLicenceTypes = (): LicenceType[] => {
