@@ -28,10 +28,10 @@ export function NewInwardChallanForm() {
     
     // Inward details
     const [inwardChallanId, setInwardChallanId] = useState('');
-    const [inwardDate, setInwardDate] = useState<Date | undefined>(new Date());
+    const [inwardDate, setInwardDate] = useState<Date | undefined>(undefined);
     const [receivedFrom, setReceivedFrom] = useState('');
     const [originalChallanNo, setOriginalChallanNo] = useState('');
-    const [originalChallanDate, setOriginalChallanDate] = useState<Date | undefined>(new Date());
+    const [originalChallanDate, setOriginalChallanDate] = useState<Date | undefined>(undefined);
     const [vehicleNo, setVehicleNo] = useState('');
     const [driverName, setDriverName] = useState('');
     const [fromStation, setFromStation] = useState('');
@@ -59,6 +59,9 @@ export function NewInwardChallanForm() {
             setInwardChallanId(`INW-${String(nextId).padStart(4, '0')}`);
         }
         loadData();
+        // Set date on client to avoid hydration mismatch
+        setInwardDate(new Date());
+        setOriginalChallanDate(new Date());
     }, []);
 
     const handleSearchChallan = () => {
