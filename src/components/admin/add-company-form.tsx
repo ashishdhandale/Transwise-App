@@ -27,6 +27,7 @@ const formSchema = z.object({
   companyCode: z.string().optional(),
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
   companyLogo: z.any().optional(),
+  noOfIdRequired: z.coerce.number().min(1, 'At least 1 ID is required.'),
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   state: z.string().min(1, { message: 'State is required.'}),
@@ -60,6 +61,7 @@ export default function AddCompanyForm() {
         defaultValues: {
             companyCode: '',
             companyName: '',
+            noOfIdRequired: 1,
             headOfficeAddress: '',
             officeAddress2: '',
             state: '',
@@ -79,7 +81,9 @@ export default function AddCompanyForm() {
     useEffect(() => {
         // Generate and set the next company code only on the client side
         // to avoid hydration mismatch errors.
-        form.setValue('companyCode', `CO${companyCounter}`);
+        if (form.getValues('companyCode') === '') {
+          form.setValue('companyCode', `CO${companyCounter}`);
+        }
     }, [form]);
 
     async function onSubmit(values: AddCompanyFormValues) {
@@ -115,7 +119,7 @@ export default function AddCompanyForm() {
                 <CardDescription>Enter the information for the new company.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <FormField
                         control={form.control}
                         name="companyCode"
@@ -139,6 +143,20 @@ export default function AddCompanyForm() {
                             <FormControl>
                                 <Input placeholder="Example: Transwise Logistics" {...field} />
                             </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="noOfIdRequired"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>No. of ID Required</FormLabel>
+                            <FormControl>
+                                <Input type="number" placeholder="e.g. 5" {...field} />
+                            </FormControl>
+                            <FormDescription>Number of sub-user IDs needed.</FormDescription>
                             <FormMessage />
                             </FormItem>
                         )}
