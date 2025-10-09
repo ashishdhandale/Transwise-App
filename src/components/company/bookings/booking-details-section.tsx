@@ -147,7 +147,8 @@ export function BookingDetailsSection({
     }, [loadCityData]);
     
     useEffect(() => {
-        if (isEditMode || !companyProfile || fromStation) return;
+        // Prevent this effect from running in offline mode to stop infinite loops.
+        if (isOfflineMode || isEditMode || !companyProfile || fromStation) return;
         
         if (companyProfile.city) {
             const defaultStation = allCustomCities.find(c => c.name.toLowerCase() === companyProfile.city.toLowerCase());
@@ -157,7 +158,7 @@ export function BookingDetailsSection({
                  onFromStationChange({ id: 0, name: companyProfile.city, aliasCode: '', pinCode: '' });
             }
         }
-    }, [isEditMode, companyProfile, allCustomCities, fromStation, onFromStationChange]);
+    }, [isOfflineMode, isEditMode, companyProfile, allCustomCities, fromStation, onFromStationChange]);
 
 
     const getCityObjectByName = (name: string): City | null => {
@@ -292,7 +293,7 @@ export function BookingDetailsSection({
                             notFoundMessage="No station found."
                             addMessage="Add New Station"
                             onAdd={handleOpenAddCity}
-                            disabled={isViewOnly}
+                            disabled={isViewOnly || (!isEditMode && !isViewOnly && !!companyProfile?.city)}
                             autoOpenOnFocus
                         />
                     )}
