@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Truck } from 'lucide-react';
 import { DeliveriesList } from './deliveries-list';
 import { UpdateDeliveryStatusDialog } from './update-delivery-status-dialog';
@@ -11,6 +11,20 @@ import { addHistoryLog, getHistoryLogs } from '@/lib/history-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { DeliveryMemoDialog } from './delivery-memo-dialog';
+import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Button } from '@/components/ui/button';
+import { CheckCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+
+interface GroupedDeliveries {
+  [challanId: string]: Booking[];
+}
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -28,7 +42,6 @@ export function DeliveriesDashboard() {
     const profile = await getCompanyProfile();
     
     setAllBookings(bookings);
-    // Directly filter for items ready for delivery
     const itemsToDeliver = bookings.filter(b => b.status === 'In Transit');
     setLrsForDelivery(itemsToDeliver);
     setCompanyProfile(profile);
@@ -37,6 +50,37 @@ export function DeliveriesDashboard() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const groupedByChallan = useMemo(() => {
+    const lrDetails = getLrDetailsData();
+    const challanMap = new Map<string, string[]>(); // Map challanId to list of lrNo
+
+    lrDetails.forEach(detail => {
+        if (!challanMap.has(detail.challanId)) {
+            challanMap.set(detail.challanId, []);
+        }
+        challanMap.get(detail.challanId)!.push(detail.lrNo);
+    });
+
+    const groups: GroupedDeliveries = {};
+
+    lrsForDelivery.forEach(booking => {
+        let foundChallanId = 'Unknown Challan';
+        for (const [challanId, lrNos] of challanMap.entries()) {
+            if (lrNos.includes(booking.lrNo)) {
+                foundChallanId = challanId;
+                break;
+            }
+        }
+        if (!groups[foundChallanId]) {
+            groups[foundChallanId] = [];
+        }
+        groups[foundChallanId].push(booking);
+    });
+
+    return groups;
+  }, [lrsForDelivery]);
+
 
   const handleUpdateClick = (booking: Booking) => {
     setSelectedBookingForUpdate(booking);
@@ -65,7 +109,6 @@ export function DeliveriesDashboard() {
     const returnItems = updatedItems.filter(item => item.returnQty > 0);
     let finalStatus = status;
 
-    // Create a new booking for returned items if necessary
     if (returnItems.length > 0) {
       finalStatus = 'Partially Delivered';
       const returnBookingId = `${booking.lrNo}-R${(historyLogs.find(h => h.id.startsWith(booking.lrNo))?.logs.filter(l => l.action === 'Booking Created').length || 0) + 1}`;
@@ -90,7 +133,6 @@ export function DeliveriesDashboard() {
       toast({ title: 'Return Booking Created', description: `New LR #${newReturnBooking.lrNo} created for returned items.` });
     }
 
-    // Update the original booking
     const updatedBookings = bookings.map(b => {
       if (b.trackingId === booking.trackingId) {
         addHistoryLog(b.lrNo, finalStatus, receivedBy, `Remarks: ${remarks}`);
@@ -105,15 +147,14 @@ export function DeliveriesDashboard() {
     });
 
     saveBookings(updatedBookings);
-    setAllBookings(updatedBookings);
-    setLrsForDelivery(prev => prev.filter(d => d.trackingId !== booking.trackingId));
+    loadData(); // Reload all data to refresh the view
     
     toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as ${finalStatus}.`});
     setIsUpdateDialogOpen(false);
   };
   
   const handleQuickDeliver = (booking: Booking) => {
-    const updatedBookings = allBookings.map(b => {
+    const updatedBookings = getBookings().map(b => {
         if (b.trackingId === booking.trackingId) {
             addHistoryLog(booking.lrNo, 'Delivered', 'System', 'Quick delivery update.');
             return { ...b, status: 'Delivered' as const };
@@ -121,9 +162,22 @@ export function DeliveriesDashboard() {
         return b;
     });
     saveBookings(updatedBookings);
-    setAllBookings(updatedBookings);
-    setLrsForDelivery(prev => prev.filter(d => d.trackingId !== booking.trackingId));
+    loadData();
     toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as Delivered.` });
+  };
+
+  const handleDeliverChallan = (challanId: string) => {
+      const bookingsToUpdate = groupedByChallan[challanId].map(b => b.trackingId);
+      const updatedBookings = getBookings().map(b => {
+          if (bookingsToUpdate.includes(b.trackingId)) {
+              addHistoryLog(b.lrNo, 'Delivered', 'System', `Bulk delivery update via challan ${challanId}.`);
+              return { ...b, status: 'Delivered' as const };
+          }
+          return b;
+      });
+      saveBookings(updatedBookings);
+      loadData();
+      toast({ title: 'Challan Delivered', description: `All items in challan ${challanId} have been marked as delivered.`});
   }
 
 
@@ -136,12 +190,49 @@ export function DeliveriesDashboard() {
         </h1>
       </header>
       <div className="space-y-4">
-        <DeliveriesList 
-            deliveries={lrsForDelivery} 
-            onUpdateClick={handleUpdateClick} 
-            onPrintMemoClick={handlePrintMemoClick}
-            onQuickDeliver={handleQuickDeliver}
-        />
+        {Object.keys(groupedByChallan).length > 0 ? (
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            {Object.entries(groupedByChallan).map(([challanId, bookings]) => (
+              <AccordionItem value={challanId} key={challanId} asChild>
+                <Card>
+                  <AccordionTrigger className="p-4 w-full text-left [&[data-state=open]>svg]:rotate-180">
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex flex-col text-left">
+                            <h3 className="font-bold text-lg text-primary">{challanId}</h3>
+                            <p className="text-sm text-muted-foreground">{bookings.length} item(s) pending</p>
+                        </div>
+                        <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeliverChallan(challanId);
+                            }}
+                        >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Mark All as Delivered
+                        </Button>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CardContent className="p-0">
+                       <DeliveriesList 
+                          deliveries={bookings} 
+                          onUpdateClick={handleUpdateClick} 
+                          onPrintMemoClick={handlePrintMemoClick}
+                          onQuickDeliver={handleQuickDeliver}
+                       />
+                    </CardContent>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+            <Card className="flex h-64 items-center justify-center border-dashed">
+                <p className="text-muted-foreground">No consignments are currently awaiting delivery.</p>
+            </Card>
+        )}
       </div>
       {selectedBookingForUpdate && (
         <UpdateDeliveryStatusDialog
