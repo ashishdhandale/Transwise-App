@@ -278,6 +278,10 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStationAlertOpen, setIsStationAlertOpen] = useState(false);
     const [rateLists, setRateLists] = useState<RateList[]>([]);
+    
+    const onFromStationChange = useCallback((station: City | null) => {
+        setFromStation(station);
+    }, []);
 
 
     const generateLrNumber = (bookings: Booking[], prefix: string) => {
@@ -364,15 +368,17 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 setCurrentLrNumber('');
                  setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
             } else {
-                // For a new regular booking
-                let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
-                if (userRole === 'Branch') {
-                    const userBranch = branches.find(b => b.name === 'Pune Hub'); 
-                    if(userBranch?.lrPrefix) {
-                        lrPrefix = userBranch.lrPrefix;
+                // For a new regular booking, only generate LR number if it's not already set
+                if (!currentLrNumber) {
+                    let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
+                    if (userRole === 'Branch') {
+                        const userBranch = branches.find(b => b.name === 'Pune Hub'); 
+                        if(userBranch?.lrPrefix) {
+                            lrPrefix = userBranch.lrPrefix;
+                        }
                     }
+                    setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 }
-                setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
             }
 
@@ -380,7 +386,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [trackingId, toast, loadMasterData, userRole, branches, isOfflineMode]);
+    }, [trackingId, toast, loadMasterData, userRole, branches, isOfflineMode, currentLrNumber]);
 
     useEffect(() => {
         loadInitialData();
@@ -681,7 +687,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                     <BookingDetailsSection 
                         bookingType={bookingType} 
                         onBookingTypeChange={setBookingType}
-                        onFromStationChange={setFromStation}
+                        onFromStationChange={onFromStationChange}
                         onToStationChange={setToStation}
                         fromStation={fromStation}
                         toStation={toStation}
@@ -706,6 +712,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         taxPaidBy={taxPaidBy}
                         errors={errors}
                         isViewOnly={readOnly}
+                        isOfflineMode={isOfflineMode}
                     />
                     {loadType === 'FTL' && (
                         <VehicleDetailsSection 

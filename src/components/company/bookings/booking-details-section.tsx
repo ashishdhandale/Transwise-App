@@ -157,7 +157,7 @@ export function BookingDetailsSection({
                  onFromStationChange({ id: 0, name: companyProfile.city, aliasCode: '', pinCode: '' });
             }
         }
-    }, [isEditMode, companyProfile, allCustomCities, onFromStationChange, fromStation]);
+    }, [isEditMode, companyProfile, allCustomCities, fromStation, onFromStationChange]);
 
 
     const getCityObjectByName = (name: string): City | null => {
