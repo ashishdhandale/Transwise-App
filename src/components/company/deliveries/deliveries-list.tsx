@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, Printer } from 'lucide-react';
+import { MoreHorizontal, Printer, CheckCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,7 @@ interface DeliveriesListProps {
     deliveries: Booking[];
     onUpdateClick: (booking: Booking) => void;
     onPrintMemoClick: (booking: Booking) => void;
+    onQuickDeliver: (booking: Booking) => void;
 }
 
 const statusColors: { [key: string]: string } = {
@@ -39,11 +40,11 @@ const statusColors: { [key: string]: string } = {
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
 
-export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick }: DeliveriesListProps) {
+export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, onQuickDeliver }: DeliveriesListProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Delivery List</CardTitle>
+        <CardTitle className="font-headline">Consignments Pending for Delivery</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto border rounded-md max-h-[70vh]">
@@ -79,11 +80,14 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick }: 
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
+                             <DropdownMenuItem onClick={() => onQuickDeliver(delivery)}>
+                              <CheckCircle className="mr-2 h-4 w-4" /> Mark as Delivered
+                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => onUpdateClick(delivery)} 
                               disabled={delivery.status === 'Delivered'}
                             >
-                              Update Status
+                              Update Status (Partial/Return)
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onPrintMemoClick(delivery)}>
                               <Printer className="mr-2 h-4 w-4" /> Print Memo
@@ -96,7 +100,7 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick }: 
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
-                    No deliveries found for the current filter.
+                    No consignments are currently awaiting delivery.
                   </TableCell>
                 </TableRow>
               )}

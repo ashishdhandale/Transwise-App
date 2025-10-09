@@ -2,50 +2,35 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Truck, Search } from 'lucide-react';
-import { DeliverySearchFilters } from './delivery-search-filters';
+import { Truck } from 'lucide-react';
 import { DeliveriesList } from './deliveries-list';
 import { UpdateDeliveryStatusDialog } from './update-delivery-status-dialog';
 import { getBookings, saveBookings, type Booking, type ItemRow } from '@/lib/bookings-dashboard-data';
 import { useToast } from '@/hooks/use-toast';
-import { addHistoryLog, getHistoryLogs, saveHistoryLogs } from '@/lib/history-data';
-import type { Challan, LrDetail } from '@/lib/challan-data';
-import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
-import { ChallanList } from './challan-list';
-import { Card } from '@/components/ui/card';
+import { addHistoryLog, getHistoryLogs } from '@/lib/history-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { DeliveryMemoDialog } from './delivery-memo-dialog';
 
 export function DeliveriesDashboard() {
-  const [allChallans, setAllChallans] = useState<Challan[]>([]);
-  const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  
-  const [filteredChallans, setFilteredChallans] = useState<Challan[]>([]);
-  const [selectedChallan, setSelectedChallan] = useState<Challan | null>(null);
   const [lrsForDelivery, setLrsForDelivery] = useState<Booking[]>([]);
-
   const [selectedBookingForUpdate, setSelectedBookingForUpdate] = useState<Booking | null>(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  
   const [selectedBookingForMemo, setSelectedBookingForMemo] = useState<Booking | null>(null);
   const [isMemoDialogOpen, setIsMemoDialogOpen] = useState(false);
-
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
   const { toast } = useToast();
 
   const loadData = async () => {
-    const challans = getChallanData().filter(c => c.status === 'Finalized');
-    const lrDetails = getLrDetailsData();
     const bookings = getBookings();
     const profile = await getCompanyProfile();
     
-    setAllChallans(challans);
-    setAllLrDetails(lrDetails);
     setAllBookings(bookings);
-    setFilteredChallans(challans);
+    // Directly filter for items ready for delivery
+    const itemsToDeliver = bookings.filter(b => b.status === 'In Transit');
+    setLrsForDelivery(itemsToDeliver);
     setCompanyProfile(profile);
   };
 
@@ -53,37 +38,11 @@ export function DeliveriesDashboard() {
     loadData();
   }, []);
 
-  const handleSearch = (filters: { query: string; type: 'All' | 'Dispatch' | 'Inward' }) => {
-    let results = allChallans;
-    if (filters.type !== 'All') {
-        results = results.filter(c => c.challanType === filters.type);
-    }
-    if (filters.query) {
-        const lowerQuery = filters.query.toLowerCase();
-        results = results.filter(c => 
-            c.challanId.toLowerCase().includes(lowerQuery) ||
-            c.vehicleNo.toLowerCase().includes(lowerQuery) ||
-            c.fromStation.toLowerCase().includes(lowerQuery) ||
-            c.toStation.toLowerCase().includes(lowerQuery)
-        );
-    }
-    setFilteredChallans(results);
-    setSelectedChallan(null);
-    setLrsForDelivery([]);
-  };
-
-  const handleSelectChallan = (challan: Challan) => {
-    setSelectedChallan(challan);
-    const relatedLrNos = new Set(allLrDetails.filter(lr => lr.challanId === challan.challanId).map(lr => lr.lrNo));
-    const bookingsForChallan = allBookings.filter(b => relatedLrNos.has(b.lrNo));
-    setLrsForDelivery(bookingsForChallan);
-  };
-  
   const handleUpdateClick = (booking: Booking) => {
     setSelectedBookingForUpdate(booking);
     setIsUpdateDialogOpen(true);
   };
-  
+
   const handlePrintMemoClick = (booking: Booking) => {
     setSelectedBookingForMemo(booking);
     setIsMemoDialogOpen(true);
@@ -122,7 +81,7 @@ export function DeliveriesDashboard() {
           actWt: String((parseFloat(item.actWt) / parseFloat(item.qty)) * item.returnQty),
           chgWt: String((parseFloat(item.chgWt) / parseFloat(item.qty)) * item.returnQty),
         })),
-        totalAmount: 0, // Or recalculate if needed
+        totalAmount: 0, 
         bookingDate: new Date().toISOString(),
       };
 
@@ -147,12 +106,25 @@ export function DeliveriesDashboard() {
 
     saveBookings(updatedBookings);
     setAllBookings(updatedBookings);
-
-    setLrsForDelivery(prev => prev.map(d => d.trackingId === booking.trackingId ? { ...d, status: finalStatus } : d));
+    setLrsForDelivery(prev => prev.filter(d => d.trackingId !== booking.trackingId));
     
     toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as ${finalStatus}.`});
     setIsUpdateDialogOpen(false);
   };
+  
+  const handleQuickDeliver = (booking: Booking) => {
+    const updatedBookings = allBookings.map(b => {
+        if (b.trackingId === booking.trackingId) {
+            addHistoryLog(booking.lrNo, 'Delivered', 'System', 'Quick delivery update.');
+            return { ...b, status: 'Delivered' as const };
+        }
+        return b;
+    });
+    saveBookings(updatedBookings);
+    setAllBookings(updatedBookings);
+    setLrsForDelivery(prev => prev.filter(d => d.trackingId !== booking.trackingId));
+    toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as Delivered.` });
+  }
 
 
   return (
@@ -164,21 +136,12 @@ export function DeliveriesDashboard() {
         </h1>
       </header>
       <div className="space-y-4">
-        <DeliverySearchFilters onSearch={handleSearch} />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ChallanList challans={filteredChallans} onSelectChallan={handleSelectChallan} selectedChallanId={selectedChallan?.challanId} />
-            
-            {selectedChallan ? (
-                <DeliveriesList deliveries={lrsForDelivery} onUpdateClick={handleUpdateClick} onPrintMemoClick={handlePrintMemoClick} />
-            ) : (
-                <Card className="flex h-full items-center justify-center border-dashed">
-                    <div className="text-center text-muted-foreground">
-                        <Search className="mx-auto h-12 w-12" />
-                        <p className="mt-2 font-medium">Select a challan to view its consignments.</p>
-                    </div>
-                </Card>
-            )}
-        </div>
+        <DeliveriesList 
+            deliveries={lrsForDelivery} 
+            onUpdateClick={handleUpdateClick} 
+            onPrintMemoClick={handlePrintMemoClick}
+            onQuickDeliver={handleQuickDeliver}
+        />
       </div>
       {selectedBookingForUpdate && (
         <UpdateDeliveryStatusDialog
