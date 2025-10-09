@@ -195,15 +195,16 @@ export function DeliveriesDashboard() {
             {Object.entries(groupedByChallan).map(([challanId, bookings]) => (
               <AccordionItem value={challanId} key={challanId} asChild>
                 <Card>
-                  <AccordionTrigger className="p-4 w-full text-left [&[data-state=open]>svg]:rotate-180">
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex flex-col text-left">
+                   <div className="flex items-center justify-between p-4 w-full">
+                      <AccordionTrigger className="flex-1 text-left p-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                        <div className="flex flex-col">
                             <h3 className="font-bold text-lg text-primary">{challanId}</h3>
                             <p className="text-sm text-muted-foreground">{bookings.length} item(s) pending</p>
                         </div>
-                        <Button
+                      </AccordionTrigger>
+                       <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600 hover:bg-green-700 ml-4"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleDeliverChallan(challanId);
@@ -212,8 +213,7 @@ export function DeliveriesDashboard() {
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Mark All as Delivered
                         </Button>
-                    </div>
-                  </AccordionTrigger>
+                   </div>
                   <AccordionContent>
                     <CardContent className="p-0">
                        <DeliveriesList 
