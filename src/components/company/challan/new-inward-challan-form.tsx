@@ -28,10 +28,10 @@ export function NewInwardChallanForm() {
     
     // Inward details
     const [inwardChallanId, setInwardChallanId] = useState('');
-    const [inwardDate, setInwardDate] = useState<Date | undefined>(undefined);
+    const [inwardDate, setInwardDate] = useState<Date | undefined>();
     const [receivedFrom, setReceivedFrom] = useState('');
     const [originalChallanNo, setOriginalChallanNo] = useState('');
-    const [originalChallanDate, setOriginalChallanDate] = useState<Date | undefined>(undefined);
+    const [originalChallanDate, setOriginalChallanDate] = useState<Date | undefined>();
     const [vehicleNo, setVehicleNo] = useState('');
     const [driverName, setDriverName] = useState('');
     const [fromStation, setFromStation] = useState('');
@@ -54,19 +54,24 @@ export function NewInwardChallanForm() {
             setCompanyProfile(profile);
             const allChallans = getChallanData();
             setAllDispatchChallans(allChallans.filter(c => c.challanType === 'Dispatch' && c.status === 'Finalized'));
-            
-            const nextId = (allChallans.filter(c => c.challanType === 'Inward').length) + 1;
-            setInwardChallanId(`INW-${String(nextId).padStart(4, '0')}`);
         }
         loadData();
-        // Set date on client to avoid hydration mismatch
+    }, []);
+
+    useEffect(() => {
+        // Set date and ID on client to avoid hydration mismatch
         if (!inwardDate) {
             setInwardDate(new Date());
         }
         if (!originalChallanDate) {
             setOriginalChallanDate(new Date());
         }
-    }, []);
+        if (!inwardChallanId) {
+            const allChallans = getChallanData();
+            const nextId = (allChallans.filter(c => c.challanType === 'Inward').length) + 1;
+            setInwardChallanId(`INW-${String(nextId).padStart(4, '0')}`);
+        }
+    }, [inwardDate, originalChallanDate, inwardChallanId]);
 
     const handleSearchChallan = () => {
         const found = allDispatchChallans.find(c => c.challanId.toLowerCase() === importQuery.toLowerCase());
@@ -108,11 +113,17 @@ export function NewInwardChallanForm() {
             // In manual mode, we create new bookings and their corresponding LR details
             const allBookings = getBookings();
             manualLrs.forEach(b => {
-                 const newBooking: Booking = { ...b, status: 'In Stock', trackingId: `TRK-${Date.now()}-${Math.random()}` };
+                 const isLocalDelivery = b.toCity.toLowerCase() === toStation.toLowerCase();
+                 const newStatus = isLocalDelivery ? 'In Transit' : 'In Stock';
+                 const newBooking: Booking = { ...b, status: newStatus, trackingId: `TRK-${Date.now()}-${Math.random()}` };
                  bookingsToUpdate.push(newBooking);
                  lrsToSave.push({
                      challanId: inwardChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver, from: b.fromCity, to: b.toCity, bookingDate: b.bookingDate, itemDescription: b.itemDescription, quantity: b.qty, actualWeight: b.itemRows.reduce((s,i) => s + Number(i.actWt), 0), chargeWeight: b.chgWt, grandTotal: b.totalAmount
                  });
+                 addHistoryLog(b.lrNo, 'Booking Created', 'System', `Manual inward entry via challan ${inwardChallanId}`);
+                 if (isLocalDelivery) {
+                     addHistoryLog(b.lrNo, 'Arrived at Hub', 'System', `Arrived at ${toStation} hub for local delivery.`);
+                 }
             });
             saveBookings([...allBookings, ...bookingsToUpdate]);
 
@@ -242,14 +253,14 @@ export function NewInwardChallanForm() {
                                     <TableBody>
                                          {manualLrs.length > 0 ? (
                                             manualLrs.map((lr) => (
-                                                <TableRow key={lr.lrNo}>
+                                                <TableRow key={lr.trackingId}>
                                                     <TableCell>{lr.lrNo}</TableCell>
                                                     <TableCell>{lr.sender}</TableCell>
                                                     <TableCell>{lr.receiver}</TableCell>
                                                     <TableCell>{lr.qty}</TableCell>
                                                     <TableCell>{lr.chgWt}</TableCell>
                                                     <TableCell>
-                                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setManualLrs(prev => prev.filter(item => item.lrNo !== lr.lrNo))}>
+                                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setManualLrs(prev => prev.filter(item => item.trackingId !== lr.trackingId))}>
                                                             <Trash2 className="h-4 w-4"/>
                                                         </Button>
                                                     </TableCell>
@@ -346,5 +357,3 @@ export function NewInwardChallanForm() {
       </div>
     );
 }
-
-    
