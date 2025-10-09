@@ -359,19 +359,20 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                      toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                 }
 
+            } else if (isOfflineMode) {
+                // In offline mode for inward challan, LR number is manual, so start blank.
+                setCurrentLrNumber('');
+                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
             } else {
-                if (isOfflineMode) {
-                    setCurrentLrNumber('');
-                } else if (!currentLrNumber) {
-                    let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
-                    if (userRole === 'Branch') {
-                        const userBranch = branches.find(b => b.name === 'Pune Hub'); 
-                        if(userBranch?.lrPrefix) {
-                            lrPrefix = userBranch.lrPrefix;
-                        }
+                // For a new regular booking
+                let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
+                if (userRole === 'Branch') {
+                    const userBranch = branches.find(b => b.name === 'Pune Hub'); 
+                    if(userBranch?.lrPrefix) {
+                        lrPrefix = userBranch.lrPrefix;
                     }
-                    setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 }
+                setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
             }
 
@@ -379,7 +380,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             console.error("Failed to process bookings from localStorage or fetch profile", error);
             toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [trackingId, toast, loadMasterData, userRole, branches, isOfflineMode, currentLrNumber]);
+    }, [trackingId, toast, loadMasterData, userRole, branches, isOfflineMode]);
 
     useEffect(() => {
         loadInitialData();
