@@ -15,22 +15,31 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { MoreHorizontal, Printer } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface DeliveriesListProps {
     deliveries: Booking[];
     onUpdateClick: (booking: Booking) => void;
+    onPrintMemoClick: (booking: Booking) => void;
 }
 
 const statusColors: { [key: string]: string } = {
   'In Transit': 'text-blue-600 border-blue-600/40',
   'Delivered': 'text-green-600 border-green-600/40',
+  'Partially Delivered': 'text-green-700 border-green-700/40',
   'In HOLD': 'text-yellow-600 border-yellow-600/40',
 };
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
 
-export function DeliveriesList({ deliveries, onUpdateClick }: DeliveriesListProps) {
+export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick }: DeliveriesListProps) {
   return (
     <Card>
       <CardHeader>
@@ -43,10 +52,8 @@ export function DeliveriesList({ deliveries, onUpdateClick }: DeliveriesListProp
               <TableRow>
                 <TableHead className={thClass}>LR No.</TableHead>
                 <TableHead className={thClass}>Booking Date</TableHead>
-                <TableHead className={thClass}>From</TableHead>
                 <TableHead className={thClass}>To</TableHead>
                 <TableHead className={thClass}>Receiver</TableHead>
-                <TableHead className={thClass}>Packages</TableHead>
                 <TableHead className={thClass}>Status</TableHead>
                 <TableHead className={`${thClass} text-right`}>Action</TableHead>
               </TableRow>
@@ -57,25 +64,38 @@ export function DeliveriesList({ deliveries, onUpdateClick }: DeliveriesListProp
                   <TableRow key={delivery.trackingId}>
                     <TableCell className={cn(tdClass, 'font-medium')}>{delivery.lrNo}</TableCell>
                     <TableCell className={cn(tdClass)}>{format(parseISO(delivery.bookingDate), 'dd-MMM-yyyy')}</TableCell>
-                    <TableCell className={cn(tdClass)}>{delivery.fromCity}</TableCell>
                     <TableCell className={cn(tdClass)}>{delivery.toCity}</TableCell>
                     <TableCell className={cn(tdClass)}>{delivery.receiver}</TableCell>
-                    <TableCell className={cn(tdClass)}>{delivery.qty}</TableCell>
                     <TableCell className={cn(tdClass)}>
                        <Badge variant="outline" className={cn('font-semibold', statusColors[delivery.status])}>
                          {delivery.status}
                        </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                        {delivery.status !== 'Delivered' && (
-                            <Button size="sm" onClick={() => onUpdateClick(delivery)}>Update Status</Button>
-                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem 
+                              onClick={() => onUpdateClick(delivery)} 
+                              disabled={delivery.status === 'Delivered'}
+                            >
+                              Update Status
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onPrintMemoClick(delivery)}>
+                              <Printer className="mr-2 h-4 w-4" /> Print Memo
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No deliveries found for the current filter.
                   </TableCell>
                 </TableRow>

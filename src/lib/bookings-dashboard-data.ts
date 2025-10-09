@@ -1,5 +1,4 @@
 
-
 import type { ItemRow } from "@/components/company/bookings/item-details-table";
 import { initialBookings } from "./sample-data";
 import { getChallanData, getLrDetailsData } from "./challan-data";
@@ -29,7 +28,7 @@ export interface Booking {
   qty: number;
   chgWt: number;
   totalAmount: number;
-  status: 'In Stock' | 'In Loading' | 'In Transit' | 'Cancelled' | 'In HOLD' | 'Delivered';
+  status: 'In Stock' | 'In Loading' | 'In Transit' | 'Cancelled' | 'In HOLD' | 'Delivered' | 'Partially Delivered';
   dispatchStatus?: 'Short Dispatched' | 'Extra Dispatched';
   itemRows: ItemRow[];
   additionalCharges?: { [key: string]: number };

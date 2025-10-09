@@ -1,5 +1,4 @@
 
-
 export interface LogEntry {
   timestamp: string;
   action:
@@ -7,6 +6,7 @@ export interface LogEntry {
     | 'Booking Updated'
     | 'Booking Cancelled'
     | 'Booking Partially Cancelled'
+    | 'Partially Delivered'
     | 'In Loading'
     | 'Dispatched from Warehouse'
     | 'In Transit'
@@ -38,12 +38,22 @@ export const getHistoryLogs = (): BookingHistory[] => {
   }
 };
 
+// Function to save all history logs
+export const saveHistoryLogs = (history: BookingHistory[]) => {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_HISTORY, JSON.stringify(history));
+    } catch (error) {
+        console.error("Failed to save history logs to localStorage", error);
+    }
+}
+
 // Function to add a new log entry
 export const addHistoryLog = (lrNumber: string, action: LogEntry['action'], user: string, details?: string) => {
   if (typeof window === 'undefined') return;
   
   const allHistory = getHistoryLogs();
-  const existingHistory = allHistory.find(h => h.id === lrNumber);
+  let existingHistory = allHistory.find(h => h.id === lrNumber);
 
   const newLog: LogEntry = {
     timestamp: new Date().toLocaleString(),
@@ -56,19 +66,14 @@ export const addHistoryLog = (lrNumber: string, action: LogEntry['action'], user
     // Add new log to the top of the list
     existingHistory.logs.unshift(newLog);
   } else {
-    allHistory.push({
+    existingHistory = {
       id: lrNumber,
       logs: [newLog],
-    });
+    };
+    allHistory.push(existingHistory);
   }
 
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY_HISTORY, JSON.stringify(allHistory));
-  } catch (error) {
-    console.error("Failed to save history log to localStorage", error);
-  }
+  saveHistoryLogs(allHistory);
 };
 
 export const historyData: BookingHistory[] = [];
-
-    
