@@ -23,9 +23,10 @@ interface PartyRowProps {
     initialParty: Customer | null;
     hasError: boolean;
     disabled: boolean;
+    isOfflineMode?: boolean;
 }
 
-const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError, disabled }: PartyRowProps) => {
+const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError, disabled, isOfflineMode }: PartyRowProps) => {
     const { toast } = useToast();
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [partyDetails, setPartyDetails] = useState<Customer | null>(initialParty);
@@ -43,8 +44,28 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
 
     const handlePartySelect = useCallback((partyName: string) => {
         const selectedParty = customers.find(c => c.name.toLowerCase() === partyName.toLowerCase()) || null;
-        setPartyDetails(selectedParty);
-    }, [customers]);
+        if(isOfflineMode && !selectedParty) {
+            setPartyDetails({
+                id: 0,
+                name: partyName,
+                gstin: '',
+                address: '',
+                mobile: '',
+                email: '',
+                type: 'Company',
+                openingBalance: 0
+            });
+        } else {
+            setPartyDetails(selectedParty);
+        }
+    }, [customers, isOfflineMode]);
+
+    const handlePartyInputChange = (partyName: string) => {
+        setPartyDetails(prev => ({
+            ...(prev || { id: 0, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 }),
+            name: partyName,
+        }));
+    };
 
     const handleOpenAddCustomer = (query?: string) => {
         setInitialCustomerData(query ? { name: query } : null);
@@ -92,17 +113,26 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr_1fr] gap-x-4 gap-y-2 items-start p-3 border-b">
                 <div className={cn("space-y-1 rounded-md", hasError && 'ring-2 ring-red-500/50')}>
                     <Label className="font-semibold text-primary">{side} Name*</Label>
-                    <Combobox
-                        options={customerOptions}
-                        value={partyDetails?.name}
-                        onChange={handlePartySelect}
-                        placeholder={`Select ${side}...`}
-                        searchPlaceholder="Search customers..."
-                        notFoundMessage="No customer found."
-                        addMessage="Add New Party"
-                        onAdd={handleOpenAddCustomer}
-                        disabled={disabled}
-                    />
+                    {isOfflineMode ? (
+                        <Input
+                            placeholder={`Enter ${side} Name...`}
+                            value={partyDetails?.name || ''}
+                            onChange={(e) => handlePartyInputChange(e.target.value)}
+                            disabled={disabled}
+                        />
+                    ) : (
+                        <Combobox
+                            options={customerOptions}
+                            value={partyDetails?.name}
+                            onChange={handlePartySelect}
+                            placeholder={`Select ${side}...`}
+                            searchPlaceholder="Search customers..."
+                            notFoundMessage="No customer found."
+                            addMessage="Add New Party"
+                            onAdd={handleOpenAddCustomer}
+                            disabled={disabled}
+                        />
+                    )}
                 </div>
                  <div className="space-y-1">
                     <Label>GST No.</Label>
@@ -136,9 +166,10 @@ interface PartyDetailsSectionProps {
     taxPaidBy: string;
     errors: { [key: string]: boolean };
     isViewOnly?: boolean;
+    isOfflineMode?: boolean;
 }
 
-export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy, errors, isViewOnly = false }: PartyDetailsSectionProps) {
+export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy, errors, isViewOnly = false, isOfflineMode = false }: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
     const [otherBillToParty, setOtherBillToParty] = useState<string | undefined>(undefined);
@@ -210,8 +241,8 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
 
     return (
         <div className="border rounded-md">
-            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} disabled={isViewOnly} />
-            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} disabled={isViewOnly} />
+            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} disabled={isViewOnly} isOfflineMode={isOfflineMode} />
+            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} disabled={isViewOnly} isOfflineMode={isOfflineMode} />
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
                  <div className="space-y-1">
