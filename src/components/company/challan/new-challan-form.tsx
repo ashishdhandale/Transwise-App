@@ -429,57 +429,6 @@ export function NewChallanForm() {
     }, [inStockLrs, toStationFilter]);
 
 
-    const renderTable = (title: string, data: Booking[], selection: Set<string>, onSelect: (id: string, checked: boolean) => void, onSelectAll: (checked: boolean) => void) => (
-        <Card className="h-full flex flex-col">
-            <CardHeader className="p-3">
-                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{title}</CardTitle>
-                    {title === 'LRs In Stock' && (
-                        <div className="flex items-center gap-2">
-                            <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
-                             <Select value={toStationFilter} onValueChange={setToStationFilter}>
-                                <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {stockToStationOptions.map(station => (
-                                        <SelectItem key={station} value={station}>{station}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )}
-                 </div>
-            </CardHeader>
-            <CardContent className="p-0 flex-grow">
-                <div className="overflow-y-auto h-96 border-t">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => onSelectAll(c as boolean)} checked={data.length > 0 && selection.size === data.length} /></TableHead>
-                                <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                <TableHead className="sticky top-0 bg-card">To</TableHead>
-                                <TableHead className="sticky top-0 bg-card">Packages</TableHead>
-                                <TableHead className="sticky top-0 bg-card">Charge Wt.</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {data.map(lr => (
-                                <TableRow key={lr.trackingId}>
-                                    <TableCell><Checkbox onCheckedChange={(c) => onSelect(lr.trackingId, c as boolean)} checked={selection.has(lr.trackingId)} /></TableCell>
-                                    <TableCell>{lr.lrNo}</TableCell>
-                                    <TableCell>{lr.toCity}</TableCell>
-                                    <TableCell>{lr.qty}</TableCell>
-                                    <TableCell>{lr.chgWt}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
-    );
-
     return (
         <div className="space-y-4">
             <header className="mb-4">
@@ -531,27 +480,93 @@ export function NewChallanForm() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                {renderTable('LRs In Stock', filteredInStockLrs, stockSelection, (id, checked) => {
-                    const newSelection = new Set(stockSelection);
-                    if (checked) newSelection.add(id); else newSelection.delete(id);
-                    setStockSelection(newSelection);
-                }, (checked) => {
-                    if (checked) setStockSelection(new Set(filteredInStockLrs.map(lr => lr.trackingId))); else setStockSelection(new Set());
-                })}
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_auto_1fr] gap-4 items-start">
+                {/* LRs In Stock Table */}
+                <Card className="h-full flex flex-col">
+                    <CardHeader className="p-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base">LRs In Stock</CardTitle>
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
+                                <Select value={toStationFilter} onValueChange={setToStationFilter}>
+                                    <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {stockToStationOptions.map(station => (
+                                            <SelectItem key={station} value={station}>{station}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0 flex-grow">
+                        <div className="overflow-y-auto h-96 border-t">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean)} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.length} /></TableHead>
+                                        <TableHead className="sticky top-0 bg-card">LR No</TableHead>
+                                        <TableHead className="sticky top-0 bg-card">Date</TableHead>
+                                        <TableHead className="sticky top-0 bg-card">To</TableHead>
+                                        <TableHead className="sticky top-0 bg-card">Sender</TableHead>
+                                        <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
+                                        <TableHead className="sticky top-0 bg-card">Packages</TableHead>
+                                        <TableHead className="sticky top-0 bg-card">Charge Wt.</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredInStockLrs.map(lr => (
+                                        <TableRow key={lr.trackingId} data-state={stockSelection.has(lr.trackingId) && "selected"}>
+                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean)} checked={stockSelection.has(lr.trackingId)} /></TableCell>
+                                            <TableCell>{lr.lrNo}</TableCell>
+                                            <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
+                                            <TableCell>{lr.toCity}</TableCell>
+                                            <TableCell>{lr.sender}</TableCell>
+                                            <TableCell>{lr.receiver}</TableCell>
+                                            <TableCell>{lr.qty}</TableCell>
+                                            <TableCell>{lr.chgWt}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                <div className="flex flex-col gap-2">
+
+                <div className="flex flex-col gap-2 self-center">
                     <Button onClick={handleAddToChallan} disabled={stockSelection.size === 0}><ArrowDown className="mr-2 h-4 w-4" /> Add to Challan</Button>
-                    <Button onClick={handleRemoveFromChallan} disabled={addedSelection.size === 0} variant="outline"><ArrowUp className="mr-2 h-4 w-4" /> Remove from Challan</Button>
+                    <Button onClick={handleRemoveFromChallan} disabled={addedSelection.size === 0} variant="outline"><ArrowUp className="mr-2 h-4 w-4" /> Remove</Button>
                 </div>
 
-                {renderTable('LRs Added to Challan', addedLrs, addedSelection, (id, checked) => {
-                    const newSelection = new Set(addedSelection);
-                    if (checked) newSelection.add(id); else newSelection.delete(id);
-                    setAddedSelection(newSelection);
-                }, (checked) => {
-                    if (checked) setAddedSelection(new Set(addedLrs.map(lr => lr.trackingId))); else setAddedSelection(new Set());
-                })}
+                {/* LRs Added to Challan Table */}
+                <Card className="h-full flex flex-col">
+                    <CardHeader className="p-3">
+                        <CardTitle className="text-base">LRs Added to Challan</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0 flex-grow">
+                        <div className="overflow-y-auto h-96 border-t">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => setAddedSelection(c ? new Set(addedLrs.map(lr => lr.trackingId)) : new Set())} checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length} /></TableHead>
+                                        <TableHead className="sticky top-0 bg-card">LR No</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {addedLrs.map(lr => (
+                                        <TableRow key={lr.trackingId} data-state={addedSelection.has(lr.trackingId) && "selected"}>
+                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
+                                            <TableCell>{lr.lrNo}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 border rounded-md bg-muted/50">
