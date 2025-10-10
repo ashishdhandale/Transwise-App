@@ -86,6 +86,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                 <Table className="border-collapse border border-black">
                     <TableHeader>
                         <TableRow>
+                            <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>LR No</TableHead>
                             <TableHead className={thClass}>LR Type</TableHead>
                             <TableHead className={thClass}>To</TableHead>
@@ -104,6 +105,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             return (
                                 <React.Fragment key={booking.trackingId}>
                                     <TableRow>
+                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.fromCity}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrNo}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrType}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.toCity}</TableCell>
@@ -113,7 +115,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                              <div className="whitespace-pre-wrap p-1">
                                                 <span>
                                                     {booking.itemRows[0]?.itemName || booking.itemRows[0]?.description}
-                                                     {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
+                                                    {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -143,8 +145,8 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                             <TableCell colSpan={4} className={`${tdClass} text-right`}>TOTAL LRs: {totalLrCount}</TableCell>
-                            <TableCell className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                             <TableCell colSpan={5} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell className={`${tdClass} text-center`}>TOTAL LRs: {totalLrCount}</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
