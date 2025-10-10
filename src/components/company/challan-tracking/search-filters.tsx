@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -60,10 +61,6 @@ export function SearchFilters() {
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="dispatch" id="dispatch" />
                         <Label htmlFor="dispatch" className="font-normal">Dispatch</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="inward" id="inward" />
-                        <Label htmlFor="inward" className="font-normal">Inward</Label>
                     </div>
                 </RadioGroup>
             </div>

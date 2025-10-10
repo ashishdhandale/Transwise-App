@@ -251,7 +251,6 @@ export function ChallanDashboard() {
 
   const pendingChallans = allChallans.filter(c => c.status === 'Pending' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
   const dispatchedChallans = allChallans.filter(c => c.status === 'Finalized' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
-  const inwardChallans = allChallans.filter(c => c.challanType === 'Inward' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
 
 
   return (
@@ -274,11 +273,6 @@ export function ChallanDashboard() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                 <Button asChild>
-                    <Link href="/company/challan/new-inward">
-                        <PlusCircle className="mr-2 h-4 w-4" /> New Inward Challan
-                    </Link>
-                </Button>
                 <Button asChild>
                     <Link href="/company/challan/new">
                         <PlusCircle className="mr-2 h-4 w-4" /> New Dispatch Challan
@@ -290,7 +284,6 @@ export function ChallanDashboard() {
         <div className="space-y-6">
           <ChallanTable title="Pending for Dispatch" challans={pendingChallans} onDelete={handleDeleteTempChallan} />
           <ChallanTable title="Dispatched Challans" challans={dispatchedChallans} onReprint={handleReprintChallan} />
-           <ChallanTable title="Inward Challans" challans={inwardChallans} onReprint={handleReprintChallan} />
         </div>
       </main>
 
