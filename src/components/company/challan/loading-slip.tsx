@@ -26,12 +26,18 @@ const SummaryItem = ({ label, value }: { label: string; value: string | number }
 );
 
 
-export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }: LoadingSlipProps) {
+export function LorryHireChallan({ receipt, profile }: { receipt: any, profile: CompanyProfileFormValues }) {
+    return (
+        <div className="p-6 font-sans text-sm text-black bg-white" style={{ width: '210mm' }}>
+           {/* Lorry Hire Challan Content */}
+        </div>
+    );
+}
 
+export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }: LoadingSlipProps) {
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
     
-    // Only sum amounts for TOPAY and TBB bookings for collection purposes
     const grandTotalAmount = bookings.reduce((sum, lr) => {
         if (lr.lrType === 'TOPAY' || lr.lrType === 'TBB') {
             return sum + lr.totalAmount;
@@ -96,14 +102,14 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             const totalQty = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
                             
                             return (
-                                <TableRow key={lr.trackingId} className="border-b-2 border-black">
-                                     <TableCell className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
-                                     <TableCell className={tdClass}>{lr.lrNo}</TableCell>
-                                     <TableCell className={tdClass}>{lr.lrType}</TableCell>
-                                     <TableCell className={tdClass}>{lr.fromCity}</TableCell>
-                                     <TableCell className={tdClass}>{lr.toCity}</TableCell>
-                                     <TableCell className={tdClass}>{lr.receiver}</TableCell>
-                                     <TableCell className={`${tdClass} p-0`}>
+                                <TableRow key={lr.trackingId}>
+                                    <TableCell className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
+                                    <TableCell className={tdClass}>{lr.lrNo}</TableCell>
+                                    <TableCell className={tdClass}>{lr.lrType}</TableCell>
+                                    <TableCell className={tdClass}>{lr.fromCity}</TableCell>
+                                    <TableCell className={tdClass}>{lr.toCity}</TableCell>
+                                    <TableCell className={tdClass}>{lr.receiver}</TableCell>
+                                    <TableCell className={`${tdClass} p-0`}>
                                          <div className="whitespace-pre-wrap">
                                             {lr.itemRows.map((item, itemIndex) => (
                                                 <div key={item.id} className={itemIndex < lr.itemRows.length - 1 ? 'border-b border-black' : ''}>
@@ -156,7 +162,14 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                 </div>
                  <div className="border border-black p-2 min-h-[150px]">
                     <h3 className="font-bold underline text-xs mb-1">Challan Calculation</h3>
-                    {/* This space is intentionally left blank for manual calculations */}
+                    <div className="space-y-1 text-xs">
+                        <SummaryItem label="Total ToPay Amount:" value={formatValue(challan.summary.totalTopayAmount)} />
+                        <SummaryItem label="Commission:" value={formatValue(challan.summary.commission)} />
+                        <SummaryItem label="Labour:" value={formatValue(challan.summary.labour)} />
+                        <SummaryItem label="Crossing:" value={formatValue(challan.summary.carting)} />
+                        <SummaryItem label="Balance Truck Hire:" value={formatValue(challan.summary.balanceTruckHire)} />
+                        <SummaryItem label="Debit/Credit Note:" value={formatValue(challan.summary.debitCreditAmount)} />
+                    </div>
                 </div>
             </div>
 
