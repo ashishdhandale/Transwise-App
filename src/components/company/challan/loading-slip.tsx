@@ -114,7 +114,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                             <div className="whitespace-pre-wrap p-1">
                                                 <span>
                                                     {booking.itemRows[0]?.itemName || booking.itemRows[0]?.description}
-                                                    {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
+                                                     {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -144,9 +144,9 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell colSpan={4} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>TOTAL LRs: {totalLrCount}</TableCell>
-                            <TableCell colSpan={1}></TableCell>
+                            <TableCell colSpan={4}></TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
@@ -171,7 +171,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             </span>
                         } />
                         <SummaryItem label="Total Packages:" value={totalPackages} />
-                        <SummaryItem label="Total Items:" value={challan.totalItems} />
                         <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
                         <SummaryItem label="Total To-Pay Freight:" value={formatValue(grandTotalAmount)} />
                     </div>
@@ -201,3 +200,4 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
         </div>
     );
 }
+
