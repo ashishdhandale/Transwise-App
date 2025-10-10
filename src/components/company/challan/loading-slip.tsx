@@ -143,7 +143,8 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell colSpan={5} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                             <TableCell colSpan={4} className={`${tdClass} text-right`}>TOTAL LRs: {totalLrCount}</TableCell>
+                            <TableCell className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
