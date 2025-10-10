@@ -44,6 +44,8 @@ import { ClientOnly } from '@/components/ui/client-only';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap px-2 py-1 h-9";
+const addedTdClass = "whitespace-nowrap px-2 py-1 h-8 text-xs";
+
 
 const generatePermanentChallanId = (challans: Challan[], prefix: string): string => {
     const relevantChallanIds = challans
@@ -93,6 +95,7 @@ export function NewChallanForm() {
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [toStationFilter, setToStationFilter] = useState('All');
+    const [stockSearchTerm, setStockSearchTerm] = useState('');
     
     const { toast } = useToast();
     const router = useRouter();
@@ -421,11 +424,23 @@ export function NewChallanForm() {
     }, [inStockLrs]);
     
     const filteredInStockLrs = useMemo(() => {
-        if (toStationFilter === 'All') {
-            return inStockLrs;
+        let filtered = inStockLrs;
+
+        if (toStationFilter !== 'All') {
+            filtered = filtered.filter(lr => lr.toCity === toStationFilter);
         }
-        return inStockLrs.filter(lr => lr.toCity === toStationFilter);
-    }, [inStockLrs, toStationFilter]);
+
+        if (stockSearchTerm) {
+            const lowerQuery = stockSearchTerm.toLowerCase();
+            filtered = filtered.filter(lr => 
+                lr.lrNo.toLowerCase().includes(lowerQuery) ||
+                lr.sender.toLowerCase().includes(lowerQuery) ||
+                lr.receiver.toLowerCase().includes(lowerQuery)
+            );
+        }
+        
+        return filtered;
+    }, [inStockLrs, toStationFilter, stockSearchTerm]);
 
 
     return (
@@ -486,6 +501,15 @@ export function NewChallanForm() {
                             <div className="flex items-center justify-between">
                                 <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
                                 <div className="flex items-center gap-2">
+                                     <div className="relative w-full max-w-xs">
+                                        <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Search LR, sender, receiver..."
+                                            className="pl-8 h-8 text-xs"
+                                            value={stockSearchTerm}
+                                            onChange={(e) => setStockSearchTerm(e.target.value)}
+                                        />
+                                    </div>
                                     <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
                                     <Select value={toStationFilter} onValueChange={setToStationFilter}>
                                         <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
@@ -540,12 +564,12 @@ export function NewChallanForm() {
                     </div>
 
                     {/* LRs Added to Challan Table */}
-                    <Card>
+                    <Card className="h-full flex flex-col">
                         <CardHeader className="p-4">
                             <CardTitle className="text-base font-headline">LRs Added to Challan</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="overflow-y-auto h-60 border-t">
+                        <CardContent className="p-0 flex-grow">
+                             <div className="overflow-y-auto h-60 border-t">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
