@@ -20,7 +20,7 @@ interface LoadingSlipProps {
 const thClass = "text-left text-xs font-bold text-black border border-black p-1";
 const tdClass = "text-xs border border-black p-1 align-top";
 
-const SummaryItem = ({ label, value }: { label: string; value: string | number }) => (
+const SummaryItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <div className="flex justify-between text-xs py-0.5">
         <span className="font-semibold">{label}</span>
         <span className="font-bold">{value}</span>
@@ -85,7 +85,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                 <Table className="border-collapse border border-black">
                     <TableHeader>
                         <TableRow>
-                            <TableHead className={thClass}>#</TableHead>
                             <TableHead className={thClass}>LR No</TableHead>
                             <TableHead className={thClass}>LR Type</TableHead>
                             <TableHead className={thClass}>From</TableHead>
@@ -106,7 +105,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             return (
                                 <React.Fragment key={booking.trackingId}>
                                     <TableRow>
-                                        <TableCell className={`${tdClass} text-center`} rowSpan={booking.itemRows.length || 1}>{lrIndex + 1}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrNo}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrType}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.fromCity}</TableCell>
@@ -131,7 +129,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                     </TableRow>
                                     
                                     {/* Subsequent item rows */}
-                                    {booking.itemRows.slice(1).map((item) => (
+                                    {booking.itemRows.slice(1).map((item, itemIndex) => (
                                         <TableRow key={item.id}>
                                             <TableCell className={`${tdClass} p-0`}>
                                                 <div className="whitespace-pre-wrap p-1 border-t border-black">
@@ -149,7 +147,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell colSpan={7} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell colSpan={6} className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
@@ -205,3 +203,4 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
         </div>
     );
 }
+
