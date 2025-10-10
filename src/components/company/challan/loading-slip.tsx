@@ -125,10 +125,15 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     <p className="text-xs min-h-[40px] whitespace-pre-line border-b border-dashed pb-2 mb-2">{remark || 'No remarks.'}</p>
                     <div className="space-y-1">
                         <h3 className="font-bold underline text-xs mb-1">Challan Summary</h3>
-                        {paidCount > 0 && <SummaryItem label="PAID LRs:" value={paidCount} />}
-                        {toPayCount > 0 && <SummaryItem label="TOPAY LRs:" value={toPayCount} />}
-                        {tbbCount > 0 && <SummaryItem label="TBB LRs:" value={tbbCount} />}
-                        <SummaryItem label="Total LR:" value={challan.totalLr} />
+                         <div className="flex justify-between text-xs py-0.5">
+                            <span className="font-semibold">Total LR:</span>
+                            <span className="font-bold">
+                                {paidCount > 0 && `Paid(${paidCount}) `}
+                                {toPayCount > 0 && `Topay(${toPayCount}) `}
+                                {tbbCount > 0 && `TBB(${tbbCount}) `}
+                                Total {challan.totalLr}
+                            </span>
+                        </div>
                         <SummaryItem label="Total Packages:" value={totalPackages} />
                         <SummaryItem label="Total Items:" value={challan.totalItems} />
                         <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
