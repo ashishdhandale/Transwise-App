@@ -51,6 +51,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     const toPayCount = bookings.filter(b => b.lrType === 'TOPAY').length;
     const tbbCount = bookings.filter(b => b.lrType === 'TBB').length;
     const focCount = bookings.filter(b => b.lrType === 'FOC').length;
+    const totalLrCount = paidCount + toPayCount + tbbCount + focCount;
 
 
     const title = challan.status === 'Finalized' ? 'DISPATCH CHALLAN' : 'LOADING SLIP';
@@ -97,11 +98,10 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bookings.map((booking, lrIndex) => {
+                        {bookings.map((booking) => {
                             const totalActWt = booking.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
                             const totalQty = booking.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
-                            const isAmountVisible = booking.lrType === 'TOPAY' || booking.lrType === 'TBB';
-
+                            
                             return (
                                 <React.Fragment key={booking.trackingId}>
                                     <TableRow>
@@ -111,12 +111,11 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.toCity}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.receiver}</TableCell>
 
-                                        {/* First item row */}
                                         <TableCell className={`${tdClass} p-0`}>
                                              <div className="whitespace-pre-wrap p-1">
                                                 <span>
                                                     {booking.itemRows[0]?.itemName || booking.itemRows[0]?.description}
-                                                    {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
+                                                     {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -124,12 +123,11 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                         <TableCell className={`${tdClass} text-center`} rowSpan={booking.itemRows.length || 1}>{totalQty}</TableCell>
                                         <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>{totalActWt.toFixed(2)}</TableCell>
                                         <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>
-                                            {isAmountVisible ? formatValue(booking.totalAmount) : '0.00'}
+                                            {formatValue(booking.totalAmount)}
                                         </TableCell>
                                     </TableRow>
                                     
-                                    {/* Subsequent item rows */}
-                                    {booking.itemRows.slice(1).map((item, itemIndex) => (
+                                    {booking.itemRows.slice(1).map((item) => (
                                         <TableRow key={item.id}>
                                             <TableCell className={`${tdClass} p-0`}>
                                                 <div className="whitespace-pre-wrap p-1 border-t border-black">
@@ -169,13 +167,14 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                 {toPayCount > 0 && `Topay(${toPayCount}) `}
                                 {tbbCount > 0 && `TBB(${tbbCount}) `}
                                 {focCount > 0 && `FOC(${focCount}) `}
-                                Total {challan.totalLr}
+                                Total {totalLrCount}
                             </span>
                         </div>
                         <SummaryItem label="Total Packages:" value={totalPackages} />
                         <SummaryItem label="Total Items:" value={challan.totalItems} />
                         <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
-                        <SummaryItem label="Total Freight:" value={formatValue(grandTotalAmount)} />
+                        <SummaryItem label="Total Charge Wt:" value={`${challan.totalChargeWeight.toFixed(2)} kg`} />
+                        <SummaryItem label="Total To-Pay Freight:" value={formatValue(grandTotalAmount)} />
                     </div>
                 </div>
                  <div className="border border-black p-2 min-h-[150px]">
@@ -203,4 +202,3 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
         </div>
     );
 }
-
