@@ -105,61 +105,61 @@ export function NewChallanForm() {
     const [isDownloading, setIsDownloading] = useState(false);
     
 
-    const loadInitialData = useCallback(async () => {
-        const profile = await getCompanyProfile();
-        setCompanyProfile(profile);
-
-        const allBookings = getBookings();
-        const allChallans = getChallanData();
-        const allCities = getCities();
-        
-        setVehicles(getVehicles());
-        setDrivers(getDrivers());
-        setCities(allCities);
-        
-        const existingChallanId = searchParams.get('challanId');
-
-        if (existingChallanId) {
-            const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
-            const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
-            const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
-
-            if (existingChallan) {
-                setChallanId(existingChallan.challanId);
-                setDispatchDate(new Date(existingChallan.dispatchDate));
-                setVehicleNo(existingChallan.vehicleNo);
-                setDriverName(existingChallan.driverName);
-                setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
-                setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
-                setRemark(existingChallan.remark || '');
-                setVehicleHireFreight(existingChallan.vehicleHireFreight);
-                setAdvance(existingChallan.advance);
-                setBalance(existingChallan.balance);
-                setCommission(existingChallan.summary.commission || 0);
-                setLabour(existingChallan.summary.labour || 0);
-                setCrossing(existingChallan.summary.crossing || 0);
-
-                const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
-                const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
-                
-                setAddedLrs(added);
-                setInStockLrs(inStock);
-            }
-        } else {
-            setChallanId(`TEMP-CHLN-${Date.now()}`); 
-            setInStockLrs(allBookings.filter(b => b.status === 'In Stock'));
-            setAddedLrs([]);
-
-            if(profile.city) {
-                const defaultStation = allCities.find((c: City) => c.name.toLowerCase() === profile.city.toLowerCase()) || null;
-                setFromStation(defaultStation);
-            }
-        }
-    }, [searchParams]);
-
     useEffect(() => {
+        const loadInitialData = async () => {
+            const profile = await getCompanyProfile();
+            setCompanyProfile(profile);
+
+            const allBookings = getBookings();
+            const allChallans = getChallanData();
+            const allCities = getCities();
+            
+            setVehicles(getVehicles());
+            setDrivers(getDrivers());
+            setCities(allCities);
+            
+            const existingChallanId = searchParams.get('challanId');
+
+            if (existingChallanId) {
+                const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
+                const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
+                const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
+
+                if (existingChallan) {
+                    setChallanId(existingChallan.challanId);
+                    setDispatchDate(new Date(existingChallan.dispatchDate));
+                    setVehicleNo(existingChallan.vehicleNo);
+                    setDriverName(existingChallan.driverName);
+                    setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
+                    setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
+                    setRemark(existingChallan.remark || '');
+                    setVehicleHireFreight(existingChallan.vehicleHireFreight);
+                    setAdvance(existingChallan.advance);
+                    setBalance(existingChallan.balance);
+                    setCommission(existingChallan.summary.commission || 0);
+                    setLabour(existingChallan.summary.labour || 0);
+                    setCrossing(existingChallan.summary.crossing || 0);
+
+                    const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
+                    const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
+                    
+                    setAddedLrs(added);
+                    setInStockLrs(inStock);
+                }
+            } else {
+                setChallanId(`TEMP-CHLN-${Date.now()}`); 
+                setInStockLrs(allBookings.filter(b => b.status === 'In Stock'));
+                setAddedLrs([]);
+
+                if(profile.city) {
+                    const defaultStation = allCities.find((c: City) => c.name.toLowerCase() === profile.city.toLowerCase()) || null;
+                    setFromStation(defaultStation);
+                }
+            }
+        };
+
         loadInitialData();
-    }, [loadInitialData]);
+    }, [searchParams]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
