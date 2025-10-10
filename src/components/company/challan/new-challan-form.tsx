@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -147,7 +146,6 @@ export function NewChallanForm() {
                     setInStockLrs(inStock);
                 }
             } else {
-                setChallanId(`TEMP-CHLN-${Date.now()}`); 
                 setInStockLrs(allBookings.filter(b => b.status === 'In Stock'));
                 setAddedLrs([]);
 
@@ -161,12 +159,15 @@ export function NewChallanForm() {
         loadInitialData();
     }, [searchParams]);
     
-    // Set date on client mount to avoid hydration error
+    // Set date and ID on client mount to avoid hydration mismatch
     useEffect(() => {
         if (!dispatchDate) {
             setDispatchDate(new Date());
         }
-    }, [dispatchDate]);
+        if (!searchParams.get('challanId') && !challanId) {
+            setChallanId(`TEMP-CHLN-${Date.now()}`);
+        }
+    }, [dispatchDate, challanId, searchParams]);
 
     const handleLoadFromHireReceipt = (receiptNo: string) => {
         setHireReceiptNo(receiptNo);
@@ -480,7 +481,7 @@ export function NewChallanForm() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_auto_1fr] gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_auto_1fr] gap-4 items-start">
                 {/* LRs In Stock Table */}
                 <Card className="h-full flex flex-col">
                     <CardHeader className="p-3">
@@ -506,7 +507,7 @@ export function NewChallanForm() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean)} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.length} /></TableHead>
+                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.length} /></TableHead>
                                         <TableHead className="sticky top-0 bg-card">LR No</TableHead>
                                         <TableHead className="sticky top-0 bg-card">Date</TableHead>
                                         <TableHead className="sticky top-0 bg-card">To</TableHead>
@@ -519,7 +520,7 @@ export function NewChallanForm() {
                                 <TableBody>
                                     {filteredInStockLrs.map(lr => (
                                         <TableRow key={lr.trackingId} data-state={stockSelection.has(lr.trackingId) && "selected"}>
-                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean)} checked={stockSelection.has(lr.trackingId)} /></TableCell>
+                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} /></TableCell>
                                             <TableCell>{lr.lrNo}</TableCell>
                                             <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
                                             <TableCell>{lr.toCity}</TableCell>
@@ -551,14 +552,14 @@ export function NewChallanForm() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => setAddedSelection(c ? new Set(addedLrs.map(lr => lr.trackingId)) : new Set())} checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length} /></TableHead>
+                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, addedLrs, (ids) => setAddedSelection(ids))} checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length} /></TableHead>
                                         <TableHead className="sticky top-0 bg-card">LR No</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {addedLrs.map(lr => (
                                         <TableRow key={lr.trackingId} data-state={addedSelection.has(lr.trackingId) && "selected"}>
-                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
+                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, addedSelection, setAddedSelection)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
                                             <TableCell>{lr.lrNo}</TableCell>
                                         </TableRow>
                                     ))}
@@ -648,4 +649,23 @@ export function NewChallanForm() {
             )}
         </div>
     );
+}
+
+// Helper functions for table selection
+function handleSelectAll(checked: boolean, data: { trackingId: string }[], setSelection: (ids: Set<string>) => void) {
+    if (checked) {
+        setSelection(new Set(data.map(item => item.trackingId)));
+    } else {
+        setSelection(new Set());
+    }
+}
+
+function handleSelectRow(id: string, checked: boolean, currentSelection: Set<string>, setSelection: (ids: Set<string>) => void) {
+    const newSelection = new Set(currentSelection);
+    if (checked) {
+        newSelection.add(id);
+    } else {
+        newSelection.delete(id);
+    }
+    setSelection(newSelection);
 }
