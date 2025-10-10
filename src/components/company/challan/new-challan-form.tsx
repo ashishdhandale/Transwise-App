@@ -518,10 +518,6 @@ export function NewChallanForm() {
                             <Label>To Station</Label>
                             <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
                         </div>
-                         <div className="md:col-span-2 lg:col-span-4 space-y-1">
-                            <Label>Remarks / Dispatch Note</Label>
-                            <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
-                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -549,7 +545,7 @@ export function NewChallanForm() {
                 })}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-muted/50">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-md bg-muted/50">
                  <div className="space-y-1">
                     <Label>Vehicle Hire Freight</Label>
                     <Input value={vehicleHireFreight} readOnly className="font-semibold" />
@@ -561,6 +557,10 @@ export function NewChallanForm() {
                 <div className="space-y-1">
                     <Label>Balance</Label>
                     <Input value={balance} readOnly className="font-bold text-green-700" />
+                </div>
+                 <div className="md:col-span-1 space-y-1">
+                    <Label>Remarks / Dispatch Note</Label>
+                    <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                 </div>
             </div>
 
