@@ -31,11 +31,20 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
     const totalChargeWeight = bookings.reduce((sum, lr) => sum + lr.chgWt, 0);
-    const grandTotalAmount = bookings.reduce((sum, lr) => sum + lr.totalAmount, 0);
+    
+    // Only sum amounts for TOPAY and TBB bookings for collection purposes
+    const grandTotalAmount = bookings.reduce((sum, lr) => {
+        if (lr.lrType === 'TOPAY' || lr.lrType === 'TBB') {
+            return sum + lr.totalAmount;
+        }
+        return sum;
+    }, 0);
 
     const paidCount = bookings.filter(b => b.lrType === 'PAID').length;
     const toPayCount = bookings.filter(b => b.lrType === 'TOPAY').length;
     const tbbCount = bookings.filter(b => b.lrType === 'TBB').length;
+    const focCount = bookings.filter(b => b.lrType === 'FOC').length;
+
 
     const title = challan.status === 'Finalized' ? 'DISPATCH CHALLAN' : 'LOADING SLIP';
 
@@ -82,30 +91,29 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableHeader>
                     <TableBody>
                         {bookings.map((lr, lrIndex) => {
-                            const combinedDescription = lr.itemRows.map((item, itemIndex) => (
-                                <div key={item.id} className={itemIndex > 0 ? 'mt-1 pt-1 border-t border-black' : ''}>
-                                    {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
-                                </div>
-                            ));
-
-                             const lrTotalPackages = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
-                             const lrTotalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
-
-                            return (
-                                <TableRow key={lr.trackingId}>
-                                    <TableCell className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
-                                    <TableCell className={tdClass}>{lr.lrNo}</TableCell>
-                                    <TableCell className={tdClass}>{lr.lrType}</TableCell>
-                                    <TableCell className={tdClass}>{lr.toCity}</TableCell>
-                                    <TableCell className={tdClass}>{lr.receiver}</TableCell>
-                                    <TableCell className={tdClass}>
-                                        <div className="whitespace-pre-wrap">{combinedDescription}</div>
-                                    </TableCell>
-                                    <TableCell className={`${tdClass} text-center`}>{lrTotalPackages}</TableCell>
-                                    <TableCell className={`${tdClass} text-right`}>{lrTotalActWt.toFixed(2)}</TableCell>
-                                    <TableCell className={`${tdClass} text-right`}>{formatValue(lr.totalAmount)}</TableCell>
+                            const rowSpan = lr.itemRows.length > 1 ? lr.itemRows.length : 1;
+                            const isAmountVisible = lr.lrType === 'TOPAY' || lr.lrType === 'TBB';
+                            return lr.itemRows.map((item, itemIndex) => (
+                                <TableRow key={`${lr.trackingId}-${item.id}`}>
+                                    {itemIndex === 0 && (
+                                        <>
+                                            <TableCell className={`${tdClass} text-center`} rowSpan={rowSpan}>{lrIndex + 1}</TableCell>
+                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.lrNo}</TableCell>
+                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.lrType}</TableCell>
+                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.toCity}</TableCell>
+                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.receiver}</TableCell>
+                                        </>
+                                    )}
+                                    <TableCell className={tdClass}>{item.itemName} - {item.description}</TableCell>
+                                    <TableCell className={`${tdClass} text-center`}>{item.qty}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>{Number(item.actWt).toFixed(2)}</TableCell>
+                                    {itemIndex === 0 && (
+                                        <TableCell className={`${tdClass} text-right`} rowSpan={rowSpan}>
+                                            {isAmountVisible ? formatValue(lr.totalAmount) : '0.00'}
+                                        </TableCell>
+                                    )}
                                 </TableRow>
-                            )
+                            ));
                         })}
                     </TableBody>
                     <TableFooter>
@@ -131,6 +139,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                 {paidCount > 0 && `Paid(${paidCount}) `}
                                 {toPayCount > 0 && `Topay(${toPayCount}) `}
                                 {tbbCount > 0 && `TBB(${tbbCount}) `}
+                                {focCount > 0 && `FOC(${focCount}) `}
                                 Total {challan.totalLr}
                             </span>
                         </div>
