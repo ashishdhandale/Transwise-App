@@ -15,16 +15,13 @@ interface LoadingSlipProps {
     remark: string;
 }
 
-const thClass = "text-left text-xs font-bold text-black border border-black";
-const tdClass = "text-xs border border-black p-1";
-const subRowTdClass = "text-xs border-b border-l border-r border-dashed p-1 pl-4";
-
+const thClass = "text-left text-xs font-bold text-black border border-black p-1";
+const tdClass = "text-xs border border-black p-1 align-top";
 
 export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }: LoadingSlipProps) {
 
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
-    const totalItems = bookings.reduce((sum, lr) => sum + lr.itemRows.length, 0);
     const grandTotalAmount = bookings.reduce((sum, lr) => sum + lr.totalAmount, 0);
 
     const title = challan.status === 'Finalized' ? 'DISPATCH CHALLAN' : 'LOADING SLIP';
@@ -71,39 +68,36 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bookings.map((lr, index) => (
-                           <React.Fragment key={lr.trackingId}>
-                                <TableRow className="bg-muted/30">
+                        {bookings.map((lr, index) => {
+                            const totalPackagesLr = lr.itemRows.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+                            const totalActWtLr = lr.itemRows.reduce((sum, item) => sum + (Number(item.actWt) || 0), 0);
+
+                            return (
+                                <TableRow key={lr.trackingId}>
                                     <TableCell className={tdClass}>{index + 1}</TableCell>
                                     <TableCell className={tdClass}>{lr.lrNo}</TableCell>
                                     <TableCell className={tdClass}>{lr.lrType}</TableCell>
                                     <TableCell className={tdClass}>{lr.toCity}</TableCell>
                                     <TableCell className={tdClass}>{lr.receiver}</TableCell>
-                                    <TableCell className={tdClass}></TableCell>
-                                    <TableCell className={`${tdClass} text-center`}></TableCell>
-                                    <TableCell className={`${tdClass} text-right`}></TableCell>
-                                    <TableCell className={`${tdClass} text-right`}></TableCell>
+                                    <TableCell className={tdClass}>
+                                        <div className="whitespace-pre-wrap">
+                                            {lr.itemRows.map((item, itemIndex) => (
+                                                <div key={itemIndex}>
+                                                    {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className={`${tdClass} text-center`}>{totalPackagesLr}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>{totalActWtLr.toFixed(2)}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>{formatValue(lr.totalAmount)}</TableCell>
                                 </TableRow>
-                                {lr.itemRows.map((item, itemIndex) => (
-                                     <TableRow key={`${lr.trackingId}-${item.id}`}>
-                                        <TableCell className={subRowTdClass}></TableCell>
-                                        <TableCell className={subRowTdClass}></TableCell>
-                                        <TableCell className={subRowTdClass}></TableCell>
-                                        <TableCell className={subRowTdClass}></TableCell>
-                                        <TableCell className={subRowTdClass}></TableCell>
-                                        <TableCell className={subRowTdClass}>{item.itemName} - {item.description}</TableCell>
-                                        <TableCell className={`${subRowTdClass} text-center`}>{item.qty}</TableCell>
-                                        <TableCell className={`${subRowTdClass} text-right`}>{Number(item.actWt).toFixed(2)}</TableCell>
-                                        <TableCell className={`${subRowTdClass} text-right`}>{formatValue(Number(item.lumpsum))}</TableCell>
-                                     </TableRow>
-                                ))}
-                            </React.Fragment>
-                        ))}
+                            )
+                        })}
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell colSpan={5} className={`${tdClass} text-right`}>TOTAL:</TableCell>
-                            <TableCell className={`${tdClass} text-center`}>{totalItems} Items</TableCell>
+                            <TableCell colSpan={6} className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
