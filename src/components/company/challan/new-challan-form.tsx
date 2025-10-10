@@ -83,6 +83,9 @@ export function NewChallanForm() {
     const [vehicleHireFreight, setVehicleHireFreight] = useState(0);
     const [advance, setAdvance] = useState(0);
     const [balance, setBalance] = useState(0);
+    const [commission, setCommission] = useState(0);
+    const [labour, setLabour] = useState(0);
+    const [crossing, setCrossing] = useState(0);
 
 
     // Master data
@@ -132,6 +135,9 @@ export function NewChallanForm() {
                 setVehicleHireFreight(existingChallan.vehicleHireFreight);
                 setAdvance(existingChallan.advance);
                 setBalance(existingChallan.balance);
+                setCommission(existingChallan.summary.commission || 0);
+                setLabour(existingChallan.summary.labour || 0);
+                setCrossing(existingChallan.summary.crossing || 0);
 
                 const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
                 const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
@@ -241,7 +247,10 @@ export function NewChallanForm() {
             summary: {
                 grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
                 totalTopayAmount: addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
-                commission: 0, labour: 0, crossing: 0, carting: 0, 
+                commission: commission, 
+                labour: labour, 
+                crossing: crossing, 
+                carting: 0, 
                 balanceTruckHire: balance,
                 debitCreditAmount: 0,
             }
@@ -545,20 +554,32 @@ export function NewChallanForm() {
                 })}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-md bg-muted/50">
+            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 border rounded-md bg-muted/50">
                  <div className="space-y-1">
                     <Label>Vehicle Hire Freight</Label>
-                    <Input value={vehicleHireFreight} readOnly className="font-semibold" />
+                    <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value))} className="font-semibold" />
                 </div>
                 <div className="space-y-1">
                     <Label>Advance Paid</Label>
-                    <Input value={advance} readOnly className="font-semibold" />
+                    <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value))} className="font-semibold" />
                 </div>
                 <div className="space-y-1">
                     <Label>Balance</Label>
-                    <Input value={balance} readOnly className="font-bold text-green-700" />
+                    <Input value={balance} onChange={(e) => setBalance(Number(e.target.value))} readOnly className="font-bold text-green-700" />
                 </div>
-                 <div className="md:col-span-1 space-y-1">
+                <div className="space-y-1">
+                    <Label>Commission</Label>
+                    <Input value={commission} onChange={(e) => setCommission(Number(e.target.value))} />
+                </div>
+                <div className="space-y-1">
+                    <Label>Labour</Label>
+                    <Input value={labour} onChange={(e) => setLabour(Number(e.target.value))} />
+                </div>
+                <div className="space-y-1">
+                    <Label>Crossing</Label>
+                    <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
+                </div>
+                 <div className="lg:col-span-2 space-y-1">
                     <Label>Remarks / Dispatch Note</Label>
                     <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                 </div>

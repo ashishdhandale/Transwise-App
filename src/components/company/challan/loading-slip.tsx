@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Challan } from '@/lib/challan-data';
@@ -6,6 +7,7 @@ import type { CompanyProfileFormValues } from '../settings/company-profile-setti
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import React from 'react';
+import { format, parseISO } from 'date-fns';
 
 interface LoadingSlipProps {
     challan: Challan;
@@ -113,7 +115,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
 
                                         {/* First item row */}
                                         <TableCell className={`${tdClass} p-0`}>
-                                            <div className="whitespace-pre-wrap">
+                                             <div className="whitespace-pre-wrap p-1">
                                                 <span>
                                                     {booking.itemRows[0]?.itemName || booking.itemRows[0]?.description}
                                                     {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
@@ -129,13 +131,13 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                     </TableRow>
                                     
                                     {/* Subsequent item rows */}
-                                    {booking.itemRows.slice(1).map((item, itemIndex) => (
+                                    {booking.itemRows.slice(1).map((item) => (
                                         <TableRow key={item.id}>
                                             <TableCell className={`${tdClass} p-0`}>
-                                                <div className="whitespace-pre-wrap border-t border-black">
+                                                <div className="whitespace-pre-wrap p-1 border-t border-black">
                                                     <span>
                                                         {item.itemName || item.description}
-                                                        {booking.itemRows.length > 1 && ` (${item.qty} Pkgs, ${Number(item.actWt).toFixed(2)}kg)`}
+                                                        {` (${item.qty} Pkgs, ${Number(item.actWt).toFixed(2)}kg)`}
                                                     </span>
                                                 </div>
                                             </TableCell>
@@ -184,7 +186,8 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <SummaryItem label="Total ToPay Amount:" value={formatValue(challan.summary.totalTopayAmount)} />
                         <SummaryItem label="Commission:" value={formatValue(challan.summary.commission)} />
                         <SummaryItem label="Labour:" value={formatValue(challan.summary.labour)} />
-                        <SummaryItem label="Crossing:" value={formatValue(challan.summary.carting)} />
+                        <SummaryItem label="Crossing:" value={formatValue(challan.summary.crossing)} />
+                        <SummaryItem label="Carting:" value={formatValue(challan.summary.carting)} />
                         <SummaryItem label="Balance Truck Hire:" value={formatValue(challan.summary.balanceTruckHire)} />
                         <SummaryItem label="Debit/Credit Note:" value={formatValue(challan.summary.debitCreditAmount)} />
                     </div>
