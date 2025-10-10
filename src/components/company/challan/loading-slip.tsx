@@ -96,35 +96,53 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bookings.map((lr, lrIndex) => {
-                            const isAmountVisible = lr.lrType === 'TOPAY' || lr.lrType === 'TBB';
-                            const totalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
-                            const totalQty = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
-                            
+                        {bookings.map((booking, lrIndex) => {
+                            const totalActWt = booking.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
+                            const totalQty = booking.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
+                            const isAmountVisible = booking.lrType === 'TOPAY' || booking.lrType === 'TBB';
+
                             return (
-                                <TableRow key={lr.trackingId}>
-                                    <TableCell className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
-                                    <TableCell className={tdClass}>{lr.lrNo}</TableCell>
-                                    <TableCell className={tdClass}>{lr.lrType}</TableCell>
-                                    <TableCell className={tdClass}>{lr.fromCity}</TableCell>
-                                    <TableCell className={tdClass}>{lr.toCity}</TableCell>
-                                    <TableCell className={tdClass}>{lr.receiver}</TableCell>
-                                    <TableCell className={`${tdClass} p-0`}>
-                                         <div className="whitespace-pre-wrap">
-                                            {lr.itemRows.map((item, itemIndex) => (
-                                                <div key={item.id} className={itemIndex < lr.itemRows.length - 1 ? 'border-b border-black' : ''}>
-                                                    <span>{item.itemName || item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)</span>
+                                <React.Fragment key={booking.trackingId}>
+                                    <TableRow>
+                                        <TableCell className={`${tdClass} text-center`} rowSpan={booking.itemRows.length || 1}>{lrIndex + 1}</TableCell>
+                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrNo}</TableCell>
+                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrType}</TableCell>
+                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.fromCity}</TableCell>
+                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.toCity}</TableCell>
+                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.receiver}</TableCell>
+
+                                        {/* First item row */}
+                                        <TableCell className={`${tdClass} p-0`}>
+                                            <div className="whitespace-pre-wrap">
+                                                <span>
+                                                    {booking.itemRows[0]?.itemName || booking.itemRows[0]?.description}
+                                                    {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        
+                                        <TableCell className={`${tdClass} text-center`} rowSpan={booking.itemRows.length || 1}>{totalQty}</TableCell>
+                                        <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>{totalActWt.toFixed(2)}</TableCell>
+                                        <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>
+                                            {isAmountVisible ? formatValue(booking.totalAmount) : '0.00'}
+                                        </TableCell>
+                                    </TableRow>
+                                    
+                                    {/* Subsequent item rows */}
+                                    {booking.itemRows.slice(1).map((item, itemIndex) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell className={`${tdClass} p-0`}>
+                                                <div className="whitespace-pre-wrap border-t border-black">
+                                                    <span>
+                                                        {item.itemName || item.description}
+                                                        {booking.itemRows.length > 1 && ` (${item.qty} Pkgs, ${Number(item.actWt).toFixed(2)}kg)`}
+                                                    </span>
                                                 </div>
-                                            ))}
-                                        </div>
-                                     </TableCell>
-                                     <TableCell className={`${tdClass} text-center`}>{totalQty}</TableCell>
-                                     <TableCell className={`${tdClass} text-right`}>{totalActWt.toFixed(2)}</TableCell>
-                                     <TableCell className={`${tdClass} text-right`}>
-                                         {isAmountVisible ? formatValue(lr.totalAmount) : '0.00'}
-                                     </TableCell>
-                                 </TableRow>
-                            )
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </React.Fragment>
+                            );
                         })}
                     </TableBody>
                     <TableFooter>
