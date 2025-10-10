@@ -107,7 +107,7 @@ export function NewChallanForm() {
     useEffect(() => {
         // This effect runs only on the client
         if (!searchParams.get('challanId')) {
-            setChallanId(`TEMP-CHLN-${Date.now()}`);
+             setChallanId(`TEMP-CHLN-${Date.now()}`);
         }
         setDispatchDate(new Date());
     }, [searchParams]);
@@ -478,13 +478,13 @@ export function NewChallanForm() {
                         </div>
                     </CardContent>
                 </Card>
-
-                <div className="grid grid-cols-1 lg:grid-cols-[2fr_auto_1fr] gap-4 items-start">
+                
+                <div className="space-y-4">
                     {/* LRs In Stock Table */}
-                    <Card className="h-full flex flex-col">
-                        <CardHeader className="p-3">
+                    <Card>
+                        <CardHeader className="p-4">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-base">LRs In Stock</CardTitle>
+                                <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
                                 <div className="flex items-center gap-2">
                                     <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
                                     <Select value={toStationFilter} onValueChange={setToStationFilter}>
@@ -500,7 +500,7 @@ export function NewChallanForm() {
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-0 flex-grow">
+                        <CardContent className="p-0">
                             <div className="overflow-y-auto h-96 border-t">
                                 <Table>
                                     <TableHeader>
@@ -511,8 +511,8 @@ export function NewChallanForm() {
                                             <TableHead className="sticky top-0 bg-card">To</TableHead>
                                             <TableHead className="sticky top-0 bg-card">Sender</TableHead>
                                             <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Packages</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Charge Wt.</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -524,8 +524,8 @@ export function NewChallanForm() {
                                                 <TableCell>{lr.toCity}</TableCell>
                                                 <TableCell>{lr.sender}</TableCell>
                                                 <TableCell>{lr.receiver}</TableCell>
-                                                <TableCell>{lr.qty}</TableCell>
-                                                <TableCell>{lr.chgWt}</TableCell>
+                                                <TableCell className="text-right">{lr.qty}</TableCell>
+                                                <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -534,24 +534,26 @@ export function NewChallanForm() {
                         </CardContent>
                     </Card>
 
-
-                    <div className="flex flex-col gap-2 self-center">
+                    <div className="flex flex-col items-center gap-2">
                         <Button onClick={handleAddToChallan} disabled={stockSelection.size === 0}><ArrowDown className="mr-2 h-4 w-4" /> Add to Challan</Button>
                         <Button onClick={handleRemoveFromChallan} disabled={addedSelection.size === 0} variant="outline"><ArrowUp className="mr-2 h-4 w-4" /> Remove</Button>
                     </div>
 
                     {/* LRs Added to Challan Table */}
-                    <Card className="h-full flex flex-col">
-                        <CardHeader className="p-3">
-                            <CardTitle className="text-base">LRs Added to Challan</CardTitle>
+                    <Card>
+                        <CardHeader className="p-4">
+                            <CardTitle className="text-base font-headline">LRs Added to Challan</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0 flex-grow">
-                            <div className="overflow-y-auto h-96 border-t">
+                        <CardContent className="p-0">
+                            <div className="overflow-y-auto h-60 border-t">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, addedLrs, (ids) => setAddedSelection(ids))} checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length} /></TableHead>
                                             <TableHead className="sticky top-0 bg-card">LR No</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">To</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -559,6 +561,9 @@ export function NewChallanForm() {
                                             <TableRow key={lr.trackingId} data-state={addedSelection.has(lr.trackingId) && "selected"}>
                                                 <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, addedSelection, setAddedSelection)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
                                                 <TableCell>{lr.lrNo}</TableCell>
+                                                <TableCell>{lr.toCity}</TableCell>
+                                                <TableCell className="text-right">{lr.qty}</TableCell>
+                                                <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -600,9 +605,9 @@ export function NewChallanForm() {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> Save as Temp &amp; Exit</Button>
+                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> Save as Temp & Exit</Button>
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize &amp; Save Challan</Button>
+                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize & Save Challan</Button>
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
                 </div>
                 
@@ -639,7 +644,7 @@ export function NewChallanForm() {
                                 </Button>
                                 <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
                                 {previewData.challan.status === 'Finalized' && (
-                                    <Button onClick={handlePrintAndClose}>Done &amp; Exit</Button>
+                                    <Button onClick={handlePrintAndClose}>Done & Exit</Button>
                                 )}
                             </DialogFooter>
                         </DialogContent>
