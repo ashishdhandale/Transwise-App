@@ -81,7 +81,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                              const lrTotalPackages = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
                              const lrTotalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
                              const combinedDescription = lr.itemRows.map((item, itemIndex) => (
-                                <div key={item.id} className={itemIndex > 0 ? 'mt-1 pt-1 border-t border-dashed' : ''}>
+                                <div key={item.id} className={itemIndex > 0 ? 'mt-1 pt-1 border-t border-black' : ''}>
                                     {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
                                 </div>
                             ));
@@ -116,7 +116,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
             
             <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="border border-black p-2">
-                    <h3 className="font-bold underline text-xs mb-1">Remarks / Summary</h3>
+                    <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
                     <p className="text-xs min-h-[40px] whitespace-pre-line border-b border-dashed pb-2 mb-2">{remark || 'No remarks.'}</p>
                     <div className="space-y-1">
                         <SummaryItem label="Total LR:" value={challan.totalLr} />
