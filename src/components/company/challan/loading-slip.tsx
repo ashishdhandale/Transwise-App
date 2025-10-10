@@ -82,9 +82,12 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                     <TableCell className={tdClass}>
                                         <div className="whitespace-pre-wrap">
                                             {lr.itemRows.map((item, itemIndex) => (
-                                                <div key={itemIndex}>
-                                                    {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
-                                                </div>
+                                                <React.Fragment key={itemIndex}>
+                                                    <div>
+                                                        {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
+                                                    </div>
+                                                    {itemIndex < lr.itemRows.length - 1 && <hr className="my-1 border-gray-300" />}
+                                                </React.Fragment>
                                             ))}
                                         </div>
                                     </TableCell>
