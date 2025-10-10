@@ -80,6 +80,7 @@ export function BookingsDashboard() {
   const [isClient, setIsClient] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPartialCancelDialogOpen, setIsPartialCancelDialogOpen] = useState(false);
@@ -114,6 +115,17 @@ export function BookingsDashboard() {
     setIsClient(true);
     loadBookings();
   }, []);
+  
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
 
   const handleEditOpen = (bookingId: string) => {
     setSelectedBookingId(bookingId);
@@ -232,11 +244,11 @@ export function BookingsDashboard() {
   const filteredBookings = useMemo(() => {
     const sortedBookings = [...bookings].sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 
-    if (!searchQuery) {
+    if (!debouncedSearchQuery) {
       return sortedBookings;
     }
     
-    const lowercasedQuery = searchQuery.toLowerCase();
+    const lowercasedQuery = debouncedSearchQuery.toLowerCase();
     return sortedBookings.filter((booking) => 
         booking.lrNo.toLowerCase().includes(lowercasedQuery) ||
         booking.sender.toLowerCase().includes(lowercasedQuery) ||
@@ -244,7 +256,7 @@ export function BookingsDashboard() {
         booking.fromCity.toLowerCase().includes(lowercasedQuery) ||
         booking.toCity.toLowerCase().includes(lowercasedQuery)
     );
-  }, [bookings, searchQuery]);
+  }, [bookings, debouncedSearchQuery]);
 
   const formatCurrency = (amount: number) => {
     if (!companyProfile) return amount.toLocaleString();
