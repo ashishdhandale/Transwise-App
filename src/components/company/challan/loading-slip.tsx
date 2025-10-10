@@ -88,7 +88,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <TableRow>
                             <TableHead className={thClass}>LR No</TableHead>
                             <TableHead className={thClass}>LR Type</TableHead>
-                            <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Consignee</TableHead>
                             <TableHead className={thClass}>Item & Description</TableHead>
@@ -98,7 +97,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bookings.map((booking) => {
+                        {bookings.map((booking, lrIndex) => {
                             const totalActWt = booking.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
                             const totalQty = booking.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
                             
@@ -107,7 +106,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                     <TableRow>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrNo}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrType}</TableCell>
-                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.fromCity}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.toCity}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.receiver}</TableCell>
 
@@ -127,7 +125,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                         </TableCell>
                                     </TableRow>
                                     
-                                    {booking.itemRows.slice(1).map((item) => (
+                                    {booking.itemRows.slice(1).map((item, itemIndex) => (
                                         <TableRow key={item.id}>
                                             <TableCell className={`${tdClass} p-0`}>
                                                 <div className="whitespace-pre-wrap p-1 border-t border-black">
@@ -145,7 +143,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell colSpan={6} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell colSpan={5} className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
@@ -173,7 +171,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <SummaryItem label="Total Packages:" value={totalPackages} />
                         <SummaryItem label="Total Items:" value={challan.totalItems} />
                         <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
-                        <SummaryItem label="Total Charge Wt:" value={`${challan.totalChargeWeight.toFixed(2)} kg`} />
                         <SummaryItem label="Total To-Pay Freight:" value={formatValue(grandTotalAmount)} />
                     </div>
                 </div>
@@ -186,7 +183,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <SummaryItem label="Crossing:" value={formatValue(challan.summary.crossing)} />
                         <SummaryItem label="Carting:" value={formatValue(challan.summary.carting)} />
                         <SummaryItem label="Balance Truck Hire:" value={formatValue(challan.summary.balanceTruckHire)} />
-                        <SummaryItem label="Debit/Credit Note:" value={formatValue(challan.summary.debitCreditAmount)} />
+                        <SummaryItem label="Debit/Credit Amount:" value={formatValue(challan.summary.debitCreditAmount)} />
                     </div>
                 </div>
             </div>
