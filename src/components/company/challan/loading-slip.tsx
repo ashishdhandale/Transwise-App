@@ -88,8 +88,8 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>LR No</TableHead>
                             <TableHead className={thClass}>LR Type</TableHead>
-                            <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Consignee</TableHead>
+                            <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Item & Description</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
@@ -107,8 +107,8 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.fromCity}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrNo}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrType}</TableCell>
-                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.toCity}</TableCell>
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.receiver}</TableCell>
+                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.toCity}</TableCell>
 
                                         <TableCell className={`${tdClass} p-0`}>
                                             <div className="whitespace-pre-wrap p-1">
@@ -144,9 +144,9 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell colSpan={4} className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>TOTAL LRs: {totalLrCount}</TableCell>
-                            <TableCell colSpan={4}></TableCell>
+                            <TableCell colSpan={1}></TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
