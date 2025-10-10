@@ -39,6 +39,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getVehicleHireReceipts } from '@/lib/vehicle-hire-data';
+import { ClientOnly } from '@/components/ui/client-only';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -103,12 +104,12 @@ export function NewChallanForm() {
     const [previewData, setPreviewData] = useState<{ challan: Challan, bookings: Booking[] } | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     
-    // Set date and ID on client mount to avoid hydration mismatch
     useEffect(() => {
-        setDispatchDate(new Date());
+        // This effect runs only on the client
         if (!searchParams.get('challanId')) {
             setChallanId(`TEMP-CHLN-${Date.now()}`);
         }
+        setDispatchDate(new Date());
     }, [searchParams]);
 
     useEffect(() => {
@@ -435,215 +436,216 @@ export function NewChallanForm() {
                     New Dispatch Challan
                 </h1>
             </header>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Challan Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                        <div className="space-y-1">
-                            <Label>Challan ID</Label>
-                            <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Dispatch Date</Label>
-                            <DatePicker date={dispatchDate} setDate={setDispatchDate} />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Load from Hire Receipt</Label>
-                            <Input 
-                                placeholder="Enter Hire Receipt No."
-                                value={hireReceiptNo}
-                                onChange={e => handleLoadFromHireReceipt(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Vehicle No</Label>
-                            <Combobox options={vehicleOptions} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Driver Name</Label>
-                            <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                        </div>
-                         <div className="space-y-1">
-                            <Label>From Station</Label>
-                            <Combobox options={cityOptions} value={fromStation?.name} onChange={(val) => setFromStation(cities.find(c => c.name === val) || null)} placeholder="Select Origin..." />
-                        </div>
-                         <div className="space-y-1">
-                            <Label>To Station</Label>
-                            <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_auto_1fr] gap-4 items-start">
-                {/* LRs In Stock Table */}
-                <Card className="h-full flex flex-col">
-                    <CardHeader className="p-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base">LRs In Stock</CardTitle>
-                            <div className="flex items-center gap-2">
-                                <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
-                                <Select value={toStationFilter} onValueChange={setToStationFilter}>
-                                    <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {stockToStationOptions.map(station => (
-                                            <SelectItem key={station} value={station}>{station}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+            <ClientOnly>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Challan Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                            <div className="space-y-1">
+                                <Label>Challan ID</Label>
+                                <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
                             </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-grow">
-                        <div className="overflow-y-auto h-96 border-t">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.length} /></TableHead>
-                                        <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                        <TableHead className="sticky top-0 bg-card">Date</TableHead>
-                                        <TableHead className="sticky top-0 bg-card">To</TableHead>
-                                        <TableHead className="sticky top-0 bg-card">Sender</TableHead>
-                                        <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
-                                        <TableHead className="sticky top-0 bg-card">Packages</TableHead>
-                                        <TableHead className="sticky top-0 bg-card">Charge Wt.</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredInStockLrs.map(lr => (
-                                        <TableRow key={lr.trackingId} data-state={stockSelection.has(lr.trackingId) && "selected"}>
-                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} /></TableCell>
-                                            <TableCell>{lr.lrNo}</TableCell>
-                                            <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
-                                            <TableCell>{lr.toCity}</TableCell>
-                                            <TableCell>{lr.sender}</TableCell>
-                                            <TableCell>{lr.receiver}</TableCell>
-                                            <TableCell>{lr.qty}</TableCell>
-                                            <TableCell>{lr.chgWt}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-
-
-                <div className="flex flex-col gap-2 self-center">
-                    <Button onClick={handleAddToChallan} disabled={stockSelection.size === 0}><ArrowDown className="mr-2 h-4 w-4" /> Add to Challan</Button>
-                    <Button onClick={handleRemoveFromChallan} disabled={addedSelection.size === 0} variant="outline"><ArrowUp className="mr-2 h-4 w-4" /> Remove</Button>
-                </div>
-
-                {/* LRs Added to Challan Table */}
-                <Card className="h-full flex flex-col">
-                    <CardHeader className="p-3">
-                        <CardTitle className="text-base">LRs Added to Challan</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-grow">
-                        <div className="overflow-y-auto h-96 border-t">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, addedLrs, (ids) => setAddedSelection(ids))} checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length} /></TableHead>
-                                        <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {addedLrs.map(lr => (
-                                        <TableRow key={lr.trackingId} data-state={addedSelection.has(lr.trackingId) && "selected"}>
-                                            <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, addedSelection, setAddedSelection)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
-                                            <TableCell>{lr.lrNo}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 border rounded-md bg-muted/50">
-                 <div className="space-y-1">
-                    <Label>Vehicle Hire Freight</Label>
-                    <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value))} className="font-semibold" />
-                </div>
-                <div className="space-y-1">
-                    <Label>Advance Paid</Label>
-                    <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value))} className="font-semibold" />
-                </div>
-                <div className="space-y-1">
-                    <Label>Balance</Label>
-                    <Input value={balance} onChange={(e) => setBalance(Number(e.target.value))} readOnly className="font-bold text-green-700" />
-                </div>
-                <div className="space-y-1">
-                    <Label>Commission</Label>
-                    <Input value={commission} onChange={(e) => setCommission(Number(e.target.value))} />
-                </div>
-                <div className="space-y-1">
-                    <Label>Labour</Label>
-                    <Input value={labour} onChange={(e) => setLabour(Number(e.target.value))} />
-                </div>
-                <div className="space-y-1">
-                    <Label>Crossing</Label>
-                    <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
-                </div>
-                 <div className="lg:col-span-2 space-y-1">
-                    <Label>Remarks / Dispatch Note</Label>
-                    <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
-                </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-                <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> Save as Temp &amp; Exit</Button>
-                <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize &amp; Save Challan</Button>
-                 <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
-            </div>
-            
-            {previewData && companyProfile && (
-                <Dialog open={isPreviewOpen} onOpenChange={(isOpen) => {
-                    if (!isOpen && previewData.challan.status === 'Finalized') {
-                        handlePrintAndClose();
-                    } else {
-                        setIsPreviewOpen(isOpen);
-                    }
-                }}>
-                    <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                            <DialogTitle>
-                                {previewData.challan.status === 'Finalized' ? 'Challan Finalized' : 'Loading Slip Preview'}: {previewData.challan.challanId}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
-                            <div ref={printRef} className="bg-white">
-                                <LoadingSlip 
-                                    challan={previewData.challan} 
-                                    bookings={previewData.bookings}
-                                    profile={companyProfile}
-                                    driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
-                                    remark={previewData.challan.remark || ''}
+                            <div className="space-y-1">
+                                <Label>Dispatch Date</Label>
+                                <DatePicker date={dispatchDate} setDate={setDispatchDate} />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Load from Hire Receipt</Label>
+                                <Input 
+                                    placeholder="Enter Hire Receipt No."
+                                    value={hireReceiptNo}
+                                    onChange={e => handleLoadFromHireReceipt(e.target.value)}
                                 />
                             </div>
+                            <div className="space-y-1">
+                                <Label>Vehicle No</Label>
+                                <Combobox options={vehicleOptions} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Driver Name</Label>
+                                <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>From Station</Label>
+                                <Combobox options={cityOptions} value={fromStation?.name} onChange={(val) => setFromStation(cities.find(c => c.name === val) || null)} placeholder="Select Origin..." />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>To Station</Label>
+                                <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
+                            </div>
                         </div>
-                        <DialogFooter>
-                             <Button variant="secondary" onClick={() => setIsPreviewOpen(false)}>Close Preview</Button>
-                            <Button onClick={handleDownloadPdf} disabled={isDownloading}>
-                                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                                Download PDF
-                            </Button>
-                            <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
-                             {previewData.challan.status === 'Finalized' && (
-                                <Button onClick={handlePrintAndClose}>Done &amp; Exit</Button>
-                            )}
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
+                    </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-1 lg:grid-cols-[2fr_auto_1fr] gap-4 items-start">
+                    {/* LRs In Stock Table */}
+                    <Card className="h-full flex flex-col">
+                        <CardHeader className="p-3">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-base">LRs In Stock</CardTitle>
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
+                                    <Select value={toStationFilter} onValueChange={setToStationFilter}>
+                                        <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {stockToStationOptions.map(station => (
+                                                <SelectItem key={station} value={station}>{station}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-grow">
+                            <div className="overflow-y-auto h-96 border-t">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.length} /></TableHead>
+                                            <TableHead className="sticky top-0 bg-card">LR No</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Date</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">To</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Sender</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Packages</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Charge Wt.</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredInStockLrs.map(lr => (
+                                            <TableRow key={lr.trackingId} data-state={stockSelection.has(lr.trackingId) && "selected"}>
+                                                <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} /></TableCell>
+                                                <TableCell>{lr.lrNo}</TableCell>
+                                                <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
+                                                <TableCell>{lr.toCity}</TableCell>
+                                                <TableCell>{lr.sender}</TableCell>
+                                                <TableCell>{lr.receiver}</TableCell>
+                                                <TableCell>{lr.qty}</TableCell>
+                                                <TableCell>{lr.chgWt}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+
+                    <div className="flex flex-col gap-2 self-center">
+                        <Button onClick={handleAddToChallan} disabled={stockSelection.size === 0}><ArrowDown className="mr-2 h-4 w-4" /> Add to Challan</Button>
+                        <Button onClick={handleRemoveFromChallan} disabled={addedSelection.size === 0} variant="outline"><ArrowUp className="mr-2 h-4 w-4" /> Remove</Button>
+                    </div>
+
+                    {/* LRs Added to Challan Table */}
+                    <Card className="h-full flex flex-col">
+                        <CardHeader className="p-3">
+                            <CardTitle className="text-base">LRs Added to Challan</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-grow">
+                            <div className="overflow-y-auto h-96 border-t">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, addedLrs, (ids) => setAddedSelection(ids))} checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length} /></TableHead>
+                                            <TableHead className="sticky top-0 bg-card">LR No</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {addedLrs.map(lr => (
+                                            <TableRow key={lr.trackingId} data-state={addedSelection.has(lr.trackingId) && "selected"}>
+                                                <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, addedSelection, setAddedSelection)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
+                                                <TableCell>{lr.lrNo}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 border rounded-md bg-muted/50">
+                    <div className="space-y-1">
+                        <Label>Vehicle Hire Freight</Label>
+                        <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value))} className="font-semibold" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Advance Paid</Label>
+                        <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value))} className="font-semibold" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Balance</Label>
+                        <Input value={balance} onChange={(e) => setBalance(Number(e.target.value))} readOnly className="font-bold text-green-700" />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Commission</Label>
+                        <Input value={commission} onChange={(e) => setCommission(Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Labour</Label>
+                        <Input value={labour} onChange={(e) => setLabour(Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Crossing</Label>
+                        <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
+                    </div>
+                    <div className="lg:col-span-2 space-y-1">
+                        <Label>Remarks / Dispatch Note</Label>
+                        <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> Save as Temp &amp; Exit</Button>
+                    <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
+                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize &amp; Save Challan</Button>
+                    <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
+                </div>
+                
+                {previewData && companyProfile && (
+                    <Dialog open={isPreviewOpen} onOpenChange={(isOpen) => {
+                        if (!isOpen && previewData.challan.status === 'Finalized') {
+                            handlePrintAndClose();
+                        } else {
+                            setIsPreviewOpen(isOpen);
+                        }
+                    }}>
+                        <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                                <DialogTitle>
+                                    {previewData.challan.status === 'Finalized' ? 'Challan Finalized' : 'Loading Slip Preview'}: {previewData.challan.challanId}
+                                </DialogTitle>
+                            </DialogHeader>
+                            <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
+                                <div ref={printRef} className="bg-white">
+                                    <LoadingSlip 
+                                        challan={previewData.challan} 
+                                        bookings={previewData.bookings}
+                                        profile={companyProfile}
+                                        driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
+                                        remark={previewData.challan.remark || ''}
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="secondary" onClick={() => setIsPreviewOpen(false)}>Close Preview</Button>
+                                <Button onClick={handleDownloadPdf} disabled={isDownloading}>
+                                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                                    Download PDF
+                                </Button>
+                                <Button onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                                {previewData.challan.status === 'Finalized' && (
+                                    <Button onClick={handlePrintAndClose}>Done &amp; Exit</Button>
+                                )}
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )}
+            </ClientOnly>
         </div>
     );
 }
