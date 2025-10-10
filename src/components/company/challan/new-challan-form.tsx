@@ -494,7 +494,7 @@ export function NewChallanForm() {
                     </CardContent>
                 </Card>
                 
-                <div className="space-y-4">
+                 <div className="space-y-4">
                     {/* LRs In Stock Table */}
                     <Card>
                         <CardHeader className="p-4">
@@ -541,7 +541,12 @@ export function NewChallanForm() {
                                     </TableHeader>
                                     <TableBody>
                                         {filteredInStockLrs.map(lr => (
-                                            <TableRow key={lr.trackingId} data-state={stockSelection.has(lr.trackingId) && "selected"}>
+                                            <TableRow 
+                                                key={lr.trackingId} 
+                                                data-state={stockSelection.has(lr.trackingId) && "selected"}
+                                                onClick={() => handleSelectRow(lr.trackingId, !stockSelection.has(lr.trackingId), stockSelection, setStockSelection)}
+                                                className="cursor-pointer"
+                                            >
                                                 <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} /></TableCell>
                                                 <TableCell>{lr.lrNo}</TableCell>
                                                 <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
@@ -582,7 +587,12 @@ export function NewChallanForm() {
                                     </TableHeader>
                                     <TableBody>
                                         {addedLrs.map(lr => (
-                                            <TableRow key={lr.trackingId} data-state={addedSelection.has(lr.trackingId) && "selected"}>
+                                            <TableRow 
+                                                key={lr.trackingId} 
+                                                data-state={addedSelection.has(lr.trackingId) && "selected"}
+                                                onClick={() => handleSelectRow(lr.trackingId, !addedSelection.has(lr.trackingId), addedSelection, setAddedSelection)}
+                                                className="cursor-pointer"
+                                            >
                                                 <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, addedSelection, setAddedSelection)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
                                                 <TableCell>{lr.lrNo}</TableCell>
                                                 <TableCell>{lr.toCity}</TableCell>
