@@ -80,6 +80,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>#</TableHead>
                             <TableHead className={thClass}>LR No</TableHead>
                             <TableHead className={thClass}>LR Type</TableHead>
+                            <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Consignee</TableHead>
                             <TableHead className={thClass}>Item & Description</TableHead>
@@ -90,7 +91,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableHeader>
                     <TableBody>
                         {bookings.map((lr, lrIndex) => {
-                            const rowSpan = lr.itemRows.length;
                             const isAmountVisible = lr.lrType === 'TOPAY' || lr.lrType === 'TBB';
                             const totalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
                             const totalQty = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
@@ -100,15 +100,15 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                      <TableCell className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
                                      <TableCell className={tdClass}>{lr.lrNo}</TableCell>
                                      <TableCell className={tdClass}>{lr.lrType}</TableCell>
+                                     <TableCell className={tdClass}>{lr.fromCity}</TableCell>
                                      <TableCell className={tdClass}>{lr.toCity}</TableCell>
                                      <TableCell className={tdClass}>{lr.receiver}</TableCell>
                                      <TableCell className={`${tdClass} p-0`}>
                                          <div className="whitespace-pre-wrap">
                                             {lr.itemRows.map((item, itemIndex) => (
-                                                <React.Fragment key={item.id}>
+                                                <div key={item.id} className={itemIndex < lr.itemRows.length - 1 ? 'border-b border-black' : ''}>
                                                     <span>{item.itemName || item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)</span>
-                                                    {itemIndex < lr.itemRows.length - 1 && <hr className="my-1 border-t border-black" />}
-                                                </React.Fragment>
+                                                </div>
                                             ))}
                                         </div>
                                      </TableCell>
@@ -123,7 +123,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell colSpan={6} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell colSpan={7} className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
