@@ -33,6 +33,10 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     const totalChargeWeight = bookings.reduce((sum, lr) => sum + lr.chgWt, 0);
     const grandTotalAmount = bookings.reduce((sum, lr) => sum + lr.totalAmount, 0);
 
+    const paidCount = bookings.filter(b => b.lrType === 'PAID').length;
+    const toPayCount = bookings.filter(b => b.lrType === 'TOPAY').length;
+    const tbbCount = bookings.filter(b => b.lrType === 'TBB').length;
+
     const title = challan.status === 'Finalized' ? 'DISPATCH CHALLAN' : 'LOADING SLIP';
 
     const formatValue = (amount: number) => {
@@ -78,13 +82,14 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableHeader>
                     <TableBody>
                         {bookings.map((lr, lrIndex) => {
-                             const lrTotalPackages = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
-                             const lrTotalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
-                             const combinedDescription = lr.itemRows.map((item, itemIndex) => (
+                            const combinedDescription = lr.itemRows.map((item, itemIndex) => (
                                 <div key={item.id} className={itemIndex > 0 ? 'mt-1 pt-1 border-t border-black' : ''}>
                                     {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
                                 </div>
                             ));
+
+                             const lrTotalPackages = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
+                             const lrTotalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
 
                             return (
                                 <TableRow key={lr.trackingId}>
@@ -119,6 +124,10 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
                     <p className="text-xs min-h-[40px] whitespace-pre-line border-b border-dashed pb-2 mb-2">{remark || 'No remarks.'}</p>
                     <div className="space-y-1">
+                        <h3 className="font-bold underline text-xs mb-1">Challan Summary</h3>
+                        {paidCount > 0 && <SummaryItem label="PAID LRs:" value={paidCount} />}
+                        {toPayCount > 0 && <SummaryItem label="TOPAY LRs:" value={toPayCount} />}
+                        {tbbCount > 0 && <SummaryItem label="TBB LRs:" value={tbbCount} />}
                         <SummaryItem label="Total LR:" value={challan.totalLr} />
                         <SummaryItem label="Total Packages:" value={totalPackages} />
                         <SummaryItem label="Total Items:" value={challan.totalItems} />
