@@ -108,7 +108,6 @@ export function NewChallanForm() {
     const [isDownloading, setIsDownloading] = useState(false);
     
     useEffect(() => {
-        // This effect runs only on the client
         if (!searchParams.get('challanId')) {
              setChallanId(`TEMP-CHLN-${Date.now()}`);
         }
@@ -441,6 +440,20 @@ export function NewChallanForm() {
         
         return filtered;
     }, [inStockLrs, toStationFilter, stockSearchTerm]);
+    
+    const handleStockSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter' && filteredInStockLrs.length === 1) {
+            event.preventDefault();
+            const lrToAdd = filteredInStockLrs[0];
+            if (lrToAdd.status !== 'In Stock') {
+                toast({ title: 'Cannot Add LR', description: `LR# ${lrToAdd.lrNo} has status "${lrToAdd.status}" and cannot be added.`, variant: 'destructive'});
+                return;
+            }
+            setAddedLrs(prev => [...prev, lrToAdd]);
+            setInStockLrs(prev => prev.filter(lr => lr.trackingId !== lrToAdd.trackingId));
+            setStockSearchTerm('');
+        }
+    };
 
 
     return (
@@ -508,6 +521,7 @@ export function NewChallanForm() {
                                             className="pl-8 h-8 text-xs"
                                             value={stockSearchTerm}
                                             onChange={(e) => setStockSearchTerm(e.target.value)}
+                                            onKeyDown={handleStockSearchKeyDown}
                                         />
                                     </div>
                                     <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
@@ -529,7 +543,7 @@ export function NewChallanForm() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.length} /></TableHead>
+                                            <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.filter(lr => lr.status === 'In Stock').length && stockSelection.size > 0} /></TableHead>
                                             <TableHead className="sticky top-0 bg-card">LR No</TableHead>
                                             <TableHead className="sticky top-0 bg-card">Date</TableHead>
                                             <TableHead className="sticky top-0 bg-card">To</TableHead>
@@ -544,10 +558,14 @@ export function NewChallanForm() {
                                             <TableRow 
                                                 key={lr.trackingId} 
                                                 data-state={stockSelection.has(lr.trackingId) && "selected"}
-                                                onClick={() => handleSelectRow(lr.trackingId, !stockSelection.has(lr.trackingId), stockSelection, setStockSelection)}
-                                                className="cursor-pointer"
+                                                onClick={() => {
+                                                    if(lr.status === 'In Stock') {
+                                                        handleSelectRow(lr.trackingId, !stockSelection.has(lr.trackingId), stockSelection, setStockSelection)
+                                                    }
+                                                }}
+                                                className={lr.status === 'In Stock' ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
                                             >
-                                                <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} /></TableCell>
+                                                <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} disabled={lr.status !== 'In Stock'} /></TableCell>
                                                 <TableCell>{lr.lrNo}</TableCell>
                                                 <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
                                                 <TableCell>{lr.toCity}</TableCell>
@@ -690,9 +708,10 @@ export function NewChallanForm() {
 }
 
 // Helper functions for table selection
-function handleSelectAll(checked: boolean, data: { trackingId: string }[], setSelection: (ids: Set<string>) => void) {
+function handleSelectAll(checked: boolean, data: { trackingId: string, status: string }[], setSelection: (ids: Set<string>) => void) {
     if (checked) {
-        setSelection(new Set(data.map(item => item.trackingId)));
+        const stockToSelect = data.filter(item => item.status === 'In Stock');
+        setSelection(new Set(stockToSelect.map(item => item.trackingId)));
     } else {
         setSelection(new Set());
     }
@@ -707,3 +726,4 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
+
