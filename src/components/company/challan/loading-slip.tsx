@@ -18,10 +18,19 @@ interface LoadingSlipProps {
 const thClass = "text-left text-xs font-bold text-black border border-black p-1";
 const tdClass = "text-xs border border-black p-1 align-top";
 
+const SummaryItem = ({ label, value }: { label: string; value: string | number }) => (
+    <div className="flex justify-between text-xs py-0.5">
+        <span className="font-semibold">{label}</span>
+        <span className="font-bold">{value}</span>
+    </div>
+);
+
+
 export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }: LoadingSlipProps) {
 
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
+    const totalChargeWeight = bookings.reduce((sum, lr) => sum + lr.chgWt, 0);
     const grandTotalAmount = bookings.reduce((sum, lr) => sum + lr.totalAmount, 0);
 
     const title = challan.status === 'Finalized' ? 'DISPATCH CHALLAN' : 'LOADING SLIP';
@@ -70,6 +79,9 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     <TableBody>
                         {bookings.map((lr, lrIndex) => {
                             const rowCount = lr.itemRows.length || 1;
+                            const totalPackages = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
+                            const totalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
+
                              return lr.itemRows.map((item, itemIndex) => (
                                 <TableRow key={`${lr.trackingId}-${item.id}`}>
                                     {itemIndex === 0 && (
@@ -104,9 +116,20 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                 </Table>
             </div>
             
-            <div className="mt-2 border border-black p-2">
-                <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
-                <p className="text-xs min-h-[60px] whitespace-pre-line">{remark || 'No remarks.'}</p>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+                <div className="border border-black p-2">
+                    <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
+                    <p className="text-xs min-h-[60px] whitespace-pre-line">{remark || 'No remarks.'}</p>
+                </div>
+                <div className="border border-black p-2 space-y-1">
+                    <h3 className="font-bold underline text-xs mb-1">Challan Summary</h3>
+                    <SummaryItem label="Total LR:" value={challan.totalLr} />
+                    <SummaryItem label="Total Packages:" value={totalPackages} />
+                    <SummaryItem label="Total Items:" value={challan.totalItems} />
+                    <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
+                    <SummaryItem label="Total Charge Wt:" value={`${totalChargeWeight.toFixed(2)} kg`} />
+                    <SummaryItem label="Total Freight:" value={formatValue(grandTotalAmount)} />
+                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-12 pt-12 text-xs">
