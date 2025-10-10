@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
+import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { addHistoryLog } from '@/lib/history-data';
 import {
   AlertDialog,
@@ -157,7 +157,7 @@ export function ChallanDashboard() {
   
   const printRef = React.useRef<HTMLDivElement>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewData, setPreviewData] = useState<{ challan: Challan, lrDetails: LrDetail[] } | null>(null);
+  const [previewData, setPreviewData] = useState<{ challan: Challan, bookings: Booking[] } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -205,7 +205,9 @@ export function ChallanDashboard() {
 
   const handleReprintChallan = (challan: Challan) => {
     const lrDetails = getLrDetailsData().filter(lr => lr.challanId === challan.challanId);
-    setPreviewData({ challan, lrDetails });
+    const lrNos = new Set(lrDetails.map(lr => lr.lrNo));
+    const bookings = getBookings().filter(b => lrNos.has(b.lrNo));
+    setPreviewData({ challan, bookings });
     setIsPreviewOpen(true);
   };
   
@@ -304,7 +306,7 @@ export function ChallanDashboard() {
                     <div ref={printRef} className="bg-white">
                         <LoadingSlip 
                             challan={previewData.challan} 
-                            lrDetails={previewData.lrDetails} 
+                            bookings={previewData.bookings}
                             profile={companyProfile}
                             driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
                             remark={previewData.challan.remark || ''}

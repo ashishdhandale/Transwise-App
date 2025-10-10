@@ -98,7 +98,7 @@ export function NewChallanForm() {
     // PDF Preview state
     const printRef = React.useRef<HTMLDivElement>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [previewData, setPreviewData] = useState<{ challan: Challan, lrDetails: LrDetail[] } | null>(null);
+    const [previewData, setPreviewData] = useState<{ challan: Challan, bookings: Booking[] } | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     
 
@@ -312,7 +312,7 @@ export function NewChallanForm() {
         const data = buildChallanObject('Pending');
         if (!data) return;
 
-        setPreviewData(data);
+        setPreviewData({ challan: data.challan, bookings: addedLrs });
         setIsPreviewOpen(true);
     };
 
@@ -357,7 +357,7 @@ export function NewChallanForm() {
         
         toast({ title: "Challan Finalized", description: `Challan ${newChallanId} has been saved.` });
         
-        setPreviewData({ challan: finalChallan, lrDetails: finalLrDetails });
+        setPreviewData({ challan: finalChallan, bookings: addedLrs });
         setIsPreviewOpen(true);
     };
     
@@ -589,7 +589,7 @@ export function NewChallanForm() {
                             <div ref={printRef} className="bg-white">
                                 <LoadingSlip 
                                     challan={previewData.challan} 
-                                    lrDetails={previewData.lrDetails} 
+                                    bookings={previewData.bookings}
                                     profile={companyProfile}
                                     driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
                                     remark={previewData.challan.remark || ''}
