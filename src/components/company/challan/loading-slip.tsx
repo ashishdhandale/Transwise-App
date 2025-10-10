@@ -78,31 +78,29 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableHeader>
                     <TableBody>
                         {bookings.map((lr, lrIndex) => {
-                            const rowCount = lr.itemRows.length || 1;
-                            const totalPackages = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
-                            const totalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
+                             const lrTotalPackages = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
+                             const lrTotalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
+                             const combinedDescription = lr.itemRows.map((item, itemIndex) => (
+                                <div key={item.id} className={itemIndex > 0 ? 'mt-1 pt-1 border-t border-dashed' : ''}>
+                                    {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
+                                </div>
+                            ));
 
-                             return lr.itemRows.map((item, itemIndex) => (
-                                <TableRow key={`${lr.trackingId}-${item.id}`}>
-                                    {itemIndex === 0 && (
-                                        <>
-                                            <TableCell rowSpan={rowCount} className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
-                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.lrNo}</TableCell>
-                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.lrType}</TableCell>
-                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.toCity}</TableCell>
-                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.receiver}</TableCell>
-                                        </>
-                                    )}
-                                    <TableCell className={tdClass}>{item.itemName} - {item.description}</TableCell>
-                                    <TableCell className={`${tdClass} text-center`}>{item.qty}</TableCell>
-                                    <TableCell className={`${tdClass} text-right`}>{Number(item.actWt).toFixed(2)}</TableCell>
-                                     {itemIndex === 0 && (
-                                        <TableCell rowSpan={rowCount} className={`${tdClass} text-right`}>
-                                            {formatValue(lr.totalAmount)}
-                                        </TableCell>
-                                    )}
+                            return (
+                                <TableRow key={lr.trackingId}>
+                                    <TableCell className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
+                                    <TableCell className={tdClass}>{lr.lrNo}</TableCell>
+                                    <TableCell className={tdClass}>{lr.lrType}</TableCell>
+                                    <TableCell className={tdClass}>{lr.toCity}</TableCell>
+                                    <TableCell className={tdClass}>{lr.receiver}</TableCell>
+                                    <TableCell className={tdClass}>
+                                        <div className="whitespace-pre-wrap">{combinedDescription}</div>
+                                    </TableCell>
+                                    <TableCell className={`${tdClass} text-center`}>{lrTotalPackages}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>{lrTotalActWt.toFixed(2)}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>{formatValue(lr.totalAmount)}</TableCell>
                                 </TableRow>
-                            ))
+                            )
                         })}
                     </TableBody>
                     <TableFooter>
@@ -118,17 +116,20 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
             
             <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="border border-black p-2">
-                    <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
-                    <p className="text-xs min-h-[60px] whitespace-pre-line">{remark || 'No remarks.'}</p>
+                    <h3 className="font-bold underline text-xs mb-1">Remarks / Summary</h3>
+                    <p className="text-xs min-h-[40px] whitespace-pre-line border-b border-dashed pb-2 mb-2">{remark || 'No remarks.'}</p>
+                    <div className="space-y-1">
+                        <SummaryItem label="Total LR:" value={challan.totalLr} />
+                        <SummaryItem label="Total Packages:" value={totalPackages} />
+                        <SummaryItem label="Total Items:" value={challan.totalItems} />
+                        <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
+                        <SummaryItem label="Total Charge Wt:" value={`${totalChargeWeight.toFixed(2)} kg`} />
+                        <SummaryItem label="Total Freight:" value={formatValue(grandTotalAmount)} />
+                    </div>
                 </div>
-                <div className="border border-black p-2 space-y-1">
-                    <h3 className="font-bold underline text-xs mb-1">Challan Summary</h3>
-                    <SummaryItem label="Total LR:" value={challan.totalLr} />
-                    <SummaryItem label="Total Packages:" value={totalPackages} />
-                    <SummaryItem label="Total Items:" value={challan.totalItems} />
-                    <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
-                    <SummaryItem label="Total Charge Wt:" value={`${totalChargeWeight.toFixed(2)} kg`} />
-                    <SummaryItem label="Total Freight:" value={formatValue(grandTotalAmount)} />
+                 <div className="border border-black p-2 min-h-[150px]">
+                    <h3 className="font-bold underline text-xs mb-1">Challan Calculation</h3>
+                    {/* This space is intentionally left blank for manual calculations */}
                 </div>
             </div>
 
