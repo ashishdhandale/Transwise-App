@@ -103,6 +103,13 @@ export function NewChallanForm() {
     const [previewData, setPreviewData] = useState<{ challan: Challan, bookings: Booking[] } | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     
+    // Set date and ID on client mount to avoid hydration mismatch
+    useEffect(() => {
+        setDispatchDate(new Date());
+        if (!searchParams.get('challanId')) {
+            setChallanId(`TEMP-CHLN-${Date.now()}`);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -158,16 +165,6 @@ export function NewChallanForm() {
 
         loadInitialData();
     }, [searchParams]);
-    
-    // Set date and ID on client mount to avoid hydration mismatch
-    useEffect(() => {
-        if (!dispatchDate) {
-            setDispatchDate(new Date());
-        }
-        if (!searchParams.get('challanId') && !challanId) {
-            setChallanId(`TEMP-CHLN-${Date.now()}`);
-        }
-    }, [dispatchDate, challanId, searchParams]);
 
     const handleLoadFromHireReceipt = (receiptNo: string) => {
         setHireReceiptNo(receiptNo);
@@ -481,7 +478,7 @@ export function NewChallanForm() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[3fr_auto_1fr] gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_auto_1fr] gap-4 items-start">
                 {/* LRs In Stock Table */}
                 <Card className="h-full flex flex-col">
                     <CardHeader className="p-3">
