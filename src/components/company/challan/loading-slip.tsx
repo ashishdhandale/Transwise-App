@@ -72,7 +72,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
             <div className="grid grid-cols-2 gap-x-4 text-xs border-y border-black py-2">
                 <div>
                     <p><span className="font-semibold">Challan No:</span> {challan.challanId}</p>
-                    <p><span className="font-semibold">From:</span> {challan.fromStation}</p>
                     <p><span className="font-semibold">To:</span> {challan.toStation}</p>
                 </div>
                 <div>
@@ -112,7 +111,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                         <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.receiver}</TableCell>
 
                                         <TableCell className={`${tdClass} p-0`}>
-                                             <div className="whitespace-pre-wrap p-1">
+                                            <div className="whitespace-pre-wrap p-1">
                                                 <span>
                                                     {booking.itemRows[0]?.itemName || booking.itemRows[0]?.description}
                                                     {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
@@ -145,8 +144,9 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                             <TableCell colSpan={5} className={`${tdClass} text-right`}>TOTAL:</TableCell>
+                            <TableCell className={`${tdClass} text-right`}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>TOTAL LRs: {totalLrCount}</TableCell>
+                            <TableCell colSpan={4}></TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
@@ -161,8 +161,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     <p className="text-xs min-h-[40px] whitespace-pre-line border-b border-dashed pb-2 mb-2">{remark || 'No remarks.'}</p>
                     <div className="space-y-1">
                         <h3 className="font-bold underline text-xs mb-1">Challan Summary</h3>
-                         <div className="flex justify-between text-xs py-0.5">
-                            <span className="font-semibold">Total LR:</span>
+                        <SummaryItem label="Total LR:" value={
                             <span className="font-bold">
                                 {paidCount > 0 && `Paid(${paidCount}) `}
                                 {toPayCount > 0 && `Topay(${toPayCount}) `}
@@ -170,14 +169,14 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                 {focCount > 0 && `FOC(${focCount}) `}
                                 Total {totalLrCount}
                             </span>
-                        </div>
+                        } />
                         <SummaryItem label="Total Packages:" value={totalPackages} />
                         <SummaryItem label="Total Items:" value={challan.totalItems} />
                         <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
                         <SummaryItem label="Total To-Pay Freight:" value={formatValue(grandTotalAmount)} />
                     </div>
                 </div>
-                 <div className="border border-black p-2 min-h-[150px]">
+                <div className="border border-black p-2 min-h-[150px]">
                     <h3 className="font-bold underline text-xs mb-1">Challan Calculation</h3>
                     <div className="space-y-1 text-xs">
                         <SummaryItem label="Total ToPay Amount:" value={formatValue(challan.summary.totalTopayAmount)} />
