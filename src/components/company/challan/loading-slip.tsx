@@ -68,34 +68,29 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bookings.map((lr, index) => {
-                            const totalPackagesLr = lr.itemRows.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
-                            const totalActWtLr = lr.itemRows.reduce((sum, item) => sum + (Number(item.actWt) || 0), 0);
-
-                            return (
-                                <TableRow key={lr.trackingId}>
-                                    <TableCell className={tdClass}>{index + 1}</TableCell>
-                                    <TableCell className={tdClass}>{lr.lrNo}</TableCell>
-                                    <TableCell className={tdClass}>{lr.lrType}</TableCell>
-                                    <TableCell className={tdClass}>{lr.toCity}</TableCell>
-                                    <TableCell className={tdClass}>{lr.receiver}</TableCell>
-                                    <TableCell className={tdClass}>
-                                        <div className="whitespace-pre-wrap">
-                                            {lr.itemRows.map((item, itemIndex) => (
-                                                <React.Fragment key={itemIndex}>
-                                                    <div>
-                                                        {item.itemName} - {item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)
-                                                    </div>
-                                                    {itemIndex < lr.itemRows.length - 1 && <hr className="my-1 border-gray-300" />}
-                                                </React.Fragment>
-                                            ))}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className={`${tdClass} text-center`}>{totalPackagesLr}</TableCell>
-                                    <TableCell className={`${tdClass} text-right`}>{totalActWtLr.toFixed(2)}</TableCell>
-                                    <TableCell className={`${tdClass} text-right`}>{formatValue(lr.totalAmount)}</TableCell>
+                        {bookings.map((lr, lrIndex) => {
+                            const rowCount = lr.itemRows.length || 1;
+                             return lr.itemRows.map((item, itemIndex) => (
+                                <TableRow key={`${lr.trackingId}-${item.id}`}>
+                                    {itemIndex === 0 && (
+                                        <>
+                                            <TableCell rowSpan={rowCount} className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
+                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.lrNo}</TableCell>
+                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.lrType}</TableCell>
+                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.toCity}</TableCell>
+                                            <TableCell rowSpan={rowCount} className={tdClass}>{lr.receiver}</TableCell>
+                                        </>
+                                    )}
+                                    <TableCell className={tdClass}>{item.itemName} - {item.description}</TableCell>
+                                    <TableCell className={`${tdClass} text-center`}>{item.qty}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>{Number(item.actWt).toFixed(2)}</TableCell>
+                                     {itemIndex === 0 && (
+                                        <TableCell rowSpan={rowCount} className={`${tdClass} text-right`}>
+                                            {formatValue(lr.totalAmount)}
+                                        </TableCell>
+                                    )}
                                 </TableRow>
-                            )
+                            ))
                         })}
                     </TableBody>
                     <TableFooter>
