@@ -30,7 +30,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
 
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
-    const totalChargeWeight = bookings.reduce((sum, lr) => sum + lr.chgWt, 0);
     
     // Only sum amounts for TOPAY and TBB bookings for collection purposes
     const grandTotalAmount = bookings.reduce((sum, lr) => {
@@ -91,29 +90,35 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableHeader>
                     <TableBody>
                         {bookings.map((lr, lrIndex) => {
-                            const rowSpan = lr.itemRows.length > 1 ? lr.itemRows.length : 1;
+                            const rowSpan = lr.itemRows.length;
                             const isAmountVisible = lr.lrType === 'TOPAY' || lr.lrType === 'TBB';
-                            return lr.itemRows.map((item, itemIndex) => (
-                                <TableRow key={`${lr.trackingId}-${item.id}`}>
-                                    {itemIndex === 0 && (
-                                        <>
-                                            <TableCell className={`${tdClass} text-center`} rowSpan={rowSpan}>{lrIndex + 1}</TableCell>
-                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.lrNo}</TableCell>
-                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.lrType}</TableCell>
-                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.toCity}</TableCell>
-                                            <TableCell className={tdClass} rowSpan={rowSpan}>{lr.receiver}</TableCell>
-                                        </>
-                                    )}
-                                    <TableCell className={tdClass}>{item.itemName} - {item.description}</TableCell>
-                                    <TableCell className={`${tdClass} text-center`}>{item.qty}</TableCell>
-                                    <TableCell className={`${tdClass} text-right`}>{Number(item.actWt).toFixed(2)}</TableCell>
-                                    {itemIndex === 0 && (
-                                        <TableCell className={`${tdClass} text-right`} rowSpan={rowSpan}>
-                                            {isAmountVisible ? formatValue(lr.totalAmount) : '0.00'}
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ));
+                            const totalActWt = lr.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
+                            const totalQty = lr.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
+                            
+                            return (
+                                <TableRow key={lr.trackingId} className="border-b-2 border-black">
+                                     <TableCell className={`${tdClass} text-center`}>{lrIndex + 1}</TableCell>
+                                     <TableCell className={tdClass}>{lr.lrNo}</TableCell>
+                                     <TableCell className={tdClass}>{lr.lrType}</TableCell>
+                                     <TableCell className={tdClass}>{lr.toCity}</TableCell>
+                                     <TableCell className={tdClass}>{lr.receiver}</TableCell>
+                                     <TableCell className={`${tdClass} p-0`}>
+                                         <div className="whitespace-pre-wrap">
+                                            {lr.itemRows.map((item, itemIndex) => (
+                                                <React.Fragment key={item.id}>
+                                                    <span>{item.itemName || item.description} ({item.qty} Pkgs, {Number(item.actWt).toFixed(2)}kg)</span>
+                                                    {itemIndex < lr.itemRows.length - 1 && <hr className="my-1 border-t border-black" />}
+                                                </React.Fragment>
+                                            ))}
+                                        </div>
+                                     </TableCell>
+                                     <TableCell className={`${tdClass} text-center`}>{totalQty}</TableCell>
+                                     <TableCell className={`${tdClass} text-right`}>{totalActWt.toFixed(2)}</TableCell>
+                                     <TableCell className={`${tdClass} text-right`}>
+                                         {isAmountVisible ? formatValue(lr.totalAmount) : '0.00'}
+                                     </TableCell>
+                                 </TableRow>
+                            )
                         })}
                     </TableBody>
                     <TableFooter>
@@ -146,7 +151,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <SummaryItem label="Total Packages:" value={totalPackages} />
                         <SummaryItem label="Total Items:" value={challan.totalItems} />
                         <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
-                        <SummaryItem label="Total Charge Wt:" value={`${totalChargeWeight.toFixed(2)} kg`} />
                         <SummaryItem label="Total Freight:" value={formatValue(grandTotalAmount)} />
                     </div>
                 </div>
