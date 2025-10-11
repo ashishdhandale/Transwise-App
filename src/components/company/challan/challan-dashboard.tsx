@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +47,7 @@ import { getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { BackButton } from '@/components/ui/back-button';
 import { ClientOnly } from '@/components/ui/client-only';
+import { useRouter } from 'next/navigation';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
