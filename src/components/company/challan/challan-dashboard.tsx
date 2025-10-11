@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, PlusCircle, Search, Trash2, Printer, Loader2, Download, MoreHorizontal, Pencil, Eye } from 'lucide-react';
+import { FileText, PlusCircle, Search, Trash2, Printer, Loader2, Download, MoreHorizontal, Pencil, Eye, ArrowDownToLine } from 'lucide-react';
 import { getChallanData, saveChallanData } from '@/lib/challan-data';
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import { cn } from '@/lib/utils';
@@ -46,6 +46,7 @@ import React from 'react';
 import { getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { BackButton } from '@/components/ui/back-button';
+import { ClientOnly } from '@/components/ui/client-only';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -55,7 +56,7 @@ const statusColors: { [key: string]: string } = {
   Finalized: 'text-green-600 border-green-500/80',
 };
 
-const ChallanTable = ({ title, challans, onDelete, onReprint }: { title: string; challans: Challan[], onDelete?: (challanId: string) => void, onReprint?: (challan: Challan) => void }) => (
+const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit }: { title: string; challans: Challan[], onDelete?: (challanId: string) => void, onReprint?: (challan: Challan) => void, onEdit: (challanId: string) => void }) => (
   <Card>
     <CardHeader>
       <CardTitle className="font-headline">{title}</CardTitle>
@@ -102,8 +103,8 @@ const ChallanTable = ({ title, challans, onDelete, onReprint }: { title: string;
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                                <Link href={`/company/challan/new?challanId=${challan.challanId}`}><Pencil className="mr-2 h-4 w-4" />View/Edit</Link>
+                            <DropdownMenuItem onSelect={() => onEdit(challan.challanId)}>
+                                <Pencil className="mr-2 h-4 w-4" />View/Edit
                             </DropdownMenuItem>
                             {onReprint && (
                                 <DropdownMenuItem onClick={() => onReprint(challan)}>
@@ -161,6 +162,7 @@ export function ChallanDashboard() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const router = useRouter();
 
 
   const loadChallanData = async () => {
@@ -248,16 +250,25 @@ export function ChallanDashboard() {
     setIsDownloading(false);
   };
 
+  const handleEditChallan = (challanId: string) => {
+    const challan = allChallans.find(c => c.challanId === challanId);
+    if (challan?.challanType === 'Inward') {
+      router.push(`/company/challan/new-inward?challanId=${challanId}`);
+    } else {
+      router.push(`/company/challan/new?challanId=${challanId}`);
+    }
+  }
 
-  const pendingChallans = allChallans.filter(c => c.status === 'Pending' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
-  const dispatchedChallans = allChallans.filter(c => c.status === 'Finalized' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
 
+  const pendingDispatchChallans = allChallans.filter(c => c.status === 'Pending' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
+  const finalizedDispatchChallans = allChallans.filter(c => c.status === 'Finalized' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
+  const inwardChallans = allChallans.filter(c => c.challanType === 'Inward' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
 
   return (
     <>
       <main className="flex-1 p-4 md:p-6 bg-secondary/30">
         <header className="mb-4">
-          <BackButton />
+          <ClientOnly><BackButton /></ClientOnly>
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
               <FileText className="h-8 w-8" />
@@ -274,6 +285,11 @@ export function ChallanDashboard() {
                   />
                 </div>
                 <Button asChild>
+                    <Link href="/company/challan/new-inward">
+                        <ArrowDownToLine className="mr-2 h-4 w-4" /> New Inward Challan
+                    </Link>
+                </Button>
+                <Button asChild>
                     <Link href="/company/challan/new">
                         <PlusCircle className="mr-2 h-4 w-4" /> New Dispatch Challan
                     </Link>
@@ -282,8 +298,9 @@ export function ChallanDashboard() {
           </div>
         </header>
         <div className="space-y-6">
-          <ChallanTable title="Pending for Dispatch" challans={pendingChallans} onDelete={handleDeleteTempChallan} />
-          <ChallanTable title="Dispatched Challans" challans={dispatchedChallans} onReprint={handleReprintChallan} />
+          <ChallanTable title="Pending for Dispatch" challans={pendingDispatchChallans} onDelete={handleDeleteTempChallan} onEdit={handleEditChallan} />
+          <ChallanTable title="Finalized Dispatch Challans" challans={finalizedDispatchChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} />
+          <ChallanTable title="Inward Challans" challans={inwardChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} />
         </div>
       </main>
 
