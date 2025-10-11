@@ -108,6 +108,10 @@ export function NewChallanForm() {
     const [isDownloading, setIsDownloading] = useState(false);
     
     useEffect(() => {
+        setBalance(vehicleHireFreight - advance);
+    }, [vehicleHireFreight, advance]);
+
+    useEffect(() => {
         if (!searchParams.get('challanId')) {
              setChallanId(`TEMP-CHLN-${Date.now()}`);
         }
@@ -636,7 +640,7 @@ export function NewChallanForm() {
                     </div>
                     <div className="space-y-1">
                         <Label>Balance</Label>
-                        <Input value={balance} onChange={(e) => setBalance(Number(e.target.value))} readOnly className="font-bold text-green-700" />
+                        <Input value={balance} readOnly className="font-bold text-green-700" />
                     </div>
                     <div className="space-y-1">
                         <Label>Commission</Label>
@@ -726,4 +730,3 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
-
