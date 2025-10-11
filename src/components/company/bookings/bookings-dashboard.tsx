@@ -275,6 +275,9 @@ export function BookingsDashboard() {
               <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
                   <Link href="/company/bookings/new">New Booking (Alt+N)</Link>
               </Button>
+              <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
+                  <Link href="/company/bookings/new?mode=offline">Add Offline Booking (Alt+O)</Link>
+              </Button>
               <Button variant="outline" className="border-gray-400">Hold LR</Button>
             </div>
 
