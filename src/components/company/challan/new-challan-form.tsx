@@ -88,6 +88,7 @@ export function NewChallanForm() {
     const [commission, setCommission] = useState(0);
     const [labour, setLabour] = useState(0);
     const [crossing, setCrossing] = useState(0);
+    const [debitCreditAmount, setDebitCreditAmount] = useState(0);
 
 
     // Master data
@@ -110,6 +111,15 @@ export function NewChallanForm() {
     useEffect(() => {
         setBalance(vehicleHireFreight - advance);
     }, [vehicleHireFreight, advance]);
+
+    const totalTopayAmount = useMemo(() => {
+        return addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0);
+    }, [addedLrs]);
+
+    useEffect(() => {
+        const calculatedDebitCredit = totalTopayAmount - (commission + labour + crossing + balance);
+        setDebitCreditAmount(calculatedDebitCredit);
+    }, [totalTopayAmount, commission, labour, crossing, balance]);
 
     useEffect(() => {
         if (!searchParams.get('challanId')) {
@@ -152,6 +162,7 @@ export function NewChallanForm() {
                     setCommission(existingChallan.summary.commission || 0);
                     setLabour(existingChallan.summary.labour || 0);
                     setCrossing(existingChallan.summary.crossing || 0);
+                    setDebitCreditAmount(existingChallan.summary.debitCreditAmount || 0);
 
                     const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
                     const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
@@ -251,13 +262,13 @@ export function NewChallanForm() {
             senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark: remark || '',
             summary: {
                 grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
-                totalTopayAmount: addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0),
-                commission: commission, 
-                labour: labour, 
-                crossing: crossing, 
+                totalTopayAmount,
+                commission,
+                labour,
+                crossing,
                 carting: 0, 
                 balanceTruckHire: balance,
-                debitCreditAmount: 0,
+                debitCreditAmount,
             }
         };
 
@@ -629,7 +640,7 @@ export function NewChallanForm() {
                     </Card>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4 border rounded-md bg-muted/50">
+                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4 p-4 border rounded-md bg-muted/50">
                     <div className="space-y-1">
                         <Label>Vehicle Hire Freight</Label>
                         <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value))} className="font-semibold" />
@@ -654,7 +665,11 @@ export function NewChallanForm() {
                         <Label>Crossing</Label>
                         <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
                     </div>
-                    <div className="lg:col-span-2 space-y-1">
+                    <div className="space-y-1">
+                        <Label>Debit/Credit Amt</Label>
+                        <Input value={debitCreditAmount.toFixed(2)} readOnly className="font-bold text-blue-700" />
+                    </div>
+                    <div className="lg:col-span-full space-y-1">
                         <Label>Remarks / Dispatch Note</Label>
                         <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                     </div>

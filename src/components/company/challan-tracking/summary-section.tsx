@@ -10,10 +10,10 @@ interface SummarySectionProps {
     profile: CompanyProfileFormValues | null;
 }
 
-const SummaryItem = ({ label, value, isCurrency = true, profile }: { label: string; value: string | number; isCurrency?: boolean; profile: CompanyProfileFormValues | null }) => (
+const SummaryItem = ({ label, value, isCurrency = true, profile, isEmphasized = false }: { label: string; value: string | number; isCurrency?: boolean; profile: CompanyProfileFormValues | null, isEmphasized?: boolean }) => (
     <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{label}:</span>
-        <span className="font-semibold">
+        <span className={isEmphasized ? "font-bold text-blue-700" : "font-semibold"}>
             {isCurrency && profile ? (Number(value)).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
         </span>
     </div>
@@ -36,7 +36,7 @@ export function SummarySection({ challan, profile }: SummarySectionProps) {
             <SummaryItem label="Crossing" value={crossing} profile={profile} />
             <SummaryItem label="Carting" value={carting} profile={profile} />
             <SummaryItem label="Balance Truck Hire" value={balanceTruckHire} profile={profile} />
-            <SummaryItem label="Debit/Credit Amount" value={debitCreditAmount} profile={profile} />
+            <SummaryItem label="Debit/Credit Amount" value={debitCreditAmount} profile={profile} isEmphasized />
         </CardContent>
     </Card>
   );
