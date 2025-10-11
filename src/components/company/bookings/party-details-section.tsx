@@ -29,23 +29,12 @@ interface PartyRowProps {
 const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError, disabled, isOfflineMode }: PartyRowProps) => {
     const { toast } = useToast();
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
-    const [partyDetails, setPartyDetails] = useState<Customer | null>(initialParty);
     const [initialCustomerData, setInitialCustomerData] = useState<Partial<Customer> | null>(null);
-
-
-    useEffect(() => {
-        setPartyDetails(initialParty);
-    }, [initialParty]);
-    
-    useEffect(() => {
-        onPartyChange(partyDetails);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [partyDetails]);
 
     const handlePartySelect = useCallback((partyName: string) => {
         const selectedParty = customers.find(c => c.name.toLowerCase() === partyName.toLowerCase()) || null;
-        if(isOfflineMode && !selectedParty) {
-            setPartyDetails({
+        if(isOfflineMode && !selectedParty && partyName) {
+            onPartyChange({
                 id: 0,
                 name: partyName,
                 gstin: '',
@@ -56,12 +45,12 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                 openingBalance: 0
             });
         } else {
-            setPartyDetails(selectedParty);
+            onPartyChange(selectedParty);
         }
-    }, [customers, isOfflineMode]);
+    }, [customers, isOfflineMode, onPartyChange]);
 
     const handlePartyInputChange = (partyName: string) => {
-        setPartyDetails(prev => ({
+        onPartyChange(prev => ({
             ...(prev || { id: 0, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 }),
             name: partyName,
         }));
@@ -91,7 +80,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
             toast({ title: 'Customer Added', description: `"${customerData.name}" has been added to your master list.` });
             
             onPartyAdded(); 
-            setPartyDetails(newCustomer);
+            onPartyChange(newCustomer);
 
             return true;
         } catch (error) {
@@ -116,14 +105,14 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                     {isOfflineMode ? (
                         <Input
                             placeholder={`Enter ${side} Name...`}
-                            value={partyDetails?.name || ''}
+                            value={initialParty?.name || ''}
                             onChange={(e) => handlePartyInputChange(e.target.value)}
                             disabled={disabled}
                         />
                     ) : (
                         <Combobox
                             options={customerOptions}
-                            value={partyDetails?.name}
+                            value={initialParty?.name}
                             onChange={handlePartySelect}
                             placeholder={`Select ${side}...`}
                             searchPlaceholder="Search customers..."
@@ -136,15 +125,15 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                 </div>
                  <div className="space-y-1">
                     <Label>GST No.</Label>
-                    <Input placeholder="GST Number" value={partyDetails?.gstin || ''} readOnly />
+                    <Input placeholder="GST Number" value={initialParty?.gstin || ''} readOnly />
                 </div>
                 <div className="space-y-1">
                     <Label>Address</Label>
-                    <Textarea placeholder="Party Address" rows={1} value={partyDetails?.address || ''} readOnly className="min-h-[38px]" />
+                    <Textarea placeholder="Party Address" rows={1} value={initialParty?.address || ''} readOnly className="min-h-[38px]" />
                 </div>
                 <div className="space-y-1">
                     <Label>Mobile No.</Label>
-                    <Input placeholder="10 Digits Only" value={partyDetails?.mobile || ''} readOnly />
+                    <Input placeholder="10 Digits Only" value={initialParty?.mobile || ''} readOnly />
                 </div>
             </div>
             <AddCustomerDialog
@@ -158,8 +147,8 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
 };
 
 interface PartyDetailsSectionProps {
-    onSenderChange: (party: Customer | null) => void;
-    onReceiverChange: (party: Customer | null) => void;
+    onSenderChange: (party: Customer | null | ((prev: Customer | null) => Customer | null)) => void;
+    onReceiverChange: (party: Customer | null | ((prev: Customer | null) => Customer | null)) => void;
     sender: Customer | null;
     receiver: Customer | null;
     onTaxPaidByChange: (value: string) => void;
