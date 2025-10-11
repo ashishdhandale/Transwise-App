@@ -76,13 +76,8 @@ export function ChargesSection({
         });
     }
 
-    const calculateCharge = useCallback((charge: ChargeSetting) => {
-        if (!charge.isEditable) {
-            // For simple charges, just return the value or the initial value if set
-            return bookingCharges[charge.id] ?? initialCharges?.[charge.id] ?? charge.value ?? 0;
-        }
-
-        const calcDetails = liveCalc[charge.id];
+    const calculateCharge = useCallback((charge: ChargeSetting, currentLiveCalc: typeof liveCalc) => {
+        const calcDetails = currentLiveCalc[charge.id];
         const rate = calcDetails ? calcDetails.rate : charge.value || 0;
         const type = calcDetails ? calcDetails.type : charge.calculationType;
         
@@ -93,28 +88,24 @@ export function ChargesSection({
             case 'per_quantity': return itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate;
             default: return 0;
         }
-    }, [itemRows, liveCalc, chargeSettings]);
+    }, [itemRows]);
 
     useEffect(() => {
         const newBookingCharges: { [key: string]: number } = {};
-        let chargesInitialized = false;
-
+        
         chargeSettings.forEach(charge => {
-            if (initialCharges && initialCharges[charge.id] !== undefined && !chargesInitialized) {
+             if (charge.isEditable) {
+                newBookingCharges[charge.id] = calculateCharge(charge, liveCalc);
+            } else if (initialCharges && initialCharges[charge.id] !== undefined) {
                 newBookingCharges[charge.id] = initialCharges[charge.id];
             } else {
-                newBookingCharges[charge.id] = calculateCharge(charge);
+                newBookingCharges[charge.id] = charge.value || 0;
             }
         });
         
-        if (initialCharges && !chargesInitialized) {
-             setBookingCharges(initialCharges);
-             chargesInitialized = true;
-        } else {
-             setBookingCharges(newBookingCharges);
-        }
+        setBookingCharges(newBookingCharges);
 
-    }, [chargeSettings, itemRows, calculateCharge, initialCharges]);
+    }, [chargeSettings, itemRows, calculateCharge, liveCalc, initialCharges]);
     
     useEffect(() => {
         notifyParentOfChanges(bookingCharges);
