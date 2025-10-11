@@ -45,7 +45,6 @@ import html2canvas from 'html2canvas';
 import React from 'react';
 import { getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { BackButton } from '@/components/ui/back-button';
 import { ClientOnly } from '@/components/ui/client-only';
 import { useRouter } from 'next/navigation';
 
@@ -260,16 +259,19 @@ export function ChallanDashboard() {
     }
   }
 
+  const sortedChallans = useMemo(() => {
+    return [...allChallans].sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
+  }, [allChallans]);
 
-  const pendingDispatchChallans = allChallans.filter(c => c.status === 'Pending' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
-  const finalizedDispatchChallans = allChallans.filter(c => c.status === 'Finalized' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
-  const inwardChallans = allChallans.filter(c => c.challanType === 'Inward' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
+  const pendingDispatchChallans = sortedChallans.filter(c => c.status === 'Pending' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
+  const finalizedDispatchChallans = sortedChallans.filter(c => c.status === 'Finalized' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
+  const inwardChallans = sortedChallans.filter(c => c.challanType === 'Inward' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
 
   return (
     <>
       <main className="flex-1 p-4 md:p-6 bg-secondary/30">
         <header className="mb-4">
-          <ClientOnly><BackButton /></ClientOnly>
+          <ClientOnly><div/></ClientOnly>
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
               <FileText className="h-8 w-8" />
