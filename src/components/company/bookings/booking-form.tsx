@@ -666,6 +666,11 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     
     const readOnly = isViewOnly || isPartialCancel;
 
+    const handleNewBooking = useCallback(() => {
+        setShowReceipt(false);
+        handleReset();
+    }, []);
+
   return (
     <ClientOnly>
         <div className="space-y-4">
@@ -800,12 +805,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             />
 
             {receiptData && companyProfile && (
-                <Dialog open={showReceipt} onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                        window.location.reload(); 
-                    }
-                    setShowReceipt(isOpen);
-                }}>
+                <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                         <DialogHeader>
                             <DialogTitle>Documents Preview</DialogTitle>
@@ -828,7 +828,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="secondary" onClick={() => window.location.reload()}>Close & New Booking</Button>
+                            <Button type="button" variant="secondary" onClick={handleNewBooking}>Close & New Booking</Button>
                             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                                 {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                                 Download PDF
