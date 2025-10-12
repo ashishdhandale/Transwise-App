@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card } from '@/components/ui/card';
@@ -103,9 +104,11 @@ export function ChargesSection({
             }
         });
         
-        setBookingCharges(newBookingCharges);
+        if (JSON.stringify(newBookingCharges) !== JSON.stringify(bookingCharges)) {
+            setBookingCharges(newBookingCharges);
+        }
 
-    }, [chargeSettings, itemRows, calculateCharge, liveCalc, initialCharges]);
+    }, [chargeSettings, itemRows, calculateCharge, liveCalc, initialCharges, bookingCharges]);
     
     useEffect(() => {
         notifyParentOfChanges(bookingCharges);

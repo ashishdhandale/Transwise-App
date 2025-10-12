@@ -382,7 +382,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
         loadInitialData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [trackingId, isOfflineMode]);
+    }, [trackingId, isOfflineMode, userRole, toast, loadMasterData]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
