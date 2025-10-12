@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -118,12 +119,19 @@ export function DeliveriesDashboard() {
         lrNo: returnBookingId,
         trackingId: `TRK-${Date.now()}`,
         status: 'In Stock',
-        itemRows: returnItems.map(item => ({
-          ...item,
-          qty: String(item.returnQty),
-          actWt: String((parseFloat(item.actWt) / parseFloat(item.qty)) * item.returnQty),
-          chgWt: String((parseFloat(item.chgWt) / parseFloat(item.qty)) * item.returnQty),
-        })),
+        itemRows: returnItems.map(item => {
+            const originalQty = parseFloat(item.qty) || 1; // Avoid division by zero
+            const originalActWt = parseFloat(item.actWt) || 0;
+            const originalChgWt = parseFloat(item.chgWt) || 0;
+            const returnQty = item.returnQty;
+
+            return {
+                ...item,
+                qty: String(returnQty),
+                actWt: String((originalActWt / originalQty) * returnQty),
+                chgWt: String((originalChgWt / originalQty) * returnQty),
+            }
+        }),
         totalAmount: 0, 
         bookingDate: new Date().toISOString(),
       };
