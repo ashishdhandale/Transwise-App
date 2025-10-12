@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2, Eye, X, Search as SearchIcon } from 'lucide-react';
+import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2, Eye, X, Search as SearchIcon, ChevronsUpDown } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -40,6 +40,7 @@ import html2canvas from 'html2canvas';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getVehicleHireReceipts } from '@/lib/vehicle-hire-data';
 import { ClientOnly } from '@/components/ui/client-only';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -72,6 +73,7 @@ export function NewChallanForm() {
     const [stockSelection, setStockSelection] = useState<Set<string>>(new Set());
     const [addedSelection, setAddedSelection] = useState<Set<string>>(new Set());
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [isStockVisible, setIsStockVisible] = useState(true);
     
     // Form fields
     const [challanId, setChallanId] = useState('');
@@ -144,6 +146,7 @@ export function NewChallanForm() {
             const existingChallanId = searchParams.get('challanId');
 
             if (existingChallanId) {
+                setIsStockVisible(false); // Collapse stock section in edit mode
                 const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
                 const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
                 const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
@@ -523,78 +526,88 @@ export function NewChallanForm() {
                 </Card>
                 
                  <div className="space-y-4">
-                    {/* LRs In Stock Table */}
-                    <Card>
-                        <CardHeader className="p-4">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
-                                <div className="flex items-center gap-2">
-                                     <div className="relative w-full max-w-xs">
-                                        <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search LR, sender, receiver..."
-                                            className="pl-8 h-8 text-xs"
-                                            value={stockSearchTerm}
-                                            onChange={(e) => setStockSearchTerm(e.target.value)}
-                                            onKeyDown={handleStockSearchKeyDown}
-                                        />
+                    <Collapsible open={isStockVisible} onOpenChange={setIsStockVisible}>
+                        <Card>
+                            <CardHeader className="p-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <CollapsibleTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <ChevronsUpDown className="h-4 w-4" />
+                                            </Button>
+                                        </CollapsibleTrigger>
+                                        <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
                                     </div>
-                                    <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
-                                    <Select value={toStationFilter} onValueChange={setToStationFilter}>
-                                        <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {stockToStationOptions.map(station => (
-                                                <SelectItem key={station} value={station}>{station}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-2">
+                                        <div className="relative w-full max-w-xs">
+                                            <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                placeholder="Search LR, sender, receiver..."
+                                                className="pl-8 h-8 text-xs"
+                                                value={stockSearchTerm}
+                                                onChange={(e) => setStockSearchTerm(e.target.value)}
+                                                onKeyDown={handleStockSearchKeyDown}
+                                            />
+                                        </div>
+                                        <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
+                                        <Select value={toStationFilter} onValueChange={setToStationFilter}>
+                                            <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {stockToStationOptions.map(station => (
+                                                    <SelectItem key={station} value={station}>{station}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="overflow-y-auto h-96 border-t">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.filter(lr => lr.status === 'In Stock').length && stockSelection.size > 0} /></TableHead>
-                                            <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Date</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">To</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Sender</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
-                                            <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
-                                            <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredInStockLrs.map(lr => (
-                                            <TableRow 
-                                                key={lr.trackingId} 
-                                                data-state={stockSelection.has(lr.trackingId) && "selected"}
-                                                onClick={() => {
-                                                    if(lr.status === 'In Stock') {
-                                                        handleSelectRow(lr.trackingId, !stockSelection.has(lr.trackingId), stockSelection, setStockSelection)
-                                                    }
-                                                }}
-                                                className={lr.status === 'In Stock' ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
-                                            >
-                                                <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} disabled={lr.status !== 'In Stock'} /></TableCell>
-                                                <TableCell>{lr.lrNo}</TableCell>
-                                                <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
-                                                <TableCell>{lr.toCity}</TableCell>
-                                                <TableCell>{lr.sender}</TableCell>
-                                                <TableCell>{lr.receiver}</TableCell>
-                                                <TableCell className="text-right">{lr.qty}</TableCell>
-                                                <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardHeader>
+                            <CollapsibleContent>
+                                <CardContent className="p-0">
+                                    <div className="overflow-y-auto h-96 border-t">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.filter(lr => lr.status === 'In Stock').length && stockSelection.size > 0} /></TableHead>
+                                                    <TableHead className="sticky top-0 bg-card">LR No</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card">Date</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card">To</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card">Sender</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredInStockLrs.map(lr => (
+                                                    <TableRow 
+                                                        key={lr.trackingId} 
+                                                        data-state={stockSelection.has(lr.trackingId) && "selected"}
+                                                        onClick={() => {
+                                                            if(lr.status === 'In Stock') {
+                                                                handleSelectRow(lr.trackingId, !stockSelection.has(lr.trackingId), stockSelection, setStockSelection)
+                                                            }
+                                                        }}
+                                                        className={lr.status === 'In Stock' ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+                                                    >
+                                                        <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} disabled={lr.status !== 'In Stock'} /></TableCell>
+                                                        <TableCell>{lr.lrNo}</TableCell>
+                                                        <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
+                                                        <TableCell>{lr.toCity}</TableCell>
+                                                        <TableCell>{lr.sender}</TableCell>
+                                                        <TableCell>{lr.receiver}</TableCell>
+                                                        <TableCell className="text-right">{lr.qty}</TableCell>
+                                                        <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Card>
+                    </Collapsible>
 
                     <div className="flex flex-col items-center gap-2">
                         <Button onClick={handleAddToChallan} disabled={stockSelection.size === 0}><ArrowDown className="mr-2 h-4 w-4" /> Add to Challan</Button>
