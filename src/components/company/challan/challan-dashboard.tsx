@@ -47,6 +47,8 @@ import { getLrDetailsData, saveLrDetailsData } from '@/lib/challan-data';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ClientOnly } from '@/components/ui/client-only';
 import { useRouter } from 'next/navigation';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -56,7 +58,7 @@ const statusColors: { [key: string]: string } = {
   Finalized: 'text-green-600 border-green-500/80',
 };
 
-const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit }: { title: string; challans: Challan[], onDelete?: (challanId: string) => void, onReprint?: (challan: Challan) => void, onEdit: (challanId: string) => void }) => (
+const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeColumn = false }: { title: string; challans: Challan[], onDelete?: (challanId: string) => void, onReprint?: (challan: Challan) => void, onEdit: (challanId: string) => void, showTypeColumn?: boolean }) => (
   <Card>
     <CardHeader>
       <CardTitle className="font-headline">{title}</CardTitle>
@@ -67,6 +69,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit }: { title:
           <TableHeader>
             <TableRow>
               <TableHead className={thClass}>Challan ID</TableHead>
+              {showTypeColumn && <TableHead className={thClass}>Challan Type</TableHead>}
               <TableHead className={thClass}>Date</TableHead>
               <TableHead className={thClass}>From</TableHead>
               <TableHead className={thClass}>To</TableHead>
@@ -83,6 +86,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit }: { title:
                   <TableCell className={cn(tdClass, 'font-medium')}>
                     {challan.challanId}
                   </TableCell>
+                  {showTypeColumn && <TableCell className={tdClass}><Badge variant="outline">{challan.challanType}</Badge></TableCell>}
                   <TableCell className={tdClass}>{challan.dispatchDate}</TableCell>
                   <TableCell className={tdClass}>{challan.fromStation}</TableCell>
                   <TableCell className={tdClass}>{challan.toStation}</TableCell>
@@ -139,7 +143,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit }: { title:
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={showTypeColumn ? 9 : 8} className="h-24 text-center text-muted-foreground">
                   No challans found.
                 </TableCell>
               </TableRow>
@@ -154,6 +158,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit }: { title:
 export function ChallanDashboard() {
   const [allChallans, setAllChallans] = useState<Challan[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [finalizedFilter, setFinalizedFilter] = useState<'All' | 'Dispatch' | 'Inward'>('All');
   const { toast } = useToast();
   
   const printRef = React.useRef<HTMLDivElement>(null);
@@ -264,8 +269,19 @@ export function ChallanDashboard() {
   }, [allChallans]);
 
   const pendingDispatchChallans = sortedChallans.filter(c => c.status === 'Pending' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
-  const finalizedDispatchChallans = sortedChallans.filter(c => c.status === 'Finalized' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
-  const inwardChallans = sortedChallans.filter(c => c.challanType === 'Inward' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
+  
+  const finalizedAndInwardChallans = useMemo(() => {
+    const combined = sortedChallans.filter(c => 
+        (c.status === 'Finalized' || c.challanType === 'Inward') &&
+        (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase())))
+    );
+
+    if (finalizedFilter === 'All') {
+        return combined;
+    }
+    return combined.filter(c => c.challanType === finalizedFilter);
+  }, [sortedChallans, searchTerm, finalizedFilter]);
+
 
   return (
     <>
@@ -302,8 +318,31 @@ export function ChallanDashboard() {
         </header>
         <div className="space-y-6">
           <ChallanTable title="Pending for Dispatch" challans={pendingDispatchChallans} onDelete={handleDeleteTempChallan} onEdit={handleEditChallan} />
-          <ChallanTable title="Finalized Challan" challans={finalizedDispatchChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} />
-          <ChallanTable title="Inward Challans" challans={inwardChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} />
+          
+          <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <CardTitle className="font-headline">Finalized & Inward Challans</CardTitle>
+                    <RadioGroup defaultValue="All" onValueChange={(value) => setFinalizedFilter(value as any)} className="flex items-center gap-4">
+                         <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="All" id="all" />
+                            <Label htmlFor="all" className="font-normal">All</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Dispatch" id="dispatch" />
+                            <Label htmlFor="dispatch" className="font-normal">Dispatch</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Inward" id="inward" />
+                            <Label htmlFor="inward" className="font-normal">Inward</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <ChallanTable title="" challans={finalizedAndInwardChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} showTypeColumn={true} />
+            </CardContent>
+          </Card>
         </div>
       </main>
 
