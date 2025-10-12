@@ -80,21 +80,7 @@ export function BookingDetailsSection({
         return bookingOptions.stations.map(name => ({ label: name.toUpperCase(), value: name }));
     }, [cityListSource, allCustomCities]);
 
-    const fromStationOptions = useMemo(() => {
-        // For offline or edit modes, show all stations.
-        if (isOfflineMode || isEditMode || isViewOnly) {
-            return stationOptions;
-        }
-
-        // For new online bookings, only show the default station.
-        if (companyProfile?.city) {
-            const defaultCityName = companyProfile.city.toUpperCase();
-            const defaultOption = stationOptions.find(opt => opt.label === defaultCityName);
-            return defaultOption ? [defaultOption] : [];
-        }
-
-        return [];
-    }, [isOfflineMode, isEditMode, isViewOnly, stationOptions, companyProfile?.city]);
+    const fromStationOptions = stationOptions;
 
     const loadCityData = useCallback(() => {
         try {
@@ -145,20 +131,6 @@ export function BookingDetailsSection({
     useEffect(() => {
         loadCityData();
     }, [loadCityData]);
-    
-    useEffect(() => {
-        // Prevent this effect from running in offline mode or when a station is already set.
-        if (isOfflineMode || isEditMode || !companyProfile || fromStation) return;
-        
-        if (companyProfile.city) {
-            const defaultStation = allCustomCities.find(c => c.name.toLowerCase() === companyProfile.city.toLowerCase());
-            if (defaultStation) {
-                onFromStationChange(defaultStation);
-            } else if (bookingOptions.stations.includes(companyProfile.city)) {
-                 onFromStationChange({ id: 0, name: companyProfile.city, aliasCode: '', pinCode: '' });
-            }
-        }
-    }, [isOfflineMode, isEditMode, companyProfile, allCustomCities, onFromStationChange, fromStation]);
 
 
     const getCityObjectByName = (name: string): City | null => {
@@ -293,7 +265,7 @@ export function BookingDetailsSection({
                             notFoundMessage="No station found."
                             addMessage="Add New Station"
                             onAdd={handleOpenAddCity}
-                            disabled={isViewOnly || (!isEditMode && !isViewOnly && !!companyProfile?.city)}
+                            disabled={isViewOnly}
                             autoOpenOnFocus
                         />
                     )}
