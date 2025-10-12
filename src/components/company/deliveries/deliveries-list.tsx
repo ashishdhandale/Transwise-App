@@ -51,6 +51,8 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
             <TableHead className={thClass}>Sender</TableHead>
             <TableHead className={thClass}>Receiver</TableHead>
             <TableHead className={thClass}>Item & Description</TableHead>
+            <TableHead className={`${thClass} text-right`}>Qty</TableHead>
+            <TableHead className={`${thClass} text-right`}>Act. Wt.</TableHead>
             <TableHead className={thClass}>To</TableHead>
             <TableHead className={thClass}>Status</TableHead>
             <TableHead className={`${thClass} text-right`}>Action</TableHead>
@@ -58,13 +60,17 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
         </TableHeader>
         <TableBody>
           {deliveries.length > 0 ? (
-            deliveries.map((delivery) => (
+            deliveries.map((delivery) => {
+              const totalActWt = delivery.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
+              return (
               <TableRow key={delivery.trackingId}>
                 <TableCell className={cn(tdClass, 'font-medium')}>{delivery.lrNo}</TableCell>
                 <TableCell className={cn(tdClass)}>{format(parseISO(delivery.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                 <TableCell className={cn(tdClass)}>{delivery.sender}</TableCell>
                 <TableCell className={cn(tdClass)}>{delivery.receiver}</TableCell>
                 <TableCell className={cn(tdClass, 'max-w-xs truncate')}>{delivery.itemDescription}</TableCell>
+                <TableCell className={cn(tdClass, 'text-right')}>{delivery.qty}</TableCell>
+                <TableCell className={cn(tdClass, 'text-right')}>{totalActWt.toFixed(2)}</TableCell>
                 <TableCell className={cn(tdClass)}>{delivery.toCity}</TableCell>
                 <TableCell className={cn(tdClass)}>
                    <Badge variant="outline" className={cn('font-semibold', statusColors[delivery.status])}>
@@ -102,10 +108,10 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
                     </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))
+            )})
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={10} className="h-24 text-center">
                 No consignments are currently awaiting delivery for this challan.
               </TableCell>
             </TableRow>
