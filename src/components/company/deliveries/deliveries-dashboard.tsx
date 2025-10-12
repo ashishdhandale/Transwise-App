@@ -16,7 +16,7 @@ import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-interface PendingChallan extends Challan {
+interface PopulatedChallan extends Challan {
   bookings: Booking[];
 }
 
@@ -49,24 +49,19 @@ export function DeliveriesDashboard() {
     loadData();
   }, []);
 
-  const pendingChallans: PendingChallan[] = useMemo(() => {
-    const finalizedDispatchChallans = allChallans.filter(
-      c => c.status === 'Finalized' && c.challanType === 'Dispatch'
-    );
-
-    return finalizedDispatchChallans.map(challan => {
+  const { pendingChallans, deliveredChallans } = useMemo(() => {
+    const populatedChallans = allChallans.map(challan => {
       const lrNosForChallan = new Set(allLrDetails.filter(lr => lr.challanId === challan.challanId).map(lr => lr.lrNo));
-      const bookingsForChallan = allBookings.filter(b => lrNosForChallan.has(b.lrNo) && (b.status === 'In Transit' || b.status === 'Partially Delivered'));
-      return {
-        ...challan,
-        bookings: bookingsForChallan
-      };
-    }).filter(challan => challan.bookings.length > 0);
-  }, [allBookings, allChallans, allLrDetails]);
+      const bookingsForChallan = allBookings.filter(b => lrNosForChallan.has(b.lrNo));
+      return { ...challan, bookings: bookingsForChallan };
+    });
 
-  const deliveredBookings = useMemo(() => {
-    return allBookings.filter(b => b.status === 'Delivered');
-  }, [allBookings]);
+    const pending = populatedChallans.filter(c => c.bookings.some(b => b.status === 'In Transit' || b.status === 'Partially Delivered'));
+    
+    const delivered = populatedChallans.filter(c => c.bookings.length > 0 && c.bookings.every(b => b.status === 'Delivered'));
+
+    return { pendingChallans: pending, deliveredChallans: delivered };
+  }, [allBookings, allChallans, allLrDetails]);
 
 
   const handleUpdateClick = (booking: Booking) => {
@@ -187,12 +182,12 @@ export function DeliveriesDashboard() {
                                     <span className="font-bold text-primary">{challan.challanId}</span>
                                     <span>{challan.vehicleNo}</span>
                                     <span>{challan.fromStation} to {challan.toStation}</span>
-                                    <span className="text-muted-foreground">({challan.bookings.length} LRs)</span>
+                                    <span className="text-muted-foreground">({challan.bookings.filter(b => b.status !== 'Delivered').length} LRs pending)</span>
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent className="p-0">
                                <DeliveriesList 
-                                    deliveries={challan.bookings} 
+                                    deliveries={challan.bookings.filter(b => b.status !== 'Delivered')} 
                                     onUpdateClick={handleUpdateClick}
                                     onPrintMemoClick={handlePrintMemoClick}
                                     onQuickDeliver={handleQuickDeliver}
@@ -210,15 +205,36 @@ export function DeliveriesDashboard() {
         </Card>
          <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Recently Delivered</CardTitle>
+                <CardTitle className="font-headline">Recently Delivered Challans</CardTitle>
             </CardHeader>
             <CardContent>
-                 <DeliveriesList 
-                    deliveries={deliveredBookings} 
-                    onUpdateClick={handleUpdateClick}
-                    onPrintMemoClick={handlePrintMemoClick}
-                    onQuickDeliver={handleQuickDeliver}
-                />
+                 <Accordion type="single" collapsible className="w-full">
+                    {deliveredChallans.map(challan => (
+                        <AccordionItem value={challan.challanId} key={challan.challanId}>
+                            <AccordionTrigger className="hover:bg-muted/50 px-4">
+                                <div className="flex items-center gap-4 text-sm">
+                                    <span className="font-bold text-primary">{challan.challanId}</span>
+                                    <span>{challan.vehicleNo}</span>
+                                    <span>{challan.fromStation} to {challan.toStation}</span>
+                                    <span className="text-muted-foreground">({challan.bookings.length} LRs)</span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                               <DeliveriesList 
+                                    deliveries={challan.bookings} 
+                                    onUpdateClick={handleUpdateClick}
+                                    onPrintMemoClick={handlePrintMemoClick}
+                                    onQuickDeliver={handleQuickDeliver}
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+                {deliveredChallans.length === 0 && (
+                    <div className="text-center p-8 text-muted-foreground">
+                        No fully delivered challans found.
+                    </div>
+                )}
             </CardContent>
         </Card>
       </div>
