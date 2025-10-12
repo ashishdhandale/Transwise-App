@@ -323,19 +323,17 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     useEffect(() => {
         const loadInitialData = async () => {
             try {
+                loadMasterData();
                 const profile = await getCompanyProfile();
                 setCompanyProfile(profile);
-                loadMasterData();
-
-                const parsedBookings = getBookings();
                 
+                const parsedBookings = getBookings();
                 let keyCounter = 1;
 
-                if (trackingId) { // This covers edit, view and partial cancel modes
+                if (trackingId) {
                     const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId);
                     if (bookingToLoad) {
                         const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
-                        
                         const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
                         const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
 
@@ -357,35 +355,34 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         if (bookingToLoad.ftlDetails) {
                             setFtlDetails(bookingToLoad.ftlDetails);
                         }
-
                     } else {
                          toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                     }
-
-                } else if (isOfflineMode) {
-                    // In offline mode for inward challans, LR number is manual, so start blank.
-                    setCurrentLrNumber('');
-                     setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                 } else {
-                    // For a new regular booking
-                    let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
-                    if (userRole === 'Branch') {
-                        const userBranch = branches.find(b => b.name === 'Pune Hub'); 
-                        if(userBranch?.lrPrefix) {
-                            lrPrefix = userBranch.lrPrefix;
-                        }
-                    }
-                    setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
                     setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
+                    if (isOfflineMode) {
+                        setCurrentLrNumber('');
+                    } else if (profile && !currentLrNumber) {
+                        const localBranches = getBranches();
+                        let lrPrefix = profile.lrPrefix?.trim() || 'CONAG';
+                        if (userRole === 'Branch') {
+                            const userBranch = localBranches.find(b => b.name === 'Pune Hub');
+                            if(userBranch?.lrPrefix) {
+                                lrPrefix = userBranch.lrPrefix;
+                            }
+                        }
+                        setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
+                    }
                 }
-
             } catch (error) {
-                console.error("Failed to process bookings from localStorage or fetch profile", error);
+                console.error("Failed to process bookings or fetch profile", error);
                 toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
             }
-        }
+        };
+
         loadInitialData();
-    }, [trackingId, toast, loadMasterData, isOfflineMode, userRole, branches]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [trackingId, isOfflineMode]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
