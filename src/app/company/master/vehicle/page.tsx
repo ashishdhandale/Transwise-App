@@ -6,6 +6,7 @@ import DashboardLayout from '../../../(dashboard)/layout';
 import { VehicleManagement } from '@/components/company/master/vehicle-management';
 import { Truck } from 'lucide-react';
 import { BackButton } from '@/components/ui/back-button';
+import { ClientOnly } from '@/components/ui/client-only';
 
 
 function VehiclePage() {
@@ -18,7 +19,9 @@ function VehiclePage() {
                 Vehicle Master
             </h1>
         </header>
-        <VehicleManagement />
+        <ClientOnly>
+          <VehicleManagement />
+        </ClientOnly>
     </main>
   );
 }
@@ -32,3 +35,4 @@ export default function VehicleRootPage() {
     </Suspense>
   );
 }
+
