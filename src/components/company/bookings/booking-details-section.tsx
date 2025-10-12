@@ -147,7 +147,7 @@ export function BookingDetailsSection({
     }, [loadCityData]);
     
     useEffect(() => {
-        // Prevent this effect from running in offline mode to stop infinite loops.
+        // Prevent this effect from running in offline mode or when a station is already set.
         if (isOfflineMode || isEditMode || !companyProfile || fromStation) return;
         
         if (companyProfile.city) {
@@ -158,7 +158,7 @@ export function BookingDetailsSection({
                  onFromStationChange({ id: 0, name: companyProfile.city, aliasCode: '', pinCode: '' });
             }
         }
-    }, [isOfflineMode, isEditMode, companyProfile, allCustomCities, onFromStationChange]);
+    }, [isOfflineMode, isEditMode, companyProfile, allCustomCities, onFromStationChange, fromStation]);
 
 
     const getCityObjectByName = (name: string): City | null => {
