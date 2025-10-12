@@ -48,8 +48,10 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
           <TableRow>
             <TableHead className={thClass}>LR No.</TableHead>
             <TableHead className={thClass}>Booking Date</TableHead>
-            <TableHead className={thClass}>To</TableHead>
+            <TableHead className={thClass}>Sender</TableHead>
             <TableHead className={thClass}>Receiver</TableHead>
+            <TableHead className={thClass}>Item & Description</TableHead>
+            <TableHead className={thClass}>To</TableHead>
             <TableHead className={thClass}>Status</TableHead>
             <TableHead className={`${thClass} text-right`}>Action</TableHead>
           </TableRow>
@@ -60,8 +62,10 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
               <TableRow key={delivery.trackingId}>
                 <TableCell className={cn(tdClass, 'font-medium')}>{delivery.lrNo}</TableCell>
                 <TableCell className={cn(tdClass)}>{format(parseISO(delivery.bookingDate), 'dd-MMM-yyyy')}</TableCell>
-                <TableCell className={cn(tdClass)}>{delivery.toCity}</TableCell>
+                <TableCell className={cn(tdClass)}>{delivery.sender}</TableCell>
                 <TableCell className={cn(tdClass)}>{delivery.receiver}</TableCell>
+                <TableCell className={cn(tdClass, 'max-w-xs truncate')}>{delivery.itemDescription}</TableCell>
+                <TableCell className={cn(tdClass)}>{delivery.toCity}</TableCell>
                 <TableCell className={cn(tdClass)}>
                    <Badge variant="outline" className={cn('font-semibold', statusColors[delivery.status])}>
                      {delivery.status}
@@ -101,7 +105,7 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={8} className="h-24 text-center">
                 No consignments are currently awaiting delivery for this challan.
               </TableCell>
             </TableRow>
