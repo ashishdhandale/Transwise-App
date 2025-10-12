@@ -12,21 +12,36 @@ import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { DeliveryMemoDialog } from './delivery-memo-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
+import type { Challan, LrDetail } from '@/lib/challan-data';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
+interface PendingChallan extends Challan {
+  bookings: Booking[];
+}
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [allChallans, setAllChallans] = useState<Challan[]>([]);
+  const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+
   const [selectedBookingForUpdate, setSelectedBookingForUpdate] = useState<Booking | null>(null);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [selectedBookingForMemo, setSelectedBookingForMemo] = useState<Booking | null>(null);
   const [isMemoDialogOpen, setIsMemoDialogOpen] = useState(false);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   
   const { toast } = useToast();
 
   const loadData = async () => {
     const bookings = getBookings();
+    const challans = getChallanData();
+    const lrDetails = getLrDetailsData();
     const profile = await getCompanyProfile();
+    
     setAllBookings(bookings);
+    setAllChallans(challans);
+    setAllLrDetails(lrDetails);
     setCompanyProfile(profile);
   };
 
@@ -34,9 +49,20 @@ export function DeliveriesDashboard() {
     loadData();
   }, []);
 
-  const deliveriesToProcess = useMemo(() => {
-    return allBookings.filter(b => b.status === 'In Transit' || b.status === 'Partially Delivered');
-  }, [allBookings]);
+  const pendingChallans: PendingChallan[] = useMemo(() => {
+    const finalizedDispatchChallans = allChallans.filter(
+      c => c.status === 'Finalized' && c.challanType === 'Dispatch'
+    );
+
+    return finalizedDispatchChallans.map(challan => {
+      const lrNosForChallan = new Set(allLrDetails.filter(lr => lr.challanId === challan.challanId).map(lr => lr.lrNo));
+      const bookingsForChallan = allBookings.filter(b => lrNosForChallan.has(b.lrNo) && (b.status === 'In Transit' || b.status === 'Partially Delivered'));
+      return {
+        ...challan,
+        bookings: bookingsForChallan
+      };
+    }).filter(challan => challan.bookings.length > 0);
+  }, [allBookings, allChallans, allLrDetails]);
 
   const deliveredBookings = useMemo(() => {
     return allBookings.filter(b => b.status === 'Delivered');
@@ -153,12 +179,33 @@ export function DeliveriesDashboard() {
                 <CardTitle className="font-headline">Pending for Delivery</CardTitle>
             </CardHeader>
             <CardContent>
-                <DeliveriesList 
-                    deliveries={deliveriesToProcess} 
-                    onUpdateClick={handleUpdateClick}
-                    onPrintMemoClick={handlePrintMemoClick}
-                    onQuickDeliver={handleQuickDeliver}
-                />
+                <Accordion type="single" collapsible className="w-full">
+                    {pendingChallans.map(challan => (
+                        <AccordionItem value={challan.challanId} key={challan.challanId}>
+                            <AccordionTrigger className="hover:bg-muted/50 px-4">
+                                <div className="flex items-center gap-4 text-sm">
+                                    <span className="font-bold text-primary">{challan.challanId}</span>
+                                    <span>{challan.vehicleNo}</span>
+                                    <span>{challan.fromStation} to {challan.toStation}</span>
+                                    <span className="text-muted-foreground">({challan.bookings.length} LRs)</span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                               <DeliveriesList 
+                                    deliveries={challan.bookings} 
+                                    onUpdateClick={handleUpdateClick}
+                                    onPrintMemoClick={handlePrintMemoClick}
+                                    onQuickDeliver={handleQuickDeliver}
+                                />
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+                {pendingChallans.length === 0 && (
+                    <div className="text-center p-8 text-muted-foreground">
+                        No challans are currently pending for delivery.
+                    </div>
+                )}
             </CardContent>
         </Card>
          <Card>
