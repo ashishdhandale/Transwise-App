@@ -200,10 +200,10 @@ export function AppSidebar() {
                 <SidebarMenuButton href={isBranch ? "/company/bookings?role=Branch" : "/company/bookings"} size="sm" isActive={pathname.startsWith('/company/bookings')} tooltip="Bookings"><BookCopy />Bookings</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton href={isBranch ? "/company/challan?role=Branch" : "/company/challan"} size="sm" isActive={pathname.startsWith('/company/challan')} tooltip="Challan"><FileText />Challan</SidebarMenuButton>
-              </SidebarMenuItem>
-               <SidebarMenuItem>
                 <SidebarMenuButton href={isBranch ? "/company/vehicle-hire?role=Branch" : "/company/vehicle-hire"} size="sm" isActive={pathname.startsWith('/company/vehicle-hire')} tooltip="Vehicle Hire"><Truck />Vehicle Hire</SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href={isBranch ? "/company/challan?role=Branch" : "/company/challan"} size="sm" isActive={pathname.startsWith('/company/challan')} tooltip="Challan"><FileText />Challan</SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href={isBranch ? "/company/deliveries?role=Branch" : "/company/deliveries"} size="sm" isActive={pathname.startsWith('/company/deliveries')} tooltip="Deliveries"><Truck />Deliveries</SidebarMenuButton>
