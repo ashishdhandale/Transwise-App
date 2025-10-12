@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
@@ -811,7 +811,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                             <DialogTitle>Documents Preview</DialogTitle>
                         </DialogHeader>
                         <div className="flex-grow overflow-auto p-4 bg-gray-200">
-                        <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '216mm'}}>
+                        <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '210mm'}}>
                                 <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Receiver" />
                                 <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
                                 <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Sender" />
@@ -832,6 +832,9 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                                 {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                                 Download PDF
+                            </Button>
+                             <Button onClick={() => window.print()}>
+                                <Printer className="mr-2 h-4 w-4" /> Print
                             </Button>
                         </DialogFooter>
                     </DialogContent>
