@@ -40,7 +40,7 @@ import { Download, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { VehicleDetailsSection } from './vehicle-details-section';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { FtlChallan } from '../challan-tracking/ftl-challan';
@@ -242,7 +242,6 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const [sender, setSender] = useState<Customer | null>(null);
     const [receiver, setReceiver] = useState<Customer | null>(null);
     const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
-    const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [currentLrNumber, setCurrentLrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
@@ -321,55 +320,54 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         }
     }, []);
 
-    const loadInitialData = useCallback(async () => {
-        try {
-            const profile = await getCompanyProfile();
-            setCompanyProfile(profile);
-            loadMasterData();
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                const profile = await getCompanyProfile();
+                setCompanyProfile(profile);
+                loadMasterData();
 
-            const parsedBookings = getBookings();
-            setAllBookings(parsedBookings);
-            
-            let keyCounter = 1;
+                const parsedBookings = getBookings();
+                
+                let keyCounter = 1;
 
-            if (trackingId) { // This covers edit, view and partial cancel modes
-                const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId);
-                if (bookingToLoad) {
-                    const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
-                    
-                    const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
-                    const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+                if (trackingId) { // This covers edit, view and partial cancel modes
+                    const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId);
+                    if (bookingToLoad) {
+                        const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+                        
+                        const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+                        const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
 
-                    setCurrentLrNumber(bookingToLoad.lrNo);
-                    setBookingDate(new Date(bookingToLoad.bookingDate));
-                    setBookingType(bookingToLoad.lrType);
-                    setLoadType(bookingToLoad.loadType || 'LTL');
-                    setFromStation({ id: 0, name: bookingToLoad.fromCity, aliasCode: '', pinCode: '' });
-                    setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
-                    setSender(senderProfile);
-                    setReceiver(receiverProfile);
-                    const itemRowsWithIds = bookingToLoad.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
-                    setItemRows(itemRowsWithIds);
-                    
-                    setGrandTotal(bookingToLoad.totalAmount);
-                    setAdditionalCharges(bookingToLoad.additionalCharges || {});
-                    setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
-                    setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
-                    if (bookingToLoad.ftlDetails) {
-                        setFtlDetails(bookingToLoad.ftlDetails);
+                        setCurrentLrNumber(bookingToLoad.lrNo);
+                        setBookingDate(new Date(bookingToLoad.bookingDate));
+                        setBookingType(bookingToLoad.lrType);
+                        setLoadType(bookingToLoad.loadType || 'LTL');
+                        setFromStation({ id: 0, name: bookingToLoad.fromCity, aliasCode: '', pinCode: '' });
+                        setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
+                        setSender(senderProfile);
+                        setReceiver(receiverProfile);
+                        const itemRowsWithIds = bookingToLoad.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
+                        setItemRows(itemRowsWithIds);
+                        
+                        setGrandTotal(bookingToLoad.totalAmount);
+                        setAdditionalCharges(bookingToLoad.additionalCharges || {});
+                        setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
+                        setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
+                        if (bookingToLoad.ftlDetails) {
+                            setFtlDetails(bookingToLoad.ftlDetails);
+                        }
+
+                    } else {
+                         toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
                     }
 
+                } else if (isOfflineMode) {
+                    // In offline mode for inward challans, LR number is manual, so start blank.
+                    setCurrentLrNumber('');
+                     setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                 } else {
-                     toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
-                }
-
-            } else if (isOfflineMode) {
-                // In offline mode for inward challan, LR number is manual, so start blank.
-                setCurrentLrNumber('');
-                 setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
-            } else {
-                // For a new regular booking, only generate LR number if it's not already set
-                if (!currentLrNumber) {
+                    // For a new regular booking
                     let lrPrefix = profile?.lrPrefix?.trim() || 'CONAG';
                     if (userRole === 'Branch') {
                         const userBranch = branches.find(b => b.name === 'Pune Hub'); 
@@ -378,19 +376,16 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         }
                     }
                     setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
+                    setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                 }
-                setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
+
+            } catch (error) {
+                console.error("Failed to process bookings from localStorage or fetch profile", error);
+                toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
             }
-
-        } catch (error) {
-            console.error("Failed to process bookings from localStorage or fetch profile", error);
-            toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
         }
-    }, [trackingId, toast, loadMasterData, userRole, branches, isOfflineMode, currentLrNumber]);
-
-    useEffect(() => {
         loadInitialData();
-    }, [loadInitialData]);
+    }, [trackingId, toast, loadMasterData, isOfflineMode, userRole, branches]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
@@ -463,6 +458,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
         const currentStatus: Booking['status'] = 'In Stock';
+        const allBookings = getBookings();
         const currentBooking = (isEditMode || isPartialCancel) ? allBookings.find(b => b.trackingId === trackingId) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
         const userBranchName = userRole === 'Branch' ? 'Pune Hub' : companyProfile?.companyName; // Hardcoded branch for prototype
@@ -582,7 +578,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, allBookings, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
