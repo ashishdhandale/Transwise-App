@@ -105,14 +105,15 @@ export function DeliveriesDashboard() {
   ) => {
     const { status, deliveryDate, receivedBy, remarks, updatedItems } = updates;
     const bookings = getBookings();
-    let historyLogs = getHistoryLogs();
-
+    
     const returnItems = updatedItems.filter(item => item.returnQty > 0);
     let finalStatus = status;
 
     if (returnItems.length > 0) {
       finalStatus = 'Partially Delivered';
-      const returnBookingId = `${booking.lrNo}-R${(historyLogs.find(h => h.id.startsWith(booking.lrNo))?.logs.filter(l => l.action === 'Booking Created').length || 0) + 1}`;
+      // Find how many returns already exist for this LR
+      const existingReturnsCount = bookings.filter(b => b.lrNo.startsWith(`${booking.lrNo}-R`)).length;
+      const returnBookingId = `${booking.lrNo}-R${existingReturnsCount + 1}`;
       
       const newReturnBooking: Booking = {
         ...booking,
