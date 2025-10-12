@@ -11,79 +11,7 @@ import { addHistoryLog } from '@/lib/history-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { DeliveryMemoDialog } from './delivery-memo-dialog';
-import { getChallanData, getLrDetailsData, type Challan } from '@/lib/challan-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, MoreHorizontal } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
-interface GroupedChallans {
-  pending: { challan: Challan; bookings: Booking[] }[];
-  delivered: { challan: Challan; bookings: Booking[] }[];
-}
-
-const thClass = "text-primary font-bold";
-
-const ChallanTable = ({ title, data, onDeliverChallan }: { title: string, data: { challan: Challan, bookings: Booking[] }[], onDeliverChallan?: (challanId: string) => void }) => {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto border rounded-md">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className={thClass}>Challan ID</TableHead>
-                                <TableHead className={thClass}>Vehicle No</TableHead>
-                                <TableHead className={thClass}>From</TableHead>
-                                <TableHead className={thClass}>To</TableHead>
-                                <TableHead className={thClass}>Date</TableHead>
-                                {onDeliverChallan && <TableHead className={`${thClass} text-right`}>Actions</TableHead>}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {data.length > 0 ? (
-                                data.map(({ challan }) => (
-                                <TableRow key={challan.challanId}>
-                                    <TableCell className="font-medium">{challan.challanId}</TableCell>
-                                    <TableCell>{challan.vehicleNo}</TableCell>
-                                    <TableCell>{challan.fromStation}</TableCell>
-                                    <TableCell>{challan.toStation}</TableCell>
-                                    <TableCell>{format(new Date(challan.dispatchDate), 'dd-MMM-yyyy')}</TableCell>
-                                     {onDeliverChallan && (
-                                        <TableCell className="text-right">
-                                            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => onDeliverChallan(challan.challanId)}>
-                                                <CheckCircle className="mr-2 h-4 w-4" /> Mark as Delivered
-                                            </Button>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={onDeliverChallan ? 6 : 5} className="h-24 text-center">No challans in this category.</TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
-
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -106,31 +34,14 @@ export function DeliveriesDashboard() {
     loadData();
   }, []);
 
-  const groupedChallans = useMemo((): GroupedChallans => {
-    const challans = getChallanData().filter(c => c.challanType === 'Dispatch');
-    const lrDetails = getLrDetailsData();
-    const bookingsMap = new Map(allBookings.map(b => [b.lrNo, b]));
-    
-    const pending: GroupedChallans['pending'] = [];
-    const delivered: GroupedChallans['delivered'] = [];
-
-    challans.forEach(challan => {
-        const associatedLrNos = new Set(lrDetails.filter(lr => lr.challanId === challan.challanId).map(lr => lr.lrNo));
-        const associatedBookings = Array.from(associatedLrNos).map(lrNo => bookingsMap.get(lrNo)).filter((b): b is Booking => !!b);
-
-        if (associatedBookings.length === 0) return;
-
-        const areAllDelivered = associatedBookings.every(b => b.status === 'Delivered' || b.status === 'Partially Delivered');
-
-        if (areAllDelivered) {
-            delivered.push({ challan, bookings: associatedBookings });
-        } else {
-            pending.push({ challan, bookings: associatedBookings });
-        }
-    });
-
-    return { pending, delivered };
+  const deliveriesToProcess = useMemo(() => {
+    return allBookings.filter(b => b.status === 'In Transit' || b.status === 'Partially Delivered');
   }, [allBookings]);
+
+  const deliveredBookings = useMemo(() => {
+    return allBookings.filter(b => b.status === 'Delivered');
+  }, [allBookings]);
+
 
   const handleUpdateClick = (booking: Booking) => {
     setSelectedBookingForUpdate(booking);
@@ -140,6 +51,20 @@ export function DeliveriesDashboard() {
   const handlePrintMemoClick = (booking: Booking) => {
     setSelectedBookingForMemo(booking);
     setIsMemoDialogOpen(true);
+  }
+
+  const handleQuickDeliver = (booking: Booking) => {
+    const bookings = getBookings();
+    const updatedBookings = bookings.map(b => {
+      if (b.trackingId === booking.trackingId) {
+        addHistoryLog(b.lrNo, 'Delivered', 'System', `Quick delivery update.`);
+        return { ...b, status: 'Delivered' as const };
+      }
+      return b;
+    });
+    saveBookings(updatedBookings);
+    loadData();
+    toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as Delivered.`});
   }
 
   const handleStatusUpdate = (
@@ -214,24 +139,6 @@ export function DeliveriesDashboard() {
     setIsUpdateDialogOpen(false);
   };
 
-  const handleDeliverChallan = (challanId: string) => {
-      const challanGroup = groupedChallans.pending.find(p => p.challan.challanId === challanId);
-      if (!challanGroup) return;
-
-      const bookingsToUpdate = new Set(challanGroup.bookings.map(b => b.trackingId));
-      
-      const updatedBookings = getBookings().map(b => {
-          if (bookingsToUpdate.has(b.trackingId) && b.status !== 'Delivered') {
-              addHistoryLog(b.lrNo, 'Delivered', 'System', `Bulk delivery update via challan ${challanId}.`);
-              return { ...b, status: 'Delivered' as const };
-          }
-          return b;
-      });
-      saveBookings(updatedBookings);
-      loadData();
-      toast({ title: 'Challan Delivered', description: `All items in challan ${challanId} have been marked as delivered.`});
-  }
-
   return (
     <main className="flex-1 p-4 md:p-6 bg-secondary/30">
       <header className="mb-4">
@@ -241,8 +148,32 @@ export function DeliveriesDashboard() {
         </h1>
       </header>
       <div className="space-y-6">
-        <ChallanTable title="Pending for Delivery" data={groupedChallans.pending} onDeliverChallan={handleDeliverChallan} />
-        <ChallanTable title="Delivered Challans" data={groupedChallans.delivered} />
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Pending for Delivery</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <DeliveriesList 
+                    deliveries={deliveriesToProcess} 
+                    onUpdateClick={handleUpdateClick}
+                    onPrintMemoClick={handlePrintMemoClick}
+                    onQuickDeliver={handleQuickDeliver}
+                />
+            </CardContent>
+        </Card>
+         <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Recently Delivered</CardTitle>
+            </CardHeader>
+            <CardContent>
+                 <DeliveriesList 
+                    deliveries={deliveredBookings} 
+                    onUpdateClick={handleUpdateClick}
+                    onPrintMemoClick={handlePrintMemoClick}
+                    onQuickDeliver={handleQuickDeliver}
+                />
+            </CardContent>
+        </Card>
       </div>
       {selectedBookingForUpdate && (
         <UpdateDeliveryStatusDialog
@@ -263,4 +194,3 @@ export function DeliveriesDashboard() {
     </main>
   );
 }
-
