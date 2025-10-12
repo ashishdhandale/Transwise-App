@@ -242,7 +242,9 @@ export function BookingsDashboard() {
 
 
   const filteredBookings = useMemo(() => {
-    const sortedBookings = [...bookings].sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+    const sortedBookings = [...bookings]
+        .filter(b => !b.lrNo.includes('-R')) // Exclude return bookings
+        .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 
     if (!debouncedSearchQuery) {
       return sortedBookings;
