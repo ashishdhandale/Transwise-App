@@ -48,7 +48,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { ClientOnly } from '@/components/ui/client-only';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -322,7 +322,7 @@ export function ChallanDashboard() {
           <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline">Finalized & Inward Challans</CardTitle>
+                    <CardTitle className="font-headline">Finalized Challan</CardTitle>
                     <RadioGroup defaultValue="All" onValueChange={(value) => setFinalizedFilter(value as any)} className="flex items-center gap-4">
                          <div className="flex items-center space-x-2">
                             <RadioGroupItem value="All" id="all" />
