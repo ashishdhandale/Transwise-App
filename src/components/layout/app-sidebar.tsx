@@ -41,7 +41,8 @@ import {
   Users,
   Wallet,
   Wrench,
-  UserPlus
+  UserPlus,
+  Undo2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -402,6 +403,11 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton href="/company/reports/booking-type" size="sm" isActive={pathname === '/company/reports/booking-type'} tooltip="Booking Type Wise Report">
                                 <List /> Booking Type Wise
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton href="/company/reports/return-booking" size="sm" isActive={pathname === '/company/reports/return-booking'} tooltip="Return Booking Report">
+                                <Undo2 /> Return Booking Report
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>
