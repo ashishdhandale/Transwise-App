@@ -294,15 +294,6 @@ export function ChallanDashboard() {
               Challan Management
             </h1>
             <div className="flex items-center gap-4">
-                <div className="relative w-full max-w-sm">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by Challan or Vehicle No..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
                 <Button asChild>
                     <Link href="/company/challan/new-inward">
                         <ArrowDownToLine className="mr-2 h-4 w-4" /> New Inward Challan
@@ -323,20 +314,31 @@ export function ChallanDashboard() {
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <CardTitle className="font-headline">Finalized Challan</CardTitle>
-                    <RadioGroup defaultValue="All" onValueChange={(value) => setFinalizedFilter(value as any)} className="flex items-center gap-4">
-                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="All" id="all" />
-                            <Label htmlFor="all" className="font-normal">All</Label>
+                    <div className="flex items-center gap-4">
+                        <div className="relative w-full max-w-sm">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search by Challan or Vehicle No..."
+                            className="pl-8"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Dispatch" id="dispatch" />
-                            <Label htmlFor="dispatch" className="font-normal">Dispatch</Label>
-                        </div>
-                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Inward" id="inward" />
-                            <Label htmlFor="inward" className="font-normal">Inward</Label>
-                        </div>
-                    </RadioGroup>
+                        <RadioGroup defaultValue="All" onValueChange={(value) => setFinalizedFilter(value as any)} className="flex items-center gap-4">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="All" id="all" />
+                                <Label htmlFor="all" className="font-normal">All</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Dispatch" id="dispatch" />
+                                <Label htmlFor="dispatch" className="font-normal">Dispatch</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="Inward" id="inward" />
+                                <Label htmlFor="inward" className="font-normal">Inward</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
