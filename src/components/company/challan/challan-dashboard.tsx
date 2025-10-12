@@ -302,7 +302,7 @@ export function ChallanDashboard() {
         </header>
         <div className="space-y-6">
           <ChallanTable title="Pending for Dispatch" challans={pendingDispatchChallans} onDelete={handleDeleteTempChallan} onEdit={handleEditChallan} />
-          <ChallanTable title="Finalized Dispatch Challans" challans={finalizedDispatchChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} />
+          <ChallanTable title="Finalized Challan" challans={finalizedDispatchChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} />
           <ChallanTable title="Inward Challans" challans={inwardChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} />
         </div>
       </main>
