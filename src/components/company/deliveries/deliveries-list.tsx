@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, Printer, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, Printer, CheckCircle, Undo2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,7 @@ interface DeliveriesListProps {
     onUpdateClick: (booking: Booking) => void;
     onPrintMemoClick: (booking: Booking) => void;
     onQuickDeliver: (booking: Booking) => void;
+    onRevertDelivery: (booking: Booking) => void;
 }
 
 const statusColors: { [key: string]: string } = {
@@ -39,7 +40,7 @@ const statusColors: { [key: string]: string } = {
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
 
-export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, onQuickDeliver }: DeliveriesListProps) {
+export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, onQuickDeliver, onRevertDelivery }: DeliveriesListProps) {
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -74,15 +75,22 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                         <DropdownMenuItem onClick={() => onQuickDeliver(delivery)}>
-                          <CheckCircle className="mr-2 h-4 w-4" /> Mark as Delivered
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => onUpdateClick(delivery)} 
-                          disabled={delivery.status === 'Delivered'}
-                        >
-                          Update Status (Partial/Return)
-                        </DropdownMenuItem>
+                        {delivery.status !== 'Delivered' ? (
+                          <>
+                            <DropdownMenuItem onClick={() => onQuickDeliver(delivery)}>
+                              <CheckCircle className="mr-2 h-4 w-4" /> Mark as Delivered
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => onUpdateClick(delivery)} 
+                            >
+                              Update Status (Partial/Return)
+                            </DropdownMenuItem>
+                          </>
+                        ) : (
+                           <DropdownMenuItem onClick={() => onRevertDelivery(delivery)}>
+                              <Undo2 className="mr-2 h-4 w-4" /> Mark as Undelivered
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => onPrintMemoClick(delivery)}>
                           <Printer className="mr-2 h-4 w-4" /> Print Memo
                         </DropdownMenuItem>

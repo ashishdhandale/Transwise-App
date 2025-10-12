@@ -88,6 +88,20 @@ export function DeliveriesDashboard() {
     toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as Delivered.`});
   }
 
+  const handleRevertDelivery = (booking: Booking) => {
+    const bookings = getBookings();
+    const updatedBookings = bookings.map(b => {
+      if (b.trackingId === booking.trackingId) {
+        addHistoryLog(b.lrNo, 'In Transit', 'System', 'Delivery status reverted by user.');
+        return { ...b, status: 'In Transit' as const };
+      }
+      return b;
+    });
+    saveBookings(updatedBookings);
+    loadData();
+    toast({ title: 'Status Reverted', description: `LR #${booking.lrNo} has been marked as In Transit.`});
+  };
+
   const handleStatusUpdate = (
     booking: Booking,
     updates: {
@@ -191,6 +205,7 @@ export function DeliveriesDashboard() {
                                     onUpdateClick={handleUpdateClick}
                                     onPrintMemoClick={handlePrintMemoClick}
                                     onQuickDeliver={handleQuickDeliver}
+                                    onRevertDelivery={handleRevertDelivery}
                                 />
                             </AccordionContent>
                         </AccordionItem>
@@ -225,6 +240,7 @@ export function DeliveriesDashboard() {
                                     onUpdateClick={handleUpdateClick}
                                     onPrintMemoClick={handlePrintMemoClick}
                                     onQuickDeliver={handleQuickDeliver}
+                                    onRevertDelivery={handleRevertDelivery}
                                 />
                             </AccordionContent>
                         </AccordionItem>
