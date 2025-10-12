@@ -130,6 +130,7 @@ export function DeliveriesDashboard() {
                 qty: String(returnQty),
                 actWt: String((originalActWt / originalQty) * returnQty),
                 chgWt: String((originalChgWt / originalQty) * returnQty),
+                lumpsum: String(((parseFloat(item.lumpsum) || 0) / originalQty) * returnQty),
             }
         }),
         totalAmount: 0, 
@@ -144,11 +145,14 @@ export function DeliveriesDashboard() {
     const updatedBookings = bookings.map(b => {
       if (b.trackingId === booking.trackingId) {
         addHistoryLog(b.lrNo, finalStatus, receivedBy, `Remarks: ${remarks}`);
-        const deliveredItems = updatedItems.filter(item => item.deliveredQty > 0);
+        const deliveredItems = updatedItems
+            .filter(item => item.deliveredQty > 0)
+            .map(item => ({...item, qty: String(item.deliveredQty) }));
+            
         return { 
             ...b, 
             status: finalStatus,
-            itemRows: deliveredItems.map(item => ({...item, qty: String(item.deliveredQty) })),
+            itemRows: deliveredItems,
         };
       }
       return b;
