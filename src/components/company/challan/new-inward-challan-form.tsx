@@ -28,6 +28,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { bookingOptions } from '@/lib/booking-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -244,7 +245,6 @@ export function NewInwardChallanForm() {
     };
 
     const totalQty = useMemo(() => addedLrs.reduce((sum, lr) => sum + lr.qty, 0), [addedLrs]);
-    const totalActWt = useMemo(() => addedLrs.reduce((sum, lr) => sum + lr.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0), [addedLrs]);
     const totalAmount = useMemo(() => addedLrs.reduce((sum, lr) => sum + lr.totalAmount, 0), [addedLrs]);
     const formatValue = (amount: number) => companyProfile ? amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount.toFixed(2);
 
@@ -310,8 +310,8 @@ export function NewInwardChallanForm() {
                             <div className="space-y-1"><Label>Sender*</Label><Combobox options={customerOptions} value={currentLr.sender} onChange={(v) => setCurrentLr(p => ({...p, sender: v}))} placeholder="Sender..."/></div>
                             <div className="space-y-1"><Label>Receiver*</Label><Combobox options={customerOptions} value={currentLr.receiver} onChange={(v) => setCurrentLr(p => ({...p, receiver: v}))} placeholder="Receiver..."/></div>
                             <div className="space-y-1"><Label>Item Desc.</Label><Input value={currentLr.itemDescription} onChange={(e) => setCurrentLr(p => ({...p, itemDescription: e.target.value}))}/></div>
-                            <div className="space-y-1"><Label>Qty*</Label><Input type="number" value={currentLr.qty} onChange={(e) => setCurrentLr(p => ({...p, qty: Number(e.target.value)}))}/></div>
-                            <div className="space-y-1"><Label>Chg. Wt.</Label><Input type="number" value={currentLr.chgWt} onChange={(e) => setCurrentLr(p => ({...p, chgWt: Number(e.target.value)}))}/></div>
+                            <div className="space-y-1"><Label>Qty*</Label><Input type="number" value={currentLr.qty || ''} onChange={(e) => setCurrentLr(p => ({...p, qty: Number(e.target.value)}))}/></div>
+                            <div className="space-y-1"><Label>Chg. Wt.</Label><Input type="number" value={currentLr.chgWt || ''} onChange={(e) => setCurrentLr(p => ({...p, chgWt: Number(e.target.value)}))}/></div>
                             <div className="space-y-1"><Label>Booking Type</Label>
                                 <Select value={currentLr.lrType} onValueChange={(v) => setCurrentLr(p => ({...p, lrType: v as any}))}>
                                     <SelectTrigger><SelectValue/></SelectTrigger>
@@ -320,7 +320,7 @@ export function NewInwardChallanForm() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-1"><Label>Total Amt</Label><Input type="number" value={currentLr.totalAmount} onChange={(e) => setCurrentLr(p => ({...p, totalAmount: Number(e.target.value)}))}/></div>
+                            <div className="space-y-1"><Label>Total Amt</Label><Input type="number" value={currentLr.totalAmount || ''} onChange={(e) => setCurrentLr(p => ({...p, totalAmount: Number(e.target.value)}))}/></div>
                             <Button type="button" onClick={handleAddOrUpdateLr} className="self-end">
                                {editingLrId ? 'Update LR' : 'Add to List'}
                             </Button>
