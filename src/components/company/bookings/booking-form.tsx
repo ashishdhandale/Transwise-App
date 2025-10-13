@@ -79,6 +79,7 @@ const createEmptyRow = (id: number): ItemRow => ({
 
 interface BookingFormProps {
     bookingId?: string; // This is now trackingId
+    bookingData?: Booking | null; // Pass full booking object for editing transient data
     onSaveSuccess?: (booking: Booking) => void;
     onClose?: () => void;
     isViewOnly?: boolean;
@@ -227,11 +228,11 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 
-export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false }: BookingFormProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
-    const isEditMode = !!trackingId && !isViewOnly && !isPartialCancel;
+    const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     const isOfflineMode = isOfflineModeProp || mode === 'offline';
     
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
@@ -320,6 +321,32 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         }
     }, []);
 
+    const loadBookingData = useCallback((bookingToLoad: Booking) => {
+        const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+        const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+        const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+
+        let keyCounter = 1;
+        setCurrentLrNumber(bookingToLoad.lrNo);
+        setBookingDate(new Date(bookingToLoad.bookingDate));
+        setBookingType(bookingToLoad.lrType);
+        setLoadType(bookingToLoad.loadType || 'LTL');
+        setFromStation({ id: 0, name: bookingToLoad.fromCity, aliasCode: '', pinCode: '' });
+        setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
+        setSender(senderProfile);
+        setReceiver(receiverProfile);
+        const itemRowsWithIds = bookingToLoad.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
+        setItemRows(itemRowsWithIds);
+        
+        setGrandTotal(bookingToLoad.totalAmount);
+        setAdditionalCharges(bookingToLoad.additionalCharges || {});
+        setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
+        setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
+        if (bookingToLoad.ftlDetails) {
+            setFtlDetails(bookingToLoad.ftlDetails);
+        }
+    }, []);
+
     useEffect(() => {
         const loadInitialData = async () => {
             try {
@@ -327,42 +354,22 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 const profile = await getCompanyProfile();
                 setCompanyProfile(profile);
                 
-                const parsedBookings = getBookings();
-                let keyCounter = 1;
+                let bookingToLoad = bookingData;
 
-                if (trackingId) {
-                    const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId);
-                    if (bookingToLoad) {
-                        const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
-                        const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
-                        const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+                if (trackingId && !bookingData) {
+                    const parsedBookings = getBookings();
+                    bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId) || null;
+                }
 
-                        setCurrentLrNumber(bookingToLoad.lrNo);
-                        setBookingDate(new Date(bookingToLoad.bookingDate));
-                        setBookingType(bookingToLoad.lrType);
-                        setLoadType(bookingToLoad.loadType || 'LTL');
-                        setFromStation({ id: 0, name: bookingToLoad.fromCity, aliasCode: '', pinCode: '' });
-                        setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
-                        setSender(senderProfile);
-                        setReceiver(receiverProfile);
-                        const itemRowsWithIds = bookingToLoad.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
-                        setItemRows(itemRowsWithIds);
-                        
-                        setGrandTotal(bookingToLoad.totalAmount);
-                        setAdditionalCharges(bookingToLoad.additionalCharges || {});
-                        setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
-                        setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
-                        if (bookingToLoad.ftlDetails) {
-                            setFtlDetails(bookingToLoad.ftlDetails);
-                        }
-                    } else {
-                         toast({ title: 'Error', description: 'Booking not found.', variant: 'destructive'});
-                    }
+                if (bookingToLoad) {
+                    loadBookingData(bookingToLoad);
                 } else {
+                    let keyCounter = 1;
                     setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
                     if (isOfflineMode) {
                         setCurrentLrNumber('');
                     } else if (profile && !currentLrNumber) {
+                        const parsedBookings = getBookings();
                         const localBranches = getBranches();
                         let lrPrefix = profile.lrPrefix?.trim() || 'CONAG';
                         if (userRole === 'Branch') {
@@ -382,7 +389,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
 
         loadInitialData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [trackingId, isOfflineMode, userRole, toast, loadMasterData]);
+    }, [trackingId, bookingData, isOfflineMode, userRole, toast, loadMasterData, loadBookingData]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
@@ -498,11 +505,12 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         };
 
         try {
-            if ((isEditMode || isPartialCancel) && currentBooking) {
-                const updatedBooking = { ...currentBooking, ...newBookingData };
-                const changeDetails = generateChangeDetails(currentBooking, updatedBooking, isPartialCancel);
+            if ((isEditMode || isPartialCancel) && (currentBooking || bookingData)) {
+                const bookingToUpdate = currentBooking || bookingData!;
+                const updatedBooking = { ...bookingToUpdate, ...newBookingData };
+                const changeDetails = generateChangeDetails(bookingToUpdate, updatedBooking, isPartialCancel);
                 
-                const updatedBookings = allBookings.map(b => b.trackingId === trackingId ? updatedBooking : b);
+                const updatedBookings = allBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? updatedBooking : b);
                 saveBookings(updatedBookings);
                 
                 if (changeDetails !== 'No changes detected.') {
@@ -590,7 +598,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {

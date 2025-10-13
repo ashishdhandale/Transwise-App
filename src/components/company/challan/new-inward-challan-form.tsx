@@ -343,7 +343,8 @@ export function NewInwardChallanForm() {
                             </Button>
                           </div>
                           <BookingForm
-                            bookingId={editingLr?.trackingId} 
+                            bookingId={editingLr?.trackingId}
+                            bookingData={editingLr}
                             isOfflineMode={true}
                             onSaveSuccess={handleAddLr}
                             onClose={handleCancelForm}
@@ -395,8 +396,7 @@ export function NewInwardChallanForm() {
                                     {addedLrs.length > 0 && (
                                         <TableFooter>
                                             <TableRow className="font-bold bg-muted/50">
-                                                <TableCell>Total LRs: {totals.lrCount}</TableCell>
-                                                <TableCell colSpan={3}></TableCell>
+                                                <TableCell colSpan={4}>Total LRs: {totals.lrCount}</TableCell>
                                                 <TableCell>{totals.qty}</TableCell>
                                                 <TableCell>{totals.actWt.toFixed(2)}</TableCell>
                                                 <TableCell></TableCell>
