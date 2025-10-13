@@ -22,11 +22,9 @@ import { getCities } from '@/lib/city-data';
 import { getCustomers } from '@/lib/customer-data';
 import { Textarea } from '@/components/ui/textarea';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil, RefreshCcw } from 'lucide-react';
-import { bookingOptions } from '@/lib/booking-data';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { FileText, Loader2, PlusCircle, Save, X, Pencil, Trash2 } from 'lucide-react';
+import { EditInwardLrDialog } from './edit-inward-lr-dialog';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -41,22 +39,6 @@ const inwardChallanSchema = z.object({
 
 type InwardChallanFormValues = z.infer<typeof inwardChallanSchema>;
 
-// Schema for a single LR entry
-const lrEntrySchema = z.object({
-    lrNo: z.string().min(1, "LR No is required"),
-    fromCity: z.string().min(1, "From is required"),
-    toCity: z.string().min(1, "To is required"),
-    sender: z.string().min(1, "Sender is required"),
-    receiver: z.string().min(1, "Receiver is required"),
-    itemDescription: z.string().min(1, "Item is required"),
-    qty: z.coerce.number().min(1, "Qty must be > 0"),
-    actWt: z.coerce.number().min(0.1, "Weight must be > 0"),
-    lrType: z.enum(['FOC', 'PAID', 'TOPAY', 'TBB']),
-    totalAmount: z.coerce.number().min(0)
-});
-type LrEntryFormValues = z.infer<typeof lrEntrySchema>;
-
-
 const generateInwardChallanId = (challans: Challan[]): string => {
     const prefix = 'INW-';
     const relevantIds = challans.map(c => c.inwardId).filter(id => id && id.startsWith(prefix));
@@ -70,25 +52,17 @@ export function NewInwardChallanForm() {
     const [cities, setCities] = useState<City[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
-    const [editingLrTrackingId, setEditingLrTrackingId] = useState<string | null>(null);
+    const [editingLr, setEditingLr] = useState<Booking | null>(null);
+    const [isAddLrDialogOpen, setIsAddLrDialogOpen] = useState(false);
     
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // Main form for challan details
-    const challanForm = useForm<InwardChallanFormValues>({
+    const form = useForm<InwardChallanFormValues>({
         resolver: zodResolver(inwardChallanSchema),
         defaultValues: { 
             inwardId: '', inwardDate: undefined, originalChallanNo: '', receivedFromParty: '', vehicleNo: '', driverName: '', fromStation: '', remarks: ''
-        }
-    });
-
-    // Separate form for the LR entry line
-    const lrEntryForm = useForm<LrEntryFormValues>({
-        resolver: zodResolver(lrEntrySchema),
-        defaultValues: {
-            lrNo: '', fromCity: '', toCity: '', sender: '', receiver: '', itemDescription: '', qty: 0, actWt: 0, lrType: 'TOPAY', totalAmount: 0
         }
     });
 
@@ -96,8 +70,7 @@ export function NewInwardChallanForm() {
         async function loadInitialData() {
             const profile = await getCompanyProfile();
             setCompanyProfile(profile);
-            const allCities = getCities();
-            setCities(allCities);
+            setCities(getCities());
             setCustomers(getCustomers());
             const allChallans = getChallanData();
             
@@ -105,7 +78,7 @@ export function NewInwardChallanForm() {
             if (existingChallanId) {
                 const challan = allChallans.find(c => c.challanId === existingChallanId);
                 if (challan) {
-                    challanForm.reset({
+                    form.reset({
                         inwardId: challan.inwardId,
                         inwardDate: challan.inwardDate ? new Date(challan.inwardDate) : new Date(),
                         originalChallanNo: challan.originalChallanNo,
@@ -136,56 +109,36 @@ export function NewInwardChallanForm() {
                 }
             } else {
                  const newId = generateInwardChallanId(allChallans);
-                 challanForm.setValue('inwardId', newId);
-                 challanForm.setValue('inwardDate', new Date());
+                 form.setValue('inwardId', newId);
+                 form.setValue('inwardDate', new Date());
             }
         }
         loadInitialData();
-    }, [searchParams, challanForm]);
+    }, [searchParams, form]);
     
-    const handleEditLr = (lrToEdit: Booking) => {
-        setEditingLrTrackingId(lrToEdit.trackingId);
-        lrEntryForm.reset({
-            lrNo: lrToEdit.lrNo,
-            fromCity: lrToEdit.fromCity,
-            toCity: lrToEdit.toCity,
-            sender: lrToEdit.sender,
-            receiver: lrToEdit.receiver,
-            itemDescription: lrToEdit.itemDescription,
-            qty: lrToEdit.qty,
-            actWt: lrToEdit.itemRows[0]?.actWt ? Number(lrToEdit.itemRows[0].actWt) : 0,
-            lrType: lrToEdit.lrType,
-            totalAmount: lrToEdit.totalAmount,
-        });
+    const handleAddLr = () => {
+        setEditingLr(null);
+        setIsAddLrDialogOpen(true);
     };
 
-    const handleAddOrUpdateLr = (data: LrEntryFormValues) => {
-        const newBooking: Booking = {
-            trackingId: editingLrTrackingId || `temp-${Date.now()}`,
-            lrNo: data.lrNo, lrType: data.lrType, bookingDate: challanForm.getValues('inwardDate').toISOString(),
-            fromCity: data.fromCity, toCity: data.toCity, sender: data.sender, receiver: data.receiver,
-            itemDescription: data.itemDescription, qty: data.qty, chgWt: data.actWt, totalAmount: data.totalAmount,
-            itemRows: [{
-                id: 1, qty: String(data.qty), actWt: String(data.actWt), chgWt: String(data.actWt), lumpsum: String(data.totalAmount),
-                ewbNo: '', itemName: data.itemDescription, description: '', wtPerUnit: '', rate: '', freightOn: 'Fixed', pvtMark: '', invoiceNo: '', dValue: ''
-            }],
-            status: 'In Stock'
-        };
+    const handleEditLr = (lrToEdit: Booking) => {
+        setEditingLr(lrToEdit);
+        setIsAddLrDialogOpen(true);
+    };
 
-        if (editingLrTrackingId) {
-            setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLrTrackingId ? newBooking : lr));
-            toast({ title: 'LR Updated', description: `LR #${data.lrNo} has been updated in the list.` });
+    const handleSaveLr = (booking: Booking) => {
+        if (editingLr) {
+            setAddedLrs(prevLrs => prevLrs.map(lr => lr.trackingId === editingLr.trackingId ? booking : lr));
+            toast({ title: "LR Updated", description: "The LR details have been updated." });
         } else {
-            setAddedLrs(prev => [...prev, newBooking]);
+            setAddedLrs(prevLrs => [...prevLrs, { ...booking, trackingId: `temp-${Date.now()}` }]);
         }
-        setEditingLrTrackingId(null);
-        lrEntryForm.reset({
-            lrNo: '', fromCity: '', toCity: '', sender: '', receiver: '', itemDescription: '', qty: 0, actWt: 0, lrType: 'TOPAY', totalAmount: 0
-        });
+        setIsAddLrDialogOpen(false);
+        setEditingLr(null);
     };
     
     const handleRemoveLr = (trackingId: string) => {
-        setAddedLrs(prev => prev.filter(lr => lr.trackingId !== trackingId));
+        setAddedLrs(prevLrs => prevLrs.filter(lr => lr.trackingId !== trackingId));
     };
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
@@ -234,56 +187,54 @@ export function NewInwardChallanForm() {
         const newBookingsToStock = addedLrs.map(b => ({
             ...b, source: 'Inward' as const, status: 'In Stock' as const
         }));
-        newBookingsToStock.forEach(b => {
-             addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${newChallanData.toStation}.`);
-        });
-        const allBookings = getBookings();
-        const updatedBookings = [...allBookings, ...newBookingsToStock];
-        saveBookings(updatedBookings);
 
-        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${newBookingsToStock.length} new LRs added to stock.`});
+        const existingLrNos = new Set(getBookings().map(b => b.lrNo));
+        const trulyNewBookings = newBookingsToStock.filter(b => !existingLrNos.has(b.lrNo));
+
+        if(trulyNewBookings.length > 0) {
+            const allBookings = getBookings();
+            const updatedBookings = [...allBookings, ...trulyNewBookings];
+            saveBookings(updatedBookings);
+            trulyNewBookings.forEach(b => {
+                 addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${newChallanData.toStation}.`);
+            });
+        }
+        
+        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${trulyNewBookings.length} new LRs added to stock.`});
         router.push('/company/challan');
     };
 
-    const totals = useMemo(() => {
-        return {
-            lrCount: addedLrs.length, qty: addedLrs.reduce((sum, lr) => sum + lr.qty, 0),
-            actWt: addedLrs.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, i) => itemSum + Number(i.actWt), 0), 0),
-            amount: addedLrs.reduce((sum, lr) => sum + lr.totalAmount, 0),
-        }
-    }, [addedLrs]);
-
     return (
-         <div className="space-y-4">
+        <div className="space-y-4">
             <header className="mb-4">
                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                     <FileText className="h-8 w-8" />
                     {searchParams.get('challanId') ? 'Edit Inward Challan' : 'New Inward Challan'}
                 </h1>
             </header>
-            <Form {...challanForm}>
-                <form onSubmit={challanForm.handleSubmit(onSubmit)} className="space-y-4">
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <Card>
                         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <FormField name="inwardId" control={challanForm.control} render={({ field }) => (
+                            <FormField name="inwardId" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Inward ID</FormLabel><FormControl><Input {...field} readOnly className="font-bold text-red-600 bg-red-50"/></FormControl></FormItem>
                             )}/>
-                            <FormField name="inwardDate" control={challanForm.control} render={({ field }) => (
+                            <FormField name="inwardDate" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Inward Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
                             )}/>
-                            <FormField name="receivedFromParty" control={challanForm.control} render={({ field }) => (
+                            <FormField name="receivedFromParty" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Received From Party</FormLabel><FormControl><Input placeholder="e.g. Origin Branch Name" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
-                            <FormField name="originalChallanNo" control={challanForm.control} render={({ field }) => (
+                            <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Original Challan No</FormLabel><FormControl><Input placeholder="Original Challan No" {...field} /></FormControl></FormItem>
                             )}/>
-                             <FormField name="vehicleNo" control={challanForm.control} render={({ field }) => (
+                             <FormField name="vehicleNo" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Vehicle No.</FormLabel><FormControl><Input placeholder="e.g. MH31CQ1234" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
-                            <FormField name="driverName" control={challanForm.control} render={({ field }) => (
+                            <FormField name="driverName" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Driver Name" {...field} /></FormControl></FormItem>
                             )}/>
-                            <FormField name="fromStation" control={challanForm.control} render={({ field }) => (
+                            <FormField name="fromStation" control={form.control} render={({ field }) => (
                                 <FormItem className="md:col-span-2">
                                     <FormLabel>From Station</FormLabel>
                                     <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
@@ -294,82 +245,43 @@ export function NewInwardChallanForm() {
                     </Card>
 
                     <Card>
-                        <CardHeader><CardTitle>Add LR Entry</CardTitle></CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>LRs Received</CardTitle>
+                             <Button type="button" size="sm" onClick={handleAddLr}>
+                                <PlusCircle className="mr-2 h-4 w-4"/> Add LR Entry
+                            </Button>
+                        </CardHeader>
                         <CardContent>
-                            <Form {...lrEntryForm}>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-2 items-end">
-                                    <FormField name="lrNo" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>LR No.*</FormLabel><FormControl><Input {...field}/></FormControl></FormItem>} />
-                                    <FormField name="fromCity" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>From*</FormLabel><FormControl><Combobox options={cityOptions} {...field} placeholder="Select..."/></FormControl></FormItem>} />
-                                    <FormField name="toCity" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>To*</FormLabel><FormControl><Combobox options={cityOptions} {...field} placeholder="Select..."/></FormControl></FormItem>} />
-                                    <FormField name="sender" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>Sender*</FormLabel><FormControl><Combobox options={customerOptions} {...field} placeholder="Select..."/></FormControl></FormItem>} />
-                                    <FormField name="receiver" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>Receiver*</FormLabel><FormControl><Combobox options={customerOptions} {...field} placeholder="Select..."/></FormControl></FormItem>} />
-                                    <FormField name="itemDescription" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>Item*</FormLabel><FormControl><Input {...field}/></FormControl></FormItem>} />
-                                    <FormField name="qty" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>Qty*</FormLabel><FormControl><Input type="number" {...field}/></FormControl></FormItem>} />
-                                    <FormField name="actWt" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>Act. Wt.*</FormLabel><FormControl><Input type="number" {...field}/></FormControl></FormItem>} />
-                                    <FormField name="lrType" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>LR Type</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{bookingOptions.bookingTypes.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select></FormItem>} />
-                                    <FormField name="totalAmount" control={lrEntryForm.control} render={({field}) => <FormItem><FormLabel>Total</FormLabel><FormControl><Input type="number" {...field}/></FormControl></FormItem>} />
-                                    <div className="flex items-center gap-2 pt-6">
-                                        <Button type="button" onClick={lrEntryForm.handleSubmit(handleAddOrUpdateLr)} size="icon">
-                                            {editingLrTrackingId ? <RefreshCcw className="h-4 w-4"/> : <PlusCircle className="h-4 w-4"/>}
-                                        </Button>
-                                        {editingLrTrackingId && <Button type="button" variant="ghost" size="icon" onClick={() => { setEditingLrTrackingId(null); lrEntryForm.reset(); }}><X className="h-4 w-4"/></Button>}
-                                    </div>
-                                </div>
-                            </Form>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle>LRs Received</CardTitle></CardHeader>
-                        <CardContent>
-                            <div className="overflow-y-auto border rounded-md min-h-48">
+                            <div className="overflow-x-auto border rounded-md min-h-48">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>LR No</TableHead>
-                                            <TableHead>Sender</TableHead>
-                                            <TableHead>Receiver</TableHead>
-                                            <TableHead>Item</TableHead>
+                                            <TableHead>From</TableHead>
+                                            <TableHead>To</TableHead>
                                             <TableHead>Qty</TableHead>
-                                            <TableHead>Act. Wt.</TableHead>
-                                            <TableHead>Booking Type</TableHead>
-                                            <TableHead>Total</TableHead>
-                                            <TableHead className="text-right">Action</TableHead>
+                                            <TableHead>Chg. Wt.</TableHead>
+                                            <TableHead>Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {addedLrs.map(lr => (
                                             <TableRow key={lr.trackingId}>
                                                 <TableCell>{lr.lrNo}</TableCell>
-                                                <TableCell>{lr.sender}</TableCell>
-                                                <TableCell>{lr.receiver}</TableCell>
-                                                <TableCell className="max-w-[200px] truncate">{lr.itemDescription}</TableCell>
+                                                <TableCell>{lr.fromCity}</TableCell>
+                                                <TableCell>{lr.toCity}</TableCell>
                                                 <TableCell>{lr.qty}</TableCell>
-                                                <TableCell>{lr.itemRows.reduce((sum, item) => sum + Number(item.actWt || 0), 0).toFixed(2)}</TableCell>
-                                                <TableCell>{lr.lrType}</TableCell>
-                                                <TableCell>{lr.totalAmount.toFixed(2)}</TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell>{lr.chgWt.toFixed(2)}</TableCell>
+                                                <TableCell>
                                                     <Button variant="ghost" size="icon" onClick={() => handleEditLr(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
                                                     <Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
-                                     {addedLrs.length > 0 && (
-                                        <TableFooter>
-                                            <TableRow className="font-bold bg-muted/50">
-                                                <TableCell colSpan={4}>Total LRs: {totals.lrCount}</TableCell>
-                                                <TableCell>{totals.qty}</TableCell>
-                                                <TableCell>{totals.actWt.toFixed(2)}</TableCell>
-                                                <TableCell></TableCell>
-                                                <TableCell>{totals.amount.toFixed(2)}</TableCell>
-                                                <TableCell></TableCell>
-                                            </TableRow>
-                                        </TableFooter>
-                                    )}
                                 </Table>
                             </div>
                         </CardContent>
@@ -378,20 +290,29 @@ export function NewInwardChallanForm() {
                     <Card>
                         <CardHeader><CardTitle>Remarks</CardTitle></CardHeader>
                         <CardContent>
-                            <FormField name="remarks" control={challanForm.control} render={({ field }) => (
+                            <FormField name="remarks" control={form.control} render={({ field }) => (
                                 <FormItem><Textarea placeholder="Note any damages, shortages, or other remarks..." {...field} /></FormItem>
                             )}/>
                         </CardContent>
                     </Card>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
-                        <Button type="submit" disabled={challanForm.formState.isSubmitting}>
-                            {challanForm.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
+                        <Button type="submit" disabled={form.formState.isSubmitting}>
+                            {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
                             Finalize & Save Inward
                         </Button>
                     </div>
                 </form>
             </Form>
+            
+            <EditInwardLrDialog
+                isOpen={isAddLrDialogOpen}
+                onOpenChange={setIsAddLrDialogOpen}
+                bookingData={editingLr}
+                onSaveSuccess={handleSaveLr}
+            />
         </div>
     );
 }
+
+    
