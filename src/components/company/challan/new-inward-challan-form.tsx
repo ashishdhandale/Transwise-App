@@ -292,33 +292,33 @@ export function NewInwardChallanForm() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>LR No</TableHead>
-                                            <TableHead>From</TableHead>
-                                            <TableHead>To</TableHead>
-                                            <TableHead>Sender</TableHead>
-                                            <TableHead>Receiver</TableHead>
-                                            <TableHead>Item</TableHead>
-                                            <TableHead>Qty</TableHead>
-                                            <TableHead>Act. Wt.</TableHead>
-                                            <TableHead>Booking Type</TableHead>
-                                            <TableHead>Total</TableHead>
-                                            <TableHead>Action</TableHead>
+                                            <TableHead className="whitespace-nowrap">LR No</TableHead>
+                                            <TableHead className="whitespace-nowrap">From</TableHead>
+                                            <TableHead className="whitespace-nowrap">To</TableHead>
+                                            <TableHead className="whitespace-nowrap">Sender</TableHead>
+                                            <TableHead className="whitespace-nowrap">Receiver</TableHead>
+                                            <TableHead className="whitespace-nowrap">Item</TableHead>
+                                            <TableHead className="whitespace-nowrap">Qty</TableHead>
+                                            <TableHead className="whitespace-nowrap">Act. Wt.</TableHead>
+                                            <TableHead className="whitespace-nowrap">Booking Type</TableHead>
+                                            <TableHead className="whitespace-nowrap">Total</TableHead>
+                                            <TableHead className="whitespace-nowrap">Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {addedLrs.map(lr => (
                                             <TableRow key={lr.trackingId}>
-                                                <TableCell>{lr.lrNo}</TableCell>
-                                                <TableCell>{lr.fromCity}</TableCell>
-                                                <TableCell>{lr.toCity}</TableCell>
-                                                <TableCell>{lr.sender}</TableCell>
-                                                <TableCell>{lr.receiver}</TableCell>
-                                                <TableCell>{lr.itemDescription}</TableCell>
-                                                <TableCell>{lr.qty}</TableCell>
-                                                <TableCell>{lr.itemRows.reduce((s, i) => s + Number(i.actWt), 0).toFixed(2)}</TableCell>
-                                                <TableCell>{lr.lrType}</TableCell>
-                                                <TableCell>{lr.totalAmount.toFixed(2)}</TableCell>
-                                                <TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.lrNo}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.fromCity}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.sender}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.receiver}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.itemDescription}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.qty}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.itemRows.reduce((s, i) => s + Number(i.actWt), 0).toFixed(2)}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.lrType}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.totalAmount.toFixed(2)}</TableCell>
+                                                <TableCell className="whitespace-nowrap">
                                                     <Button variant="ghost" size="icon" onClick={() => handleEditLr(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
                                                     <Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                                 </TableCell>
@@ -331,12 +331,12 @@ export function NewInwardChallanForm() {
                                     {addedLrs.length > 0 && (
                                         <TableFooter>
                                             <TableRow className="font-bold bg-muted/50">
-                                                <TableCell>Total</TableCell>
-                                                <TableCell colSpan={5}>{addedLrs.length} LRs</TableCell>
-                                                <TableCell>{totalQty}</TableCell>
-                                                <TableCell>{totalActWt.toFixed(2)}</TableCell>
+                                                <TableCell className="whitespace-nowrap">Total</TableCell>
+                                                <TableCell colSpan={5} className="whitespace-nowrap">{addedLrs.length} LRs</TableCell>
+                                                <TableCell className="whitespace-nowrap">{totalQty}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{totalActWt.toFixed(2)}</TableCell>
                                                 <TableCell></TableCell>
-                                                <TableCell>{formatValue(totalAmount)}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{formatValue(totalAmount)}</TableCell>
                                                 <TableCell></TableCell>
                                             </TableRow>
                                         </TableFooter>
