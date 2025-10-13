@@ -23,7 +23,7 @@ import { getCities } from '@/lib/city-data';
 import { Textarea } from '@/components/ui/textarea';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowDown, FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil } from 'lucide-react';
+import { ArrowDown, FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil, RefreshCcw, XCircle } from 'lucide-react';
 import { BookingForm } from '../bookings/booking-form';
 import { Separator } from '@/components/ui/separator';
 
@@ -100,7 +100,7 @@ export function NewInwardChallanForm() {
                     
                     const lrDetailsForChallan = allLrDetails.filter(lr => lr.challanId === existingChallanId);
                     const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => ({
-                        trackingId: `temp-${lr.lrNo}`,
+                        trackingId: `temp-${lr.lrNo}-${Math.random()}`, // Ensure unique key
                         lrNo: lr.lrNo,
                         lrType: lr.lrType as any,
                         bookingDate: lr.bookingDate,
@@ -127,14 +127,16 @@ export function NewInwardChallanForm() {
     const handleAddLr = (newBooking: Booking) => {
         // If we are editing, replace the existing LR
         if(editingLr) {
-             setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? newBooking : lr));
+             setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? {...newBooking, trackingId: editingLr.trackingId} : lr));
              toast({ title: 'LR Updated', description: `LR# ${newBooking.lrNo} has been updated.`});
         } else {
              if (addedLrs.some(lr => lr.lrNo.toLowerCase() === newBooking.lrNo.toLowerCase())) {
                 toast({ title: 'Duplicate LR', description: 'This LR number has already been added to the list.', variant: 'destructive'});
                 return;
             }
-            setAddedLrs(prev => [newBooking, ...prev]);
+            // Add a unique temporary trackingId for client-side keying
+            const bookingWithId = {...newBooking, trackingId: `temp-${Date.now()}`};
+            setAddedLrs(prev => [bookingWithId, ...prev]);
             toast({ title: 'LR Added', description: `LR# ${newBooking.lrNo} added to the inward challan.`});
         }
         
@@ -300,6 +302,34 @@ export function NewInwardChallanForm() {
                         </CardContent>
                     </Card>
 
+                    {!showLrForm && (
+                         <div className="text-center">
+                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
+                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
+                            </Button>
+                        </div>
+                    )}
+                    
+                    {showLrForm && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-semibold text-primary">{editingLr ? `Editing LR: ${editingLr.lrNo}` : 'Add New LR Details'}</h2>
+                            {editingLr && (
+                                <Button type="button" variant="outline" size="sm" onClick={handleCancelForm}>
+                                    <XCircle className="mr-2 h-4 w-4" /> Cancel Edit
+                                </Button>
+                            )}
+                          </div>
+                          <BookingForm
+                            bookingId={editingLr?.trackingId} // Pass bookingId for editing
+                            isOfflineMode={true}
+                            onSaveSuccess={handleAddLr}
+                            onClose={handleCancelForm}
+                          />
+                        </>
+                    )}
+
                     <Card>
                         <CardHeader>
                             <CardTitle>LRs Received</CardTitle>
@@ -330,25 +360,6 @@ export function NewInwardChallanForm() {
                             </div>
                         </CardContent>
                     </Card>
-
-                    {showLrForm ? (
-                        <>
-                          <Separator />
-                          <h2 className="text-xl font-semibold text-primary">{editingLr ? `Editing LR: ${editingLr.lrNo}` : 'Add New LR Details'}</h2>
-                          <BookingForm
-                            bookingId={editingLr?.trackingId} // Pass bookingId for editing
-                            isOfflineMode={true}
-                            onSaveSuccess={handleAddLr}
-                            onClose={handleCancelForm}
-                          />
-                        </>
-                    ) : (
-                         <div className="text-center">
-                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
-                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
-                            </Button>
-                        </div>
-                    )}
                     
                     {!showLrForm && (
                         <>
