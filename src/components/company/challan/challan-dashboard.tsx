@@ -126,7 +126,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeCo
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                                This will delete the temporary challan and move all its LRs back to stock (if applicable). This action cannot be undone.
+                                                This will delete the challan and its associated LR details. This action cannot be undone.
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
@@ -181,12 +181,13 @@ export function ChallanDashboard() {
     loadChallanData();
   }, []);
 
-  const handleDeleteTempChallan = (challanIdToDelete: string, challanType: 'Dispatch' | 'Inward') => {
+  const handleDeleteChallan = (challanIdToDelete: string, challanType: 'Dispatch' | 'Inward') => {
+    const isTemp = challanIdToDelete.startsWith('TEMP-');
     const lrDetails = getLrDetailsData();
     const lrsToRevert = lrDetails.filter(lr => lr.challanId === challanIdToDelete).map(lr => lr.lrNo);
     
-    // Only revert status for dispatch challans
-    if (challanType === 'Dispatch' && lrsToRevert.length > 0) {
+    // Only revert status for dispatch challans that are temporary
+    if (challanType === 'Dispatch' && lrsToRevert.length > 0 && isTemp) {
         const allBookings = getBookings();
         const updatedBookings = allBookings.map(booking => {
             if (lrsToRevert.includes(booking.lrNo)) {
@@ -206,8 +207,8 @@ export function ChallanDashboard() {
     saveLrDetailsData(updatedLrDetails);
 
     toast({
-        title: "Temporary Challan Deleted",
-        description: `${challanIdToDelete} has been deleted and its items have been returned to stock.`,
+        title: "Challan Deleted",
+        description: `${challanIdToDelete} has been deleted and associated LRs are now unlinked.`,
     });
   };
 
@@ -309,7 +310,7 @@ export function ChallanDashboard() {
           </div>
         </header>
         <div className="space-y-6">
-          <ChallanTable title="Pending Challans" challans={pendingChallans} onDelete={handleDeleteTempChallan} onEdit={handleEditChallan} showTypeColumn={true} />
+          <ChallanTable title="Pending Challans" challans={pendingChallans} onDelete={handleDeleteChallan} onEdit={handleEditChallan} showTypeColumn={true} />
           
           <Card>
             <CardHeader>
@@ -343,7 +344,7 @@ export function ChallanDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
-                <ChallanTable title="" challans={finalizedChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} showTypeColumn={true} />
+                <ChallanTable title="" challans={finalizedChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} onDelete={handleDeleteChallan} showTypeColumn={true} />
             </CardContent>
           </Card>
         </div>
