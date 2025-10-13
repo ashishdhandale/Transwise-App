@@ -16,9 +16,10 @@ interface MainActionsSectionProps {
     onReset?: () => void;
     isSubmitting: boolean;
     isViewOnly?: boolean;
+    isOfflineMode?: boolean;
 }
 
-export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isOfflineMode }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
@@ -41,7 +42,7 @@ export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClos
         );
     }
     
-    let saveButtonText = isEditMode ? 'Update Booking' : 'Save Booking';
+    let saveButtonText = isEditMode ? 'Update Booking' : isOfflineMode ? 'Add LR to List' : 'Save Booking';
     if (isPartialCancel) saveButtonText = 'Confirm Cancellation';
 
     let savingButtonText = isEditMode ? 'Updating...' : 'Saving...';
@@ -55,10 +56,10 @@ export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClos
                 {isSubmitting ? savingButtonText : saveButtonText}
             </Button>
             
-            {isEditMode || isPartialCancel ? (
+            {isEditMode || isPartialCancel || isOfflineMode ? (
                 <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <X className="mr-2 h-4 w-4" />
-                    Exit Without Saving
+                    {isOfflineMode ? 'Cancel' : 'Exit Without Saving'}
                 </Button>
             ) : (
                 <>

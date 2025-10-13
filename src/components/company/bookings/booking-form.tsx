@@ -454,7 +454,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     }, [itemRows]);
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
-        const currentStatus: Booking['status'] = 'In Stock';
+        const currentStatus: Booking['status'] = isOfflineModeProp ? 'In Stock' : 'In Stock';
         const allBookings = getBookings();
         const currentBooking = (isEditMode || isPartialCancel) ? allBookings.find(b => b.trackingId === trackingId) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
@@ -474,7 +474,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
             totalAmount: grandTotal,
-            status: currentBooking?.status || currentStatus,
+            status: isOfflineModeProp ? 'In Stock' : (currentBooking?.status || currentStatus),
             itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
@@ -671,17 +671,20 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         handleReset();
     }, []);
 
+    const formTitle = isEditMode ? `Edit Booking: ${currentLrNumber}` : 
+                      isViewOnly ? `View Booking: ${currentLrNumber}` :
+                      isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
+                      (isOfflineMode ? 'Add Offline/Manual Booking' : 'Create New Booking');
+
   return (
     <ClientOnly>
         <div className="space-y-4">
-            <h1 className="text-2xl font-bold text-primary">
-                {isEditMode ? `Edit Booking: ${currentLrNumber}` : 
-                 isViewOnly ? `View Booking: ${currentLrNumber}` :
-                 isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
-                 (isOfflineMode ? 'Add Offline/Manual Booking' : 'Create New Booking')}
-            </h1>
-            <Card className="border-2 border-green-200">
-                <CardContent className="p-4 space-y-4">
+            {!isOfflineModeProp && (
+                 <h1 className="text-2xl font-bold text-primary">{formTitle}</h1>
+            )}
+           
+            <Card className={isOfflineModeProp ? 'border-none shadow-none' : 'border-2 border-green-200'}>
+                <CardContent className={isOfflineModeProp ? 'p-0' : 'p-4 space-y-4'}>
                     <BookingDetailsSection 
                         bookingType={bookingType} 
                         onBookingTypeChange={setBookingType}
@@ -771,6 +774,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                                 onReset={handleReset}
                                 isSubmitting={isSubmitting}
                                 isViewOnly={isViewOnly}
+                                isOfflineMode={isOfflineModeProp}
                             />
                         </div>
                     </div>
