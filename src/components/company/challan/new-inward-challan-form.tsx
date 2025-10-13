@@ -216,7 +216,6 @@ export function NewInwardChallanForm() {
         let allChallans = getChallanData();
         const existingChallanId = searchParams.get('challanId');
         if (existingChallanId) {
-             // If we are finalizing a temp challan, remove the temp one and add the final one.
             allChallans = allChallans.filter(c => c.challanId !== existingChallanId);
         }
         allChallans.push(challan);
@@ -226,23 +225,11 @@ export function NewInwardChallanForm() {
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
         
-        const newBookingsToStock = addedLrs.map(b => ({
-            ...b, source: 'Inward' as const, status: 'In Stock' as const
-        }));
-
-        const allBookings = getBookings();
-        const existingLrNos = new Set(allBookings.map(b => b.lrNo));
-        const trulyNewBookings = newBookingsToStock.filter(b => !existingLrNos.has(b.lrNo));
-
-        if(trulyNewBookings.length > 0) {
-            const updatedBookings = [...allBookings, ...trulyNewBookings];
-            saveBookings(updatedBookings);
-            trulyNewBookings.forEach(b => {
-                 addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
-            });
-        }
+        lrDetails.forEach(lr => {
+             addHistoryLog(lr.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
+        });
         
-        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${trulyNewBookings.length} new LRs added to stock.`});
+        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${lrDetails.length} LRs added to stock.`});
         router.push('/company/challan');
     };
 
@@ -336,17 +323,19 @@ export function NewInwardChallanForm() {
                                             <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
-                                    <TableFooter>
-                                        <TableRow className="font-bold bg-muted/50">
-                                            <TableCell>Total</TableCell>
-                                            <TableCell colSpan={3}>{addedLrs.length} LRs</TableCell>
-                                            <TableCell>{totalQty}</TableCell>
-                                            <TableCell>{totalActWt.toFixed(2)}</TableCell>
-                                            <TableCell></TableCell>
-                                            <TableCell>{formatValue(totalAmount)}</TableCell>
-                                            <TableCell></TableCell>
-                                        </TableRow>
-                                    </TableFooter>
+                                    {addedLrs.length > 0 && (
+                                        <TableFooter>
+                                            <TableRow className="font-bold bg-muted/50">
+                                                <TableCell>Total</TableCell>
+                                                <TableCell colSpan={3}>{addedLrs.length} LRs</TableCell>
+                                                <TableCell>{totalQty}</TableCell>
+                                                <TableCell>{totalActWt.toFixed(2)}</TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell>{formatValue(totalAmount)}</TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableFooter>
+                                    )}
                                 </Table>
                             </div>
                         </CardContent>

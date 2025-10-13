@@ -61,7 +61,7 @@ export const getBookings = (): Booking[] => {
 
             let dataWasCorrected = false;
 
-            const correctedBookings = parsedBookings.map(booking => {
+            let correctedBookings = parsedBookings.map(booking => {
                 const newBooking = { ...booking };
 
                 // 1. If a booking is "In Transit" but isn't on any challan, its status is wrong. Correct it.
@@ -73,11 +73,9 @@ export const getBookings = (): Booking[] => {
                 // 2. Retroactively assign 'source' property.
                 if (!newBooking.source) {
                     dataWasCorrected = true;
-                    // If the LR no is found in an inward challan, it's an inward booking.
                     if (inwardLrNos.has(newBooking.lrNo)) {
                         newBooking.source = 'Inward';
                     } else {
-                        // Otherwise, it's a system booking.
                         newBooking.source = 'System';
                     }
                 }
@@ -90,6 +88,14 @@ export const getBookings = (): Booking[] => {
                 
                 return newBooking;
             });
+            
+            // 4. Remove any bookings that have source: 'Inward' from the main list.
+            const bookingsToKeep = correctedBookings.filter(b => b.source !== 'Inward');
+            if (bookingsToKeep.length !== correctedBookings.length) {
+                dataWasCorrected = true;
+                correctedBookings = bookingsToKeep;
+            }
+
 
             if (dataWasCorrected) {
                 saveBookings(correctedBookings);
