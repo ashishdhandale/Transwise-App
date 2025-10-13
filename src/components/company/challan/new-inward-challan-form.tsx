@@ -26,7 +26,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { FileText, PlusCircle, Save, X, Pencil, Trash2, ChevronsUpDown } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { EditInwardLrDialog } from './edit-inward-lr-dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getBookings } from '@/lib/bookings-dashboard-data';
 
 
 const inwardChallanSchema = z.object({
@@ -50,14 +52,27 @@ const generateInwardChallanId = (challans: Challan[]): string => {
     return `${prefix}${String(lastNum + 1).padStart(2, '0')}`;
 };
 
+const emptyLr: Omit<Booking, 'trackingId'> = {
+    lrNo: '',
+    bookingDate: new Date().toISOString(),
+    fromCity: '', toCity: '',
+    sender: '', receiver: '',
+    itemDescription: '',
+    qty: 0, chgWt: 0, totalAmount: 0,
+    lrType: 'TOPAY', loadType: 'LTL', status: 'In Stock',
+    itemRows: [], source: 'Inward',
+};
+
+
 export function NewInwardChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     const [cities, setCities] = useState<City[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
     
-    // Dialog State
-    const [isLrDialogOpen, setIsLrDialogOpen] = useState(false);
-    const [editingLr, setEditingLr] = useState<Booking | null>(null);
+    // Inline Form State
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentLr, setCurrentLr] = useState<Booking>({ trackingId: `temp-${Date.now()}`, ...emptyLr});
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     
@@ -79,6 +94,7 @@ export function NewInwardChallanForm() {
             const profile = await getCompanyProfile();
             setCompanyProfile(profile);
             setCities(getCities());
+            setCustomers(getCustomers());
             const allChallans = getChallanData();
             
             const existingChallanId = searchParams.get('challanId');
@@ -108,6 +124,7 @@ export function NewInwardChallanForm() {
                         itemRows: [],
                         status: 'In Stock',
                         source: 'Inward',
+                        loadType: 'LTL'
                     }));
                     setAddedLrs(reconstructedBookings);
                 }
@@ -119,31 +136,37 @@ export function NewInwardChallanForm() {
         }
         loadInitialData();
     }, [searchParams, form]);
-    
-    const handleAddLrClick = () => {
-        setEditingLr(null);
-        setIsLrDialogOpen(true);
-    };
 
-    const handleEditLrClick = (lr: Booking) => {
-        setEditingLr(lr);
-        setIsLrDialogOpen(true);
-    };
-
-    const handleSaveLr = (lrData: Booking) => {
-        if (editingLr) {
-            setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? lrData : lr));
-        } else {
-            setAddedLrs(prev => [...prev, { ...lrData, trackingId: `temp-${Date.now()}` }]);
+    const handleAddLrToList = () => {
+        if (!currentLr.lrNo || !currentLr.fromCity || !currentLr.toCity || !currentLr.sender || !currentLr.receiver || !currentLr.itemDescription) {
+            toast({ title: 'Missing Information', description: 'Please fill all required (*) LR fields.', variant: 'destructive'});
+            return;
         }
-        setIsLrDialogOpen(false);
-    };
+
+        if(isEditing) {
+            setAddedLrs(prev => prev.map(lr => lr.trackingId === currentLr.trackingId ? currentLr : lr));
+            toast({ title: 'LR Updated', description: `LR# ${currentLr.lrNo} has been updated.`});
+        } else {
+            setAddedLrs(prev => [...prev, currentLr]);
+            toast({ title: 'LR Added', description: `LR# ${currentLr.lrNo} has been added to the list.`});
+        }
+        
+        // Reset form for next entry
+        setCurrentLr({ trackingId: `temp-${Date.now()}`, ...emptyLr });
+        setIsEditing(false);
+    }
     
+    const handleEditLrClick = (lrToEdit: Booking) => {
+        setCurrentLr(lrToEdit);
+        setIsEditing(true);
+    };
+
     const handleRemoveLr = (trackingId: string) => {
         setAddedLrs(prevLrs => prevLrs.filter(lr => lr.trackingId !== trackingId));
     };
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
+    const customerOptions = useMemo(() => customers.map(c => ({ label: c.name, value: c.name })), [customers]);
 
     const createChallanObject = (status: 'Pending' | 'Finalized') => {
         const formData = form.getValues();
@@ -238,12 +261,6 @@ export function NewInwardChallanForm() {
 
     return (
         <div className="space-y-4">
-            <header className="mb-4">
-                <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-                    <FileText className="h-8 w-8" />
-                    {searchParams.get('challanId') ? 'Edit Inward Challan' : 'New Inward Challan'}
-                </h1>
-            </header>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>
@@ -287,13 +304,41 @@ export function NewInwardChallanForm() {
                             </CollapsibleContent>
                         </Card>
                     </Collapsible>
+
+                    <Card>
+                        <CardHeader><CardTitle>Add/Edit LR Details</CardTitle></CardHeader>
+                        <CardContent className="p-4 border rounded-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 items-end">
+                            <div className="space-y-1"><Label>LR No*</Label><Input value={currentLr.lrNo} onChange={(e) => setCurrentLr(p => ({...p, lrNo: e.target.value}))}/></div>
+                            <div className="space-y-1"><Label>From*</Label><Combobox options={cityOptions} value={currentLr.fromCity} onChange={(v) => setCurrentLr(p => ({...p, fromCity: v}))} placeholder="From..."/></div>
+                            <div className="space-y-1"><Label>To*</Label><Combobox options={cityOptions} value={currentLr.toCity} onChange={(v) => setCurrentLr(p => ({...p, toCity: v}))} placeholder="To..."/></div>
+                            <div className="space-y-1"><Label>Sender*</Label><Combobox options={customerOptions} value={currentLr.sender} onChange={(v) => setCurrentLr(p => ({...p, sender: v}))} placeholder="Sender..."/></div>
+                            <div className="space-y-1"><Label>Receiver*</Label><Combobox options={customerOptions} value={currentLr.receiver} onChange={(v) => setCurrentLr(p => ({...p, receiver: v}))} placeholder="Receiver..."/></div>
+                            <div className="space-y-1"><Label>Item Desc.</Label><Input value={currentLr.itemDescription} onChange={(e) => setCurrentLr(p => ({...p, itemDescription: e.target.value}))}/></div>
+                            <div className="space-y-1"><Label>Qty*</Label><Input type="number" value={currentLr.qty} onChange={(e) => setCurrentLr(p => ({...p, qty: Number(e.target.value)}))}/></div>
+                            <div className="space-y-1"><Label>Chg. Wt.</Label><Input type="number" value={currentLr.chgWt} onChange={(e) => setCurrentLr(p => ({...p, chgWt: Number(e.target.value)}))}/></div>
+                            <div className="space-y-1"><Label>Booking Type</Label>
+                                <Select value={currentLr.lrType} onValueChange={(v) => setCurrentLr(p => ({...p, lrType: v as any}))}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="FOC">FOC</SelectItem>
+                                        <SelectItem value="PAID">PAID</SelectItem>
+                                        <SelectItem value="TOPAY">TOPAY</SelectItem>
+                                        <SelectItem value="TBB">TBB</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1"><Label>Total Amt.</Label><Input type="number" value={currentLr.totalAmount} onChange={(e) => setCurrentLr(p => ({...p, totalAmount: Number(e.target.value)}))}/></div>
+                            <div className="col-span-full sm:col-span-2 lg:col-span-1 self-end">
+                                <Button type="button" onClick={handleAddLrToList} className="w-full">
+                                    {isEditing ? 'Update LR' : 'Add to List'}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                     
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>LRs Received</CardTitle>
-                            <Button type="button" size="sm" onClick={handleAddLrClick}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add LR Entry
-                            </Button>
                         </CardHeader>
                         <CardContent>
                             <div className="overflow-x-auto border rounded-md min-h-48">
@@ -372,14 +417,6 @@ export function NewInwardChallanForm() {
                     </div>
                 </form>
             </Form>
-
-            <EditInwardLrDialog 
-                isOpen={isLrDialogOpen}
-                onOpenChange={setIsLrDialogOpen}
-                onSave={handleSaveLr}
-                bookingData={editingLr}
-            />
         </div>
     );
 }
-
