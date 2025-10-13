@@ -53,25 +53,41 @@ export const getBookings = (): Booking[] => {
             // --- DATA MIGRATION & CORRECTION LOGIC ---
             const lrDetails = getLrDetailsData();
             const lrsOnChallan = new Set(lrDetails.map(lr => lr.lrNo));
+
+            const inwardChallans = getChallanData().filter(c => c.challanType === 'Inward');
+            const inwardLrNos = new Set(
+                lrDetails.filter(lr => inwardChallans.some(c => c.challanId === lr.challanId)).map(lr => lr.lrNo)
+            );
+
             let dataWasCorrected = false;
 
             const correctedBookings = parsedBookings.map(booking => {
                 const newBooking = { ...booking };
-                // If a booking is "In Transit" but isn't on any challan, its status is wrong. Correct it.
+
+                // 1. If a booking is "In Transit" but isn't on any challan, its status is wrong. Correct it.
                 if ((newBooking.status === 'In Transit' || newBooking.status === 'In Loading') && !lrsOnChallan.has(newBooking.lrNo)) {
                     dataWasCorrected = true;
                     newBooking.status = 'In Stock';
                 }
-                // Also handle migration for old data structures if needed
+                
+                // 2. Retroactively assign 'source' property.
+                if (!newBooking.source) {
+                    dataWasCorrected = true;
+                    // If the LR no is found in an inward challan, it's an inward booking.
+                    if (inwardLrNos.has(newBooking.lrNo)) {
+                        newBooking.source = 'Inward';
+                    } else {
+                        // Otherwise, it's a system booking.
+                        newBooking.source = 'System';
+                    }
+                }
+
+                // 3. Ensure a trackingId exists
                 if (!newBooking.trackingId) {
                     dataWasCorrected = true;
                     newBooking.trackingId = `TRK-${Date.now()}-${Math.random()}`;
                 }
-                 if (!newBooking.source) {
-                    dataWasCorrected = true;
-                    // Default existing bookings to 'System'
-                    newBooking.source = 'System';
-                }
+                
                 return newBooking;
             });
 
