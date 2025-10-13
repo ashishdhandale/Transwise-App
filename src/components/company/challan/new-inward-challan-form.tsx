@@ -21,14 +21,13 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { getCities } from '@/lib/city-data';
 import { getCustomers } from '@/lib/customer-data';
 import { Textarea } from '@/components/ui/textarea';
-import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
+import type { Booking } from '@/lib/bookings-dashboard-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { FileText, Loader2, PlusCircle, Save, X, Pencil, Trash2, ChevronsUpDown } from 'lucide-react';
+import { FileText, PlusCircle, Save, X, Pencil, Trash2, ChevronsUpDown } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { bookingOptions } from '@/lib/booking-data';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { EditInwardLrDialog } from './edit-inward-lr-dialog';
+
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -51,22 +50,14 @@ const generateInwardChallanId = (challans: Challan[]): string => {
     return `${prefix}${String(lastNum + 1).padStart(2, '0')}`;
 };
 
-const emptyLr: Omit<Booking, 'trackingId'> = {
-    lrNo: '', bookingDate: new Date().toISOString(), fromCity: '', toCity: '',
-    lrType: 'TOPAY', loadType: 'LTL', sender: '', receiver: '', itemDescription: '',
-    qty: 0, chgWt: 0, totalAmount: 0, status: 'In Stock', itemRows: [], source: 'Inward',
-};
-
-
 export function NewInwardChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     const [cities, setCities] = useState<City[]>([]);
-    const [customers, setCustomers] = useState<Customer[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
     
-    // State for the inline form
-    const [currentLr, setCurrentLr] = useState<Booking>(emptyLr as Booking);
-    const [editingLrId, setEditingLrId] = useState<string | null>(null);
+    // Dialog State
+    const [isLrDialogOpen, setIsLrDialogOpen] = useState(false);
+    const [editingLr, setEditingLr] = useState<Booking | null>(null);
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     
@@ -88,7 +79,6 @@ export function NewInwardChallanForm() {
             const profile = await getCompanyProfile();
             setCompanyProfile(profile);
             setCities(getCities());
-            setCustomers(getCustomers());
             const allChallans = getChallanData();
             
             const existingChallanId = searchParams.get('challanId');
@@ -130,25 +120,23 @@ export function NewInwardChallanForm() {
         loadInitialData();
     }, [searchParams, form]);
     
-    const handleAddOrUpdateLr = () => {
-        if (!currentLr.lrNo || !currentLr.fromCity || !currentLr.toCity || !currentLr.sender || !currentLr.receiver || !currentLr.qty) {
-            toast({ title: "Incomplete LR Details", description: "Please fill all required fields for the LR.", variant: "destructive" });
-            return;
-        }
-
-        if (editingLrId) {
-            setAddedLrs(prevLrs => prevLrs.map(lr => lr.trackingId === editingLrId ? currentLr : lr));
-            toast({ title: "LR Updated", description: "The LR details have been updated in the list." });
-        } else {
-            setAddedLrs(prevLrs => [...prevLrs, { ...currentLr, trackingId: `temp-${Date.now()}` }]);
-        }
-        setCurrentLr(emptyLr as Booking);
-        setEditingLrId(null);
+    const handleAddLrClick = () => {
+        setEditingLr(null);
+        setIsLrDialogOpen(true);
     };
 
-    const handleEditLr = (lrToEdit: Booking) => {
-        setEditingLrId(lrToEdit.trackingId);
-        setCurrentLr(lrToEdit);
+    const handleEditLrClick = (lr: Booking) => {
+        setEditingLr(lr);
+        setIsLrDialogOpen(true);
+    };
+
+    const handleSaveLr = (lrData: Booking) => {
+        if (editingLr) {
+            setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? lrData : lr));
+        } else {
+            setAddedLrs(prev => [...prev, { ...lrData, trackingId: `temp-${Date.now()}` }]);
+        }
+        setIsLrDialogOpen(false);
     };
     
     const handleRemoveLr = (trackingId: string) => {
@@ -156,7 +144,6 @@ export function NewInwardChallanForm() {
     };
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
-    const customerOptions = useMemo(() => customers.map(c => ({ label: c.name, value: c.name })), [customers]);
 
     const createChallanObject = (status: 'Pending' | 'Finalized') => {
         const formData = form.getValues();
@@ -302,34 +289,11 @@ export function NewInwardChallanForm() {
                     </Collapsible>
                     
                     <Card>
-                        <CardHeader><CardTitle>Add/Edit LR Details</CardTitle></CardHeader>
-                        <CardContent className="p-4 border rounded-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 items-end">
-                            <div className="space-y-1"><Label>LR No*</Label><Input value={currentLr.lrNo} onChange={(e) => setCurrentLr(p => ({...p, lrNo: e.target.value}))}/></div>
-                            <div className="space-y-1"><Label>From*</Label><Combobox options={cityOptions} value={currentLr.fromCity} onChange={(v) => setCurrentLr(p => ({...p, fromCity: v}))} placeholder="From..."/></div>
-                            <div className="space-y-1"><Label>To*</Label><Combobox options={cityOptions} value={currentLr.toCity} onChange={(v) => setCurrentLr(p => ({...p, toCity: v}))} placeholder="To..."/></div>
-                            <div className="space-y-1"><Label>Sender*</Label><Combobox options={customerOptions} value={currentLr.sender} onChange={(v) => setCurrentLr(p => ({...p, sender: v}))} placeholder="Sender..."/></div>
-                            <div className="space-y-1"><Label>Receiver*</Label><Combobox options={customerOptions} value={currentLr.receiver} onChange={(v) => setCurrentLr(p => ({...p, receiver: v}))} placeholder="Receiver..."/></div>
-                            <div className="space-y-1"><Label>Item Desc.</Label><Input value={currentLr.itemDescription} onChange={(e) => setCurrentLr(p => ({...p, itemDescription: e.target.value}))}/></div>
-                            <div className="space-y-1"><Label>Qty*</Label><Input type="number" value={currentLr.qty || ''} onChange={(e) => setCurrentLr(p => ({...p, qty: Number(e.target.value)}))}/></div>
-                            <div className="space-y-1"><Label>Chg. Wt.</Label><Input type="number" value={currentLr.chgWt || ''} onChange={(e) => setCurrentLr(p => ({...p, chgWt: Number(e.target.value)}))}/></div>
-                            <div className="space-y-1"><Label>Booking Type</Label>
-                                <Select value={currentLr.lrType} onValueChange={(v) => setCurrentLr(p => ({...p, lrType: v as any}))}>
-                                    <SelectTrigger><SelectValue/></SelectTrigger>
-                                    <SelectContent>
-                                        {bookingOptions.bookingTypes.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-1"><Label>Total Amt</Label><Input type="number" value={currentLr.totalAmount || ''} onChange={(e) => setCurrentLr(p => ({...p, totalAmount: Number(e.target.value)}))}/></div>
-                            <Button type="button" onClick={handleAddOrUpdateLr} className="self-end">
-                               {editingLrId ? 'Update LR' : 'Add to List'}
-                            </Button>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>LRs Received</CardTitle>
+                            <Button type="button" size="sm" onClick={handleAddLrClick}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add LR Entry
+                            </Button>
                         </CardHeader>
                         <CardContent>
                             <div className="overflow-x-auto border rounded-md min-h-48">
@@ -343,7 +307,7 @@ export function NewInwardChallanForm() {
                                             <TableHead className="whitespace-nowrap">Receiver</TableHead>
                                             <TableHead className="whitespace-nowrap">Item</TableHead>
                                             <TableHead className="whitespace-nowrap">Qty</TableHead>
-                                            <TableHead className="whitespace-nowrap">Chg. Wt.</TableHead>
+                                            <TableHead className="whitespace-nowrap">Act. Wt.</TableHead>
                                             <TableHead className="whitespace-nowrap">Booking Type</TableHead>
                                             <TableHead className="whitespace-nowrap">Total</TableHead>
                                             <TableHead className="whitespace-nowrap">Action</TableHead>
@@ -359,11 +323,11 @@ export function NewInwardChallanForm() {
                                                 <TableCell className="whitespace-nowrap">{lr.receiver}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.itemDescription}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.qty}</TableCell>
-                                                <TableCell className="whitespace-nowrap">{lr.chgWt}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.chgWt.toFixed(2)}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.lrType}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.totalAmount.toFixed(2)}</TableCell>
                                                 <TableCell className="whitespace-nowrap">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleEditLr(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEditLrClick(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
                                                     <Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                                 </TableCell>
                                             </TableRow>
@@ -408,6 +372,14 @@ export function NewInwardChallanForm() {
                     </div>
                 </form>
             </Form>
+
+            <EditInwardLrDialog 
+                isOpen={isLrDialogOpen}
+                onOpenChange={setIsLrDialogOpen}
+                onSave={handleSaveLr}
+                bookingData={editingLr}
+            />
         </div>
     );
 }
+
