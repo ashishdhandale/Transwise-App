@@ -19,23 +19,27 @@ interface PartyRowProps {
     side: 'Sender' | 'Receiver';
     customers: Customer[];
     onPartyAdded: () => void;
-    onPartyChange: (party: Customer | null) => void;
+    onPartyChange: (party: Customer | null | ((prev: Customer | null) => Customer | null)) => void;
     initialParty: Customer | null;
     hasError: boolean;
     disabled: boolean;
-    isOfflineMode?: boolean;
 }
 
-const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError, disabled, isOfflineMode }: PartyRowProps) => {
+const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, hasError, disabled }: PartyRowProps) => {
     const { toast } = useToast();
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [initialCustomerData, setInitialCustomerData] = useState<Partial<Customer> | null>(null);
 
+    // A party is considered "from master" if it has a non-zero ID.
+    const isFromMaster = !!initialParty?.id;
+
     const handlePartySelect = useCallback((partyName: string) => {
-        const selectedParty = customers.find(c => c.name.toLowerCase() === partyName.toLowerCase()) || null;
-        if(isOfflineMode && !selectedParty && partyName) {
-            onPartyChange({
-                id: 0,
+        const selectedParty = customers.find(c => c.name.toLowerCase() === partyName.toLowerCase());
+        if (selectedParty) {
+            onPartyChange(selectedParty);
+        } else {
+             onPartyChange({
+                id: 0, // 0 indicates a new, unsaved customer
                 name: partyName,
                 gstin: '',
                 address: '',
@@ -44,16 +48,16 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                 type: 'Company',
                 openingBalance: 0
             });
-        } else {
-            onPartyChange(selectedParty);
         }
-    }, [customers, isOfflineMode, onPartyChange]);
-
-    const handlePartyInputChange = (partyName: string) => {
-        onPartyChange(prev => ({
-            ...(prev || { id: 0, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 }),
-            name: partyName,
-        }));
+    }, [customers, onPartyChange]);
+    
+    const handleDetailChange = (field: keyof Customer, value: string) => {
+        if (isFromMaster) return; // Don't allow editing master data here
+        onPartyChange(prev => {
+            const newParty = { ...(prev || { name: '' }), [field]: value } as Customer;
+            if (!prev?.id) newParty.id = 0; // Ensure it remains a "new" customer
+            return newParty;
+        });
     };
 
     const handleOpenAddCustomer = (query?: string) => {
@@ -102,38 +106,46 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr_1fr] gap-x-4 gap-y-2 items-start p-3 border-b">
                 <div className={cn("space-y-1 rounded-md", hasError && 'ring-2 ring-red-500/50')}>
                     <Label className="font-semibold text-primary">{side} Name*</Label>
-                    {isOfflineMode ? (
-                        <Input
-                            placeholder={`Enter ${side} Name...`}
-                            value={initialParty?.name || ''}
-                            onChange={(e) => handlePartyInputChange(e.target.value)}
-                            disabled={disabled}
-                        />
-                    ) : (
-                        <Combobox
-                            options={customerOptions}
-                            value={initialParty?.name}
-                            onChange={handlePartySelect}
-                            placeholder={`Select ${side}...`}
-                            searchPlaceholder="Search customers..."
-                            notFoundMessage="No customer found."
-                            addMessage="Add New Party"
-                            onAdd={handleOpenAddCustomer}
-                            disabled={disabled}
-                        />
-                    )}
+                    <Combobox
+                        options={customerOptions}
+                        value={initialParty?.name}
+                        onChange={handlePartySelect}
+                        placeholder={`Select or enter ${side}...`}
+                        searchPlaceholder="Search customers..."
+                        notFoundMessage="No customer found."
+                        addMessage="Add New Party"
+                        onAdd={handleOpenAddCustomer}
+                        disabled={disabled}
+                    />
                 </div>
                  <div className="space-y-1">
                     <Label>GST No.</Label>
-                    <Input placeholder="GST Number" value={initialParty?.gstin || ''} readOnly />
+                    <Input 
+                        placeholder="GST Number" 
+                        value={initialParty?.gstin || ''} 
+                        onChange={(e) => handleDetailChange('gstin', e.target.value)}
+                        readOnly={isFromMaster || disabled} 
+                    />
                 </div>
                 <div className="space-y-1">
                     <Label>Address</Label>
-                    <Textarea placeholder="Party Address" rows={1} value={initialParty?.address || ''} readOnly className="min-h-[38px]" />
+                    <Textarea 
+                        placeholder="Party Address" 
+                        rows={1} 
+                        value={initialParty?.address || ''} 
+                        onChange={(e) => handleDetailChange('address', e.target.value)}
+                        readOnly={isFromMaster || disabled}
+                        className="min-h-[38px]" 
+                    />
                 </div>
                 <div className="space-y-1">
                     <Label>Mobile No.</Label>
-                    <Input placeholder="10 Digits Only" value={initialParty?.mobile || ''} readOnly />
+                    <Input 
+                        placeholder="10 Digits Only" 
+                        value={initialParty?.mobile || ''}
+                        onChange={(e) => handleDetailChange('mobile', e.target.value)}
+                        readOnly={isFromMaster || disabled}
+                    />
                 </div>
             </div>
             <AddCustomerDialog
@@ -156,9 +168,21 @@ interface PartyDetailsSectionProps {
     errors: { [key: string]: boolean };
     isViewOnly?: boolean;
     isOfflineMode?: boolean;
+    onPartyAdded: () => void; // New prop to notify parent about new customer
 }
 
-export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, receiver, onTaxPaidByChange, taxPaidBy, errors, isViewOnly = false, isOfflineMode = false }: PartyDetailsSectionProps) {
+export function PartyDetailsSection({ 
+    onSenderChange, 
+    onReceiverChange, 
+    sender, 
+    receiver, 
+    onTaxPaidByChange, 
+    taxPaidBy, 
+    errors, 
+    isViewOnly = false, 
+    isOfflineMode = false,
+    onPartyAdded
+}: PartyDetailsSectionProps) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
     const [otherBillToParty, setOtherBillToParty] = useState<string | undefined>(undefined);
@@ -230,8 +254,8 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
 
     return (
         <div className="border rounded-md">
-            <PartyRow side="Sender" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} disabled={isViewOnly} isOfflineMode={isOfflineMode} />
-            <PartyRow side="Receiver" customers={customers} onPartyAdded={loadCustomers} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} disabled={isViewOnly} isOfflineMode={isOfflineMode} />
+            <PartyRow side="Sender" customers={customers} onPartyAdded={onPartyAdded} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} disabled={isViewOnly} />
+            <PartyRow side="Receiver" customers={customers} onPartyAdded={onPartyAdded} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} disabled={isViewOnly} />
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
                  <div className="space-y-1">

@@ -452,8 +452,23 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
     const basicFreight = useMemo(() => {
         return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
+    
+    const maybeSaveNewParty = useCallback((party: Customer | null) => {
+        if (party && party.id === 0 && party.name.trim()) { // 0 is the indicator for a new party
+            const currentCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+            const newId = currentCustomers.length > 0 ? Math.max(...currentCustomers.map(c => c.id)) + 1 : 1;
+            const newCustomer: Customer = { ...party, id: newId };
+            const updatedCustomers = [newCustomer, ...currentCustomers];
+            localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(updatedCustomers));
+            return newCustomer;
+        }
+        return party;
+    }, []);
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
+        const finalSender = maybeSaveNewParty(sender);
+        const finalReceiver = maybeSaveNewParty(receiver);
+
         const currentStatus: Booking['status'] = isOfflineModeProp ? 'In Stock' : 'In Stock';
         const allBookings = getBookings();
         const currentBooking = (isEditMode || isPartialCancel) ? allBookings.find(b => b.trackingId === trackingId) : undefined;
@@ -468,8 +483,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
             lrType: bookingType as Booking['lrType'],
             paymentMode: bookingType === 'PAID' ? paymentMode : undefined,
             loadType,
-            sender: sender!.name,
-            receiver: receiver!.name,
+            sender: finalSender!.name,
+            receiver: finalReceiver!.name,
             itemDescription: validRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
             qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
@@ -509,8 +524,8 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                 saveBookings(updatedBookings);
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
-                if (sender && receiver) {
-                    updateStandardRateList(newBooking, sender, receiver);
+                if (finalSender && finalReceiver) {
+                    updateStandardRateList(newBooking, finalSender, finalReceiver);
                 }
                 
                 if (newBooking.loadType === 'FTL') {
@@ -575,7 +590,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -714,6 +729,7 @@ export function BookingForm({ bookingId: trackingId, onSaveSuccess, onClose, isV
                         errors={errors}
                         isViewOnly={readOnly}
                         isOfflineMode={isOfflineMode}
+                        onPartyAdded={loadMasterData}
                     />
                     {loadType === 'FTL' && (
                         <VehicleDetailsSection 
