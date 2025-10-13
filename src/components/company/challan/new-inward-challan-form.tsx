@@ -22,7 +22,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { getCities } from '@/lib/city-data';
 import { Textarea } from '@/components/ui/textarea';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { ArrowDown, FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil, RefreshCcw, XCircle } from 'lucide-react';
 import { BookingForm } from '../bookings/booking-form';
 import { Separator } from '@/components/ui/separator';
@@ -97,13 +97,8 @@ export function NewInwardChallanForm() {
                     });
                     
                     const lrDetailsForChallan = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
-                    const allBookings = getBookings();
                     
                     const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => {
-                        // Find the full booking if it exists, otherwise create a shell
-                        const existingBooking = allBookings.find(b => b.lrNo === lr.lrNo);
-                        if (existingBooking) return existingBooking;
-
                         return {
                             trackingId: `temp-${lr.lrNo}-${Math.random()}`, // Ensure unique key
                             lrNo: lr.lrNo,
@@ -117,7 +112,22 @@ export function NewInwardChallanForm() {
                             qty: lr.quantity,
                             chgWt: lr.chargeWeight,
                             totalAmount: lr.grandTotal,
-                            itemRows: [], 
+                            itemRows: [{ // Create a dummy item row for consistency
+                                id: Date.now(),
+                                ewbNo: '',
+                                itemName: lr.itemDescription,
+                                description: '',
+                                wtPerUnit: '',
+                                qty: String(lr.quantity),
+                                actWt: String(lr.actualWeight),
+                                chgWt: String(lr.chargeWeight),
+                                rate: '',
+                                freightOn: 'Fixed',
+                                lumpsum: String(lr.grandTotal),
+                                pvtMark: '',
+                                invoiceNo: '',
+                                dValue: '',
+                            }], 
                             status: 'In Stock'
                         }
                     });
@@ -131,7 +141,6 @@ export function NewInwardChallanForm() {
     }, [searchParams, form]);
     
     const handleAddLr = (newBooking: Booking) => {
-        // If we are editing, replace the existing LR
         if(editingLr) {
              setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? {...newBooking, trackingId: editingLr.trackingId} : lr));
              toast({ title: 'LR Updated', description: `LR# ${newBooking.lrNo} has been updated.`});
@@ -140,7 +149,6 @@ export function NewInwardChallanForm() {
                 toast({ title: 'Duplicate LR', description: 'This LR number has already been added to the list.', variant: 'destructive'});
                 return;
             }
-            // Add a unique temporary trackingId for client-side keying
             const bookingWithId = {...newBooking, trackingId: `temp-${Date.now()}`};
             setAddedLrs(prev => [bookingWithId, ...prev]);
             toast({ title: 'LR Added', description: `LR# ${newBooking.lrNo} added to the inward challan.`});
@@ -268,6 +276,15 @@ export function NewInwardChallanForm() {
         router.push('/company/challan');
     };
 
+    const totals = useMemo(() => {
+        return {
+            lrCount: addedLrs.length,
+            qty: addedLrs.reduce((sum, lr) => sum + lr.qty, 0),
+            actWt: addedLrs.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, i) => itemSum + Number(i.actWt), 0), 0),
+            amount: addedLrs.reduce((sum, lr) => sum + lr.totalAmount, 0),
+        }
+    }, [addedLrs]);
+
     return (
          <div className="space-y-4">
             <header className="mb-4">
@@ -308,7 +325,15 @@ export function NewInwardChallanForm() {
                         </CardContent>
                     </Card>
 
-                    {showLrForm ? (
+                    {!showLrForm && (
+                         <div className="text-center">
+                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
+                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
+                            </Button>
+                        </div>
+                    )}
+
+                    {showLrForm && (
                         <>
                           <Separator />
                           <div className="flex justify-between items-center">
@@ -318,18 +343,12 @@ export function NewInwardChallanForm() {
                             </Button>
                           </div>
                           <BookingForm
-                            bookingId={editingLr?.trackingId} // Pass bookingId for editing
+                            bookingId={editingLr?.trackingId} 
                             isOfflineMode={true}
                             onSaveSuccess={handleAddLr}
                             onClose={handleCancelForm}
                           />
                         </>
-                    ) : (
-                         <div className="text-center">
-                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
-                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
-                            </Button>
-                        </div>
                     )}
 
                     <Card>
@@ -345,6 +364,7 @@ export function NewInwardChallanForm() {
                                             <TableHead>Sender</TableHead>
                                             <TableHead>Receiver</TableHead>
                                             <TableHead>Item</TableHead>
+                                            <TableHead>Qty</TableHead>
                                             <TableHead>Act. Wt.</TableHead>
                                             <TableHead>Booking Type</TableHead>
                                             <TableHead>Total</TableHead>
@@ -358,6 +378,7 @@ export function NewInwardChallanForm() {
                                                 <TableCell>{lr.sender}</TableCell>
                                                 <TableCell>{lr.receiver}</TableCell>
                                                 <TableCell className="max-w-[200px] truncate">{lr.itemDescription}</TableCell>
+                                                <TableCell>{lr.qty}</TableCell>
                                                 <TableCell>{lr.itemRows.reduce((sum, item) => sum + Number(item.actWt || 0), 0).toFixed(2)}</TableCell>
                                                 <TableCell>{lr.lrType}</TableCell>
                                                 <TableCell>{lr.totalAmount.toFixed(2)}</TableCell>
@@ -368,9 +389,22 @@ export function NewInwardChallanForm() {
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={8} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
+                                    {addedLrs.length > 0 && (
+                                        <TableFooter>
+                                            <TableRow className="font-bold bg-muted/50">
+                                                <TableCell>Total LRs: {totals.lrCount}</TableCell>
+                                                <TableCell colSpan={3}></TableCell>
+                                                <TableCell>{totals.qty}</TableCell>
+                                                <TableCell>{totals.actWt.toFixed(2)}</TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell>{totals.amount.toFixed(2)}</TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableFooter>
+                                    )}
                                 </Table>
                             </div>
                         </CardContent>
