@@ -80,9 +80,7 @@ export function NewInwardChallanForm() {
             const allCities = getCities();
             setCities(allCities);
             const allChallans = getChallanData();
-            const allBookings = getBookings();
-            const allLrDetails = getLrDetailsData();
-
+            
             const existingChallanId = searchParams.get('challanId');
             if (existingChallanId) {
                 const challan = allChallans.find(c => c.challanId === existingChallanId);
@@ -98,23 +96,31 @@ export function NewInwardChallanForm() {
                         remarks: challan.remark
                     });
                     
-                    const lrDetailsForChallan = allLrDetails.filter(lr => lr.challanId === existingChallanId);
-                    const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => ({
-                        trackingId: `temp-${lr.lrNo}-${Math.random()}`, // Ensure unique key
-                        lrNo: lr.lrNo,
-                        lrType: lr.lrType as any,
-                        bookingDate: lr.bookingDate,
-                        fromCity: lr.from,
-                        toCity: lr.to,
-                        sender: lr.sender,
-                        receiver: lr.receiver,
-                        itemDescription: lr.itemDescription,
-                        qty: lr.quantity,
-                        chgWt: lr.chargeWeight,
-                        totalAmount: lr.grandTotal,
-                        itemRows: [], // Simplified for this context. Full data not persisted in LR details.
-                        status: 'In Stock'
-                    }));
+                    const lrDetailsForChallan = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
+                    const allBookings = getBookings();
+                    
+                    const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => {
+                        // Find the full booking if it exists, otherwise create a shell
+                        const existingBooking = allBookings.find(b => b.lrNo === lr.lrNo);
+                        if (existingBooking) return existingBooking;
+
+                        return {
+                            trackingId: `temp-${lr.lrNo}-${Math.random()}`, // Ensure unique key
+                            lrNo: lr.lrNo,
+                            lrType: lr.lrType as any,
+                            bookingDate: lr.bookingDate,
+                            fromCity: lr.from,
+                            toCity: lr.to,
+                            sender: lr.sender,
+                            receiver: lr.receiver,
+                            itemDescription: lr.itemDescription,
+                            qty: lr.quantity,
+                            chgWt: lr.chargeWeight,
+                            totalAmount: lr.grandTotal,
+                            itemRows: [], 
+                            status: 'In Stock'
+                        }
+                    });
                     setAddedLrs(reconstructedBookings);
                 }
             } else {
@@ -302,24 +308,14 @@ export function NewInwardChallanForm() {
                         </CardContent>
                     </Card>
 
-                    {!showLrForm && (
-                         <div className="text-center">
-                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
-                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
-                            </Button>
-                        </div>
-                    )}
-                    
-                    {showLrForm && (
+                    {showLrForm ? (
                         <>
                           <Separator />
                           <div className="flex justify-between items-center">
                             <h2 className="text-xl font-semibold text-primary">{editingLr ? `Editing LR: ${editingLr.lrNo}` : 'Add New LR Details'}</h2>
-                            {editingLr && (
-                                <Button type="button" variant="outline" size="sm" onClick={handleCancelForm}>
-                                    <XCircle className="mr-2 h-4 w-4" /> Cancel Edit
-                                </Button>
-                            )}
+                            <Button type="button" variant="outline" size="sm" onClick={handleCancelForm}>
+                                <XCircle className="mr-2 h-4 w-4" /> {editingLr ? 'Cancel Edit' : 'Close Form'}
+                            </Button>
                           </div>
                           <BookingForm
                             bookingId={editingLr?.trackingId} // Pass bookingId for editing
@@ -328,6 +324,12 @@ export function NewInwardChallanForm() {
                             onClose={handleCancelForm}
                           />
                         </>
+                    ) : (
+                         <div className="text-center">
+                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
+                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
+                            </Button>
+                        </div>
                     )}
 
                     <Card>
@@ -337,15 +339,28 @@ export function NewInwardChallanForm() {
                         <CardContent>
                             <div className="overflow-y-auto border rounded-md min-h-48">
                                 <Table>
-                                    <TableHeader><TableRow><TableHead>LR No</TableHead><TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Qty</TableHead><TableHead>Chg.Wt.</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>LR No</TableHead>
+                                            <TableHead>Sender</TableHead>
+                                            <TableHead>Receiver</TableHead>
+                                            <TableHead>Item</TableHead>
+                                            <TableHead>Act. Wt.</TableHead>
+                                            <TableHead>Booking Type</TableHead>
+                                            <TableHead>Total</TableHead>
+                                            <TableHead className="text-right">Action</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
                                     <TableBody>
                                         {addedLrs.map(lr => (
                                             <TableRow key={lr.trackingId}>
                                                 <TableCell>{lr.lrNo}</TableCell>
-                                                <TableCell>{lr.fromCity}</TableCell>
-                                                <TableCell>{lr.toCity}</TableCell>
-                                                <TableCell>{lr.qty}</TableCell>
-                                                <TableCell>{lr.chgWt.toFixed(2)}</TableCell>
+                                                <TableCell>{lr.sender}</TableCell>
+                                                <TableCell>{lr.receiver}</TableCell>
+                                                <TableCell className="max-w-[200px] truncate">{lr.itemDescription}</TableCell>
+                                                <TableCell>{lr.itemRows.reduce((sum, item) => sum + Number(item.actWt || 0), 0).toFixed(2)}</TableCell>
+                                                <TableCell>{lr.lrType}</TableCell>
+                                                <TableCell>{lr.totalAmount.toFixed(2)}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button variant="ghost" size="icon" onClick={() => handleEditLr(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
                                                     <Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
@@ -353,7 +368,7 @@ export function NewInwardChallanForm() {
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={8} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
                                 </Table>
