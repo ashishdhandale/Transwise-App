@@ -22,7 +22,7 @@ import { getCities } from '@/lib/city-data';
 import { getCustomers } from '@/lib/customer-data';
 import { Textarea } from '@/components/ui/textarea';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { FileText, Loader2, PlusCircle, Save, X, Pencil, Trash2 } from 'lucide-react';
 import { EditInwardLrDialog } from './edit-inward-lr-dialog';
 
@@ -65,6 +65,8 @@ export function NewInwardChallanForm() {
             inwardId: '', inwardDate: undefined, originalChallanNo: '', receivedFromParty: '', vehicleNo: '', driverName: '', fromStation: '', remarks: ''
         }
     });
+    
+    const tempChallanId = useMemo(() => `TEMP-INW-${Date.now()}`, []);
 
     useEffect(() => {
         async function loadInitialData() {
@@ -144,25 +146,33 @@ export function NewInwardChallanForm() {
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
     const customerOptions = useMemo(() => customers.map(c => ({ label: c.name, value: c.name })), [customers]);
 
-    const onSubmit = (data: InwardChallanFormValues) => {
-        if (addedLrs.length === 0) {
-            toast({ title: 'No LRs', description: 'Please add at least one LR to create an inward challan.', variant: 'destructive' });
-            return;
-        }
-
+    const createChallanObject = (status: 'Pending' | 'Finalized') => {
+        const formData = form.getValues();
         const existingChallanId = searchParams.get('challanId');
-        const finalChallanId = existingChallanId || `CHLN-${Date.now()}`;
-        
+        const finalChallanId = status === 'Finalized' ? (existingChallanId || formData.inwardId) : (existingChallanId || tempChallanId);
+
         const newChallanData: Challan = {
-            challanId: finalChallanId, inwardId: data.inwardId, inwardDate: data.inwardDate.toISOString(),
-            originalChallanNo: data.originalChallanNo, receivedFromParty: data.receivedFromParty, vehicleNo: data.vehicleNo,
-            driverName: data.driverName || '', fromStation: data.fromStation, toStation: companyProfile?.city || 'N/A',
-            challanType: 'Inward', status: 'Finalized', dispatchDate: data.inwardDate.toISOString(), dispatchToParty: '',
-            totalLr: addedLrs.length, totalPackages: addedLrs.reduce((s, b) => s + b.qty, 0), totalItems: addedLrs.length,
+            challanId: finalChallanId,
+            inwardId: formData.inwardId,
+            inwardDate: formData.inwardDate.toISOString(),
+            originalChallanNo: formData.originalChallanNo,
+            receivedFromParty: formData.receivedFromParty,
+            vehicleNo: formData.vehicleNo,
+            driverName: formData.driverName || '',
+            fromStation: formData.fromStation,
+            toStation: companyProfile?.city || 'N/A',
+            challanType: 'Inward',
+            status,
+            dispatchDate: formData.inwardDate.toISOString(),
+            dispatchToParty: '',
+            totalLr: addedLrs.length,
+            totalPackages: addedLrs.reduce((s, b) => s + b.qty, 0),
+            totalItems: addedLrs.length,
             totalActualWeight: addedLrs.reduce((s, b) => s + b.itemRows.reduce((is, i) => is + Number(i.actWt), 0), 0),
             totalChargeWeight: addedLrs.reduce((s, b) => s + b.chgWt, 0),
-            vehicleHireFreight: 0, advance: 0, balance: 0, senderId: '', remark: data.remarks,
-            summary: { grandTotal: 0, totalTopayAmount: 0, commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0 },
+            vehicleHireFreight: 0, advance: 0, balance: 0, senderId: '',
+            remark: formData.remarks,
+            summary: { grandTotal: addedLrs.reduce((s, b) => s + b.totalAmount, 0), totalTopayAmount: 0, commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0 },
         };
         
         const newLrDetails: LrDetail[] = addedLrs.map(b => ({
@@ -171,38 +181,76 @@ export function NewInwardChallanForm() {
             quantity: b.qty, actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
             chargeWeight: b.chgWt, grandTotal: b.totalAmount
         }));
+
+        return { challan: newChallanData, lrDetails: newLrDetails };
+    }
+
+    const handleSaveAsTemp = () => {
+        const { challan, lrDetails } = createChallanObject('Pending');
         
-        let allChallans = getChallanData();
-        if (existingChallanId) {
-            allChallans = allChallans.map(c => c.challanId === existingChallanId ? newChallanData : c);
+        const allChallans = getChallanData();
+        const existingIndex = allChallans.findIndex(c => c.challanId === challan.challanId);
+        if (existingIndex > -1) {
+            allChallans[existingIndex] = challan;
         } else {
-            allChallans.push(newChallanData);
+            allChallans.push(challan);
         }
         saveChallanData(allChallans);
 
-        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== newChallanData.challanId);
-        allLrDetails.push(...newLrDetails);
+        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId);
+        allLrDetails.push(...lrDetails);
+        saveLrDetailsData(allLrDetails);
+        
+        toast({ title: 'Challan Saved as Temporary', description: `Your progress for inward challan has been saved.` });
+        router.push('/company/challan');
+    };
+
+    const onSubmit = (data: InwardChallanFormValues) => {
+        if (addedLrs.length === 0) {
+            toast({ title: 'No LRs', description: 'Please add at least one LR to create an inward challan.', variant: 'destructive' });
+            return;
+        }
+        
+        const { challan, lrDetails } = createChallanObject('Finalized');
+
+        let allChallans = getChallanData();
+        const existingChallanId = searchParams.get('challanId');
+        if (existingChallanId) {
+             // If we are finalizing a temp challan, remove the temp one and add the final one.
+            allChallans = allChallans.filter(c => c.challanId !== existingChallanId);
+        }
+        allChallans.push(challan);
+        saveChallanData(allChallans);
+
+        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId && d.challanId !== existingChallanId);
+        allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
         
         const newBookingsToStock = addedLrs.map(b => ({
             ...b, source: 'Inward' as const, status: 'In Stock' as const
         }));
 
-        const existingLrNos = new Set(getBookings().map(b => b.lrNo));
+        const allBookings = getBookings();
+        const existingLrNos = new Set(allBookings.map(b => b.lrNo));
         const trulyNewBookings = newBookingsToStock.filter(b => !existingLrNos.has(b.lrNo));
 
         if(trulyNewBookings.length > 0) {
-            const allBookings = getBookings();
             const updatedBookings = [...allBookings, ...trulyNewBookings];
             saveBookings(updatedBookings);
             trulyNewBookings.forEach(b => {
-                 addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${newChallanData.toStation}.`);
+                 addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
             });
         }
         
         toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${trulyNewBookings.length} new LRs added to stock.`});
         router.push('/company/challan');
     };
+
+    const totalQty = useMemo(() => addedLrs.reduce((sum, lr) => sum + lr.qty, 0), [addedLrs]);
+    const totalActWt = useMemo(() => addedLrs.reduce((sum, lr) => sum + lr.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0), [addedLrs]);
+    const totalAmount = useMemo(() => addedLrs.reduce((sum, lr) => sum + lr.totalAmount, 0), [addedLrs]);
+    const formatValue = (amount: number) => companyProfile ? amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount.toFixed(2);
+
 
     return (
         <div className="space-y-4">
@@ -257,10 +305,13 @@ export function NewInwardChallanForm() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>LR No</TableHead>
-                                            <TableHead>From</TableHead>
-                                            <TableHead>To</TableHead>
+                                            <TableHead>Sender</TableHead>
+                                            <TableHead>Receiver</TableHead>
+                                            <TableHead>Item</TableHead>
                                             <TableHead>Qty</TableHead>
-                                            <TableHead>Chg. Wt.</TableHead>
+                                            <TableHead>Act. Wt.</TableHead>
+                                            <TableHead>Booking Type</TableHead>
+                                            <TableHead>Total</TableHead>
                                             <TableHead>Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -268,10 +319,13 @@ export function NewInwardChallanForm() {
                                         {addedLrs.map(lr => (
                                             <TableRow key={lr.trackingId}>
                                                 <TableCell>{lr.lrNo}</TableCell>
-                                                <TableCell>{lr.fromCity}</TableCell>
-                                                <TableCell>{lr.toCity}</TableCell>
+                                                <TableCell>{lr.sender}</TableCell>
+                                                <TableCell>{lr.receiver}</TableCell>
+                                                <TableCell>{lr.itemDescription}</TableCell>
                                                 <TableCell>{lr.qty}</TableCell>
-                                                <TableCell>{lr.chgWt.toFixed(2)}</TableCell>
+                                                <TableCell>{lr.itemRows.reduce((s, i) => s + Number(i.actWt), 0).toFixed(2)}</TableCell>
+                                                <TableCell>{lr.lrType}</TableCell>
+                                                <TableCell>{lr.totalAmount.toFixed(2)}</TableCell>
                                                 <TableCell>
                                                     <Button variant="ghost" size="icon" onClick={() => handleEditLr(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
                                                     <Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
@@ -279,9 +333,20 @@ export function NewInwardChallanForm() {
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={6} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
+                                    <TableFooter>
+                                        <TableRow className="font-bold bg-muted/50">
+                                            <TableCell>Total</TableCell>
+                                            <TableCell colSpan={3}>{addedLrs.length} LRs</TableCell>
+                                            <TableCell>{totalQty}</TableCell>
+                                            <TableCell>{totalActWt.toFixed(2)}</TableCell>
+                                            <TableCell></TableCell>
+                                            <TableCell>{formatValue(totalAmount)}</TableCell>
+                                            <TableCell></TableCell>
+                                        </TableRow>
+                                    </TableFooter>
                                 </Table>
                             </div>
                         </CardContent>
@@ -297,6 +362,7 @@ export function NewInwardChallanForm() {
                     </Card>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
+                        <Button type="button" variant="outline" onClick={handleSaveAsTemp}><Save className="mr-2 h-4 w-4" /> Save as Temp & Exit</Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>
                             {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
                             Finalize & Save Inward
@@ -314,5 +380,3 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
-
-    
