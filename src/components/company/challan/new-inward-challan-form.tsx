@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,6 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { ArrowDown, FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil, RefreshCcw, XCircle } from 'lucide-react';
 import { BookingForm } from '../bookings/booking-form';
 import { Separator } from '@/components/ui/separator';
+import { ClientOnly } from '@/components/ui/client-only';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -134,7 +135,8 @@ export function NewInwardChallanForm() {
                     setAddedLrs(reconstructedBookings);
                 }
             } else {
-                form.setValue('inwardId', generateInwardChallanId(allChallans));
+                 const newId = generateInwardChallanId(allChallans);
+                 form.setValue('inwardId', newId);
             }
         }
         loadInitialData();
@@ -262,17 +264,20 @@ export function NewInwardChallanForm() {
         saveLrDetailsData(allLrDetails);
 
         const allBookings = getBookings();
+        
+        // These are bookings that are truly new to the system.
         const newBookingsToCreate = addedLrs.filter(added => !allBookings.some(existing => existing.lrNo === added.lrNo));
 
         newBookingsToCreate.forEach(b => {
-             addHistoryLog(b.lrNo, 'Booking Created', 'System (Inward)', `Manual entry from Inward Challan ${data.inwardId}.`);
-             addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received at ${challan.toStation}.`);
+             // We don't add a "Booking Created" log, as these aren't primary bookings.
+             addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
-
+        
+        // Only add the NEW bookings to the main list.
         const updatedBookings = [...allBookings, ...newBookingsToCreate];
         saveBookings(updatedBookings);
 
-        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}`});
+        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${newBookingsToCreate.length} new LRs added to stock.`});
         router.push('/company/challan');
     };
 
@@ -325,15 +330,7 @@ export function NewInwardChallanForm() {
                         </CardContent>
                     </Card>
 
-                    {!showLrForm && (
-                         <div className="text-center">
-                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
-                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
-                            </Button>
-                        </div>
-                    )}
-
-                    {showLrForm && (
+                    {showLrForm ? (
                         <>
                           <Separator />
                           <div className="flex justify-between items-center">
@@ -350,7 +347,14 @@ export function NewInwardChallanForm() {
                             onClose={handleCancelForm}
                           />
                         </>
+                    ) : (
+                        <div className="text-center">
+                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
+                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
+                            </Button>
+                        </div>
                     )}
+
 
                     <Card>
                         <CardHeader>
