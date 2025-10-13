@@ -124,7 +124,8 @@ export function NewChallanForm() {
     }, [totalTopayAmount, commission, labour, crossing, balance]);
 
     useEffect(() => {
-        if (!searchParams.get('challanId')) {
+        const existingChallanId = searchParams.get('challanId');
+        if (!existingChallanId) {
              setChallanId(`TEMP-CHLN-${Date.now()}`);
         }
         setDispatchDate(new Date());
@@ -740,9 +741,10 @@ export function NewChallanForm() {
 }
 
 // Helper functions for table selection
-function handleSelectAll(checked: boolean, data: { trackingId: string, status: string }[], setSelection: (ids: Set<string>) => void) {
+function handleSelectAll(checked: boolean, data: { trackingId: string, status?: string }[], setSelection: (ids: Set<string>) => void) {
     if (checked) {
-        const stockToSelect = data.filter(item => item.status === 'In Stock');
+        // When selecting all, only select items that are selectable (e.g., 'In Stock')
+        const stockToSelect = data.filter(item => !item.status || item.status === 'In Stock');
         setSelection(new Set(stockToSelect.map(item => item.trackingId)));
     } else {
         setSelection(new Set());

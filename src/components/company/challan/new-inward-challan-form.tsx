@@ -60,7 +60,7 @@ export function NewInwardChallanForm() {
 
     const form = useForm<InwardChallanFormValues>({
         resolver: zodResolver(inwardChallanSchema),
-        defaultValues: { inwardDate: new Date() }
+        defaultValues: { inwardId: '', inwardDate: new Date() }
     });
 
     useEffect(() => {
