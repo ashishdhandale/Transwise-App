@@ -199,7 +199,7 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
         ...(sender ? [{ label: sender.name, value: sender.name }] : []),
         ...(receiver && receiver.name !== sender?.name ? [{ label: receiver.name, value: receiver.name }] : []),
         { label: 'Other', value: 'Other' },
-    ];
+    ].filter(option => option.value);
     
     const taxPaidByOptions = useMemo(() => {
         const options = [
@@ -220,7 +220,7 @@ export function PartyDetailsSection({ onSenderChange, onReceiverChange, sender, 
                  options.push({ label: otherBillToParty, value: otherBillToParty });
             }
         }
-        return options;
+        return options.filter(option => option.value);
     }, [billTo, otherBillToParty, sender, receiver]);
 
     const customerOptions = useMemo(() => customers.map(c => ({
