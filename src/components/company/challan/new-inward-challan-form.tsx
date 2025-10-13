@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,10 +22,9 @@ import { getCities } from '@/lib/city-data';
 import { Textarea } from '@/components/ui/textarea';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { ArrowDown, FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil, RefreshCcw, XCircle } from 'lucide-react';
-import { BookingForm } from '../bookings/booking-form';
-import { Separator } from '@/components/ui/separator';
+import { FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil } from 'lucide-react';
 import { ClientOnly } from '@/components/ui/client-only';
+import { EditInwardLrDialog } from './edit-inward-lr-dialog';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -53,8 +51,8 @@ export function NewInwardChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     const [cities, setCities] = useState<City[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
-    const [showLrForm, setShowLrForm] = useState(false);
     const [editingLr, setEditingLr] = useState<Booking | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     
     const { toast } = useToast();
     const router = useRouter();
@@ -101,7 +99,7 @@ export function NewInwardChallanForm() {
                     
                     const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => {
                         return {
-                            trackingId: `temp-${lr.lrNo}-${Math.random()}`, // Ensure unique key
+                            trackingId: `temp-${lr.lrNo}-${Math.random()}`,
                             lrNo: lr.lrNo,
                             lrType: lr.lrType as any,
                             bookingDate: lr.bookingDate,
@@ -113,7 +111,7 @@ export function NewInwardChallanForm() {
                             qty: lr.quantity,
                             chgWt: lr.chargeWeight,
                             totalAmount: lr.grandTotal,
-                            itemRows: [{ // Create a dummy item row for consistency
+                            itemRows: [{ 
                                 id: Date.now(),
                                 ewbNo: '',
                                 itemName: lr.itemDescription,
@@ -143,36 +141,21 @@ export function NewInwardChallanForm() {
         loadInitialData();
     }, [searchParams, form]);
     
-    const handleAddLr = (newBooking: Booking) => {
-        if(editingLr) {
-             setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? {...newBooking, trackingId: editingLr.trackingId} : lr));
-             toast({ title: 'LR Updated', description: `LR# ${newBooking.lrNo} has been updated.`});
-        } else {
-             if (addedLrs.some(lr => lr.lrNo.toLowerCase() === newBooking.lrNo.toLowerCase())) {
-                toast({ title: 'Duplicate LR', description: 'This LR number has already been added to the list.', variant: 'destructive'});
-                return;
-            }
-            const bookingWithId = {...newBooking, trackingId: `temp-${Date.now()}`};
-            setAddedLrs(prev => [bookingWithId, ...prev]);
-            toast({ title: 'LR Added', description: `LR# ${newBooking.lrNo} added to the inward challan.`});
-        }
-        
-        setShowLrForm(false);
-        setEditingLr(null);
-    };
-
     const handleEditLr = (lrToEdit: Booking) => {
         setEditingLr(lrToEdit);
-        setShowLrForm(true);
+        setIsEditDialogOpen(true);
     };
     
-    const handleRemoveLr = (trackingId: string) => {
-        setAddedLrs(prev => prev.filter(lr => lr.trackingId !== trackingId));
+    const handleUpdateLr = (updatedBooking: Booking) => {
+        if (!editingLr) return;
+        setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? updatedBooking : lr));
+        toast({ title: 'LR Updated', description: `LR# ${updatedBooking.lrNo} has been updated.`});
+        setIsEditDialogOpen(false);
+        setEditingLr(null);
     };
 
-    const handleCancelForm = () => {
-        setShowLrForm(false);
-        setEditingLr(null);
+    const handleRemoveLr = (trackingId: string) => {
+        setAddedLrs(prev => prev.filter(lr => lr.trackingId !== trackingId));
     };
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
@@ -263,24 +246,24 @@ export function NewInwardChallanForm() {
         let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId);
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
-
-        const allBookings = getBookings();
         
-        // Add all inward LRs to the main booking list with source 'Inward'
-        const newBookingsToCreate = addedLrs.map(b => ({
+        // --- Add to stock logic ---
+        const newBookingsToStock = addedLrs.map(b => ({
             ...b,
             source: 'Inward' as const,
             status: 'In Stock' as const
         }));
 
-        newBookingsToCreate.forEach(b => {
+        newBookingsToStock.forEach(b => {
              addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
-        const updatedBookings = [...allBookings, ...newBookingsToCreate];
+        const allBookings = getBookings();
+        const updatedBookings = [...allBookings, ...newBookingsToStock];
         saveBookings(updatedBookings);
+        // --- End of add to stock logic ---
 
-        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${newBookingsToCreate.length} new LRs added to stock.`});
+        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${newBookingsToStock.length} new LRs added to stock.`});
         router.push('/company/challan');
     };
 
@@ -333,31 +316,11 @@ export function NewInwardChallanForm() {
                         </CardContent>
                     </Card>
 
-                    {showLrForm ? (
-                        <>
-                          <Separator />
-                          <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-primary">{editingLr ? `Editing LR: ${editingLr.lrNo}` : 'Add New LR Details'}</h2>
-                            <Button type="button" variant="outline" size="sm" onClick={handleCancelForm}>
-                                <XCircle className="mr-2 h-4 w-4" /> {editingLr ? 'Cancel Edit' : 'Close Form'}
-                            </Button>
-                          </div>
-                          <BookingForm
-                            bookingId={editingLr?.trackingId}
-                            bookingData={editingLr}
-                            isOfflineMode={true}
-                            onSaveSuccess={handleAddLr}
-                            onClose={handleCancelForm}
-                          />
-                        </>
-                    ) : (
-                        <div className="text-center">
-                            <Button type="button" size="lg" onClick={() => setShowLrForm(true)}>
-                                <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
-                            </Button>
-                        </div>
-                    )}
-
+                    <div className="text-center">
+                        <Button type="button" size="lg" onClick={() => { setEditingLr(null); setIsEditDialogOpen(true); }}>
+                            <PlusCircle className="mr-2 h-5 w-5" /> Add LR Entry
+                        </Button>
+                    </div>
 
                     <Card>
                         <CardHeader>
@@ -400,7 +363,7 @@ export function NewInwardChallanForm() {
                                             <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
-                                    {addedLrs.length > 0 && (
+                                     {addedLrs.length > 0 && (
                                         <TableFooter>
                                             <TableRow className="font-bold bg-muted/50">
                                                 <TableCell colSpan={4}>Total LRs: {totals.lrCount}</TableCell>
@@ -417,28 +380,31 @@ export function NewInwardChallanForm() {
                         </CardContent>
                     </Card>
                     
-                    {!showLrForm && (
-                        <>
-                        <Card>
-                            <CardHeader><CardTitle>Remarks</CardTitle></CardHeader>
-                            <CardContent>
-                                <FormField name="remarks" control={form.control} render={({ field }) => (
-                                    <FormItem><Textarea placeholder="Note any damages, shortages, or other remarks..." {...field} /></FormItem>
-                                )}/>
-                            </CardContent>
-                        </Card>
-                        <div className="flex justify-end gap-2">
-                             <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
-                             <Button type="button" variant="outline" onClick={handleSaveTemp}><Save className="mr-2 h-4 w-4" /> Save as Temp & Exit</Button>
-                            <Button type="submit" disabled={form.formState.isSubmitting}>
-                                {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
-                                Finalize & Save Inward
-                            </Button>
-                        </div>
-                        </>
-                    )}
+                    <Card>
+                        <CardHeader><CardTitle>Remarks</CardTitle></CardHeader>
+                        <CardContent>
+                            <FormField name="remarks" control={form.control} render={({ field }) => (
+                                <FormItem><Textarea placeholder="Note any damages, shortages, or other remarks..." {...field} /></FormItem>
+                            )}/>
+                        </CardContent>
+                    </Card>
+                    <div className="flex justify-end gap-2">
+                            <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
+                            <Button type="button" variant="outline" onClick={handleSaveTemp}><Save className="mr-2 h-4 w-4" /> Save as Temp & Exit</Button>
+                        <Button type="submit" disabled={form.formState.isSubmitting}>
+                            {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
+                            Finalize & Save Inward
+                        </Button>
+                    </div>
                 </form>
             </Form>
+
+            <EditInwardLrDialog
+                isOpen={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+                bookingData={editingLr}
+                onSaveSuccess={handleUpdateLr}
+            />
         </div>
     );
 }
