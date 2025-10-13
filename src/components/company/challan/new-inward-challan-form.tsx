@@ -23,8 +23,10 @@ import { getCustomers } from '@/lib/customer-data';
 import { Textarea } from '@/components/ui/textarea';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { FileText, Loader2, PlusCircle, Save, X, Pencil, Trash2 } from 'lucide-react';
+import { FileText, Loader2, PlusCircle, Save, X, Pencil, Trash2, ChevronsUpDown } from 'lucide-react';
 import { EditInwardLrDialog } from './edit-inward-lr-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -54,6 +56,7 @@ export function NewInwardChallanForm() {
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
     const [editingLr, setEditingLr] = useState<Booking | null>(null);
     const [isAddLrDialogOpen, setIsAddLrDialogOpen] = useState(false);
+    const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     
     const { toast } = useToast();
     const router = useRouter();
@@ -80,6 +83,7 @@ export function NewInwardChallanForm() {
             if (existingChallanId) {
                 const challan = allChallans.find(c => c.challanId === existingChallanId);
                 if (challan) {
+                    setIsHeaderOpen(false); // Collapse header in edit mode
                     form.reset({
                         inwardId: challan.inwardId,
                         inwardDate: challan.inwardDate ? new Date(challan.inwardDate) : new Date(),
@@ -250,35 +254,47 @@ export function NewInwardChallanForm() {
             </header>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <Card>
-                        <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                            <FormField name="inwardId" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Inward ID</FormLabel><FormControl><Input {...field} readOnly className="font-bold text-red-600 bg-red-50"/></FormControl></FormItem>
-                            )}/>
-                            <FormField name="inwardDate" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Inward Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
-                            )}/>
-                            <FormField name="receivedFromParty" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Received From Party</FormLabel><FormControl><Input placeholder="e.g. Origin Branch Name" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Original Challan No</FormLabel><FormControl><Input placeholder="Original Challan No" {...field} /></FormControl></FormItem>
-                            )}/>
-                             <FormField name="vehicleNo" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Vehicle No.</FormLabel><FormControl><Input placeholder="e.g. MH31CQ1234" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField name="driverName" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Driver Name" {...field} /></FormControl></FormItem>
-                            )}/>
-                            <FormField name="fromStation" control={form.control} render={({ field }) => (
-                                <FormItem className="md:col-span-2">
-                                    <FormLabel>From Station</FormLabel>
-                                    <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
-                                    <FormMessage />
-                                </FormItem>
-                            )}/>
-                        </CardContent>
-                    </Card>
+                    <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>
+                        <Card>
+                            <CollapsibleTrigger asChild>
+                                <CardHeader className="cursor-pointer">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle>Challan Details</CardTitle>
+                                        <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isHeaderOpen && "rotate-180")} />
+                                    </div>
+                                </CardHeader>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <CardContent className="pt-2 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                    <FormField name="inwardId" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Inward ID</FormLabel><FormControl><Input {...field} readOnly className="font-bold text-red-600 bg-red-50"/></FormControl></FormItem>
+                                    )}/>
+                                    <FormField name="inwardDate" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Inward Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
+                                    )}/>
+                                    <FormField name="receivedFromParty" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Received From Party</FormLabel><FormControl><Input placeholder="e.g. Origin Branch Name" {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Original Challan No</FormLabel><FormControl><Input placeholder="Original Challan No" {...field} /></FormControl></FormItem>
+                                    )}/>
+                                    <FormField name="vehicleNo" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Vehicle No.</FormLabel><FormControl><Input placeholder="e.g. MH31CQ1234" {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField name="driverName" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Driver Name" {...field} /></FormControl></FormItem>
+                                    )}/>
+                                    <FormField name="fromStation" control={form.control} render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel>From Station</FormLabel>
+                                            <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Card>
+                    </Collapsible>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
