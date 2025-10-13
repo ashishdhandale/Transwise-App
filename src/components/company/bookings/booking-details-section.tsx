@@ -248,51 +248,33 @@ export function BookingDetailsSection({
                 </div>
                 <div className={cn('space-y-1 rounded-md', errors.fromStation && 'ring-2 ring-red-500/50')}>
                     <Label htmlFor="fromStation">From Station</Label>
-                    {isOfflineMode ? (
-                         <Input
-                            placeholder="Enter From Station..."
-                            value={fromStation?.name || ''}
-                            onChange={(e) => handleFromStationChange(e.target.value)}
-                            disabled={isViewOnly}
-                        />
-                    ) : (
-                        <Combobox
-                            options={fromStationOptions}
-                            value={fromStation?.name || ''}
-                            onChange={handleFromStationChange}
-                            placeholder="Select station..."
-                            searchPlaceholder="Search stations..."
-                            notFoundMessage="No station found."
-                            addMessage="Add New Station"
-                            onAdd={handleOpenAddCity}
-                            disabled={isViewOnly}
-                            autoOpenOnFocus
-                        />
-                    )}
+                    <Combobox
+                        options={fromStationOptions}
+                        value={fromStation?.name || ''}
+                        onChange={handleFromStationChange}
+                        placeholder="Select station..."
+                        searchPlaceholder="Search stations..."
+                        notFoundMessage="No station found."
+                        addMessage="Add New Station"
+                        onAdd={handleOpenAddCity}
+                        disabled={isViewOnly}
+                        autoOpenOnFocus
+                    />
                 </div>
                 <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
                     <Label htmlFor="toStation">To Station</Label>
-                    {isOfflineMode ? (
-                        <Input
-                            placeholder="Enter To Station..."
-                            value={toStation?.name || ''}
-                            onChange={(e) => handleToStationChange(e.target.value)}
-                            disabled={isViewOnly}
-                        />
-                    ) : (
-                        <Combobox
-                            options={stationOptions}
-                            value={toStation?.name || ''}
-                            onChange={handleToStationChange}
-                            placeholder="Select station..."
-                            searchPlaceholder="Search stations..."
-                            notFoundMessage="No station found."
-                            addMessage="Add New Station"
-                            onAdd={handleOpenAddCity}
-                            disabled={isViewOnly}
-                            autoOpenOnFocus
-                        />
-                    )}
+                    <Combobox
+                        options={stationOptions}
+                        value={toStation?.name || ''}
+                        onChange={handleToStationChange}
+                        placeholder="Select station..."
+                        searchPlaceholder="Search stations..."
+                        notFoundMessage="No station found."
+                        addMessage="Add New Station"
+                        onAdd={handleOpenAddCity}
+                        disabled={isViewOnly}
+                        autoOpenOnFocus
+                    />
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="bookingType">Booking Type</Label>
