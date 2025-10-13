@@ -23,7 +23,7 @@ import { getCities } from '@/lib/city-data';
 import { Textarea } from '@/components/ui/textarea';
 import { getBookings, saveBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowDown, FileText, Loader2, Save, Trash2, X, PlusCircle } from 'lucide-react';
+import { ArrowDown, FileText, Loader2, Save, Trash2, X, PlusCircle, Pencil } from 'lucide-react';
 import { BookingForm } from '../bookings/booking-form';
 import { Separator } from '@/components/ui/separator';
 
@@ -53,6 +53,7 @@ export function NewInwardChallanForm() {
     const [cities, setCities] = useState<City[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
     const [showLrForm, setShowLrForm] = useState(false);
+    const [editingLr, setEditingLr] = useState<Booking | null>(null);
     
     const { toast } = useToast();
     const router = useRouter();
@@ -97,41 +98,24 @@ export function NewInwardChallanForm() {
                         remarks: challan.remark
                     });
                     
-                    const lrNosForChallan = new Set(allLrDetails.filter(lr => lr.challanId === existingChallanId).map(lr => lr.lrNo));
-
-                    // For pending inward challans, the LRs might not be in the main booking list yet.
-                    // We need a way to store/retrieve them. For now, let's assume they are created on finalization.
-                    // Let's check both main bookings and a temporary store if we had one.
-                    const bookingsForChallan = allBookings.filter(b => lrNosForChallan.has(b.lrNo));
-                    
-                    // This is the key change: if bookings aren't found in main list, they must be in LR details
-                    if (bookingsForChallan.length < lrNosForChallan.size) {
-                        const tempBookings: Booking[] = [];
-                        allLrDetails.filter(lr => lr.challanId === existingChallanId).forEach(lr => {
-                            // If not in main bookings, reconstruct a temporary booking object
-                             if (!allBookings.some(b => b.lrNo === lr.lrNo)) {
-                                tempBookings.push({
-                                    trackingId: `temp-${lr.lrNo}`,
-                                    lrNo: lr.lrNo,
-                                    lrType: lr.lrType as any,
-                                    bookingDate: lr.bookingDate,
-                                    fromCity: lr.from,
-                                    toCity: lr.to,
-                                    sender: lr.sender,
-                                    receiver: lr.receiver,
-                                    itemDescription: lr.itemDescription,
-                                    qty: lr.quantity,
-                                    chgWt: lr.chargeWeight,
-                                    totalAmount: lr.grandTotal,
-                                    itemRows: [], // Simplified for display
-                                    status: 'In Stock' // Assumed status
-                                });
-                            }
-                        });
-                        setAddedLrs([...bookingsForChallan, ...tempBookings]);
-                    } else {
-                         setAddedLrs(bookingsForChallan);
-                    }
+                    const lrDetailsForChallan = allLrDetails.filter(lr => lr.challanId === existingChallanId);
+                    const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => ({
+                        trackingId: `temp-${lr.lrNo}`,
+                        lrNo: lr.lrNo,
+                        lrType: lr.lrType as any,
+                        bookingDate: lr.bookingDate,
+                        fromCity: lr.from,
+                        toCity: lr.to,
+                        sender: lr.sender,
+                        receiver: lr.receiver,
+                        itemDescription: lr.itemDescription,
+                        qty: lr.quantity,
+                        chgWt: lr.chargeWeight,
+                        totalAmount: lr.grandTotal,
+                        itemRows: [], // Simplified for this context. Full data not persisted in LR details.
+                        status: 'In Stock'
+                    }));
+                    setAddedLrs(reconstructedBookings);
                 }
             } else {
                 form.setValue('inwardId', generateInwardChallanId(allChallans));
@@ -141,17 +125,35 @@ export function NewInwardChallanForm() {
     }, [searchParams, form]);
     
     const handleAddLr = (newBooking: Booking) => {
-        if (addedLrs.some(lr => lr.lrNo.toLowerCase() === newBooking.lrNo.toLowerCase())) {
-            toast({ title: 'Duplicate LR', description: 'This LR number has already been added to the list.', variant: 'destructive'});
-            return;
+        // If we are editing, replace the existing LR
+        if(editingLr) {
+             setAddedLrs(prev => prev.map(lr => lr.trackingId === editingLr.trackingId ? newBooking : lr));
+             toast({ title: 'LR Updated', description: `LR# ${newBooking.lrNo} has been updated.`});
+        } else {
+             if (addedLrs.some(lr => lr.lrNo.toLowerCase() === newBooking.lrNo.toLowerCase())) {
+                toast({ title: 'Duplicate LR', description: 'This LR number has already been added to the list.', variant: 'destructive'});
+                return;
+            }
+            setAddedLrs(prev => [newBooking, ...prev]);
+            toast({ title: 'LR Added', description: `LR# ${newBooking.lrNo} added to the inward challan.`});
         }
-        setAddedLrs(prev => [newBooking, ...prev]);
+        
         setShowLrForm(false);
-        toast({ title: 'LR Added', description: `LR# ${newBooking.lrNo} added to the inward challan.`});
+        setEditingLr(null);
+    };
+
+    const handleEditLr = (lrToEdit: Booking) => {
+        setEditingLr(lrToEdit);
+        setShowLrForm(true);
     };
     
     const handleRemoveLr = (trackingId: string) => {
         setAddedLrs(prev => prev.filter(lr => lr.trackingId !== trackingId));
+    };
+
+    const handleCancelForm = () => {
+        setShowLrForm(false);
+        setEditingLr(null);
     };
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
@@ -210,7 +212,6 @@ export function NewInwardChallanForm() {
         }
         saveChallanData(allChallans);
 
-        // Crucially, save the LR details so they can be reloaded
         let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId);
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
@@ -306,7 +307,7 @@ export function NewInwardChallanForm() {
                         <CardContent>
                             <div className="overflow-y-auto border rounded-md min-h-48">
                                 <Table>
-                                    <TableHeader><TableRow><TableHead>LR No</TableHead><TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Qty</TableHead><TableHead>Chg.Wt.</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                                    <TableHeader><TableRow><TableHead>LR No</TableHead><TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Qty</TableHead><TableHead>Chg.Wt.</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
                                     <TableBody>
                                         {addedLrs.map(lr => (
                                             <TableRow key={lr.trackingId}>
@@ -315,7 +316,10 @@ export function NewInwardChallanForm() {
                                                 <TableCell>{lr.toCity}</TableCell>
                                                 <TableCell>{lr.qty}</TableCell>
                                                 <TableCell>{lr.chgWt.toFixed(2)}</TableCell>
-                                                <TableCell><Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEditLr(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
@@ -330,11 +334,12 @@ export function NewInwardChallanForm() {
                     {showLrForm ? (
                         <>
                           <Separator />
-                          <h2 className="text-xl font-semibold text-primary">Add New LR Details</h2>
+                          <h2 className="text-xl font-semibold text-primary">{editingLr ? `Editing LR: ${editingLr.lrNo}` : 'Add New LR Details'}</h2>
                           <BookingForm
+                            bookingId={editingLr?.trackingId} // Pass bookingId for editing
                             isOfflineMode={true}
                             onSaveSuccess={handleAddLr}
-                            onClose={() => setShowLrForm(false)}
+                            onClose={handleCancelForm}
                           />
                         </>
                     ) : (
