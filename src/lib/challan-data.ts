@@ -1,3 +1,4 @@
+
 export interface ChallanSummary {
   grandTotal: number;
   totalTopayAmount: number;
@@ -31,7 +32,9 @@ export interface Challan {
   inwardId: string;
   inwardDate: string;
   receivedFromParty: string;
+  originalChallanNo?: string;
   summary: ChallanSummary;
+  remark?: string;
 }
 
 export interface LrDetail {

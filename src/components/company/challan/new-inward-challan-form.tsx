@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -29,6 +30,7 @@ import { Separator } from '@/components/ui/separator';
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
   inwardDate: z.date(),
+  originalChallanNo: z.string().optional(),
   receivedFromParty: z.string().min(1, 'Received from is required'),
   vehicleNo: z.string().min(1, 'Vehicle number is required'),
   driverName: z.string().optional(),
@@ -78,6 +80,7 @@ export function NewInwardChallanForm() {
                     form.reset({
                         inwardId: challan.inwardId,
                         inwardDate: new Date(challan.inwardDate),
+                        originalChallanNo: challan.originalChallanNo,
                         receivedFromParty: challan.receivedFromParty,
                         vehicleNo: challan.vehicleNo,
                         driverName: challan.driverName,
@@ -120,6 +123,7 @@ export function NewInwardChallanForm() {
             challanId: finalChallanId,
             inwardId: formData.inwardId,
             inwardDate: formData.inwardDate.toISOString(),
+            originalChallanNo: formData.originalChallanNo,
             receivedFromParty: formData.receivedFromParty,
             vehicleNo: formData.vehicleNo,
             driverName: formData.driverName || '',
@@ -235,6 +239,9 @@ export function NewInwardChallanForm() {
                             <FormField name="receivedFromParty" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Received From Party</FormLabel><FormControl><Input placeholder="e.g. Origin Branch Name" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
+                            <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
+                                <FormItem><FormLabel>Original Challan No</FormLabel><FormControl><Input placeholder="Original Challan No" {...field} /></FormControl></FormItem>
+                            )}/>
                              <FormField name="vehicleNo" control={form.control} render={({ field }) => (
                                 <FormItem><FormLabel>Vehicle No.</FormLabel><FormControl><Input placeholder="e.g. MH31CQ1234" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
@@ -242,9 +249,11 @@ export function NewInwardChallanForm() {
                                 <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Driver Name" {...field} /></FormControl></FormItem>
                             )}/>
                             <FormField name="fromStation" control={form.control} render={({ field }) => (
-                                <FormItem><FormLabel>From Station</FormLabel>
-                                <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
-                                <FormMessage /></FormItem>
+                                <FormItem className="md:col-span-2">
+                                    <FormLabel>From Station</FormLabel>
+                                    <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
+                                    <FormMessage />
+                                </FormItem>
                             )}/>
                         </CardContent>
                     </Card>
