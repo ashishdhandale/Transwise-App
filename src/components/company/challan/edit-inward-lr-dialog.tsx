@@ -29,14 +29,19 @@ export function EditInwardLrDialog({
   const handleSave = (updatedBooking: Booking) => {
     onSaveSuccess(updatedBooking);
   };
+  
+  const dialogTitle = bookingData ? 'Edit Inward LR' : 'Add New LR';
+  const dialogDescription = bookingData 
+    ? 'Modify the details for this manually entered LR.' 
+    : 'Enter the details for a new LR received in this challan.';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Edit Inward LR</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
            <DialogDescription>
-            Modify the details for this manually entered LR.
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-grow">
@@ -53,4 +58,5 @@ export function EditInwardLrDialog({
     </Dialog>
   );
 }
+
 
