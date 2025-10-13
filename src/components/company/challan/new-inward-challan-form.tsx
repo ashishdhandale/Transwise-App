@@ -105,7 +105,8 @@ export function NewInwardChallanForm() {
                             rate: '', freightOn: 'Fixed', lumpsum: String(lr.grandTotal),
                             pvtMark: '', invoiceNo: '', dValue: '',
                         }], 
-                        status: 'In Stock'
+                        status: 'In Stock',
+                        source: 'Inward',
                     }));
                     setAddedLrs(reconstructedBookings);
                 }
@@ -292,6 +293,8 @@ export function NewInwardChallanForm() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>LR No</TableHead>
+                                            <TableHead>From</TableHead>
+                                            <TableHead>To</TableHead>
                                             <TableHead>Sender</TableHead>
                                             <TableHead>Receiver</TableHead>
                                             <TableHead>Item</TableHead>
@@ -306,6 +309,8 @@ export function NewInwardChallanForm() {
                                         {addedLrs.map(lr => (
                                             <TableRow key={lr.trackingId}>
                                                 <TableCell>{lr.lrNo}</TableCell>
+                                                <TableCell>{lr.fromCity}</TableCell>
+                                                <TableCell>{lr.toCity}</TableCell>
                                                 <TableCell>{lr.sender}</TableCell>
                                                 <TableCell>{lr.receiver}</TableCell>
                                                 <TableCell>{lr.itemDescription}</TableCell>
@@ -320,14 +325,14 @@ export function NewInwardChallanForm() {
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={11} className="text-center h-24 text-muted-foreground">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
                                     {addedLrs.length > 0 && (
                                         <TableFooter>
                                             <TableRow className="font-bold bg-muted/50">
                                                 <TableCell>Total</TableCell>
-                                                <TableCell colSpan={3}>{addedLrs.length} LRs</TableCell>
+                                                <TableCell colSpan={5}>{addedLrs.length} LRs</TableCell>
                                                 <TableCell>{totalQty}</TableCell>
                                                 <TableCell>{totalActWt.toFixed(2)}</TableCell>
                                                 <TableCell></TableCell>
