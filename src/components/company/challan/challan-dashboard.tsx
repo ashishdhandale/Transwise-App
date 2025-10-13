@@ -58,7 +58,7 @@ const statusColors: { [key: string]: string } = {
   Finalized: 'text-green-600 border-green-500/80',
 };
 
-const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeColumn = false }: { title: string; challans: Challan[], onDelete?: (challanId: string) => void, onReprint?: (challan: Challan) => void, onEdit: (challanId: string) => void, showTypeColumn?: boolean }) => (
+const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeColumn = false }: { title: string; challans: Challan[], onDelete?: (challanId: string, challanType: 'Dispatch' | 'Inward') => void, onReprint?: (challan: Challan) => void, onEdit: (challanId: string) => void, showTypeColumn?: boolean }) => (
   <Card>
     <CardHeader>
       <CardTitle className="font-headline">{title}</CardTitle>
@@ -84,7 +84,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeCo
               challans.map((challan) => (
                 <TableRow key={challan.challanId}>
                   <TableCell className={cn(tdClass, 'font-medium')}>
-                    {challan.challanId}
+                    {challan.challanType === 'Inward' ? challan.inwardId : challan.challanId}
                   </TableCell>
                   {showTypeColumn && <TableCell className={tdClass}><Badge variant="outline">{challan.challanType}</Badge></TableCell>}
                   <TableCell className={tdClass}>{challan.dispatchDate}</TableCell>
@@ -126,12 +126,12 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeCo
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                                This will delete the temporary challan and move all its LRs back to stock. This action cannot be undone.
+                                                This will delete the temporary challan and move all its LRs back to stock (if applicable). This action cannot be undone.
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => onDelete(challan.challanId)}>Delete</AlertDialogAction>
+                                            <AlertDialogAction onClick={() => onDelete(challan.challanId, challan.challanType)}>Delete</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
@@ -181,11 +181,12 @@ export function ChallanDashboard() {
     loadChallanData();
   }, []);
 
-  const handleDeleteTempChallan = (challanIdToDelete: string) => {
+  const handleDeleteTempChallan = (challanIdToDelete: string, challanType: 'Dispatch' | 'Inward') => {
     const lrDetails = getLrDetailsData();
     const lrsToRevert = lrDetails.filter(lr => lr.challanId === challanIdToDelete).map(lr => lr.lrNo);
     
-    if (lrsToRevert.length > 0) {
+    // Only revert status for dispatch challans
+    if (challanType === 'Dispatch' && lrsToRevert.length > 0) {
         const allBookings = getBookings();
         const updatedBookings = allBookings.map(booking => {
             if (lrsToRevert.includes(booking.lrNo)) {
@@ -206,7 +207,7 @@ export function ChallanDashboard() {
 
     toast({
         title: "Temporary Challan Deleted",
-        description: `${challanIdToDelete} has been deleted and its LRs have been returned to stock.`,
+        description: `${challanIdToDelete} has been deleted and its items have been returned to stock.`,
     });
   };
 
@@ -268,11 +269,11 @@ export function ChallanDashboard() {
     return [...allChallans].sort((a, b) => new Date(b.dispatchDate).getTime() - new Date(a.dispatchDate).getTime());
   }, [allChallans]);
 
-  const pendingDispatchChallans = sortedChallans.filter(c => c.status === 'Pending' && c.challanType === 'Dispatch' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
+  const pendingChallans = sortedChallans.filter(c => c.status === 'Pending' && (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase()))));
   
-  const finalizedAndInwardChallans = useMemo(() => {
+  const finalizedChallans = useMemo(() => {
     const combined = sortedChallans.filter(c => 
-        (c.status === 'Finalized' || c.challanType === 'Inward') &&
+        c.status === 'Finalized' &&
         (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase())))
     );
 
@@ -308,12 +309,12 @@ export function ChallanDashboard() {
           </div>
         </header>
         <div className="space-y-6">
-          <ChallanTable title="Pending for Dispatch" challans={pendingDispatchChallans} onDelete={handleDeleteTempChallan} onEdit={handleEditChallan} />
+          <ChallanTable title="Pending Challans" challans={pendingChallans} onDelete={handleDeleteTempChallan} onEdit={handleEditChallan} showTypeColumn={true} />
           
           <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline">Finalized Challan</CardTitle>
+                    <CardTitle className="font-headline">Finalized Challans</CardTitle>
                     <div className="flex items-center gap-4">
                         <div className="relative w-full max-w-sm">
                           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -342,7 +343,7 @@ export function ChallanDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
-                <ChallanTable title="" challans={finalizedAndInwardChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} showTypeColumn={true} />
+                <ChallanTable title="" challans={finalizedChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} showTypeColumn={true} />
             </CardContent>
           </Card>
         </div>

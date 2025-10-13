@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -67,10 +68,26 @@ export function NewInwardChallanForm() {
             const allCities = getCities();
             setCities(allCities);
             const allChallans = getChallanData();
+            const allBookings = getBookings();
+            const allLrDetails = getLrDetailsData();
 
             const existingChallanId = searchParams.get('challanId');
             if (existingChallanId) {
-                // Editing mode logic would go here
+                const challan = allChallans.find(c => c.challanId === existingChallanId);
+                if (challan) {
+                    form.reset({
+                        inwardId: challan.inwardId,
+                        inwardDate: new Date(challan.inwardDate),
+                        receivedFromParty: challan.receivedFromParty,
+                        vehicleNo: challan.vehicleNo,
+                        driverName: challan.driverName,
+                        fromStation: challan.fromStation,
+                        remarks: challan.remark
+                    });
+                    const lrsForChallan = allLrDetails.filter(lr => lr.challanId === existingChallanId).map(lr => lr.lrNo);
+                    const bookingsForChallan = allBookings.filter(b => lrsForChallan.includes(b.lrNo));
+                    setAddedLrs(bookingsForChallan);
+                }
             } else {
                 form.setValue('inwardId', generateInwardChallanId(allChallans));
             }
@@ -94,29 +111,23 @@ export function NewInwardChallanForm() {
 
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
 
-    const onSubmit = (data: InwardChallanFormValues) => {
-        if (addedLrs.length === 0) {
-            toast({ title: 'No LRs', description: 'Please add at least one LR to create an inward challan.', variant: 'destructive' });
-            return;
-        }
-        
-        const allChallans = getChallanData();
+    const buildChallanData = (status: 'Pending' | 'Finalized'): { challan: Challan, lrDetails: LrDetail[] } | null => {
+        const formData = form.getValues();
         const existingChallanId = searchParams.get('challanId');
-        
         const finalChallanId = existingChallanId || `CHLN-${Date.now()}`;
 
         const newChallanData: Challan = {
             challanId: finalChallanId,
-            inwardId: data.inwardId,
-            inwardDate: data.inwardDate.toISOString(),
-            receivedFromParty: data.receivedFromParty,
-            vehicleNo: data.vehicleNo,
-            driverName: data.driverName || '',
-            fromStation: data.fromStation,
+            inwardId: formData.inwardId,
+            inwardDate: formData.inwardDate.toISOString(),
+            receivedFromParty: formData.receivedFromParty,
+            vehicleNo: formData.vehicleNo,
+            driverName: formData.driverName || '',
+            fromStation: formData.fromStation,
             toStation: companyProfile?.city || 'N/A',
             challanType: 'Inward',
-            status: 'Finalized',
-            dispatchDate: data.inwardDate.toISOString(),
+            status: status,
+            dispatchDate: formData.inwardDate.toISOString(),
             dispatchToParty: '',
             totalLr: addedLrs.length,
             totalPackages: addedLrs.reduce((sum, b) => sum + b.qty, 0),
@@ -124,37 +135,76 @@ export function NewInwardChallanForm() {
             totalActualWeight: addedLrs.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
             totalChargeWeight: addedLrs.reduce((sum, b) => sum + b.chgWt, 0),
             vehicleHireFreight: 0, advance: 0, balance: 0, senderId: '',
+            remark: formData.remarks,
             summary: { grandTotal: 0, totalTopayAmount: 0, commission: 0, labour: 0, crossing: 0, carting: 0, balanceTruckHire: 0, debitCreditAmount: 0 },
         };
         
-        let updatedChallans;
-        if (existingChallanId) {
-            updatedChallans = allChallans.map(c => c.challanId === existingChallanId ? newChallanData : c);
-        } else {
-            updatedChallans = [...allChallans, newChallanData];
-        }
-        saveChallanData(updatedChallans);
-
-        // Update LR Details
         const newLrDetails: LrDetail[] = addedLrs.map(b => ({
             challanId: finalChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
             from: b.fromCity, to: b.toCity, bookingDate: b.bookingDate, itemDescription: b.itemDescription,
             quantity: b.qty, actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
             chargeWeight: b.chgWt, grandTotal: b.totalAmount
         }));
-        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== existingChallanId);
-        allLrDetails.push(...newLrDetails);
+
+        return { challan: newChallanData, lrDetails: newLrDetails };
+    };
+
+    const handleSaveTemp = () => {
+        const data = buildChallanData('Pending');
+        if (!data) return;
+
+        const { challan, lrDetails } = data;
+        let allChallans = getChallanData();
+        const existingChallanId = searchParams.get('challanId');
+        
+        if (existingChallanId) {
+            allChallans = allChallans.map(c => c.challanId === existingChallanId ? challan : c);
+        } else {
+            allChallans.push(challan);
+        }
+        saveChallanData(allChallans);
+
+        // For temp save, we might not want to save LRs or bookings yet, or save them with a temp link.
+        // For now, let's assume we save LR details to keep them associated.
+        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId);
+        allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
 
-        // Save the new bookings and update statuses
+        toast({ title: 'Inward Challan Saved', description: `Challan ${challan.inwardId} has been saved as pending.` });
+        router.push('/company/challan');
+    };
+
+    const onSubmit = (data: InwardChallanFormValues) => {
+        if (addedLrs.length === 0) {
+            toast({ title: 'No LRs', description: 'Please add at least one LR to create an inward challan.', variant: 'destructive' });
+            return;
+        }
+        
+        const challanData = buildChallanData('Finalized');
+        if (!challanData) return;
+
+        const { challan, lrDetails } = challanData;
+        
+        let allChallans = getChallanData();
+        const existingChallanId = searchParams.get('challanId');
+
+        if (existingChallanId) {
+            allChallans = allChallans.map(c => c.challanId === existingChallanId ? challan : c);
+        } else {
+            allChallans.push(challan);
+        }
+        saveChallanData(allChallans);
+
+        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId);
+        allLrDetails.push(...lrDetails);
+        saveLrDetailsData(allLrDetails);
+
         const allBookings = getBookings();
-        const addedLrNos = new Set(addedLrs.map(b => b.lrNo));
-        const existingBookingsToUpdate = allBookings.filter(b => addedLrNos.has(b.lrNo));
         const newBookingsToCreate = addedLrs.filter(added => !allBookings.some(existing => existing.lrNo === added.lrNo));
 
         newBookingsToCreate.forEach(b => {
              addHistoryLog(b.lrNo, 'Booking Created', 'System (Inward)', `Manual entry from Inward Challan ${data.inwardId}.`);
-             addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received at ${newChallanData.toStation}.`);
+             addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received at ${challan.toStation}.`);
         });
 
         const updatedBookings = [...allBookings, ...newBookingsToCreate];
@@ -256,10 +306,11 @@ export function NewInwardChallanForm() {
                             </CardContent>
                         </Card>
                         <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel</Button>
+                             <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
+                             <Button type="button" variant="outline" onClick={handleSaveTemp}><Save className="mr-2 h-4 w-4" /> Save as Temp & Exit</Button>
                             <Button type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
-                                Save Inward Challan
+                                Finalize & Save Inward
                             </Button>
                         </div>
                         </>
