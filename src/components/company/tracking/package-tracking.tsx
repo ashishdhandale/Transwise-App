@@ -13,9 +13,10 @@ import { getBookings } from '@/lib/bookings-dashboard-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { Card } from '@/components/ui/card';
+import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
 
 export function PackageTracking() {
-  const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [allTrackableItems, setAllTrackableItems] = useState<Booking[]>([]);
   const [searchResults, setSearchResults] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedBookingHistory, setSelectedBookingHistory] = useState<BookingHistory | null>(null);
@@ -24,7 +25,32 @@ export function PackageTracking() {
 
   useEffect(() => {
     async function loadData() {
-        setAllBookings(getBookings());
+        const primaryBookings = getBookings();
+        const inwardChallans = getChallanData().filter(c => c.challanType === 'Inward' && c.status === 'Finalized');
+        const inwardLrDetails = getLrDetailsData().filter(lr => inwardChallans.some(c => c.challanId === lr.challanId));
+        
+        const inwardBookings: Booking[] = inwardLrDetails.map(lr => ({
+            trackingId: `inward-${lr.lrNo}`, // Ensure a unique key
+            lrNo: lr.lrNo,
+            bookingDate: lr.bookingDate,
+            fromCity: lr.from,
+            toCity: lr.to,
+            lrType: lr.lrType as any,
+            sender: lr.sender,
+            receiver: lr.receiver,
+            itemDescription: lr.itemDescription,
+            qty: lr.quantity,
+            chgWt: lr.chargeWeight,
+            totalAmount: lr.grandTotal,
+            status: 'In Stock', // Inwarded items start as In Stock
+            itemRows: [], // Simplified for tracking view
+            source: 'Inward',
+        }));
+
+        const combinedList = [...primaryBookings, ...inwardBookings];
+        const uniqueItems = Array.from(new Map(combinedList.map(item => [item.lrNo, item])).values());
+        
+        setAllTrackableItems(uniqueItems);
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
     }
@@ -40,7 +66,7 @@ export function PackageTracking() {
       return;
     }
     const lowercasedId = id.toLowerCase();
-    const results = allBookings.filter(b => 
+    const results = allTrackableItems.filter(b => 
         b.lrNo.toLowerCase().includes(lowercasedId) ||
         String(b.trackingId).toLowerCase().includes(lowercasedId)
     );
