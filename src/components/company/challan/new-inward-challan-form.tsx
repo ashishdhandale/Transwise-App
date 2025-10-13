@@ -64,7 +64,7 @@ export function NewInwardChallanForm() {
         resolver: zodResolver(inwardChallanSchema),
         defaultValues: { 
             inwardId: '', 
-            inwardDate: new Date(),
+            inwardDate: undefined,
             originalChallanNo: '',
             receivedFromParty: '',
             vehicleNo: '',
@@ -137,6 +137,7 @@ export function NewInwardChallanForm() {
             } else {
                  const newId = generateInwardChallanId(allChallans);
                  form.setValue('inwardId', newId);
+                 form.setValue('inwardDate', new Date());
             }
         }
         loadInitialData();
@@ -265,15 +266,17 @@ export function NewInwardChallanForm() {
 
         const allBookings = getBookings();
         
-        // These are bookings that are truly new to the system.
-        const newBookingsToCreate = addedLrs.filter(added => !allBookings.some(existing => existing.lrNo === added.lrNo));
+        // Add all inward LRs to the main booking list with source 'Inward'
+        const newBookingsToCreate = addedLrs.map(b => ({
+            ...b,
+            source: 'Inward' as const,
+            status: 'In Stock' as const
+        }));
 
         newBookingsToCreate.forEach(b => {
-             // We don't add a "Booking Created" log, as these aren't primary bookings.
              addHistoryLog(b.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
-        // Only add the NEW bookings to the main list.
         const updatedBookings = [...allBookings, ...newBookingsToCreate];
         saveBookings(updatedBookings);
 

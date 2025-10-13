@@ -36,6 +36,7 @@ export interface Booking {
   isGstApplicable?: boolean;
   ftlDetails?: FtlDetails;
   branchName?: string; // Link to the branch that created the booking
+  source?: 'System' | 'Inward'; // To distinguish origin of the booking
 }
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
@@ -55,17 +56,23 @@ export const getBookings = (): Booking[] => {
             let dataWasCorrected = false;
 
             const correctedBookings = parsedBookings.map(booking => {
+                const newBooking = { ...booking };
                 // If a booking is "In Transit" but isn't on any challan, its status is wrong. Correct it.
-                if ((booking.status === 'In Transit' || booking.status === 'In Loading') && !lrsOnChallan.has(booking.lrNo)) {
+                if ((newBooking.status === 'In Transit' || newBooking.status === 'In Loading') && !lrsOnChallan.has(newBooking.lrNo)) {
                     dataWasCorrected = true;
-                    return { ...booking, status: 'In Stock' as const };
+                    newBooking.status = 'In Stock';
                 }
                 // Also handle migration for old data structures if needed
-                if (!booking.trackingId) {
+                if (!newBooking.trackingId) {
                     dataWasCorrected = true;
-                    return { ...booking, trackingId: `TRK-${Date.now()}-${Math.random()}` };
+                    newBooking.trackingId = `TRK-${Date.now()}-${Math.random()}`;
                 }
-                return booking;
+                 if (!newBooking.source) {
+                    dataWasCorrected = true;
+                    // Default existing bookings to 'System'
+                    newBooking.source = 'System';
+                }
+                return newBooking;
             });
 
             if (dataWasCorrected) {

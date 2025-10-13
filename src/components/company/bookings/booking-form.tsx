@@ -501,6 +501,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
             branchName: currentBooking?.branchName || userBranchName,
+            source: isOfflineModeProp ? 'Inward' : 'System',
             ...(loadType === 'FTL' && { ftlDetails }),
         };
 
