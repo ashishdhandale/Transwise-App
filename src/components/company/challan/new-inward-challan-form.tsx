@@ -88,7 +88,7 @@ export function NewInwardChallanForm() {
                 if (challan) {
                     form.reset({
                         inwardId: challan.inwardId,
-                        inwardDate: new Date(challan.inwardDate),
+                        inwardDate: challan.inwardDate ? new Date(challan.inwardDate) : new Date(),
                         originalChallanNo: challan.originalChallanNo,
                         receivedFromParty: challan.receivedFromParty,
                         vehicleNo: challan.vehicleNo,
@@ -96,9 +96,42 @@ export function NewInwardChallanForm() {
                         fromStation: challan.fromStation,
                         remarks: challan.remark
                     });
-                    const lrsForChallan = allLrDetails.filter(lr => lr.challanId === existingChallanId).map(lr => lr.lrNo);
-                    const bookingsForChallan = allBookings.filter(b => lrsForChallan.includes(b.lrNo));
-                    setAddedLrs(bookingsForChallan);
+                    
+                    const lrNosForChallan = new Set(allLrDetails.filter(lr => lr.challanId === existingChallanId).map(lr => lr.lrNo));
+
+                    // For pending inward challans, the LRs might not be in the main booking list yet.
+                    // We need a way to store/retrieve them. For now, let's assume they are created on finalization.
+                    // Let's check both main bookings and a temporary store if we had one.
+                    const bookingsForChallan = allBookings.filter(b => lrNosForChallan.has(b.lrNo));
+                    
+                    // This is the key change: if bookings aren't found in main list, they must be in LR details
+                    if (bookingsForChallan.length < lrNosForChallan.size) {
+                        const tempBookings: Booking[] = [];
+                        allLrDetails.filter(lr => lr.challanId === existingChallanId).forEach(lr => {
+                            // If not in main bookings, reconstruct a temporary booking object
+                             if (!allBookings.some(b => b.lrNo === lr.lrNo)) {
+                                tempBookings.push({
+                                    trackingId: `temp-${lr.lrNo}`,
+                                    lrNo: lr.lrNo,
+                                    lrType: lr.lrType as any,
+                                    bookingDate: lr.bookingDate,
+                                    fromCity: lr.from,
+                                    toCity: lr.to,
+                                    sender: lr.sender,
+                                    receiver: lr.receiver,
+                                    itemDescription: lr.itemDescription,
+                                    qty: lr.quantity,
+                                    chgWt: lr.chargeWeight,
+                                    totalAmount: lr.grandTotal,
+                                    itemRows: [], // Simplified for display
+                                    status: 'In Stock' // Assumed status
+                                });
+                            }
+                        });
+                        setAddedLrs([...bookingsForChallan, ...tempBookings]);
+                    } else {
+                         setAddedLrs(bookingsForChallan);
+                    }
                 }
             } else {
                 form.setValue('inwardId', generateInwardChallanId(allChallans));
@@ -177,8 +210,7 @@ export function NewInwardChallanForm() {
         }
         saveChallanData(allChallans);
 
-        // For temp save, we might not want to save LRs or bookings yet, or save them with a temp link.
-        // For now, let's assume we save LR details to keep them associated.
+        // Crucially, save the LR details so they can be reloaded
         let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId);
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
