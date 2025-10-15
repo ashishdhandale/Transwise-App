@@ -67,6 +67,7 @@ export function NewInwardChallanForm() {
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
+    const [isLrFormOpen, setIsLrFormOpen] = useState(true);
     
     const { toast } = useToast();
     const router = useRouter();
@@ -153,6 +154,7 @@ export function NewInwardChallanForm() {
     
     const handleEditLrClick = (lrToEdit: Booking) => {
         setBookingDataToEdit(lrToEdit);
+        setIsLrFormOpen(true); // Ensure form is open when editing
     };
 
     const handleRemoveLr = (trackingId: string) => {
@@ -258,7 +260,8 @@ export function NewInwardChallanForm() {
     return (
         <div className="space-y-4">
              <header className="mb-4 flex items-center justify-between">
-                <h1 className="text-xl font-bold text-primary">
+                <h1 className="text-xl font-bold text-primary flex items-center gap-2">
+                    <FileText className="h-6 w-6" />
                     New Inward Challan
                 </h1>
                 <div className="flex justify-end gap-2">
@@ -323,19 +326,28 @@ export function NewInwardChallanForm() {
                         </Card>
                     </Collapsible>
                     
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Add LR Manually</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <BookingForm 
-                                isOfflineMode={true} 
-                                onSaveAndNew={handleAddOrUpdateLr}
-                                bookingData={bookingDataToEdit}
-                                onClose={() => setBookingDataToEdit(null)}
-                            />
-                        </CardContent>
-                    </Card>
+                     <Collapsible open={isLrFormOpen} onOpenChange={setIsLrFormOpen}>
+                        <Card>
+                            <CollapsibleTrigger className="w-full">
+                                <CardHeader className="cursor-pointer p-4">
+                                     <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">Add LR Manually</CardTitle>
+                                        <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isLrFormOpen && "rotate-180")} />
+                                    </div>
+                                </CardHeader>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <CardContent>
+                                    <BookingForm 
+                                        isOfflineMode={true} 
+                                        onSaveAndNew={handleAddOrUpdateLr}
+                                        bookingData={bookingDataToEdit}
+                                        onClose={() => setBookingDataToEdit(null)}
+                                    />
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Card>
+                    </Collapsible>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between p-4">
