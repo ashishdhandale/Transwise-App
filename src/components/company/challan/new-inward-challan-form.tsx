@@ -68,6 +68,7 @@ export function NewInwardChallanForm() {
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isFinalized, setIsFinalized] = useState(false);
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     const [isLrFormOpen, setIsLrFormOpen] = useState(true);
@@ -104,6 +105,9 @@ export function NewInwardChallanForm() {
                 const challan = allChallans.find(c => c.challanId === existingChallanId);
                 if (challan) {
                     setIsHeaderOpen(false); // Collapse header in edit mode
+                    if (challan.status === 'Finalized') {
+                        setIsFinalized(true);
+                    }
                     form.reset({
                         inwardId: challan.inwardId,
                         inwardDate: challan.inwardDate ? new Date(challan.inwardDate) : new Date(),
@@ -451,17 +455,7 @@ export function NewInwardChallanForm() {
                             )}/>
                         </CardContent>
                     </Card>
-                    <div className="flex justify-end gap-2">
-                         <Button type="button" onClick={handleSaveAsTemp} variant="outline">
-                            <Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}
-                        </Button>
-                         <Button type="submit" size="lg" form="inward-challan-form">
-                            <Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Inward'}
-                        </Button>
-                        <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}>
-                            <X className="mr-2 h-4 w-4" /> Cancel & Exit
-                        </Button>
-                    </div>
+                    <div id="form-actions-placeholder"></div>
                 </form>
             </Form>
 
@@ -485,3 +479,5 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
+
+    
