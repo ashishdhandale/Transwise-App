@@ -355,16 +355,15 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 loadMasterData();
                 const profile = await getCompanyProfile();
                 setCompanyProfile(profile);
-                
-                let bookingToLoad = bookingData;
 
-                if (trackingId && !bookingData) {
+                if (bookingData) {
+                    loadBookingData(bookingData);
+                } else if (trackingId) {
                     const parsedBookings = getBookings();
-                    bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId) || null;
-                }
-
-                if (bookingToLoad) {
-                    loadBookingData(bookingToLoad);
+                    const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId) || null;
+                    if (bookingToLoad) {
+                        loadBookingData(bookingToLoad);
+                    }
                 } else {
                     handleReset();
                 }
@@ -424,7 +423,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         });
         
         setTimeout(() => {
-            lrNumberInputRef?.current?.focus();
+            if (lrNumberInputRef && 'current' in lrNumberInputRef && lrNumberInputRef.current) {
+                lrNumberInputRef.current.focus();
+            }
         }, 0);
 
 
