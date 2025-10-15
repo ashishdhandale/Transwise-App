@@ -6,24 +6,26 @@ import { NewInwardChallanForm } from '@/components/company/challan/new-inward-ch
 import { ClientOnly } from '@/components/ui/client-only';
 import { Button } from '@/components/ui/button';
 import { Save, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function NewInwardChallanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = !!searchParams.get('challanId');
   
   return (
     <DashboardLayout>
       <main className="flex-1 p-4 md:p-6">
         <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-bold text-primary">
-                New Inward Challan
+                {isEditMode ? 'Edit Inward Challan' : 'New Inward Challan'}
             </h1>
             <div className="flex items-center gap-2">
                 <Button type="submit" form="inward-challan-form" size="sm">
-                    <Save className="mr-2 h-4 w-4"/> Finalize & Save Inward
+                    <Save className="mr-2 h-4 w-4"/> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Inward'}
                 </Button>
                  <Button type="button" variant="outline" size="sm" form="inward-challan-form" id="save-temp-button">
-                    <Save className="mr-2 h-4 w-4"/> Save as Temp & Exit
+                    <Save className="mr-2 h-4 w-4"/> {isEditMode ? 'Update Temp & Exit' : 'Save as Temp & Exit'}
                 </Button>
                 <Button type="button" variant="destructive" size="sm" onClick={() => router.push('/company/challan')}>
                     <X className="mr-2 h-4 w-4"/> Cancel & Exit
