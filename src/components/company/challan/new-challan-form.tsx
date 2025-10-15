@@ -42,6 +42,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getVehicleHireReceipts } from '@/lib/vehicle-hire-data';
 import { ClientOnly } from '@/components/ui/client-only';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
