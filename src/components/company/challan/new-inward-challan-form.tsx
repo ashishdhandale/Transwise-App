@@ -266,11 +266,14 @@ export function NewInwardChallanForm() {
                                         {isHeaderOpen ? (
                                              <CardTitle>Challan Details</CardTitle>
                                         ) : (
-                                            <div className="flex items-center gap-4 flex-wrap">
-                                                <CardTitle className="text-lg">Challan Details</CardTitle>
+                                            <div className="flex items-center gap-x-4 gap-y-1 flex-wrap">
+                                                <CardTitle className="text-lg mr-4">Challan Details</CardTitle>
                                                 <SummaryItem label="Inward ID" value={watchedChallanValues.inwardId} />
+                                                <SummaryItem label="Inward Date" value={watchedChallanValues.inwardDate ? format(watchedChallanValues.inwardDate, 'dd-MMM-yy') : 'N/A'} />
                                                 <SummaryItem label="Received From" value={watchedChallanValues.receivedFromParty} />
+                                                <SummaryItem label="Original Challan" value={watchedChallanValues.originalChallanNo} />
                                                 <SummaryItem label="Vehicle No." value={watchedChallanValues.vehicleNo} />
+                                                <SummaryItem label="Driver" value={watchedChallanValues.driverName} />
                                                 <SummaryItem label="From Station" value={watchedChallanValues.fromStation} />
                                             </div>
                                         )}
@@ -400,4 +403,3 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
-
