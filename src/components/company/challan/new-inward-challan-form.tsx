@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -27,9 +26,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { FileText, Save, X, Pencil, Trash2, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { BookingForm } from '../bookings/booking-form';
-
+import { Label } from '@/components/ui/label';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -52,6 +50,13 @@ const generateInwardChallanId = (challans: Challan[]): string => {
     return `${prefix}${String(lastNum + 1).padStart(2, '0')}`;
 };
 
+const SummaryItem = ({ label, value }: { label: string; value: string | undefined }) => (
+    <div className="flex items-baseline">
+        <span className="text-xs font-medium text-muted-foreground mr-1">{label}:</span>
+        <span className="text-sm font-semibold text-primary">{value || 'N/A'}</span>
+    </div>
+);
+
 
 export function NewInwardChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
@@ -73,6 +78,8 @@ export function NewInwardChallanForm() {
         }
     });
     
+    const watchedChallanValues = form.watch();
+
     const tempChallanId = useMemo(() => `TEMP-INW-${Date.now()}`, []);
 
     useEffect(() => {
@@ -253,16 +260,26 @@ export function NewInwardChallanForm() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>
                         <Card>
-                            <CollapsibleTrigger asChild>
-                                <CardHeader className="cursor-pointer">
+                             <CollapsibleTrigger className="w-full">
+                                <CardHeader className="cursor-pointer p-4">
                                     <div className="flex items-center justify-between">
-                                        <CardTitle>Challan Details</CardTitle>
+                                        {isHeaderOpen ? (
+                                             <CardTitle>Challan Details</CardTitle>
+                                        ) : (
+                                            <div className="flex items-center gap-4 flex-wrap">
+                                                <CardTitle className="text-lg">Challan Details</CardTitle>
+                                                <SummaryItem label="From" value={watchedChallanValues.receivedFromParty} />
+                                                <SummaryItem label="Vehicle" value={watchedChallanValues.vehicleNo} />
+                                                <SummaryItem label="Origin" value={watchedChallanValues.fromStation} />
+                                                <SummaryItem label="Date" value={watchedChallanValues.inwardDate ? format(watchedChallanValues.inwardDate, 'dd-MMM-yy') : 'N/A'} />
+                                            </div>
+                                        )}
                                         <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isHeaderOpen && "rotate-180")} />
                                     </div>
                                 </CardHeader>
                             </CollapsibleTrigger>
                             <CollapsibleContent>
-                                <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <CardContent className="pt-2 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                                     <FormField name="inwardId" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Inward ID</FormLabel><FormControl><Input {...field} readOnly className="font-bold text-red-600 bg-red-50"/></FormControl></FormItem>
                                     )}/>
@@ -301,11 +318,11 @@ export function NewInwardChallanForm() {
                     />
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-row items-center justify-between p-4">
                             <CardTitle>LRs Received</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto border rounded-md min-h-48">
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto border-t">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
