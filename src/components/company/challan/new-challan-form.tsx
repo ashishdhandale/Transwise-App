@@ -123,6 +123,65 @@ export function NewChallanForm() {
         setDebitCreditAmount(calculatedDebitCredit);
     }, [totalTopayAmount, commission, labour, crossing, balance]);
 
+    const loadInitialData = useCallback(async () => {
+        const profile = await getCompanyProfile();
+        setCompanyProfile(profile);
+
+        const allBookings = getBookings();
+        const allChallans = getChallanData();
+        const allCities = getCities();
+        
+        setVehicles(getVehicles());
+        setDrivers(getDrivers());
+        setCities(allCities);
+        
+        const existingChallanId = searchParams.get('challanId');
+
+        if (existingChallanId) {
+            setIsStockVisible(false); // Collapse stock section in edit mode
+            const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
+            const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
+            const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
+
+            if (existingChallan) {
+                setChallanId(existingChallan.challanId);
+                setDispatchDate(new Date(existingChallan.dispatchDate));
+                setVehicleNo(existingChallan.vehicleNo);
+                setDriverName(existingChallan.driverName);
+                setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
+                setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
+                setRemark(existingChallan.remark || '');
+                setVehicleHireFreight(existingChallan.vehicleHireFreight);
+                setAdvance(existingChallan.advance);
+                setBalance(existingChallan.balance);
+                setCommission(existingChallan.summary.commission || 0);
+                setLabour(existingChallan.summary.labour || 0);
+                setCrossing(existingChallan.summary.crossing || 0);
+                setDebitCreditAmount(existingChallan.summary.debitCreditAmount || 0);
+
+                const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
+                const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
+                
+                setAddedLrs(added);
+                setInStockLrs(inStock);
+            }
+        } else {
+            const stockBookings = allBookings.filter(b => b.status === 'In Stock');
+            setInStockLrs(stockBookings);
+            setAddedLrs([]);
+
+            if(profile.city) {
+                const defaultStation = allCities.find((c: City) => c.name.toLowerCase() === profile.city.toLowerCase()) || null;
+                setFromStation(defaultStation);
+            }
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        loadInitialData();
+    }, [loadInitialData]);
+
+
     useEffect(() => {
         const existingChallanId = searchParams.get('challanId');
         if (!existingChallanId) {
@@ -131,62 +190,7 @@ export function NewChallanForm() {
         setDispatchDate(new Date());
     }, [searchParams]);
 
-    useEffect(() => {
-        const loadInitialData = async () => {
-            const profile = await getCompanyProfile();
-            setCompanyProfile(profile);
-
-            const allBookings = getBookings();
-            const allChallans = getChallanData();
-            const allCities = getCities();
-            
-            setVehicles(getVehicles());
-            setDrivers(getDrivers());
-            setCities(allCities);
-            
-            const existingChallanId = searchParams.get('challanId');
-
-            if (existingChallanId) {
-                setIsStockVisible(false); // Collapse stock section in edit mode
-                const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
-                const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
-                const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
-
-                if (existingChallan) {
-                    setChallanId(existingChallan.challanId);
-                    setDispatchDate(new Date(existingChallan.dispatchDate));
-                    setVehicleNo(existingChallan.vehicleNo);
-                    setDriverName(existingChallan.driverName);
-                    setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
-                    setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
-                    setRemark(existingChallan.remark || '');
-                    setVehicleHireFreight(existingChallan.vehicleHireFreight);
-                    setAdvance(existingChallan.advance);
-                    setBalance(existingChallan.balance);
-                    setCommission(existingChallan.summary.commission || 0);
-                    setLabour(existingChallan.summary.labour || 0);
-                    setCrossing(existingChallan.summary.crossing || 0);
-                    setDebitCreditAmount(existingChallan.summary.debitCreditAmount || 0);
-
-                    const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
-                    const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
-                    
-                    setAddedLrs(added);
-                    setInStockLrs(inStock);
-                }
-            } else {
-                setInStockLrs(allBookings.filter(b => b.status === 'In Stock'));
-                setAddedLrs([]);
-
-                if(profile.city) {
-                    const defaultStation = allCities.find((c: City) => c.name.toLowerCase() === profile.city.toLowerCase()) || null;
-                    setFromStation(defaultStation);
-                }
-            }
-        };
-
-        loadInitialData();
-    }, [searchParams]);
+    
 
     const handleLoadFromHireReceipt = (receiptNo: string) => {
         setHireReceiptNo(receiptNo);
@@ -368,8 +372,7 @@ export function NewChallanForm() {
         allChallans.push(finalChallan);
         saveChallanData(allChallans);
 
-        let allLrDetails = getLrDetailsData();
-        allLrDetails = allLrDetails.filter(d => d.challanId !== challanId); // Remove old temp details
+        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challanId); // Remove old temp details
         allLrDetails.push(...finalLrDetails);
         saveLrDetailsData(allLrDetails);
 
