@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -27,6 +28,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { BookingForm } from '../bookings/booking-form';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -63,6 +65,7 @@ export function NewInwardChallanForm() {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     const [isLrFormOpen, setIsLrFormOpen] = useState(true);
@@ -141,6 +144,7 @@ export function NewInwardChallanForm() {
             updatedLrs[existingLrIndex] = booking;
             setAddedLrs(updatedLrs);
             toast({ title: 'LR Updated', description: `LR# ${booking.lrNo} has been updated in the list.` });
+            setIsEditDialogOpen(false); // Close dialog on update
         } else {
             // Add new LR
             setAddedLrs(prev => [...prev, { ...booking, trackingId: `temp-${Date.now()}` }]);
@@ -155,7 +159,7 @@ export function NewInwardChallanForm() {
     
     const handleEditLrClick = (lrToEdit: Booking) => {
         setBookingDataToEdit(lrToEdit);
-        setIsLrFormOpen(true); // Ensure form is open when editing
+        setIsEditDialogOpen(true);
     };
 
     const handleRemoveLr = (trackingId: string) => {
@@ -327,10 +331,7 @@ export function NewInwardChallanForm() {
                                 <CardContent>
                                     <BookingForm 
                                         isOfflineMode={true} 
-                                        onSaveSuccess={handleAddOrUpdateLr}
                                         onSaveAndNew={handleAddOrUpdateLr}
-                                        bookingData={bookingDataToEdit}
-                                        onClose={() => setBookingDataToEdit(null)}
                                         lrNumberInputRef={lrNumberInputRef}
                                     />
                                 </CardContent>
@@ -411,6 +412,26 @@ export function NewInwardChallanForm() {
                     </Card>
                 </form>
             </Form>
+
+            {bookingDataToEdit && (
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
+                        <DialogHeader>
+                            <DialogTitle>Edit Inward LR Details: {bookingDataToEdit.lrNo}</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex-grow overflow-auto pr-6">
+                            <BookingForm
+                                isOfflineMode={true}
+                                bookingData={bookingDataToEdit}
+                                onSaveSuccess={handleAddOrUpdateLr}
+                                onClose={() => setIsEditDialogOpen(false)}
+                            />
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }
+
+    
