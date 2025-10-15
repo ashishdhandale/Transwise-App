@@ -73,7 +73,6 @@ const createEmptyRow = (id: number): ItemRow => ({
   lumpsum: '',
   pvtMark: '',
   invoiceNo: '',
-  invoiceDate: '',
   dValue: '',
 });
 
@@ -337,7 +336,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
         setSender(senderProfile);
         setReceiver(receiverProfile);
-        const itemRowsWithIds = bookingToLoad.itemRows?.map(row => ({ ...row, id: row.id || keyCounter++ })) || Array.from({ length: 2 }, () => createEmptyRow(keyCounter++));
+        const itemRowsWithIds = (bookingToLoad.itemRows || []).map(row => ({ ...row, id: row.id || keyCounter++ }));
         setItemRows(itemRowsWithIds);
         
         setGrandTotal(bookingToLoad.totalAmount);
@@ -375,7 +374,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
         loadInitialData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [trackingId, bookingData]);
+    }, [trackingId, bookingData, loadBookingData]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
