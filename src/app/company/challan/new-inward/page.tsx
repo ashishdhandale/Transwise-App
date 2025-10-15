@@ -10,11 +10,6 @@ function NewInwardChallanPage() {
   return (
     <DashboardLayout>
       <main className="flex-1 p-4 md:p-6">
-        <header className="mb-4">
-            <h1 className="text-xl font-bold text-primary">
-                New Inward Challan
-            </h1>
-        </header>
         <ClientOnly>
           <NewInwardChallanForm />
         </ClientOnly>
@@ -30,3 +25,4 @@ export default function NewInwardChallanRootPage() {
     </Suspense>
   );
 }
+

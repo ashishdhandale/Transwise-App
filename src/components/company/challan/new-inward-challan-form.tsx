@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -256,8 +257,21 @@ export function NewInwardChallanForm() {
 
     return (
         <div className="space-y-4">
+             <header className="mb-4 flex items-center justify-between">
+                <h1 className="text-xl font-bold text-primary">
+                    New Inward Challan
+                </h1>
+                <div className="flex justify-end gap-2">
+                    <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
+                    <Button type="button" variant="outline" onClick={handleSaveAsTemp}>Save as Temp & Exit</Button>
+                    <Button type="submit" form="inward-challan-form" disabled={form.formState.isSubmitting}>
+                        {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
+                        Finalize & Save Inward
+                    </Button>
+                </div>
+            </header>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form id="inward-challan-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>
                         <Card>
                              <CollapsibleTrigger className="w-full">
@@ -309,12 +323,19 @@ export function NewInwardChallanForm() {
                         </Card>
                     </Collapsible>
                     
-                    <BookingForm 
-                        isOfflineMode={true} 
-                        onSaveAndNew={handleAddOrUpdateLr}
-                        bookingData={bookingDataToEdit}
-                        onClose={() => setBookingDataToEdit(null)}
-                    />
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Add LR Manually</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <BookingForm 
+                                isOfflineMode={true} 
+                                onSaveAndNew={handleAddOrUpdateLr}
+                                bookingData={bookingDataToEdit}
+                                onClose={() => setBookingDataToEdit(null)}
+                            />
+                        </CardContent>
+                    </Card>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between p-4">
@@ -386,14 +407,6 @@ export function NewInwardChallanForm() {
                             )}/>
                         </CardContent>
                     </Card>
-                    <div className="flex justify-end gap-2">
-                        <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
-                        <Button type="button" variant="outline" onClick={handleSaveAsTemp}>Save as Temp & Exit</Button>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
-                            Finalize & Save Inward
-                        </Button>
-                    </div>
                 </form>
             </Form>
         </div>
