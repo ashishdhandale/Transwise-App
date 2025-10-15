@@ -1,4 +1,5 @@
 
+
 export interface ChallanSummary {
   grandTotal: number;
   totalTopayAmount: number;
@@ -14,7 +15,7 @@ export interface Challan {
   challanId: string;
   dispatchDate: string;
   challanType: 'Dispatch' | 'Inward';
-  status: 'Pending' | 'Finalized';
+  status: 'Pending' | 'Finalized' | 'Cancelled';
   vehicleNo: string;
   driverName: string;
   fromStation: string;

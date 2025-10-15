@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, PlusCircle, Search, Trash2, Printer, Loader2, Download, MoreHorizontal, Pencil, Eye, ArrowDownToLine } from 'lucide-react';
+import { FileText, PlusCircle, Search, Trash2, Printer, Loader2, Download, MoreHorizontal, Pencil, Eye, ArrowDownToLine, XCircle } from 'lucide-react';
 import { getChallanData, saveChallanData } from '@/lib/challan-data';
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import { cn } from '@/lib/utils';
@@ -56,9 +56,10 @@ const tdClass = "whitespace-nowrap";
 const statusColors: { [key: string]: string } = {
   Pending: 'text-yellow-600 border-yellow-500/80',
   Finalized: 'text-green-600 border-green-500/80',
+  Cancelled: 'text-red-600 border-red-500/80 bg-red-50',
 };
 
-const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeColumn = false }: { title: string; challans: Challan[], onDelete?: (challanId: string, challanType: 'Dispatch' | 'Inward') => void, onReprint?: (challan: Challan) => void, onEdit: (challanId: string) => void, showTypeColumn?: boolean }) => (
+const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, onCancel, showTypeColumn = false }: { title: string; challans: Challan[], onDelete?: (challanId: string, challanType: 'Dispatch' | 'Inward') => void, onReprint?: (challan: Challan) => void, onEdit: (challanId: string) => void, onCancel?: (challan: Challan) => void, showTypeColumn?: boolean }) => (
   <Card>
     <CardHeader>
       <CardTitle className="font-headline">{title}</CardTitle>
@@ -82,7 +83,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeCo
           <TableBody>
             {challans.length > 0 ? (
               challans.map((challan) => (
-                <TableRow key={challan.challanId}>
+                <TableRow key={challan.challanId} className={cn(challan.status === 'Cancelled' && 'bg-destructive/10')}>
                   <TableCell className={cn(tdClass, 'font-medium')}>
                     {challan.challanType === 'Inward' ? challan.inwardId : challan.challanId}
                   </TableCell>
@@ -115,7 +116,26 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeCo
                                     <Printer className="mr-2 h-4 w-4" /> Reprint
                                 </DropdownMenuItem>
                             )}
-                            {onDelete && (
+                             {challan.status === 'Finalized' && onCancel && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                            <XCircle className="mr-2 h-4 w-4" /> Cancel Challan
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>This will cancel the challan and revert the status of all associated LRs. This action cannot be undone.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Back</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onCancel(challan)}>Confirm Cancellation</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                            {onDelete && challan.status === 'Pending' && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
@@ -125,9 +145,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, showTypeCo
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                This will delete the challan and its associated LR details. This action cannot be undone.
-                                            </AlertDialogDescription>
+                                            <AlertDialogDescription>This will delete the challan and its associated LR details. This action cannot be undone.</AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -211,6 +229,41 @@ export function ChallanDashboard() {
         description: `${challanIdToDelete} has been deleted and associated LRs are now unlinked.`,
     });
   };
+  
+  const handleCancelChallan = (challanToCancel: Challan) => {
+    // Update Challan Status
+    const updatedChallans = allChallans.map(c => c.challanId === challanToCancel.challanId ? { ...c, status: 'Cancelled' as const } : c);
+    saveChallanData(updatedChallans);
+    setAllChallans(updatedChallans);
+    
+    // Update LR Statuses
+    const lrDetails = getLrDetailsData();
+    const lrsToUpdate = lrDetails.filter(lr => lr.challanId === challanToCancel.challanId).map(lr => lr.lrNo);
+    
+    if (lrsToUpdate.length > 0) {
+        const allBookings = getBookings();
+        const updatedBookings = allBookings.map(booking => {
+            if (lrsToUpdate.includes(booking.lrNo)) {
+                let newStatus: Booking['status'] = 'In Stock';
+                let historyAction = 'Challan Cancelled';
+                let historyDetails = `Dispatch challan ${challanToCancel.challanId} cancelled. Status reverted to In Stock.`;
+
+                if (challanToCancel.challanType === 'Inward') {
+                    newStatus = 'Cancelled';
+                    historyAction = 'Booking Cancelled';
+                    historyDetails = `Inward challan ${challanToCancel.inwardId} was cancelled. This LR is now void.`;
+                }
+
+                addHistoryLog(booking.lrNo, historyAction as any, companyProfile?.companyName || 'System', historyDetails);
+                return { ...booking, status: newStatus };
+            }
+            return booking;
+        });
+        saveBookings(updatedBookings);
+    }
+    
+    toast({ title: "Challan Cancelled", description: `${challanToCancel.challanId} has been cancelled.` });
+  };
 
   const handleReprintChallan = (challan: Challan) => {
     const lrDetails = getLrDetailsData().filter(lr => lr.challanId === challan.challanId);
@@ -274,7 +327,7 @@ export function ChallanDashboard() {
   
   const finalizedChallans = useMemo(() => {
     const combined = sortedChallans.filter(c => 
-        c.status === 'Finalized' &&
+        c.status !== 'Pending' &&
         (c.challanId.toLowerCase().includes(searchTerm.toLowerCase()) || (c.vehicleNo && c.vehicleNo.toLowerCase().includes(searchTerm.toLowerCase())))
     );
 
@@ -315,7 +368,7 @@ export function ChallanDashboard() {
           <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline">Finalized Challans</CardTitle>
+                    <CardTitle className="font-headline">Finalized & Cancelled Challans</CardTitle>
                     <div className="flex items-center gap-4">
                         <div className="relative w-full max-w-sm">
                           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -344,7 +397,7 @@ export function ChallanDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
-                <ChallanTable title="" challans={finalizedChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} showTypeColumn={true} />
+                <ChallanTable title="" challans={finalizedChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} onCancel={handleCancelChallan} showTypeColumn={true} />
             </CardContent>
           </Card>
         </div>
