@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -558,39 +558,41 @@ export function NewChallanForm() {
                  <div className="space-y-4">
                     <Collapsible open={isStockVisible} onOpenChange={setIsStockVisible}>
                         <Card>
-                            <CollapsibleTrigger className="w-full">
-                                <CardHeader className="cursor-pointer p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            
-                                            <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="relative w-full max-w-xs">
-                                                <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input
-                                                    placeholder="Search LR, sender, receiver..."
-                                                    className="pl-8 h-8 text-xs"
-                                                    value={stockSearchTerm}
-                                                    onChange={(e) => setStockSearchTerm(e.target.value)}
-                                                    onKeyDown={handleStockSearchKeyDown}
-                                                />
+                            <CollapsibleTrigger asChild>
+                                <div className="w-full">
+                                    <CardHeader className="cursor-pointer p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                
+                                                <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
                                             </div>
-                                            <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
-                                            <Select value={toStationFilter} onValueChange={setToStationFilter}>
-                                                <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {stockToStationOptions.map(station => (
-                                                        <SelectItem key={station} value={station}>{station}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isStockVisible && "rotate-180")} />
+                                            <div className="flex items-center gap-2">
+                                                <div className="relative w-full max-w-xs">
+                                                    <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        placeholder="Search LR, sender, receiver..."
+                                                        className="pl-8 h-8 text-xs"
+                                                        value={stockSearchTerm}
+                                                        onChange={(e) => setStockSearchTerm(e.target.value)}
+                                                        onKeyDown={handleStockSearchKeyDown}
+                                                    />
+                                                </div>
+                                                <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
+                                                <Select value={toStationFilter} onValueChange={setToStationFilter}>
+                                                    <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {stockToStationOptions.map(station => (
+                                                            <SelectItem key={station} value={station}>{station}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isStockVisible && "rotate-180")} />
+                                            </div>
                                         </div>
-                                    </div>
-                                </CardHeader>
+                                    </CardHeader>
+                                </div>
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                                 <CardContent className="p-0">
