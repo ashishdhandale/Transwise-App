@@ -131,22 +131,6 @@ export function NewInwardChallanForm() {
         }
         loadInitialData();
     }, [searchParams, form]);
-
-    useEffect(() => {
-        // This effect will run once when the component mounts.
-        const tempSaveButton = document.getElementById('save-temp-button');
-        if (tempSaveButton) {
-            tempSaveButton.addEventListener('click', handleSaveAsTemp);
-        }
-
-        // Cleanup function to remove the event listener
-        return () => {
-            if (tempSaveButton) {
-                tempSaveButton.removeEventListener('click', handleSaveAsTemp);
-            }
-        };
-    }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
-
     
     const handleAddOrUpdateLr = (booking: Booking, resetFormCallback?: () => void) => {
         const existingLrIndex = addedLrs.findIndex(lr => lr.trackingId === booking.trackingId);
@@ -329,8 +313,8 @@ export function NewInwardChallanForm() {
                         </Card>
                     </Collapsible>
                     
-                    <Card>
-                        <Collapsible open={isLrFormOpen} onOpenChange={setIsLrFormOpen}>
+                     <Collapsible open={isLrFormOpen} onOpenChange={setIsLrFormOpen}>
+                        <Card>
                              <CollapsibleTrigger className="w-full">
                                 <CardHeader className="cursor-pointer p-4">
                                      <div className="flex items-center justify-between">
@@ -343,6 +327,7 @@ export function NewInwardChallanForm() {
                                 <CardContent>
                                     <BookingForm 
                                         isOfflineMode={true} 
+                                        onSaveSuccess={handleAddOrUpdateLr}
                                         onSaveAndNew={handleAddOrUpdateLr}
                                         bookingData={bookingDataToEdit}
                                         onClose={() => setBookingDataToEdit(null)}
@@ -350,8 +335,9 @@ export function NewInwardChallanForm() {
                                     />
                                 </CardContent>
                             </CollapsibleContent>
-                        </Collapsible>
-                    </Card>
+                        </Card>
+                    </Collapsible>
+
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between p-4">

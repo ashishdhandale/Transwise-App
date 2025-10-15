@@ -43,42 +43,56 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
         );
     }
     
-    let saveButtonText = isEditMode ? 'Update Booking' : isOfflineMode ? 'Add LR to List' : 'Save Booking';
-    if (isPartialCancel) saveButtonText = 'Confirm Cancellation';
+    let saveButtonText: string;
+    if (isPartialCancel) {
+        saveButtonText = 'Confirm Cancellation';
+    } else if (isEditMode) {
+        saveButtonText = onSaveAndNew ? 'Update & Add' : 'Update Booking';
+    } else if (isOfflineMode) {
+        saveButtonText = 'Add to List & New';
+    } else {
+        saveButtonText = 'Save Booking';
+    }
 
-    let savingButtonText = isEditMode ? 'Updating...' : 'Saving...';
-    if (isPartialCancel) savingButtonText = 'Confirming...';
+    let savingButtonText: string;
+    if (isPartialCancel) {
+        savingButtonText = 'Confirming...';
+    } else if (isEditMode) {
+        savingButtonText = 'Updating...';
+    } else {
+        savingButtonText = 'Saving...';
+    }
 
 
+    const mainButtonAction = onSaveAndNew ? onSaveAndNew : onSave;
+    const mainButtonIcon = isEditMode || isPartialCancel ? <RefreshCcw className="mr-2 h-4 w-4" /> : onSaveAndNew ? <Plus className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />;
+    
     return (
         <div className="flex flex-col gap-2">
-            {onSaveAndNew ? (
-                <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={onSaveAndNew} disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-                    Add to List & New
-                </Button>
-            ) : (
-                <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={onSave} disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditMode || isPartialCancel ? <RefreshCw className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-                    {isSubmitting ? savingButtonText : saveButtonText}
-                </Button>
-            )}
+            <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={mainButtonAction} disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : mainButtonIcon}
+                {isSubmitting ? savingButtonText : saveButtonText}
+            </Button>
             
-            {isEditMode || isPartialCancel || isOfflineMode ? (
-                <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
+            {(isEditMode && !onSaveAndNew) || isPartialCancel || (isOfflineMode && !onSaveAndNew) ? (
+                 <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <X className="mr-2 h-4 w-4" />
                     {isOfflineMode ? 'Cancel' : 'Exit Without Saving'}
                 </Button>
             ) : (
                 <>
-                    <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Reset Form
-                    </Button>
-                    <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
-                        <FileX className="mr-2 h-4 w-4" />
-                        Exit Without Saving
-                    </Button>
+                    {!onSaveAndNew && (
+                        <>
+                            <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Reset Form
+                            </Button>
+                            <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
+                                <FileX className="mr-2 h-4 w-4" />
+                                Exit Without Saving
+                            </Button>
+                        </>
+                    )}
                 </>
             )}
 

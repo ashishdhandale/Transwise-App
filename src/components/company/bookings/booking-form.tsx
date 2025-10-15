@@ -86,6 +86,7 @@ interface BookingFormProps {
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
     isOfflineMode?: boolean; // New prop for special offline/inward mode
+    lrNumberInputRef?: React.Ref<HTMLInputElement>;
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -229,14 +230,13 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false, lrNumberInputRef }: BookingFormProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     const isOfflineMode = isOfflineModeProp || mode === 'offline';
     
-    const lrNumberInputRef = useRef<HTMLInputElement>(null);
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
     const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('LTL');
@@ -366,22 +366,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 if (bookingToLoad) {
                     loadBookingData(bookingToLoad);
                 } else {
-                    let keyCounter = 1;
-                    setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
-                    if (isOfflineMode) {
-                        setCurrentLrNumber('');
-                    } else if (profile && !currentLrNumber) {
-                        const parsedBookings = getBookings();
-                        const localBranches = getBranches();
-                        let lrPrefix = profile.lrPrefix?.trim() || 'CONAG';
-                        if (userRole === 'Branch') {
-                            const userBranch = localBranches.find(b => b.name === 'Pune Hub');
-                            if(userBranch?.lrPrefix) {
-                                lrPrefix = userBranch.lrPrefix;
-                            }
-                        }
-                        setCurrentLrNumber(generateLrNumber(parsedBookings, lrPrefix));
-                    }
+                    handleReset();
                 }
             } catch (error) {
                 console.error("Failed to process bookings or fetch profile", error);
@@ -391,14 +376,14 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
         loadInitialData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [trackingId, bookingData, isOfflineMode, userRole, toast, loadMasterData, loadBookingData]);
+    }, [trackingId, bookingData]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
-        if (!bookingDate) {
+        if (!bookingDate && !bookingData) { // Only set if it's a new form
             setBookingDate(new Date());
         }
-    }, [bookingDate]);
+    }, [bookingDate, bookingData]);
 
 
     const handleReset = useCallback(() => {
@@ -439,7 +424,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         });
         
         setTimeout(() => {
-            lrNumberInputRef.current?.focus();
+            lrNumberInputRef?.current?.focus();
         }, 0);
 
 
@@ -447,7 +432,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             title: "Form Reset",
             description: "All fields have been cleared.",
         });
-    }, [companyProfile, userRole, branches, isOfflineMode, toast]);
+    }, [companyProfile, userRole, branches, isOfflineMode, toast, lrNumberInputRef]);
 
 
     useEffect(() => {
@@ -485,7 +470,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
         const currentStatus: Booking['status'] = isOfflineModeProp ? 'In Stock' : 'In Stock';
         const allBookings = getBookings();
-        const currentBooking = (isEditMode || isPartialCancel) ? allBookings.find(b => b.trackingId === trackingId) : undefined;
+        const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
         const userBranchName = userRole === 'Branch' ? 'Pune Hub' : companyProfile?.companyName; // Hardcoded branch for prototype
 
@@ -513,10 +498,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         try {
-            if ((isEditMode || isPartialCancel) && (currentBooking || bookingData)) {
-                const bookingToUpdate = currentBooking || bookingData!;
-                const updatedBooking = { ...bookingToUpdate, ...newBookingData };
-                const changeDetails = generateChangeDetails(bookingToUpdate, updatedBooking, isPartialCancel);
+            if ((isEditMode || isPartialCancel) && currentBooking) {
+                const updatedBooking = { ...currentBooking, ...newBookingData };
+                const changeDetails = generateChangeDetails(currentBooking, updatedBooking, isPartialCancel);
                 
                 const updatedBookings = allBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? updatedBooking : b);
                 saveBookings(updatedBookings);
@@ -529,7 +513,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 if (onSaveSuccess) onSaveSuccess(updatedBooking);
                  if (postSaveCallback) postSaveCallback();
             } else {
-                const newBooking: Booking = { trackingId: `TRK-${Date.now()}`, ...newBookingData };
+                const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
                 if (onSaveAndNew) {
                     onSaveAndNew(newBooking, handleReset);
@@ -615,7 +599,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userRole, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset]);
 
 
-    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false, isSaveAndNew = false) => {
+    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
         const newErrors: { [key: string]: boolean } = {};
         if (!fromStation) newErrors.fromStation = true;
         if (!toStation) newErrors.toStation = true;
@@ -642,7 +626,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             return;
         }
         
-        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode && !isOfflineModeProp && !isSaveAndNew) {
+        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode && !isOfflineModeProp && !onSaveAndNew) {
             setIsPaymentDialogOpen(true);
             return;
         }
@@ -650,8 +634,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setIsSubmitting(true);
         if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100));
-
-        await proceedWithSave(paymentMode, isSaveAndNew ? handleReset : undefined);
+        
+        const callback = onSaveAndNew ? handleReset : undefined;
+        await proceedWithSave(paymentMode, callback);
     };
     
     const handleDownloadPdf = async () => {
@@ -713,6 +698,107 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                       isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
                       (isOfflineMode ? 'Add Offline/Manual Booking' : 'Create New Booking');
 
+  const formContent = (
+     <div className="space-y-4">
+        <BookingDetailsSection 
+            lrNumberInputRef={lrNumberInputRef}
+            bookingType={bookingType} 
+            onBookingTypeChange={setBookingType}
+            onFromStationChange={onFromStationChange}
+            onToStationChange={setToStation}
+            fromStation={fromStation}
+            toStation={toStation}
+            lrNumber={currentLrNumber}
+            onLrNumberChange={setCurrentLrNumber}
+            bookingDate={bookingDate}
+            onBookingDateChange={setBookingDate}
+            isEditMode={isEditMode}
+            isOfflineMode={isOfflineMode}
+            companyProfile={companyProfile}
+            errors={errors}
+            loadType={loadType}
+            onLoadTypeChange={setLoadType}
+            isViewOnly={readOnly}
+        />
+        <PartyDetailsSection 
+            onSenderChange={setSender}
+            onReceiverChange={setReceiver}
+            sender={sender}
+            receiver={receiver}
+            onTaxPaidByChange={setTaxPaidBy}
+            taxPaidBy={taxPaidBy}
+            errors={errors}
+            isViewOnly={readOnly}
+            isOfflineMode={isOfflineMode}
+            onPartyAdded={loadMasterData}
+        />
+        {loadType === 'FTL' && (
+            <VehicleDetailsSection 
+                details={ftlDetails} 
+                onDetailsChange={setFtlDetails} 
+                drivers={drivers}
+                vehicles={vehicles}
+                vendors={vendors}
+                onMasterDataChange={loadMasterData}
+                loadType={loadType}
+                isViewOnly={readOnly}
+            />
+        )}
+        <ItemDetailsTable 
+            rows={itemRows} 
+            onRowsChange={setItemRows} 
+            isViewOnly={isViewOnly}
+            sender={sender}
+            receiver={receiver}
+            fromStation={fromStation}
+            toStation={toStation}
+            onQuotationApply={(newLrType) => {
+                setBookingType(newLrType);
+            }}
+        />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
+            <ChargesSection 
+                basicFreight={basicFreight} 
+                onGrandTotalChange={setGrandTotal} 
+                initialGrandTotal={isEditMode || isPartialCancel ? grandTotal : undefined}
+                isGstApplicable={isGstApplicable}
+                onChargesChange={setAdditionalCharges}
+                initialCharges={initialChargesFromBooking}
+                profile={companyProfile}
+                isViewOnly={isViewOnly}
+                itemRows={itemRows}
+            />
+            <div className="w-[300px]">
+                <DeliveryInstructionsSection 
+                    deliveryAt={deliveryAt}
+                    onDeliveryAtChange={setDeliveryAt}
+                    isViewOnly={readOnly}
+                />
+            </div>
+            <div className="flex flex-col gap-2">
+                <Card className="flex-1 flex flex-col items-center justify-center p-2 text-center border-green-300">
+                    <p className="text-sm text-muted-foreground">Booking Type</p>
+                    <p className="text-xl font-bold text-green-600">
+                        {bookingType}
+                    </p>
+                </Card>
+                 <MainActionsSection 
+                    onSave={() => handleSaveOrUpdate()} 
+                    onSaveAndNew={onSaveAndNew ? () => handleSaveOrUpdate() : undefined}
+                    isEditMode={isEditMode || !!bookingData}
+                    isPartialCancel={isPartialCancel} 
+                    onClose={onClose} 
+                    onReset={handleReset}
+                    isSubmitting={isSubmitting}
+                    isViewOnly={isViewOnly}
+                    isOfflineMode={isOfflineModeProp}
+                />
+            </div>
+        </div>
+    </div>
+  );
+
   return (
     <ClientOnly>
         <div className="space-y-4">
@@ -720,106 +806,14 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                  <h1 className="text-2xl font-bold text-primary">{formTitle}</h1>
             )}
            
-            <div className={isOfflineModeProp ? '' : 'p-4 border-2 border-green-200 rounded-md bg-card'}>
-                <div className="space-y-4">
-                    <BookingDetailsSection 
-                        lrNumberInputRef={lrNumberInputRef}
-                        bookingType={bookingType} 
-                        onBookingTypeChange={setBookingType}
-                        onFromStationChange={onFromStationChange}
-                        onToStationChange={setToStation}
-                        fromStation={fromStation}
-                        toStation={toStation}
-                        lrNumber={currentLrNumber}
-                        onLrNumberChange={setCurrentLrNumber}
-                        bookingDate={bookingDate}
-                        onBookingDateChange={setBookingDate}
-                        isEditMode={isEditMode}
-                        isOfflineMode={isOfflineMode}
-                        companyProfile={companyProfile}
-                        errors={errors}
-                        loadType={loadType}
-                        onLoadTypeChange={setLoadType}
-                        isViewOnly={readOnly}
-                    />
-                    <PartyDetailsSection 
-                        onSenderChange={setSender}
-                        onReceiverChange={setReceiver}
-                        sender={sender}
-                        receiver={receiver}
-                        onTaxPaidByChange={setTaxPaidBy}
-                        taxPaidBy={taxPaidBy}
-                        errors={errors}
-                        isViewOnly={readOnly}
-                        isOfflineMode={isOfflineMode}
-                        onPartyAdded={loadMasterData}
-                    />
-                    {loadType === 'FTL' && (
-                        <VehicleDetailsSection 
-                            details={ftlDetails} 
-                            onDetailsChange={setFtlDetails} 
-                            drivers={drivers}
-                            vehicles={vehicles}
-                            vendors={vendors}
-                            onMasterDataChange={loadMasterData}
-                            loadType={loadType}
-                            isViewOnly={readOnly}
-                        />
-                    )}
-                    <ItemDetailsTable 
-                        rows={itemRows} 
-                        onRowsChange={setItemRows} 
-                        isViewOnly={isViewOnly}
-                        sender={sender}
-                        receiver={receiver}
-                        fromStation={fromStation}
-                        toStation={toStation}
-                        onQuotationApply={(newLrType) => {
-                            setBookingType(newLrType);
-                        }}
-                    />
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
-                        <ChargesSection 
-                            basicFreight={basicFreight} 
-                            onGrandTotalChange={setGrandTotal} 
-                            initialGrandTotal={isEditMode || isPartialCancel ? grandTotal : undefined}
-                            isGstApplicable={isGstApplicable}
-                            onChargesChange={setAdditionalCharges}
-                            initialCharges={initialChargesFromBooking}
-                            profile={companyProfile}
-                            isViewOnly={isViewOnly}
-                            itemRows={itemRows}
-                        />
-                        <div className="w-[300px]">
-                            <DeliveryInstructionsSection 
-                                deliveryAt={deliveryAt}
-                                onDeliveryAtChange={setDeliveryAt}
-                                isViewOnly={readOnly}
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Card className="flex-1 flex flex-col items-center justify-center p-2 text-center border-green-300">
-                                <p className="text-sm text-muted-foreground">Booking Type</p>
-                                <p className="text-xl font-bold text-green-600">
-                                    {bookingType}
-                                </p>
-                            </Card>
-                            <MainActionsSection 
-                                onSave={() => handleSaveOrUpdate()} 
-                                onSaveAndNew={onSaveAndNew ? () => handleSaveOrUpdate(undefined, false, true) : undefined}
-                                isEditMode={isEditMode}
-                                isPartialCancel={isPartialCancel} 
-                                onClose={onClose} 
-                                onReset={handleReset}
-                                isSubmitting={isSubmitting}
-                                isViewOnly={isViewOnly}
-                                isOfflineMode={isOfflineModeProp}
-                            />
-                        </div>
-                    </div>
+            {isOfflineModeProp ? (
+                formContent
+            ) : (
+                <div className="p-4 border-2 border-green-200 rounded-md bg-card">
+                   {formContent}
                 </div>
-            </div>
+            )}
+
 
             <AlertDialog open={isStationAlertOpen} onOpenChange={setIsStationAlertOpen}>
                 <AlertDialogContent>
