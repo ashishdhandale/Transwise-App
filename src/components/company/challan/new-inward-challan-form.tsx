@@ -388,6 +388,7 @@ export function NewInwardChallanForm() {
                     </Card>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
+                        <Button type="button" variant="outline" onClick={handleSaveAsTemp}>Save as Temp & Exit</Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>
                             {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
                             Finalize & Save Inward
