@@ -500,7 +500,7 @@ export function NewChallanForm() {
                 <div className="flex justify-end gap-2">
                     <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Finalized Challan' : 'Finalize & Save Challan'}</Button>
+                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Challan'}</Button>
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
                 </div>
             </header>
