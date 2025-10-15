@@ -11,8 +11,8 @@ function NewInwardChallanPage() {
     <DashboardLayout>
       <main className="flex-1 p-4 md:p-6">
         <header className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-                <ArrowDownToLine className="h-8 w-8" />
+            <h1 className="text-2xl font-bold text-primary flex items-center justify-center gap-2">
+                <ArrowDownToLine className="h-7 w-7" />
                 New Inward Challan
             </h1>
         </header>
