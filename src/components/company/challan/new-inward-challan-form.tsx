@@ -259,20 +259,6 @@ export function NewInwardChallanForm() {
 
     return (
         <div className="space-y-4">
-             <header className="mb-4 flex items-center justify-between">
-                <h1 className="text-xl font-bold text-primary flex items-center gap-2">
-                    <FileText className="h-6 w-6" />
-                    New Inward Challan
-                </h1>
-                <div className="flex justify-end gap-2">
-                    <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
-                    <Button type="button" variant="outline" onClick={handleSaveAsTemp}>Save as Temp & Exit</Button>
-                    <Button type="submit" form="inward-challan-form" disabled={form.formState.isSubmitting}>
-                        {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
-                        Finalize & Save Inward
-                    </Button>
-                </div>
-            </header>
             <Form {...form}>
                 <form id="inward-challan-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>

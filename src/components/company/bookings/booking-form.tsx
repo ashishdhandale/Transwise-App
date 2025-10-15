@@ -236,6 +236,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     const isOfflineMode = isOfflineModeProp || mode === 'offline';
     
+    const lrNumberInputRef = useRef<HTMLInputElement>(null);
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
     const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('LTL');
@@ -436,6 +437,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             commission: 0,
             otherDeductions: 0,
         });
+        
+        setTimeout(() => {
+            lrNumberInputRef.current?.focus();
+        }, 0);
+
 
         toast({
             title: "Form Reset",
@@ -714,9 +720,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                  <h1 className="text-2xl font-bold text-primary">{formTitle}</h1>
             )}
            
-            <Card className={isOfflineModeProp ? 'border-none shadow-none' : 'border-2 border-green-200'}>
-                <CardContent className={isOfflineModeProp ? 'p-0' : 'p-4 space-y-4'}>
+            <div className={isOfflineModeProp ? '' : 'p-4 border-2 border-green-200 rounded-md bg-card'}>
+                <div className="space-y-4">
                     <BookingDetailsSection 
+                        lrNumberInputRef={lrNumberInputRef}
                         bookingType={bookingType} 
                         onBookingTypeChange={setBookingType}
                         onFromStationChange={onFromStationChange}
@@ -811,8 +818,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                             />
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             <AlertDialog open={isStationAlertOpen} onOpenChange={setIsStationAlertOpen}>
                 <AlertDialogContent>

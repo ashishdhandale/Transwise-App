@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { bookingOptions } from '@/lib/booking-data';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import type { City } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,7 @@ interface BookingDetailsSectionProps {
     companyProfile: CompanyProfileFormValues | null;
     errors: { [key: string]: boolean };
     isViewOnly?: boolean;
+    lrNumberInputRef?: React.Ref<HTMLInputElement>;
 }
 
 
@@ -65,6 +66,7 @@ export function BookingDetailsSection({
     companyProfile,
     errors,
     isViewOnly = false,
+    lrNumberInputRef,
 }: BookingDetailsSectionProps) {
     const { toast } = useToast();
     const [cityListSource, setCityListSource] = useState<CityListSource>('default');
@@ -191,6 +193,7 @@ export function BookingDetailsSection({
                 <div className="space-y-1">
                     <Label htmlFor="lrNo">LR Number</Label>
                     <Input 
+                        ref={lrNumberInputRef}
                         id="lrNo" 
                         value={lrNumber}
                         onChange={(e) => onLrNumberChange(e.target.value)}
