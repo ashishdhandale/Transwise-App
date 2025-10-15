@@ -344,7 +344,7 @@ export function ChallanDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
-                <ChallanTable title="" challans={finalizedChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} onDelete={handleDeleteChallan} showTypeColumn={true} />
+                <ChallanTable title="" challans={finalizedChallans} onReprint={handleReprintChallan} onEdit={handleEditChallan} showTypeColumn={true} />
             </CardContent>
           </Card>
         </div>
