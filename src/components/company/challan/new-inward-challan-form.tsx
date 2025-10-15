@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { BookingForm } from '../bookings/booking-form';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
@@ -94,6 +95,7 @@ export function NewInwardChallanForm() {
             setCities(getCities());
             setCustomers(getCustomers());
             const allChallans = getChallanData();
+            const allBookings = getBookings();
             
             const existingChallanId = searchParams.get('challanId');
             if (existingChallanId) {
@@ -113,17 +115,21 @@ export function NewInwardChallanForm() {
                     
                     const lrDetailsForChallan = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
                     
-                    const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => ({
-                        trackingId: `temp-${lr.lrNo}-${Math.random()}`,
-                        lrNo: lr.lrNo, lrType: lr.lrType as any, bookingDate: lr.bookingDate,
-                        fromCity: lr.from, toCity: lr.to, sender: lr.sender, receiver: lr.receiver,
-                        itemDescription: lr.itemDescription, qty: lr.quantity, chgWt: lr.chargeWeight,
-                        totalAmount: lr.grandTotal,
-                        itemRows: [],
-                        status: 'In Stock',
-                        source: 'Inward',
-                        loadType: 'LTL'
-                    }));
+                    const reconstructedBookings: Booking[] = lrDetailsForChallan.map(lr => {
+                        const booking = allBookings.find(b => b.lrNo === lr.lrNo);
+                        return {
+                            ...(booking || {}),
+                            trackingId: booking?.trackingId || `temp-${lr.lrNo}-${Math.random()}`,
+                            lrNo: lr.lrNo, lrType: lr.lrType as any, bookingDate: lr.bookingDate,
+                            fromCity: lr.from, toCity: lr.to, sender: lr.sender, receiver: lr.receiver,
+                            itemDescription: lr.itemDescription, qty: lr.quantity, chgWt: lr.chargeWeight,
+                            totalAmount: lr.grandTotal,
+                            itemRows: booking?.itemRows || [],
+                            status: booking?.status || 'In Stock',
+                            source: 'Inward',
+                            loadType: booking?.loadType || 'LTL'
+                        }
+                    });
                     setAddedLrs(reconstructedBookings);
                 }
             } else {
@@ -248,12 +254,28 @@ export function NewInwardChallanForm() {
         let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId && d.challanId !== existingChallanId);
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
+
+        // Also add these LRs to the main bookings list for tracking
+        const allBookings = getBookings();
+        const newInwardBookings = addedLrs.map(b => ({
+            ...b,
+            trackingId: `TRK-${Date.now()}-${b.lrNo}`, // Ensure unique tracking ID
+            source: 'Inward' as const,
+            status: 'In Stock' as const,
+        }));
         
-        lrDetails.forEach(lr => {
+        // Avoid duplicates by LR number
+        const bookingLrNos = new Set(allBookings.map(b => b.lrNo));
+        const bookingsToAdd = newInwardBookings.filter(b => !bookingLrNos.has(b.lrNo));
+
+        const updatedBookings = [...allBookings, ...bookingsToAdd];
+        saveBookings(updatedBookings);
+        
+        bookingsToAdd.forEach(lr => {
              addHistoryLog(lr.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
-        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${lrDetails.length} LRs added to stock.`});
+        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${bookingsToAdd.length} LRs added to stock.`});
         router.push('/company/challan');
     };
 

@@ -25,32 +25,8 @@ export function PackageTracking() {
 
   useEffect(() => {
     async function loadData() {
-        const primaryBookings = getBookings();
-        const inwardChallans = getChallanData().filter(c => c.challanType === 'Inward' && c.status === 'Finalized');
-        const inwardLrDetails = getLrDetailsData().filter(lr => inwardChallans.some(c => c.challanId === lr.challanId));
-        
-        const inwardBookings: Booking[] = inwardLrDetails.map(lr => ({
-            trackingId: `inward-${lr.lrNo}`, // Ensure a unique key
-            lrNo: lr.lrNo,
-            bookingDate: lr.bookingDate,
-            fromCity: lr.from,
-            toCity: lr.to,
-            lrType: lr.lrType as any,
-            sender: lr.sender,
-            receiver: lr.receiver,
-            itemDescription: lr.itemDescription,
-            qty: lr.quantity,
-            chgWt: lr.chargeWeight,
-            totalAmount: lr.grandTotal,
-            status: 'In Stock', // Inwarded items start as In Stock
-            itemRows: [], // Simplified for tracking view
-            source: 'Inward',
-        }));
-
-        const combinedList = [...primaryBookings, ...inwardBookings];
-        const uniqueItems = Array.from(new Map(combinedList.map(item => [item.lrNo, item])).values());
-        
-        setAllTrackableItems(uniqueItems);
+        const bookings = getBookings();
+        setAllTrackableItems(bookings);
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
     }

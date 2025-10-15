@@ -60,36 +60,10 @@ export function StockDashboard() {
   const loadStock = () => {
      try {
         const allBookings = getBookings();
-        const inwardChallans = getChallanData().filter(c => c.challanType === 'Inward');
-        const inwardLrDetails = getLrDetailsData().filter(lr => inwardChallans.some(c => c.challanId === lr.challanId));
-        
-        const inwardBookings: Booking[] = inwardLrDetails.map(lr => ({
-            trackingId: `inward-${lr.lrNo}`, // Ensure a unique key
-            lrNo: lr.lrNo,
-            bookingDate: lr.bookingDate,
-            fromCity: lr.from,
-            toCity: lr.to,
-            lrType: lr.lrType as any,
-            sender: lr.sender,
-            receiver: lr.receiver,
-            itemDescription: lr.itemDescription,
-            qty: lr.quantity,
-            chgWt: lr.chargeWeight,
-            totalAmount: lr.grandTotal,
-            status: 'In Stock', // Inwarded items are always in stock initially
-            itemRows: [], // Simplified for stock view
-            source: 'Inward',
-        }));
-
-        // Combine system bookings that are in stock with all inward bookings
-        const currentStockBookings = allBookings
-            .filter(booking => ['In Stock', 'In Loading', 'In HOLD'].includes(booking.status))
-            .concat(inwardBookings);
-            
-        // Deduplicate in case an inward booking was manually added to main bookings previously
-        const uniqueStock = Array.from(new Map(currentStockBookings.map(item => [item.lrNo, item])).values());
-
-        setStock(uniqueStock);
+        const currentStockBookings = allBookings.filter(booking => 
+            ['In Stock', 'In Loading', 'In HOLD'].includes(booking.status)
+        );
+        setStock(currentStockBookings);
     } catch (error) {
         console.error("Failed to load stock from localStorage", error);
     }
