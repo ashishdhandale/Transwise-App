@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -372,7 +373,8 @@ export function NewChallanForm() {
         allChallans.push(finalChallan);
         saveChallanData(allChallans);
 
-        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challanId); // Remove old temp details
+        // Remove old temp details and add new finalized details.
+        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challanId);
         allLrDetails.push(...finalLrDetails);
         saveLrDetailsData(allLrDetails);
 
