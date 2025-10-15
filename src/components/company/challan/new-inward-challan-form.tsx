@@ -268,10 +268,10 @@ export function NewInwardChallanForm() {
                                         ) : (
                                             <div className="flex items-center gap-4 flex-wrap">
                                                 <CardTitle className="text-lg">Challan Details</CardTitle>
-                                                <SummaryItem label="From" value={watchedChallanValues.receivedFromParty} />
-                                                <SummaryItem label="Vehicle" value={watchedChallanValues.vehicleNo} />
-                                                <SummaryItem label="Origin" value={watchedChallanValues.fromStation} />
-                                                <SummaryItem label="Date" value={watchedChallanValues.inwardDate ? format(watchedChallanValues.inwardDate, 'dd-MMM-yy') : 'N/A'} />
+                                                <SummaryItem label="Inward ID" value={watchedChallanValues.inwardId} />
+                                                <SummaryItem label="Received From" value={watchedChallanValues.receivedFromParty} />
+                                                <SummaryItem label="Vehicle No." value={watchedChallanValues.vehicleNo} />
+                                                <SummaryItem label="From Station" value={watchedChallanValues.fromStation} />
                                             </div>
                                         )}
                                         <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isHeaderOpen && "rotate-180")} />
@@ -365,8 +365,7 @@ export function NewInwardChallanForm() {
                                     {addedLrs.length > 0 && (
                                         <TableFooter>
                                             <TableRow className="font-bold bg-muted/50">
-                                                <TableCell className="whitespace-nowrap">Total</TableCell>
-                                                <TableCell colSpan={5} className="whitespace-nowrap">{addedLrs.length} LRs</TableCell>
+                                                <TableCell colSpan={6} className="whitespace-nowrap text-right">Total</TableCell>
                                                 <TableCell className="whitespace-nowrap">{totalQty}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{addedLrs.reduce((sum, lr) => sum + lr.chgWt, 0).toFixed(2)}</TableCell>
                                                 <TableCell></TableCell>
@@ -401,3 +400,4 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
+
