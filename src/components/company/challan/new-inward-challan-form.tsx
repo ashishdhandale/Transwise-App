@@ -1,8 +1,6 @@
-
-
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -72,6 +70,8 @@ export function NewInwardChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
+    
+    const lrNumberInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<InwardChallanFormValues>({
         resolver: zodResolver(inwardChallanSchema),
@@ -131,6 +131,22 @@ export function NewInwardChallanForm() {
         }
         loadInitialData();
     }, [searchParams, form]);
+
+    useEffect(() => {
+        // This effect will run once when the component mounts.
+        const tempSaveButton = document.getElementById('save-temp-button');
+        if (tempSaveButton) {
+            tempSaveButton.addEventListener('click', handleSaveAsTemp);
+        }
+
+        // Cleanup function to remove the event listener
+        return () => {
+            if (tempSaveButton) {
+                tempSaveButton.removeEventListener('click', handleSaveAsTemp);
+            }
+        };
+    }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
+
     
     const handleAddOrUpdateLr = (booking: Booking, resetFormCallback?: () => void) => {
         const existingLrIndex = addedLrs.findIndex(lr => lr.trackingId === booking.trackingId);
@@ -150,6 +166,7 @@ export function NewInwardChallanForm() {
         if (resetFormCallback) {
             resetFormCallback();
         }
+        lrNumberInputRef.current?.focus();
     };
     
     const handleEditLrClick = (lrToEdit: Booking) => {
@@ -312,9 +329,9 @@ export function NewInwardChallanForm() {
                         </Card>
                     </Collapsible>
                     
-                     <Collapsible open={isLrFormOpen} onOpenChange={setIsLrFormOpen}>
-                        <Card>
-                            <CollapsibleTrigger className="w-full">
+                    <Card>
+                        <Collapsible open={isLrFormOpen} onOpenChange={setIsLrFormOpen}>
+                             <CollapsibleTrigger className="w-full">
                                 <CardHeader className="cursor-pointer p-4">
                                      <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg">Add LR Manually</CardTitle>
@@ -329,11 +346,12 @@ export function NewInwardChallanForm() {
                                         onSaveAndNew={handleAddOrUpdateLr}
                                         bookingData={bookingDataToEdit}
                                         onClose={() => setBookingDataToEdit(null)}
+                                        lrNumberInputRef={lrNumberInputRef}
                                     />
                                 </CardContent>
                             </CollapsibleContent>
-                        </Card>
-                    </Collapsible>
+                        </Collapsible>
+                    </Card>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between p-4">
