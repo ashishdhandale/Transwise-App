@@ -75,6 +75,7 @@ export function NewInwardChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const isEditMode = !!searchParams.get('challanId');
     
     const lrNumberInputRef = useRef<HTMLInputElement>(null);
 
@@ -237,7 +238,7 @@ export function NewInwardChallanForm() {
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
         
-        toast({ title: 'Challan Saved as Temporary', description: `Your progress for inward challan has been saved.` });
+        toast({ title: isEditMode ? 'Challan Updated' : 'Challan Saved as Temporary', description: `Your progress for inward challan has been saved.` });
         router.push('/company/challan');
     };
 
@@ -247,41 +248,53 @@ export function NewInwardChallanForm() {
             return;
         }
         
-        const existingChallanId = searchParams.get('challanId');
         const { challan, lrDetails } = createChallanObject('Finalized', data.inwardId);
 
         let allChallans = getChallanData();
-        // Remove the old temp or existing challan record
+        
+        const existingChallanId = searchParams.get('challanId');
         allChallans = allChallans.filter(c => c.challanId !== existingChallanId && c.challanId !== tempChallanId);
         allChallans.push(challan);
         saveChallanData(allChallans);
 
-        // Remove old details and add the new, finalized ones
         let allLrDetails = getLrDetailsData().filter(d => d.challanId !== existingChallanId && d.challanId !== tempChallanId);
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
 
-        // Also add these LRs to the main bookings list for tracking
         const allBookings = getBookings();
         const newInwardBookings = addedLrs.map(b => ({
             ...b,
-            trackingId: `TRK-${Date.now()}-${b.lrNo}`, // Ensure unique tracking ID
+            trackingId: b.trackingId.startsWith('temp-') ? `TRK-${Date.now()}-${b.lrNo}` : b.trackingId,
             source: 'Inward' as const,
             status: 'In Stock' as const,
         }));
         
-        // Avoid duplicates by LR number
-        const bookingLrNos = new Set(allBookings.map(b => b.lrNo));
-        const bookingsToAdd = newInwardBookings.filter(b => !bookingLrNos.has(b.lrNo));
+        const existingLrNos = new Set(allBookings.map(b => b.lrNo));
+        const bookingsToUpdate: Booking[] = [];
+        const bookingsToAdd: Booking[] = [];
 
-        const updatedBookings = [...allBookings, ...bookingsToAdd];
+        newInwardBookings.forEach(inwardBooking => {
+            if (existingLrNos.has(inwardBooking.lrNo)) {
+                bookingsToUpdate.push(inwardBooking);
+            } else {
+                bookingsToAdd.push(inwardBooking);
+            }
+        });
+
+        const updatedBookings = allBookings
+            .map(b => {
+                const updatedVersion = bookingsToUpdate.find(ub => ub.lrNo === b.lrNo);
+                return updatedVersion || b;
+            })
+            .concat(bookingsToAdd);
+
         saveBookings(updatedBookings);
         
-        bookingsToAdd.forEach(lr => {
+        newInwardBookings.forEach(lr => {
              addHistoryLog(lr.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
-        toast({ title: 'Inward Challan Saved', description: `Successfully created Inward Challan ${data.inwardId}. ${bookingsToAdd.length} LRs added to stock.`});
+        toast({ title: isEditMode ? 'Inward Challan Updated' : 'Inward Challan Saved', description: `Successfully processed Inward Challan ${data.inwardId}.`});
         router.push('/company/challan');
     };
 
@@ -300,7 +313,7 @@ export function NewInwardChallanForm() {
                                 <CardHeader className="cursor-pointer p-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
-                                            <CardTitle className="text-lg">Challan Details</CardTitle>
+                                            <CardTitle className="text-lg">{isEditMode ? 'Edit Inward Challan' : 'New Inward Challan'}</CardTitle>
                                              {!isHeaderOpen && (
                                                 <div className="flex items-center gap-x-4 text-xs text-muted-foreground">
                                                     <span>Inward ID: <span className="font-semibold text-foreground">{watchedChallanValues.inwardId}</span></span>
@@ -438,6 +451,17 @@ export function NewInwardChallanForm() {
                             )}/>
                         </CardContent>
                     </Card>
+                    <div className="flex justify-end gap-2">
+                         <Button type="button" onClick={handleSaveAsTemp} variant="outline">
+                            <Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}
+                        </Button>
+                         <Button type="submit" size="lg" form="inward-challan-form">
+                            <Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Inward'}
+                        </Button>
+                        <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}>
+                            <X className="mr-2 h-4 w-4" /> Cancel & Exit
+                        </Button>
+                    </div>
                 </form>
             </Form>
 
@@ -461,8 +485,3 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
-
-    
-
-    
-

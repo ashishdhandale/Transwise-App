@@ -104,6 +104,7 @@ export function NewChallanForm() {
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const isEditMode = !!searchParams.get('challanId');
 
     // PDF Preview state
     const printRef = React.useRef<HTMLDivElement>(null);
@@ -338,7 +339,7 @@ export function NewChallanForm() {
         saveBookings(updatedBookings);
 
 
-        toast({ title: "Challan Saved", description: `Temporary challan ${challanId} has been saved.` });
+        toast({ title: isEditMode ? "Challan Updated" : "Challan Saved", description: `Temporary challan ${challanId} has been saved.` });
         router.push('/company/challan');
     };
 
@@ -356,10 +357,17 @@ export function NewChallanForm() {
             toast({ title: "No LRs Added", description: "Please add at least one LR to the challan before finalizing.", variant: "destructive" });
             return;
         }
-
-        const challanPrefix = companyProfile?.challanPrefix || 'CHLN';
+        
+        const isActuallyEditing = isEditMode && !challanId.startsWith('TEMP-');
+        
         const allChallans = getChallanData();
-        const newChallanId = generatePermanentChallanId(allChallans, challanPrefix);
+        
+        let newChallanId = challanId;
+        if (!isActuallyEditing) {
+            const challanPrefix = companyProfile?.challanPrefix || 'CHLN';
+            newChallanId = generatePermanentChallanId(allChallans, challanPrefix);
+        }
+
 
         const data = buildChallanObject('Finalized', newChallanId);
         if (!data) return;
@@ -368,12 +376,14 @@ export function NewChallanForm() {
 
         const existingChallanIndex = allChallans.findIndex(c => c.challanId === challanId);
         if (existingChallanIndex !== -1) {
-            allChallans.splice(existingChallanIndex, 1);
+            // If we are finalizing a temp challan, replace it. If editing a final challan, replace it.
+            allChallans[existingChallanIndex] = finalChallan;
+        } else {
+             allChallans.push(finalChallan);
         }
-        allChallans.push(finalChallan);
         saveChallanData(allChallans);
 
-        // Remove old temp details and add new finalized details.
+        // Remove old details and add new finalized details.
         let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challanId);
         allLrDetails.push(...finalLrDetails);
         saveLrDetailsData(allLrDetails);
@@ -389,7 +399,7 @@ export function NewChallanForm() {
         });
         saveBookings(updatedBookings);
         
-        toast({ title: "Challan Finalized", description: `Challan ${newChallanId} has been saved.` });
+        toast({ title: isEditMode ? "Challan Updated & Finalized" : "Challan Finalized", description: `Challan ${newChallanId} has been saved.` });
         
         setPreviewData({ challan: finalChallan, bookings: addedLrs });
         setIsPreviewOpen(true);
@@ -485,7 +495,7 @@ export function NewChallanForm() {
             <header className="mb-4">
                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                     <FileText className="h-8 w-8" />
-                    New Dispatch Challan
+                    {isEditMode ? 'Edit Dispatch Challan' : 'New Dispatch Challan'}
                 </h1>
             </header>
             <ClientOnly>
@@ -695,9 +705,9 @@ export function NewChallanForm() {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> Save as Temp & Exit</Button>
+                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize & Save Challan</Button>
+                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Finalized Challan' : 'Finalize & Save Challan'}</Button>
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
                 </div>
                 
