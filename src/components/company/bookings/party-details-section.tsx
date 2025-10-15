@@ -12,6 +12,9 @@ import type { Customer, CustomerType } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronsUpDown } from 'lucide-react';
+import { Button } from '../ui/button';
 
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 
@@ -188,6 +191,7 @@ export function PartyDetailsSection({
     const [otherBillToParty, setOtherBillToParty] = useState<string | undefined>(undefined);
     const [shippingAddress, setShippingAddress] = useState('');
     const [isSameAsReceiver, setIsSameAsReceiver] = useState(true);
+    const [isExtraDetailsOpen, setIsExtraDetailsOpen] = useState(false);
 
     const loadCustomers = useCallback(() => {
         try {
@@ -257,68 +261,80 @@ export function PartyDetailsSection({
             <PartyRow side="Sender" customers={customers} onPartyAdded={onPartyAdded} onPartyChange={onSenderChange} initialParty={sender} hasError={errors.sender} disabled={isViewOnly} />
             <PartyRow side="Receiver" customers={customers} onPartyAdded={onPartyAdded} onPartyChange={onReceiverChange} initialParty={receiver} hasError={errors.receiver} disabled={isViewOnly} />
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
-                 <div className="space-y-1">
-                    <div className="flex items-center justify-between mb-1">
-                        <Label className="font-semibold">Shipping Address</Label>
-                         <div className="flex items-center space-x-2">
-                            <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} disabled={isViewOnly} />
-                            <Label htmlFor="sameAsReceiver" className="text-xs font-normal cursor-pointer">Same as Receiver</Label>
-                        </div>
+            <Collapsible open={isExtraDetailsOpen} onOpenChange={setIsExtraDetailsOpen}>
+                <CollapsibleTrigger asChild>
+                    <div className="flex items-center justify-between p-3 border-b cursor-pointer hover:bg-muted/50">
+                        <span className="text-sm font-semibold text-muted-foreground">More Details (Billing, Shipping)</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <ChevronsUpDown className="h-4 w-4" />
+                        </Button>
                     </div>
-                    <Textarea 
-                        placeholder="Shipping Address" 
-                        rows={1} 
-                        value={shippingAddress} 
-                        onChange={(e) => setShippingAddress(e.target.value)}
-                        readOnly={isSameAsReceiver || isViewOnly}
-                        className="min-h-[40px]" 
-                    />
-                </div>
-                 <div className="space-y-1">
-                    <Label htmlFor="bill-to" className="font-semibold mb-1 block">Bill To</Label>
-                    <Select onValueChange={setBillTo} value={billTo} disabled={isViewOnly}>
-                        <SelectTrigger id="bill-to">
-                            <SelectValue placeholder="Select party for billing..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {billToOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    {billTo === 'Other' && (
-                        <div className="mt-2">
-                             <Combobox
-                                options={customerOptions}
-                                value={otherBillToParty}
-                                onChange={setOtherBillToParty}
-                                placeholder="Select billing party..."
-                                searchPlaceholder="Search customers..."
-                                notFoundMessage="No customer found."
-                                disabled={isViewOnly}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start p-3">
+                        <div className="space-y-1">
+                            <div className="flex items-center justify-between mb-1">
+                                <Label className="font-semibold">Shipping Address</Label>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox id="sameAsReceiver" checked={isSameAsReceiver} onCheckedChange={(checked) => setIsSameAsReceiver(!!checked)} disabled={isViewOnly} />
+                                    <Label htmlFor="sameAsReceiver" className="text-xs font-normal cursor-pointer">Same as Receiver</Label>
+                                </div>
+                            </div>
+                            <Textarea 
+                                placeholder="Shipping Address" 
+                                rows={1} 
+                                value={shippingAddress} 
+                                onChange={(e) => setShippingAddress(e.target.value)}
+                                readOnly={isSameAsReceiver || isViewOnly}
+                                className="min-h-[40px]" 
                             />
                         </div>
-                    )}
-                </div>
-                 <div className="space-y-1">
-                    <Label htmlFor="tax-paid-by" className="font-semibold mb-1 block">Tax Paid By</Label>
-                     <Select onValueChange={onTaxPaidByChange} value={taxPaidBy} disabled={isViewOnly}>
-                        <SelectTrigger id="tax-paid-by">
-                            <SelectValue placeholder="Select who pays tax..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {taxPaidByOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="bill-to" className="font-semibold mb-1 block">Bill To</Label>
+                            <Select onValueChange={setBillTo} value={billTo} disabled={isViewOnly}>
+                                <SelectTrigger id="bill-to">
+                                    <SelectValue placeholder="Select party for billing..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {billToOptions.map(option => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {billTo === 'Other' && (
+                                <div className="mt-2">
+                                    <Combobox
+                                        options={customerOptions}
+                                        value={otherBillToParty}
+                                        onChange={setOtherBillToParty}
+                                        placeholder="Select billing party..."
+                                        searchPlaceholder="Search customers..."
+                                        notFoundMessage="No customer found."
+                                        disabled={isViewOnly}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="tax-paid-by" className="font-semibold mb-1 block">Tax Paid By</Label>
+                            <Select onValueChange={onTaxPaidByChange} value={taxPaidBy} disabled={isViewOnly}>
+                                <SelectTrigger id="tax-paid-by">
+                                    <SelectValue placeholder="Select who pays tax..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {taxPaidByOptions.map(option => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
         </div>
     );
 }
