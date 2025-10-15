@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -175,10 +176,17 @@ export function NewInwardChallanForm() {
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
     const customerOptions = useMemo(() => customers.map(c => ({ label: c.name, value: c.name })), [customers]);
 
-    const createChallanObject = (status: 'Pending' | 'Finalized') => {
+    const createChallanObject = (status: 'Pending' | 'Finalized', newId?: string) => {
         const formData = form.getValues();
         const existingChallanId = searchParams.get('challanId');
-        const finalChallanId = status === 'Finalized' ? (existingChallanId || formData.inwardId) : (existingChallanId || tempChallanId);
+        
+        let finalChallanId: string;
+        if (status === 'Finalized') {
+            finalChallanId = newId || existingChallanId || formData.inwardId;
+        } else {
+            finalChallanId = existingChallanId || tempChallanId;
+        }
+
 
         const newChallanData: Challan = {
             challanId: finalChallanId,
@@ -239,19 +247,17 @@ export function NewInwardChallanForm() {
             return;
         }
         
-        const { challan, lrDetails } = createChallanObject('Finalized');
+        const existingChallanId = searchParams.get('challanId');
+        const { challan, lrDetails } = createChallanObject('Finalized', data.inwardId);
 
         let allChallans = getChallanData();
-        const existingChallanId = searchParams.get('challanId');
-        if (existingChallanId) {
-            allChallans = allChallans.filter(c => c.challanId !== existingChallanId);
-        }
-         // Remove temp challan if it exists
-        allChallans = allChallans.filter(c => c.challanId !== tempChallanId);
+        // Remove the old temp or existing challan record
+        allChallans = allChallans.filter(c => c.challanId !== existingChallanId && c.challanId !== tempChallanId);
         allChallans.push(challan);
         saveChallanData(allChallans);
 
-        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== challan.challanId && d.challanId !== existingChallanId);
+        // Remove old details and add the new, finalized ones
+        let allLrDetails = getLrDetailsData().filter(d => d.challanId !== existingChallanId && d.challanId !== tempChallanId);
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
 
@@ -459,3 +465,4 @@ export function NewInwardChallanForm() {
     
 
     
+
