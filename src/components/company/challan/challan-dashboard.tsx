@@ -135,7 +135,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, onCancel, 
                                     </AlertDialogContent>
                                 </AlertDialog>
                             )}
-                            {onDelete && challan.status === 'Pending' && (
+                            {onDelete && challan.status !== 'Finalized' && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
