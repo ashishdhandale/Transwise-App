@@ -93,6 +93,7 @@ export function NewChallanForm() {
     const [labour, setLabour] = useState(0);
     const [crossing, setCrossing] = useState(0);
     const [debitCreditAmount, setDebitCreditAmount] = useState(0);
+    const [isFinalized, setIsFinalized] = useState(false);
 
 
     // Master data
@@ -145,6 +146,10 @@ export function NewChallanForm() {
             const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
             const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
             const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
+            
+            if (existingChallan?.status === 'Finalized') {
+                setIsFinalized(true);
+            }
 
             if (existingChallan) {
                 setChallanId(existingChallan.challanId);
@@ -499,10 +504,12 @@ export function NewChallanForm() {
                     {isEditMode ? 'Edit Dispatch Challan' : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>
+                    {!isFinalized && (
+                         <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>
+                    )}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
                     <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Challan'}</Button>
-                    <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
+                    <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
             </header>
             <ClientOnly>
