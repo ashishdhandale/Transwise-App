@@ -263,22 +263,16 @@ export function NewInwardChallanForm() {
                              <CollapsibleTrigger className="w-full">
                                 <CardHeader className="cursor-pointer p-4">
                                     <div className="flex items-center justify-between">
-                                        {isHeaderOpen ? (
-                                             <CardTitle>Challan Details</CardTitle>
-                                        ) : (
-                                            <div className="flex flex-col items-start w-full">
-                                                <CardTitle className="text-lg">Challan Details</CardTitle>
-                                                <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mt-2">
-                                                    <SummaryItem label="Inward ID" value={watchedChallanValues.inwardId} />
-                                                    <SummaryItem label="Inward Date" value={watchedChallanValues.inwardDate ? format(watchedChallanValues.inwardDate, 'dd-MMM-yy') : 'N/A'} />
-                                                    <SummaryItem label="Received From" value={watchedChallanValues.receivedFromParty} />
-                                                    <SummaryItem label="Original Challan" value={watchedChallanValues.originalChallanNo} />
-                                                    <SummaryItem label="Vehicle No." value={watchedChallanValues.vehicleNo} />
-                                                    <SummaryItem label="Driver" value={watchedChallanValues.driverName} />
-                                                    <SummaryItem label="From Station" value={watchedChallanValues.fromStation} />
+                                        <div className="flex items-center gap-4">
+                                            <CardTitle className="text-lg">Challan Details</CardTitle>
+                                             {!isHeaderOpen && (
+                                                <div className="flex items-center gap-x-4 text-xs text-muted-foreground">
+                                                    <span>Inward ID: <span className="font-semibold text-foreground">{watchedChallanValues.inwardId}</span></span>
+                                                    <span>Vehicle: <span className="font-semibold text-foreground">{watchedChallanValues.vehicleNo}</span></span>
+                                                    <span>From: <span className="font-semibold text-foreground">{watchedChallanValues.fromStation}</span></span>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                         <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isHeaderOpen && "rotate-180")} />
                                     </div>
                                 </CardHeader>
@@ -394,7 +388,6 @@ export function NewInwardChallanForm() {
                     </Card>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="destructive" onClick={() => router.push('/company/challan')}><X className="mr-2 h-4 w-4"/> Cancel & Exit</Button>
-                        <Button type="button" variant="outline" onClick={handleSaveAsTemp}><Save className="mr-2 h-4 w-4" /> Save as Temp & Exit</Button>
                         <Button type="submit" disabled={form.formState.isSubmitting}>
                             {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
                             Finalize & Save Inward
