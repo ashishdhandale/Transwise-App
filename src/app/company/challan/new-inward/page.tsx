@@ -1,18 +1,17 @@
+
 'use client';
 
 import { Suspense } from 'react';
 import DashboardLayout from '../../../(dashboard)/layout';
 import { NewInwardChallanForm } from '@/components/company/challan/new-inward-challan-form';
 import { ClientOnly } from '@/components/ui/client-only';
-import { ArrowDownToLine } from 'lucide-react';
 
 function NewInwardChallanPage() {
   return (
     <DashboardLayout>
       <main className="flex-1 p-4 md:p-6">
-        <header className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-primary flex items-center justify-center gap-2">
-                <ArrowDownToLine className="h-7 w-7" />
+        <header className="mb-4">
+            <h1 className="text-xl font-bold text-primary">
                 New Inward Challan
             </h1>
         </header>
