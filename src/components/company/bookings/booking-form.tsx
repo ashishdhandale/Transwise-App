@@ -336,6 +336,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
         setSender(senderProfile);
         setReceiver(receiverProfile);
+        
         const itemRowsWithIds = (bookingToLoad.itemRows || []).map(row => ({ ...row, id: row.id || keyCounter++ }));
         setItemRows(itemRowsWithIds);
         
