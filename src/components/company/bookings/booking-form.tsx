@@ -81,6 +81,7 @@ interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     bookingData?: Booking | null; // Pass full booking object for editing transient data
     onSaveSuccess?: (booking: Booking) => void;
+    onSaveAndNew?: (booking: Booking, callback: () => void) => void; // New prop for save and new
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
@@ -228,7 +229,7 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false }: BookingFormProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -399,7 +400,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, [bookingDate]);
 
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         const profile = companyProfile;
         const parsedBookings = getBookings();
         let lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
@@ -440,7 +441,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             title: "Form Reset",
             description: "All fields have been cleared.",
         });
-    };
+    }, [companyProfile, userRole, branches, isOfflineMode, toast]);
 
 
     useEffect(() => {
@@ -472,7 +473,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         return party;
     }, []);
 
-    const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
+    const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online', postSaveCallback?: () => void) => {
         const finalSender = maybeSaveNewParty(sender);
         const finalReceiver = maybeSaveNewParty(receiver);
 
@@ -520,10 +521,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
                 toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
                 if (onSaveSuccess) onSaveSuccess(updatedBooking);
+                 if (postSaveCallback) postSaveCallback();
             } else {
                 const newBooking: Booking = { trackingId: `TRK-${Date.now()}`, ...newBookingData };
+                
+                if (onSaveAndNew) {
+                    onSaveAndNew(newBooking, handleReset);
+                    return; // The parent component handles toast and state
+                }
+
                 // If this form is used for manual inward challans, don't save to the main bookings list.
-                // Just pass the data back to the parent component.
                 if (isOfflineModeProp) {
                      if (onSaveSuccess) onSaveSuccess(newBooking);
                      return;
@@ -599,10 +606,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userRole, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userRole, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset]);
 
 
-    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
+    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false, isSaveAndNew = false) => {
         const newErrors: { [key: string]: boolean } = {};
         if (!fromStation) newErrors.fromStation = true;
         if (!toStation) newErrors.toStation = true;
@@ -629,7 +636,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             return;
         }
         
-        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode && !isOfflineModeProp) {
+        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode && !isOfflineModeProp && !isSaveAndNew) {
             setIsPaymentDialogOpen(true);
             return;
         }
@@ -638,7 +645,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        await proceedWithSave(paymentMode);
+        await proceedWithSave(paymentMode, isSaveAndNew ? handleReset : undefined);
     };
     
     const handleDownloadPdf = async () => {
@@ -693,7 +700,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
         handleReset();
-    }, []);
+    }, [handleReset]);
 
     const formTitle = isEditMode ? `Edit Booking: ${currentLrNumber}` : 
                       isViewOnly ? `View Booking: ${currentLrNumber}` :
@@ -793,6 +800,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                             </Card>
                             <MainActionsSection 
                                 onSave={() => handleSaveOrUpdate()} 
+                                onSaveAndNew={onSaveAndNew ? () => handleSaveOrUpdate(undefined, false, true) : undefined}
                                 isEditMode={isEditMode}
                                 isPartialCancel={isPartialCancel} 
                                 onClose={onClose} 

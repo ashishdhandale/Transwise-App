@@ -3,13 +3,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Save, Calculator, RefreshCw, X, FileX, RotateCcw, Loader2 } from 'lucide-react';
+import { Save, Calculator, RefreshCw, X, FileX, RotateCcw, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { CalculatorDialog } from './calculator-dialog';
 import { useRouter } from 'next/navigation';
 
 interface MainActionsSectionProps {
     onSave: () => void;
+    onSaveAndNew?: () => void; // New prop
     isEditMode: boolean;
     isPartialCancel?: boolean;
     onClose?: () => void;
@@ -19,7 +20,7 @@ interface MainActionsSectionProps {
     isOfflineMode?: boolean;
 }
 
-export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isOfflineMode }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isOfflineMode }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
@@ -51,10 +52,17 @@ export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClos
 
     return (
         <div className="flex flex-col gap-2">
-            <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={onSave} disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditMode || isPartialCancel ? <RefreshCw className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-                {isSubmitting ? savingButtonText : saveButtonText}
-            </Button>
+            {onSaveAndNew ? (
+                <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={onSaveAndNew} disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                    Add to List & New
+                </Button>
+            ) : (
+                <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={onSave} disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditMode || isPartialCancel ? <RefreshCw className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+                    {isSubmitting ? savingButtonText : saveButtonText}
+                </Button>
+            )}
             
             {isEditMode || isPartialCancel || isOfflineMode ? (
                 <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">

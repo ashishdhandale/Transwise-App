@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,11 +24,9 @@ import { getCustomers } from '@/lib/customer-data';
 import { Textarea } from '@/components/ui/textarea';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { FileText, PlusCircle, Save, X, Pencil, Trash2, ChevronsUpDown } from 'lucide-react';
+import { FileText, Save, X, Pencil, Trash2, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { BookingForm } from '../bookings/booking-form';
 
@@ -53,29 +52,13 @@ const generateInwardChallanId = (challans: Challan[]): string => {
     return `${prefix}${String(lastNum + 1).padStart(2, '0')}`;
 };
 
-const emptyLr: Omit<Booking, 'trackingId'> = {
-    lrNo: '',
-    bookingDate: new Date().toISOString(),
-    fromCity: '', toCity: '',
-    sender: '', receiver: '',
-    itemDescription: '',
-    qty: 0, chgWt: 0, totalAmount: 0,
-    lrType: 'TOPAY', loadType: 'LTL', status: 'In Stock',
-    itemRows: [], source: 'Inward',
-};
-
 
 export function NewInwardChallanForm() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
     const [cities, setCities] = useState<City[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
-    
-    // Inline Form State
-    const [isEditing, setIsEditing] = useState(false);
-    const [currentLr, setCurrentLr] = useState<Booking>({ trackingId: `temp-${Date.now()}`, ...emptyLr});
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
-
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     
@@ -139,8 +122,8 @@ export function NewInwardChallanForm() {
         }
         loadInitialData();
     }, [searchParams, form]);
-
-    const handleAddOrUpdateLr = (booking: Booking) => {
+    
+    const handleAddOrUpdateLr = (booking: Booking, resetFormCallback?: () => void) => {
         const existingLrIndex = addedLrs.findIndex(lr => lr.trackingId === booking.trackingId);
         
         if (existingLrIndex > -1) {
@@ -155,6 +138,9 @@ export function NewInwardChallanForm() {
             toast({ title: 'LR Added', description: `LR# ${booking.lrNo} has been added to the list.` });
         }
         setBookingDataToEdit(null); // Reset editing state
+        if (resetFormCallback) {
+            resetFormCallback();
+        }
     };
     
     const handleEditLrClick = (lrToEdit: Booking) => {
@@ -309,7 +295,7 @@ export function NewInwardChallanForm() {
                     
                     <BookingForm 
                         isOfflineMode={true} 
-                        onSaveSuccess={handleAddOrUpdateLr}
+                        onSaveAndNew={handleAddOrUpdateLr}
                         bookingData={bookingDataToEdit}
                         onClose={() => setBookingDataToEdit(null)}
                     />
