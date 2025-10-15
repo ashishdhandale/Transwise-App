@@ -28,7 +28,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getBookings } from '@/lib/bookings-dashboard-data';
+import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
+import { BookingForm } from '../bookings/booking-form';
 
 
 const inwardChallanSchema = z.object({
@@ -73,6 +74,8 @@ export function NewInwardChallanForm() {
     // Inline Form State
     const [isEditing, setIsEditing] = useState(false);
     const [currentLr, setCurrentLr] = useState<Booking>({ trackingId: `temp-${Date.now()}`, ...emptyLr});
+    const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
+
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     
@@ -137,28 +140,25 @@ export function NewInwardChallanForm() {
         loadInitialData();
     }, [searchParams, form]);
 
-    const handleAddLrToList = () => {
-        if (!currentLr.lrNo || !currentLr.fromCity || !currentLr.toCity || !currentLr.sender || !currentLr.receiver || !currentLr.itemDescription) {
-            toast({ title: 'Missing Information', description: 'Please fill all required (*) LR fields.', variant: 'destructive'});
-            return;
-        }
-
-        if(isEditing) {
-            setAddedLrs(prev => prev.map(lr => lr.trackingId === currentLr.trackingId ? currentLr : lr));
-            toast({ title: 'LR Updated', description: `LR# ${currentLr.lrNo} has been updated.`});
-        } else {
-            setAddedLrs(prev => [...prev, currentLr]);
-            toast({ title: 'LR Added', description: `LR# ${currentLr.lrNo} has been added to the list.`});
-        }
+    const handleAddOrUpdateLr = (booking: Booking) => {
+        const existingLrIndex = addedLrs.findIndex(lr => lr.trackingId === booking.trackingId);
         
-        // Reset form for next entry
-        setCurrentLr({ trackingId: `temp-${Date.now()}`, ...emptyLr });
-        setIsEditing(false);
-    }
+        if (existingLrIndex > -1) {
+            // Update existing LR
+            const updatedLrs = [...addedLrs];
+            updatedLrs[existingLrIndex] = booking;
+            setAddedLrs(updatedLrs);
+            toast({ title: 'LR Updated', description: `LR# ${booking.lrNo} has been updated in the list.` });
+        } else {
+            // Add new LR
+            setAddedLrs(prev => [...prev, { ...booking, trackingId: `temp-${Date.now()}` }]);
+            toast({ title: 'LR Added', description: `LR# ${booking.lrNo} has been added to the list.` });
+        }
+        setBookingDataToEdit(null); // Reset editing state
+    };
     
     const handleEditLrClick = (lrToEdit: Booking) => {
-        setCurrentLr(lrToEdit);
-        setIsEditing(true);
+        setBookingDataToEdit(lrToEdit);
     };
 
     const handleRemoveLr = (trackingId: string) => {
@@ -189,7 +189,7 @@ export function NewInwardChallanForm() {
             dispatchToParty: '',
             totalLr: addedLrs.length,
             totalPackages: addedLrs.reduce((s, b) => s + b.qty, 0),
-            totalItems: addedLrs.length,
+            totalItems: addedLrs.reduce((s, b) => s + (b.itemRows?.length || 1), 0), // Fallback to 1 item if rows not detailed
             totalActualWeight: 0,
             totalChargeWeight: addedLrs.reduce((s, b) => s + b.chgWt, 0),
             vehicleHireFreight: 0, advance: 0, balance: 0, senderId: '',
@@ -200,7 +200,7 @@ export function NewInwardChallanForm() {
         const newLrDetails: LrDetail[] = addedLrs.map(b => ({
             challanId: finalChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
             from: b.fromCity, to: b.toCity, bookingDate: b.bookingDate, itemDescription: b.itemDescription,
-            quantity: b.qty, actualWeight: 0, chargeWeight: b.chgWt, grandTotal: b.totalAmount
+            quantity: b.qty, actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), chargeWeight: b.chgWt, grandTotal: b.totalAmount
         }));
 
         return { challan: newChallanData, lrDetails: newLrDetails };
@@ -239,6 +239,8 @@ export function NewInwardChallanForm() {
         if (existingChallanId) {
             allChallans = allChallans.filter(c => c.challanId !== existingChallanId);
         }
+         // Remove temp challan if it exists
+        allChallans = allChallans.filter(c => c.challanId !== tempChallanId);
         allChallans.push(challan);
         saveChallanData(allChallans);
 
@@ -304,38 +306,14 @@ export function NewInwardChallanForm() {
                             </CollapsibleContent>
                         </Card>
                     </Collapsible>
-
-                    <Card>
-                        <CardHeader><CardTitle>Add/Edit LR Details</CardTitle></CardHeader>
-                        <CardContent className="p-4 border rounded-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 items-end">
-                            <div className="space-y-1"><Label>LR No*</Label><Input value={currentLr.lrNo} onChange={(e) => setCurrentLr(p => ({...p, lrNo: e.target.value}))}/></div>
-                            <div className="space-y-1"><Label>From*</Label><Combobox options={cityOptions} value={currentLr.fromCity} onChange={(v) => setCurrentLr(p => ({...p, fromCity: v}))} placeholder="From..."/></div>
-                            <div className="space-y-1"><Label>To*</Label><Combobox options={cityOptions} value={currentLr.toCity} onChange={(v) => setCurrentLr(p => ({...p, toCity: v}))} placeholder="To..."/></div>
-                            <div className="space-y-1"><Label>Sender*</Label><Combobox options={customerOptions} value={currentLr.sender} onChange={(v) => setCurrentLr(p => ({...p, sender: v}))} placeholder="Sender..."/></div>
-                            <div className="space-y-1"><Label>Receiver*</Label><Combobox options={customerOptions} value={currentLr.receiver} onChange={(v) => setCurrentLr(p => ({...p, receiver: v}))} placeholder="Receiver..."/></div>
-                            <div className="space-y-1"><Label>Item Desc.</Label><Input value={currentLr.itemDescription} onChange={(e) => setCurrentLr(p => ({...p, itemDescription: e.target.value}))}/></div>
-                            <div className="space-y-1"><Label>Qty*</Label><Input type="number" value={currentLr.qty} onChange={(e) => setCurrentLr(p => ({...p, qty: Number(e.target.value)}))}/></div>
-                            <div className="space-y-1"><Label>Chg. Wt.</Label><Input type="number" value={currentLr.chgWt} onChange={(e) => setCurrentLr(p => ({...p, chgWt: Number(e.target.value)}))}/></div>
-                            <div className="space-y-1"><Label>Booking Type</Label>
-                                <Select value={currentLr.lrType} onValueChange={(v) => setCurrentLr(p => ({...p, lrType: v as any}))}>
-                                    <SelectTrigger><SelectValue/></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="FOC">FOC</SelectItem>
-                                        <SelectItem value="PAID">PAID</SelectItem>
-                                        <SelectItem value="TOPAY">TOPAY</SelectItem>
-                                        <SelectItem value="TBB">TBB</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-1"><Label>Total Amt.</Label><Input type="number" value={currentLr.totalAmount} onChange={(e) => setCurrentLr(p => ({...p, totalAmount: Number(e.target.value)}))}/></div>
-                            <div className="col-span-full sm:col-span-2 lg:col-span-1 self-end">
-                                <Button type="button" onClick={handleAddLrToList} className="w-full">
-                                    {isEditing ? 'Update LR' : 'Add to List'}
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
                     
+                    <BookingForm 
+                        isOfflineMode={true} 
+                        onSaveSuccess={handleAddOrUpdateLr}
+                        bookingData={bookingDataToEdit}
+                        onClose={() => setBookingDataToEdit(null)}
+                    />
+
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>LRs Received</CardTitle>
@@ -352,7 +330,7 @@ export function NewInwardChallanForm() {
                                             <TableHead className="whitespace-nowrap">Receiver</TableHead>
                                             <TableHead className="whitespace-nowrap">Item</TableHead>
                                             <TableHead className="whitespace-nowrap">Qty</TableHead>
-                                            <TableHead className="whitespace-nowrap">Act. Wt.</TableHead>
+                                            <TableHead className="whitespace-nowrap">Chg. Wt.</TableHead>
                                             <TableHead className="whitespace-nowrap">Booking Type</TableHead>
                                             <TableHead className="whitespace-nowrap">Total</TableHead>
                                             <TableHead className="whitespace-nowrap">Action</TableHead>
