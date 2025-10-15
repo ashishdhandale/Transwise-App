@@ -492,11 +492,17 @@ export function NewChallanForm() {
 
     return (
         <div className="space-y-4">
-            <header className="mb-4">
+            <header className="mb-4 flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                     <FileText className="h-8 w-8" />
                     {isEditMode ? 'Edit Dispatch Challan' : 'New Dispatch Challan'}
                 </h1>
+                <div className="flex justify-end gap-2">
+                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>
+                    <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
+                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Finalized Challan' : 'Finalize & Save Challan'}</Button>
+                    <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
+                </div>
             </header>
             <ClientOnly>
                 <Card>
@@ -544,41 +550,40 @@ export function NewChallanForm() {
                  <div className="space-y-4">
                     <Collapsible open={isStockVisible} onOpenChange={setIsStockVisible}>
                         <Card>
-                            <CardHeader className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <CollapsibleTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                <ChevronsUpDown className="h-4 w-4" />
-                                            </Button>
-                                        </CollapsibleTrigger>
-                                        <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="relative w-full max-w-xs">
-                                            <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                placeholder="Search LR, sender, receiver..."
-                                                className="pl-8 h-8 text-xs"
-                                                value={stockSearchTerm}
-                                                onChange={(e) => setStockSearchTerm(e.target.value)}
-                                                onKeyDown={handleStockSearchKeyDown}
-                                            />
+                            <CollapsibleTrigger className="w-full">
+                                <CardHeader className="cursor-pointer p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            
+                                            <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
                                         </div>
-                                        <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
-                                        <Select value={toStationFilter} onValueChange={setToStationFilter}>
-                                            <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {stockToStationOptions.map(station => (
-                                                    <SelectItem key={station} value={station}>{station}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative w-full max-w-xs">
+                                                <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Search LR, sender, receiver..."
+                                                    className="pl-8 h-8 text-xs"
+                                                    value={stockSearchTerm}
+                                                    onChange={(e) => setStockSearchTerm(e.target.value)}
+                                                    onKeyDown={handleStockSearchKeyDown}
+                                                />
+                                            </div>
+                                            <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
+                                            <Select value={toStationFilter} onValueChange={setToStationFilter}>
+                                                <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {stockToStationOptions.map(station => (
+                                                        <SelectItem key={station} value={station}>{station}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isStockVisible && "rotate-180")} />
+                                        </div>
                                     </div>
-                                </div>
-                            </CardHeader>
+                                </CardHeader>
+                            </CollapsibleTrigger>
                             <CollapsibleContent>
                                 <CardContent className="p-0">
                                     <div className="overflow-y-auto h-96 border-t">
@@ -702,13 +707,6 @@ export function NewChallanForm() {
                         <Label>Remarks / Dispatch Note</Label>
                         <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                     </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                    <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>
-                    <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Finalized Challan' : 'Finalize & Save Challan'}</Button>
-                    <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit Without Saving</Button>
                 </div>
                 
                 {previewData && companyProfile && (
