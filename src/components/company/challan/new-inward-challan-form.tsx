@@ -376,8 +376,8 @@ export function NewInwardChallanForm() {
                                                 <TableCell className="whitespace-nowrap">{lr.lrType}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.totalAmount.toFixed(2)}</TableCell>
                                                 <TableCell className="whitespace-nowrap">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleEditLrClick(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
-                                                    <Button variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => handleEditLrClick(lr)}><Pencil className="h-4 w-4 text-blue-600"/></Button>
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveLr(lr.trackingId)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -433,5 +433,7 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
+
+    
 
     
