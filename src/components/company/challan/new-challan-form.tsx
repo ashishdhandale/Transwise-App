@@ -554,7 +554,7 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                     {!isFinalized && <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />{isEditMode ? 'Update' : 'Save as Temp'}</Button>}
+                     {!isFinalized && <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />{isEditMode ? 'Update Challan' : 'Save as Temp'}</Button>}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
                     {!isFinalized && <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save'}</Button>}
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
@@ -956,3 +956,5 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
+
+    
