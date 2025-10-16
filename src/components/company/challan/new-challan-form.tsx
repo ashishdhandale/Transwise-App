@@ -14,7 +14,7 @@ import {
   TableRow,
   TableFooter
 } from '@/components/ui/table';
-import { FileText, Save, Printer, Download, Loader2, Eye, X, ChevronsUpDown, PlusCircle, Trash2 } from 'lucide-react';
+import { FileText, Save, Printer, Download, Loader2, Eye, X, ChevronsUpDown, PlusCircle, Trash2, Pencil } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { addVoucher } from '@/lib/accounts-data';
+import { BookingForm } from '../bookings/booking-form';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -111,6 +112,10 @@ export function NewChallanForm() {
     const [cities, setCities] = useState<City[]>([]);
     const [branches, setBranches] = useState<Branch[]>([]);
     
+    // Edit Dialog state
+    const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -305,6 +310,17 @@ export function NewChallanForm() {
     const handleRemoveFromChallan = () => {
         setAddedLrs(prev => prev.filter(lr => !addedSelection.has(lr.trackingId)));
         setAddedSelection(new Set());
+    };
+
+    const handleEditLrClick = (lrToEdit: Booking) => {
+        setBookingDataToEdit(lrToEdit);
+        setIsEditDialogOpen(true);
+    };
+
+    const handleUpdateLrInList = (updatedBooking: Booking) => {
+        setAddedLrs(prev => prev.map(lr => lr.trackingId === updatedBooking.trackingId ? updatedBooking : lr));
+        setIsEditDialogOpen(false);
+        setBookingDataToEdit(null);
     };
 
     const buildChallanObject = (status: 'Pending' | 'Finalized', newId?: string): { challan: Challan, lrDetails: LrDetail[] } | null => {
@@ -757,6 +773,7 @@ export function NewChallanForm() {
                                             <TableHead className="sticky top-0 bg-card text-right whitespace-nowrap">Charge Wt.</TableHead>
                                             <TableHead className="sticky top-0 bg-card whitespace-nowrap">Booking Type</TableHead>
                                             <TableHead className="sticky top-0 bg-card text-right whitespace-nowrap">Amount</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-center whitespace-nowrap">Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -786,10 +803,15 @@ export function NewChallanForm() {
                                                 <TableCell className="text-right whitespace-nowrap">{lr.chgWt.toFixed(2)}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.lrType}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap">{formatValue(lr.totalAmount)}</TableCell>
+                                                <TableCell className="text-center whitespace-nowrap">
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditLrClick(lr)}>
+                                                        <Pencil className="h-4 w-4 text-blue-600" />
+                                                    </Button>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={11} className="text-center h-24">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={12} className="text-center h-24">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
                                      <TableFooter>
@@ -798,7 +820,7 @@ export function NewChallanForm() {
                                             <TableCell className="text-right whitespace-nowrap">{totalAddedQty}</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">{totalAddedChgWt.toFixed(2)}</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">To-Pay: {formatValue(totalTopayAmount)}</TableCell>
-                                            <TableCell className="text-right whitespace-nowrap">{formatValue(totalFreight)}</TableCell>
+                                            <TableCell className="text-right whitespace-nowrap" colSpan={2}>{formatValue(totalFreight)}</TableCell>
                                         </TableRow>
                                     </TableFooter>
                                 </Table>
@@ -901,6 +923,22 @@ export function NewChallanForm() {
                                     <Button onClick={handlePrintAndClose}>Done & Exit</Button>
                                 )}
                             </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )}
+                 {bookingDataToEdit && (
+                    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                        <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
+                            <DialogHeader>
+                                <DialogTitle>Edit In-Challan LR: {bookingDataToEdit.lrNo}</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex-grow overflow-auto pr-6">
+                                <BookingForm 
+                                    bookingData={bookingDataToEdit}
+                                    onSaveSuccess={handleUpdateLrInList}
+                                    onClose={() => setIsEditDialogOpen(false)}
+                                />
+                            </div>
                         </DialogContent>
                     </Dialog>
                 )}
