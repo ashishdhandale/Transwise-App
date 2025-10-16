@@ -504,9 +504,7 @@ export function NewChallanForm() {
                     {isEditMode ? 'Edit Dispatch Challan' : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {!isFinalized && (
-                         <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>
-                    )}
+                    {!isFinalized && <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />{isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
                     <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Challan'}</Button>
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
@@ -602,7 +600,8 @@ export function NewChallanForm() {
                                                 <TableRow>
                                                     <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.filter(lr => lr.status === 'In Stock').length && stockSelection.size > 0} /></TableHead>
                                                     <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card">Date</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card">Booking Date</TableHead>
+                                                    <TableHead className="sticky top-0 bg-card">Item & Description</TableHead>
                                                     <TableHead className="sticky top-0 bg-card">To</TableHead>
                                                     <TableHead className="sticky top-0 bg-card">Sender</TableHead>
                                                     <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
@@ -624,7 +623,8 @@ export function NewChallanForm() {
                                                     >
                                                         <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} disabled={lr.status !== 'In Stock'} /></TableCell>
                                                         <TableCell>{lr.lrNo}</TableCell>
-                                                        <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM')}</TableCell>
+                                                        <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
+                                                        <TableCell className="max-w-[200px] truncate">{lr.itemDescription}</TableCell>
                                                         <TableCell>{lr.toCity}</TableCell>
                                                         <TableCell>{lr.sender}</TableCell>
                                                         <TableCell>{lr.receiver}</TableCell>
