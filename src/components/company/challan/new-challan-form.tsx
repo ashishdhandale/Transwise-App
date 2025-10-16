@@ -661,16 +661,16 @@ export function NewChallanForm() {
                                                     checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length}
                                                 />
                                             </TableHead>
-                                            <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Booking Date</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Item & Description</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">To</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Sender</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
-                                            <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
-                                            <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Booking Type</TableHead>
-                                            <TableHead className="sticky top-0 bg-card text-right">Amount</TableHead>
+                                            <TableHead className="sticky top-0 bg-card whitespace-nowrap">LR No</TableHead>
+                                            <TableHead className="sticky top-0 bg-card whitespace-nowrap">Booking Date</TableHead>
+                                            <TableHead className="sticky top-0 bg-card whitespace-nowrap">Item & Description</TableHead>
+                                            <TableHead className="sticky top-0 bg-card whitespace-nowrap">To</TableHead>
+                                            <TableHead className="sticky top-0 bg-card whitespace-nowrap">Sender</TableHead>
+                                            <TableHead className="sticky top-0 bg-card whitespace-nowrap">Receiver</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right whitespace-nowrap">Packages</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right whitespace-nowrap">Charge Wt.</TableHead>
+                                            <TableHead className="sticky top-0 bg-card whitespace-nowrap">Booking Type</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right whitespace-nowrap">Amount</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -690,29 +690,29 @@ export function NewChallanForm() {
                                                         }}
                                                     />
                                                 </TableCell>
-                                                <TableCell>{lr.lrNo}</TableCell>
-                                                <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
-                                                <TableCell className="max-w-xs truncate">{lr.itemDescription}</TableCell>
-                                                <TableCell>{lr.toCity}</TableCell>
-                                                <TableCell>{lr.sender}</TableCell>
-                                                <TableCell>{lr.receiver}</TableCell>
-                                                <TableCell className="text-right">{lr.qty}</TableCell>
-                                                <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
-                                                <TableCell>{lr.lrType}</TableCell>
-                                                <TableCell className="text-right">{formatValue(lr.totalAmount)}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.lrNo}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
+                                                <TableCell className="max-w-xs truncate whitespace-nowrap">{lr.itemDescription}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.sender}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.receiver}</TableCell>
+                                                <TableCell className="text-right whitespace-nowrap">{lr.qty}</TableCell>
+                                                <TableCell className="text-right whitespace-nowrap">{lr.chgWt.toFixed(2)}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.lrType}</TableCell>
+                                                <TableCell className="text-right whitespace-nowrap">{formatValue(lr.totalAmount)}</TableCell>
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={11} className="h-24 text-center">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={11} className="text-center h-24">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
                                      <TableFooter>
                                         <TableRow className="font-bold bg-muted/50">
-                                            <TableCell colSpan={7} className="text-right">Total LRs: {addedLrs.length}</TableCell>
-                                            <TableCell className="text-right">{totalAddedQty}</TableCell>
-                                            <TableCell className="text-right">{totalAddedChgWt.toFixed(2)}</TableCell>
-                                            <TableCell className="text-right">To-Pay: {formatValue(totalTopayAmount)}</TableCell>
-                                            <TableCell className="text-right">{formatValue(totalFreight)}</TableCell>
+                                            <TableCell colSpan={7} className="text-right whitespace-nowrap">Total LRs: {addedLrs.length}</TableCell>
+                                            <TableCell className="text-right whitespace-nowrap">{totalAddedQty}</TableCell>
+                                            <TableCell className="text-right whitespace-nowrap">{totalAddedChgWt.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right whitespace-nowrap">To-Pay: {formatValue(totalTopayAmount)}</TableCell>
+                                            <TableCell className="text-right whitespace-nowrap">{formatValue(totalFreight)}</TableCell>
                                         </TableRow>
                                     </TableFooter>
                                 </Table>
