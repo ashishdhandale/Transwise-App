@@ -90,7 +90,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>Contents</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
-                            <TableHead className={`${thClass} text-right`}>Challan Total</TableHead>
+                            <TableHead className={`${thClass} text-right`}>Amount</TableHead>
                             <TableHead className={`${thClass} text-right`}>Pvt.Mark</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -99,7 +99,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             const totalActWt = booking.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
                             const totalQty = booking.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
                             const allItemsDescription = booking.itemRows
-                                .map(item => `${item.itemName} - ${item.description}`)
+                                .map(item => `${item.itemName || ''} - ${item.description || ''}`.replace(/^ - | - $/g, ''))
                                 .join(', ');
 
                             return (
