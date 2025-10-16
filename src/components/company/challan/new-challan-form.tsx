@@ -689,7 +689,7 @@ export function NewChallanForm() {
                             <CardTitle className="text-base font-headline">LRs Added to Challan</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0 flex-grow">
-                             <div className="overflow-y-auto h-96 border-t">
+                             <div className="overflow-y-auto max-h-[60vh] border-t">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -720,7 +720,7 @@ export function NewChallanForm() {
                                                 key={lr.trackingId} 
                                                 data-state={addedSelection.has(lr.trackingId) && "selected"}
                                             >
-                                                <TableCell>
+                                                <TableCell className="whitespace-nowrap">
                                                     <Checkbox
                                                         checked={addedSelection.has(lr.trackingId)}
                                                         onCheckedChange={(checked) => {
