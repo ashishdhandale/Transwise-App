@@ -96,7 +96,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
         setName(newName);
         // Auto-generate branchId from name for new branches
         if (!branch) {
-            const newBranchId = newName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10);
+            const newBranchId = newName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 4);
             setBranchId(newBranchId);
         }
     }
@@ -157,7 +157,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                     </div>
                      <div>
                         <Label htmlFor="branch-id">Branch ID</Label>
-                        <Input id="branch-id" value={branchId} onChange={(e) => setBranchId(e.target.value.toUpperCase())} placeholder="e.g. NGPMAIN" />
+                        <Input id="branch-id" value={branchId} onChange={(e) => setBranchId(e.target.value.toUpperCase())} placeholder="e.g. NGPMAIN" disabled={!!branch} />
                     </div>
                     <div>
                         <Label htmlFor="branch-type">Branch Type</Label>
