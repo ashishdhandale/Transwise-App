@@ -68,6 +68,10 @@ export interface Branch {
   gstin: string;
   lrPrefix?: string;
   companyId: string;
+  username?: string;
+  password?: string;
+  forcePasswordChange?: boolean;
+  isActive?: boolean;
 }
 
 export type User = AdminUser | CompanyUser;

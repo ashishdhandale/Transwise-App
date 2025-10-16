@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search, Building } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, Building, Copy, Shield, ShieldOff, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddBranchDialog } from './add-branch-dialog';
 import type { Branch } from '@/lib/types';
@@ -32,9 +32,20 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
+
+const generateRandomPassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let retVal = "";
+    for (let i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
+}
 
 export function BranchDashboard() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -87,16 +98,36 @@ export function BranchDashboard() {
     });
   };
 
-  const handleSave = (branchData: Omit<Branch, 'id' | 'companyId'>) => {
+  const handleSave = (branchData: Partial<Omit<Branch, 'id' | 'companyId'>>) => {
     let updatedBranches;
     if (currentBranch) {
-      updatedBranches = branches.map(branch => (branch.id === currentBranch.id ? { ...currentBranch, ...branchData } : branch));
+       const finalData: Branch = {
+            ...currentBranch,
+            ...branchData,
+            password: branchData.password ? branchData.password : currentBranch.password,
+            forcePasswordChange: branchData.password ? true : currentBranch.forcePasswordChange,
+            isActive: branchData.type === 'Agency' ? (currentBranch.isActive ?? true) : undefined
+        };
+      updatedBranches = branches.map(branch => (branch.id === currentBranch.id ? finalData : branch));
       toast({ title: 'Branch Updated', description: `"${branchData.name}" has been updated successfully.` });
     } else {
       const newBranch: Branch = {
         id: `branch-${Date.now()}`,
         companyId: '1', // Placeholder companyId
-        ...branchData
+        name: branchData.name || '',
+        type: branchData.type || 'Owned',
+        location: branchData.location || '',
+        address: branchData.address || '',
+        city: branchData.city || '',
+        state: branchData.state || '',
+        contactNo: branchData.contactNo || '',
+        email: branchData.email || '',
+        gstin: branchData.gstin || '',
+        lrPrefix: branchData.lrPrefix,
+        username: branchData.username,
+        password: branchData.password,
+        forcePasswordChange: branchData.forcePasswordChange,
+        isActive: branchData.isActive,
       };
       updatedBranches = [newBranch, ...branches];
       toast({ title: 'Branch Added', description: `"${branchData.name}" has been added.` });
@@ -105,6 +136,46 @@ export function BranchDashboard() {
     setBranches(updatedBranches);
     return true;
   };
+
+  const handleToggleActive = (id: string) => {
+      const updatedBranches = branches.map(branch => {
+          if (branch.id === id) {
+              return { ...branch, isActive: !branch.isActive };
+          }
+          return branch;
+      });
+      saveBranches(updatedBranches);
+      setBranches(updatedBranches);
+      const branch = branches.find(s => s.id === id);
+      toast({
+          title: `Account ${branch?.isActive ? 'Blocked' : 'Activated'}`,
+          description: `Login access for ${branch?.name} has been updated.`,
+      });
+  };
+
+  const handleResetPassword = (id: string) => {
+      const newPassword = generateRandomPassword();
+      const updatedBranches = branches.map(branch => {
+          if (branch.id === id) {
+              return { ...branch, password: newPassword, forcePasswordChange: true };
+          }
+          return branch;
+      });
+      saveBranches(updatedBranches);
+      setBranches(updatedBranches);
+      const branch = branches.find(s => s.id === id);
+      toast({
+          title: 'Password Reset',
+          description: `New password for ${branch?.name} is: ${newPassword}`,
+          duration: 10000, // Keep toast longer for copying
+      });
+  };
+  
+  const copyToClipboard = (text?: string) => {
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+      toast({ title: 'Copied!'});
+  }
 
   return (
     <>
@@ -140,7 +211,8 @@ export function BranchDashboard() {
                         <TableHead className={thClass}>Type</TableHead>
                         <TableHead className={thClass}>Location</TableHead>
                         <TableHead className={thClass}>Contact</TableHead>
-                        <TableHead className={thClass}>Email</TableHead>
+                        <TableHead className={thClass}>Login ID</TableHead>
+                        <TableHead className={thClass}>Password</TableHead>
                         <TableHead className={cn(thClass, "w-[120px] text-right")}>Actions</TableHead>
                     </TableRow>
                     </TableHeader>
@@ -153,14 +225,44 @@ export function BranchDashboard() {
                         </TableCell>
                         <TableCell className={cn(tdClass)}>{branch.city}, {branch.state}</TableCell>
                         <TableCell className={cn(tdClass)}>{branch.contactNo}</TableCell>
-                        <TableCell className={cn(tdClass)}>{branch.email}</TableCell>
+                        <TableCell className={cn(tdClass)}>{branch.type === 'Agency' ? branch.username : 'N/A'}</TableCell>
+                         <TableCell className={cn(tdClass, 'font-mono')}>
+                            {branch.type === 'Agency' && branch.forcePasswordChange && branch.password ? (
+                                <div className="flex items-center gap-2">
+                                    <span>{branch.password}</span>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(branch.password)}>
+                                        <Copy className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            ) : branch.type === 'Agency' ? '**********' : 'N/A'}
+                        </TableCell>
                         <TableCell className={cn(tdClass, "text-right")}>
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(branch)}><Pencil className="h-4 w-4" /></Button>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                               <DropdownMenuLabel>Actions for {branch.name}</DropdownMenuLabel>
+                               <DropdownMenuSeparator />
+                               <DropdownMenuItem onClick={() => handleEdit(branch)}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit Details
+                               </DropdownMenuItem>
+                               {branch.type === 'Agency' && (
+                                <>
+                                  <DropdownMenuItem onClick={() => handleToggleActive(branch.id)}>
+                                      {branch.isActive ?? true ? <ShieldOff className="mr-2 h-4 w-4" /> : <Shield className="mr-2 h-4 w-4" />}
+                                      {branch.isActive ?? true ? 'Block Access' : 'Unblock Access'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleResetPassword(branch.id)}>
+                                      <KeyRound className="mr-2 h-4 w-4" /> Reset Password
+                                  </DropdownMenuItem>
+                                </>
+                               )}
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                   <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
@@ -172,7 +274,9 @@ export function BranchDashboard() {
                                         <AlertDialogAction onClick={() => handleDelete(branch.id)}>Continue</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
-                            </AlertDialog>
+                               </AlertDialog>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                         </TableRow>
                     ))}

@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,15 +20,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getCities } from '@/lib/city-data';
 import { Combobox } from '@/components/ui/combobox';
+import { Separator } from '@/components/ui/separator';
+import { Copy } from 'lucide-react';
 
 interface AddBranchDialogProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
-    onSave: (branchData: Omit<Branch, 'id' | 'companyId'>) => boolean;
+    onSave: (branchData: Partial<Omit<Branch, 'id' | 'companyId'>>) => boolean;
     branch?: Partial<Branch> | null;
 }
 
 const branchTypes: BranchType[] = ['Owned', 'Agency'];
+
+const generateRandomPassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let retVal = "";
+    for (let i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+    }
+    return retVal;
+}
 
 export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBranchDialogProps) {
     const [name, setName] = useState('');
@@ -39,6 +52,8 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
     const [email, setEmail] = useState('');
     const [gstin, setGstin] = useState('');
     const [lrPrefix, setLrPrefix] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [masterCities, setMasterCities] = useState<City[]>([]);
     
     const { toast } = useToast();
@@ -56,6 +71,8 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                 setEmail(branch.email || '');
                 setGstin(branch.gstin || '');
                 setLrPrefix(branch.lrPrefix || '');
+                setUsername(branch.username || '');
+                setPassword(''); // Always clear on open
             } else {
                 setName('');
                 setType('Owned');
@@ -66,9 +83,12 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                 setEmail('');
                 setGstin('');
                 setLrPrefix('');
+                setUsername('');
+                setPassword(generateRandomPassword());
             }
         }
     }, [branch, isOpen]);
+
 
     const handleSave = () => {
         if (!name.trim() || !address.trim() || !city.trim() || !state.trim()) {
@@ -76,7 +96,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             return;
         }
 
-        const success = onSave({
+        const dataToSave: Partial<Omit<Branch, 'id' | 'companyId'>> = {
             name,
             type,
             location: `${city}, ${state}`,
@@ -87,7 +107,17 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             email,
             gstin,
             lrPrefix,
-        });
+            username: type === 'Agency' ? username : undefined,
+            password: type === 'Agency' ? password : undefined,
+            forcePasswordChange: type === 'Agency' && !branch,
+            isActive: type === 'Agency' ? branch?.isActive ?? true : undefined,
+        };
+        
+        if (branch && !password) {
+            delete dataToSave.password;
+        }
+
+        const success = onSave(dataToSave);
 
         if (success) {
             onOpenChange(false);
@@ -96,13 +126,18 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
     
     const cityOptions = useMemo(() => masterCities.map(c => ({ label: c.name, value: c.name })), [masterCities]);
 
+    const copyPassword = () => {
+        navigator.clipboard.writeText(password);
+        toast({ title: 'Copied!', description: 'Password copied to clipboard.' });
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>{branch ? 'Edit Branch' : 'Add New Branch'}</DialogTitle>
                 </DialogHeader>
-                <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-4">
                     <div className="md:col-span-2">
                         <Label htmlFor="branch-name">Branch Name</Label>
                         <Input id="branch-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
@@ -164,6 +199,33 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                         <Label htmlFor="gstin">Branch GSTIN (if applicable)</Label>
                         <Input id="gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} />
                     </div>
+
+                    {type === 'Agency' && (
+                        <>
+                            <div className="md:col-span-2 pt-4">
+                                <Separator />
+                            </div>
+                             <div className="md:col-span-2">
+                                <h3 className="font-semibold text-base text-primary">Agency Login Details</h3>
+                                <p className="text-xs text-muted-foreground">Create a separate login for this agency branch.</p>
+                             </div>
+                            <div>
+                                <Label htmlFor="username">Login ID / Username</Label>
+                                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                            </div>
+                             <div>
+                                <Label htmlFor="password">Password</Label>
+                                {branch ? (
+                                     <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter new password to change" />
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <Input id="password" type="text" value={password} readOnly className="font-mono bg-muted"/>
+                                        <Button type="button" variant="outline" size="icon" onClick={copyPassword}><Copy className="h-4 w-4" /></Button>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </div>
                 <DialogFooter>
                     <DialogClose asChild>
