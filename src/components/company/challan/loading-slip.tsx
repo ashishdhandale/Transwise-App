@@ -57,7 +57,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     };
 
     return (
-        <div className="p-4 font-sans text-black bg-white">
+        <div className="p-4 font-sans text-black bg-white uppercase">
             <header className="text-center pb-2 space-y-1">
                 <h1 className="text-lg font-bold">{profile.companyName}</h1>
                 <p className="text-xs">{profile.headOfficeAddress}</p>
