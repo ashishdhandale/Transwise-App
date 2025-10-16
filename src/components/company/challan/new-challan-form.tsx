@@ -128,6 +128,9 @@ export function NewChallanForm() {
         return addedLrs.reduce((sum, b) => sum + b.totalAmount, 0);
     }, [addedLrs]);
 
+    const totalAddedQty = useMemo(() => addedLrs.reduce((sum, b) => sum + b.qty, 0), [addedLrs]);
+    const totalAddedChgWt = useMemo(() => addedLrs.reduce((sum, b) => sum + b.chgWt, 0), [addedLrs]);
+
     useEffect(() => {
         const calculatedDebitCredit = totalTopayAmount - (commission + labour + crossing + balance);
         setDebitCreditAmount(calculatedDebitCredit);
@@ -294,16 +297,16 @@ export function NewChallanForm() {
             toStation: toStation.name,
             dispatchToParty: toStation.name,
             totalLr: addedLrs.length,
-            totalPackages: addedLrs.reduce((sum, b) => sum + b.qty, 0),
+            totalPackages: totalAddedQty,
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
             totalActualWeight: addedLrs.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
-            totalChargeWeight: addedLrs.reduce((sum, b) => sum + b.chgWt, 0),
+            totalChargeWeight: totalAddedChgWt,
             vehicleHireFreight,
             advance,
             balance,
             senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark: remark || '',
             summary: {
-                grandTotal: addedLrs.reduce((sum, b) => sum + b.totalAmount, 0),
+                grandTotal: totalFreight,
                 totalTopayAmount,
                 commission,
                 labour,
@@ -489,7 +492,7 @@ export function NewChallanForm() {
             <ClientOnly>
                 <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>
                     <Card>
-                         <CollapsibleTrigger asChild>
+                        <CollapsibleTrigger asChild>
                            <div className="w-full cursor-pointer">
                                 <CardHeader className="p-4">
                                     <div className="flex items-center justify-between">
@@ -704,10 +707,12 @@ export function NewChallanForm() {
                                         )}
                                     </TableBody>
                                      <TableFooter>
-                                        <TableRow>
-                                            <TableCell colSpan={9} className="text-right font-bold">Total</TableCell>
-                                            <TableCell className="text-right font-bold">{formatValue(totalTopayAmount)}</TableCell>
-                                            <TableCell className="text-right font-bold">{formatValue(totalFreight)}</TableCell>
+                                        <TableRow className="font-bold bg-muted/50">
+                                            <TableCell colSpan={7} className="text-right">Total</TableCell>
+                                            <TableCell className="text-right">{totalAddedQty}</TableCell>
+                                            <TableCell className="text-right">{totalAddedChgWt.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">To-Pay: {formatValue(totalTopayAmount)}</TableCell>
+                                            <TableCell className="text-right">{formatValue(totalFreight)}</TableCell>
                                         </TableRow>
                                     </TableFooter>
                                 </Table>
