@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -13,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, Save, Printer, Download, Loader2, Eye, X, ChevronsUpDown, PlusCircle } from 'lucide-react';
+import { FileText, Save, Printer, Download, Loader2, Eye, X, ChevronsUpDown, PlusCircle, Trash2 } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 import { Input } from '@/components/ui/input';
@@ -41,6 +40,7 @@ import { getVehicleHireReceipts } from '@/lib/vehicle-hire-data';
 import { ClientOnly } from '@/components/ui/client-only';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -452,12 +452,12 @@ export function NewChallanForm() {
             <header className="mb-4 flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                     <FileText className="h-8 w-8" />
-                    {isEditMode ? `Edit Dispatch Challan: ${challanId}` : 'New Dispatch Challan'}
+                    {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {!isFinalized && <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />{isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>}
+                     {!isFinalized && <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />{isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    {!isFinalized && <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Challan'}</Button>}
+                    {!isFinalized && <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save'}</Button>}
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
             </header>
@@ -558,15 +558,18 @@ export function NewChallanForm() {
                                             <TableHead className="w-10 sticky top-0 bg-card">
                                                 <Checkbox
                                                     onCheckedChange={(c) => {
-                                                        if (c) setSelectedLrs(new Set(addedLrs.map(lr => lr.trackingId)));
-                                                        else setSelectedLrs(new Set());
+                                                        if (c) setAddedSelection(new Set(addedLrs.map(lr => lr.trackingId)));
+                                                        else setAddedSelection(new Set());
                                                     }}
                                                     checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length}
                                                 />
                                             </TableHead>
                                             <TableHead className="sticky top-0 bg-card">LR No</TableHead>
                                             <TableHead className="sticky top-0 bg-card">Date</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Item & Description</TableHead>
                                             <TableHead className="sticky top-0 bg-card">To</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Sender</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
                                             <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
                                             <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
                                         </TableRow>
@@ -590,13 +593,16 @@ export function NewChallanForm() {
                                                 </TableCell>
                                                 <TableCell>{lr.lrNo}</TableCell>
                                                 <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
+                                                <TableCell className="max-w-xs truncate">{lr.itemDescription}</TableCell>
                                                 <TableCell>{lr.toCity}</TableCell>
+                                                <TableCell>{lr.sender}</TableCell>
+                                                <TableCell>{lr.receiver}</TableCell>
                                                 <TableCell className="text-right">{lr.qty}</TableCell>
                                                 <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={6} className="h-24 text-center">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={9} className="h-24 text-center">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
                                 </Table>
