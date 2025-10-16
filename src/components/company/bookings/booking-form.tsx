@@ -233,6 +233,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
+    const userBranchName = userRole === 'Branch' ? 'Pune Hub' : undefined; // Hardcoded branch for prototype
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     const isOfflineMode = isOfflineModeProp || mode === 'offline';
     
@@ -387,15 +388,19 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleReset = useCallback(() => {
         const profile = companyProfile;
-        const parsedBookings = getBookings();
+        const allBookings = getBookings();
+        let bookingsForPrefix = allBookings;
+
         let lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
          if (userRole === 'Branch') {
-            const userBranch = branches.find(b => b.name === 'Pune Hub'); // Hardcoded
+            const userBranch = branches.find(b => b.name === userBranchName); 
             if(userBranch?.lrPrefix) {
                 lrPrefix = userBranch.lrPrefix;
             }
+            // Filter bookings to only those for the current branch to get the correct sequence
+            bookingsForPrefix = allBookings.filter(b => b.branchName === userBranchName);
         }
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(parsedBookings, lrPrefix));
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(bookingsForPrefix, lrPrefix));
         
         let keyCounter = 1;
         setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
@@ -433,7 +438,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             title: "Form Reset",
             description: "All fields have been cleared.",
         });
-    }, [companyProfile, userRole, branches, isOfflineMode, toast, lrNumberInputRef]);
+    }, [companyProfile, userRole, branches, userBranchName, isOfflineMode, toast, lrNumberInputRef]);
 
 
     useEffect(() => {
@@ -473,7 +478,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const allBookings = getBookings();
         const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
-        const userBranchName = userRole === 'Branch' ? 'Pune Hub' : companyProfile?.companyName; // Hardcoded branch for prototype
+        const finalBranchName = userBranchName || companyProfile?.companyName;
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
             lrNo: currentLrNumber,
@@ -493,7 +498,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
-            branchName: currentBooking?.branchName || userBranchName,
+            branchName: currentBooking?.branchName || finalBranchName,
             source: isOfflineModeProp ? 'Inward' : 'System',
             ...(loadType === 'FTL' && { ftlDetails }),
         };
@@ -597,7 +602,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userRole, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
