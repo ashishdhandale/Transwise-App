@@ -93,6 +93,8 @@ export function NewChallanForm() {
     const [isFinalized, setIsFinalized] = useState(false);
     
     const [lrSearchTerm, setLrSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<Booking[]>([]);
+    const [searchSelection, setSearchSelection] = useState<Set<string>>(new Set());
 
     // Master data
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
@@ -225,28 +227,29 @@ export function NewChallanForm() {
         }
     };
     
-    const handleAddLrBySearch = () => {
-        if (!lrSearchTerm.trim()) return;
-
-        const foundBooking = allBookings.find(b => b.lrNo.toLowerCase() === lrSearchTerm.trim().toLowerCase());
-
-        if (!foundBooking) {
-            toast({ title: 'Not Found', description: `LR with number "${lrSearchTerm}" was not found.`, variant: 'destructive' });
+    const handleSearchLrs = () => {
+        if (!lrSearchTerm.trim()) {
+            setSearchResults([]);
             return;
-        }
+        };
+
+        const lowerQuery = lrSearchTerm.toLowerCase();
+        const availableStock = allBookings.filter(b => b.status === 'In Stock');
+        const results = availableStock.filter(b => b.lrNo.toLowerCase().includes(lowerQuery));
+        setSearchResults(results);
+    }
+    
+    const handleAddSelectedToChallan = () => {
+        const newlySelectedBookings = searchResults.filter(r => searchSelection.has(r.trackingId));
+        const currentLrNos = new Set(addedLrs.map(lr => lr.lrNo));
+        const uniqueNewBookings = newlySelectedBookings.filter(b => !currentLrNos.has(b.lrNo));
+
+        setAddedLrs(prev => [...prev, ...uniqueNewBookings]);
         
-        if (foundBooking.status !== 'In Stock') {
-            toast({ title: 'Invalid Status', description: `LR# ${foundBooking.lrNo} has status "${foundBooking.status}" and cannot be added.`, variant: 'destructive' });
-            return;
-        }
-        
-        if (addedLrs.some(lr => lr.lrNo === foundBooking.lrNo)) {
-            toast({ title: 'Duplicate', description: `LR# ${foundBooking.lrNo} is already in the list.`, variant: 'destructive' });
-            return;
-        }
-
-        setAddedLrs(prev => [...prev, foundBooking]);
-        setLrSearchTerm(''); // Clear search input
+        // Clear selections and results
+        setSearchSelection(new Set());
+        setSearchResults([]);
+        setLrSearchTerm('');
     };
 
     const handleRemoveFromChallan = () => {
@@ -465,14 +468,14 @@ export function NewChallanForm() {
                 <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>
                     <Card>
                          <CollapsibleTrigger asChild>
-                            <div className="w-full cursor-pointer">
+                           <div className="w-full cursor-pointer">
                                 <CardHeader className="p-4">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg">Challan Details</CardTitle>
                                         <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isHeaderOpen && "rotate-180")} />
                                     </div>
                                 </CardHeader>
-                            </div>
+                           </div>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <CardContent className="pt-2 space-y-4">
@@ -520,22 +523,71 @@ export function NewChallanForm() {
                         <CardHeader className="p-4">
                             <CardTitle className="text-lg">Add LRs to Challan</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-4">
                             <div className="flex items-end gap-2">
                                  <div className="flex-grow">
                                     <Label htmlFor="lr-search">Scan or Enter LR Number</Label>
                                     <Input 
                                         id="lr-search"
-                                        placeholder="Enter LR number to add"
+                                        placeholder="Enter LR number to search"
                                         value={lrSearchTerm}
                                         onChange={(e) => setLrSearchTerm(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleAddLrBySearch()}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearchLrs()}
                                     />
                                 </div>
-                                <Button onClick={handleAddLrBySearch}>
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Add LR
+                                <Button onClick={handleSearchLrs}>
+                                    Search LRs
                                 </Button>
                             </div>
+
+                             {searchResults.length > 0 && (
+                                <div className="space-y-2">
+                                    <h4 className="text-sm font-medium">Search Results ({searchResults.length} found)</h4>
+                                     <div className="overflow-y-auto h-48 border rounded-md">
+                                        <Table>
+                                            <TableHeader className="sticky top-0 bg-card">
+                                                <TableRow>
+                                                    <TableHead className="w-10"><Checkbox 
+                                                        onCheckedChange={(checked) => {
+                                                            if (checked) setSearchSelection(new Set(searchResults.map(lr => lr.trackingId)));
+                                                            else setSearchSelection(new Set());
+                                                        }}
+                                                        checked={searchResults.length > 0 && searchSelection.size === searchResults.length}
+                                                    /></TableHead>
+                                                    <TableHead>LR No</TableHead>
+                                                    <TableHead>To</TableHead>
+                                                    <TableHead>Receiver</TableHead>
+                                                    <TableHead>Qty</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {searchResults.map(lr => (
+                                                    <TableRow key={lr.trackingId}>
+                                                        <TableCell><Checkbox 
+                                                            checked={searchSelection.has(lr.trackingId)}
+                                                            onCheckedChange={(checked) => {
+                                                                const newSelection = new Set(searchSelection);
+                                                                if (checked) newSelection.add(lr.trackingId);
+                                                                else newSelection.delete(lr.trackingId);
+                                                                setSearchSelection(newSelection);
+                                                            }}
+                                                        /></TableCell>
+                                                        <TableCell>{lr.lrNo}</TableCell>
+                                                        <TableCell>{lr.toCity}</TableCell>
+                                                        <TableCell>{lr.receiver}</TableCell>
+                                                        <TableCell>{lr.qty}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Button onClick={handleAddSelectedToChallan} disabled={searchSelection.size === 0}>
+                                            <PlusCircle className="mr-2 h-4 w-4"/> Add Selected to Challan ({searchSelection.size})
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -545,7 +597,6 @@ export function NewChallanForm() {
                         </Button>
                     </div>
 
-                    {/* LRs Added to Challan Table */}
                     <Card className="h-full flex flex-col">
                         <CardHeader className="p-4">
                             <CardTitle className="text-base font-headline">LRs Added to Challan</CardTitle>
