@@ -21,9 +21,9 @@ const thClass = "text-left text-xs font-bold text-black border border-black p-1"
 const tdClass = "text-xs border border-black p-1 align-top";
 
 const SummaryItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="flex justify-between text-xs py-0.5">
-        <span className="font-semibold">{label}</span>
-        <span className="font-bold">{value}</span>
+    <div className="flex items-baseline gap-2 text-xs py-0.5">
+        <span className="font-semibold shrink-0">{label}</span>
+        <span className="font-bold text-right w-full">{value}</span>
     </div>
 );
 
