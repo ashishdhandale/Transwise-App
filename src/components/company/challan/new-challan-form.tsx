@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Combobox } from '@/components/ui/combobox';
-import type { Driver, VehicleMaster, City } from '@/lib/types';
+import type { Driver, VehicleMaster, City, Branch } from '@/lib/types';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +32,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { getDrivers } from '@/lib/driver-data';
 import { getVehicles } from '@/lib/vehicle-data';
 import { getCities } from '@/lib/city-data';
+import { getBranches } from '@/lib/branch-data';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSlip } from './loading-slip';
@@ -83,6 +84,7 @@ export function NewChallanForm() {
     const [driverName, setDriverName] = useState<string | undefined>(undefined);
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
+    const [billTo, setBillTo] = useState<string | undefined>();
     const [remark, setRemark] = useState('');
     const [hireReceiptNo, setHireReceiptNo] = useState('');
     const [vehicleHireFreight, setVehicleHireFreight] = useState(0);
@@ -106,6 +108,7 @@ export function NewChallanForm() {
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [cities, setCities] = useState<City[]>([]);
+    const [branches, setBranches] = useState<Branch[]>([]);
     
     const { toast } = useToast();
     const router = useRouter();
@@ -150,6 +153,7 @@ export function NewChallanForm() {
         setVehicles(getVehicles());
         setDrivers(getDrivers());
         setCities(allCities);
+        setBranches(getBranches());
         
         const existingChallanId = searchParams.get('challanId');
 
@@ -170,6 +174,7 @@ export function NewChallanForm() {
                 setDriverName(existingChallan.driverName);
                 setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
                 setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
+                setBillTo(existingChallan.dispatchToParty);
                 setRemark(existingChallan.remark || '');
                 setVehicleHireFreight(existingChallan.vehicleHireFreight);
                 setAdvance(existingChallan.advance);
@@ -216,6 +221,7 @@ export function NewChallanForm() {
             setToStation(null);
             setVehicleHireFreight(0);
             setAdvance(0);
+            setFuel(0);
             setBalance(0);
             return;
         }
@@ -238,6 +244,7 @@ export function NewChallanForm() {
             setDriverName('');
             setVehicleHireFreight(0);
             setAdvance(0);
+            setFuel(0);
             setBalance(0);
         }
     };
@@ -313,7 +320,7 @@ export function NewChallanForm() {
             driverName,
             fromStation: fromStation?.name || companyProfile?.city || 'N/A',
             toStation: toStation.name,
-            dispatchToParty: toStation.name,
+            dispatchToParty: billTo || toStation.name,
             totalLr: addedLrs.length,
             totalPackages: totalAddedQty,
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
@@ -491,6 +498,23 @@ export function NewChallanForm() {
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
     const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name, value: d.name })), [drivers]);
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
+
+    const billToOptions = useMemo(() => {
+        const options = new Set<string>();
+        if (toStation) {
+            const branch = branches.find(b => b.city.toLowerCase() === toStation.name.toLowerCase());
+            if (branch) {
+                options.add(branch.name);
+            }
+        }
+        addedLrs.forEach(lr => {
+            options.add(lr.sender);
+            options.add(lr.receiver);
+        });
+        return Array.from(options).map(opt => ({ label: opt, value: opt }));
+    }, [toStation, branches, addedLrs]);
+
+
     const formatValue = (amount: number) => companyProfile ? amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount.toFixed(2);
 
 
@@ -523,7 +547,7 @@ export function NewChallanForm() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <CardContent className="pt-2 space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
                                     <div className="space-y-1">
                                         <Label>Challan ID</Label>
                                         <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
@@ -555,6 +579,10 @@ export function NewChallanForm() {
                                     <div className="space-y-1">
                                         <Label>To Station</Label>
                                         <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
+                                    </div>
+                                    <div className="space-y-1 md:col-span-2 xl:col-span-1">
+                                        <Label>Bill To</Label>
+                                        <Combobox options={billToOptions} value={billTo} onChange={setBillTo} placeholder="Select Billing Party..." />
                                     </div>
                                 </div>
                             </CardContent>
@@ -773,20 +801,20 @@ export function NewChallanForm() {
                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <Label>Vehicle Hire Freight</Label>
-                                    <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value) || 0)} className="font-semibold" />
+                                    <Input value={vehicleHireFreight || 0} onChange={(e) => setVehicleHireFreight(Number(e.target.value) || 0)} className="font-semibold" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Advance Paid</Label>
-                                    <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value) || 0)} className="font-semibold" />
+                                    <Input value={advance || 0} onChange={(e) => setAdvance(Number(e.target.value) || 0)} className="font-semibold" />
                                 </div>
                                  <div className="space-y-1">
                                     <Label>Fuel</Label>
-                                    <Input value={fuel} onChange={(e) => setFuel(Number(e.target.value) || 0)} />
+                                    <Input value={fuel || 0} onChange={(e) => setFuel(Number(e.target.value) || 0)} />
                                 </div>
                              </div>
                              <div className="space-y-1">
                                 <Label>Balance</Label>
-                                <Input value={balance} readOnly className="font-bold text-green-700" />
+                                <Input value={balance || 0} readOnly className="font-bold text-green-700" />
                             </div>
                         </CardContent>
                     </Card>
@@ -796,19 +824,19 @@ export function NewChallanForm() {
                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <Label>Commission</Label>
-                                    <Input value={commission} onChange={(e) => setCommission(Number(e.target.value) || 0)} />
+                                    <Input value={commission || 0} onChange={(e) => setCommission(Number(e.target.value) || 0)} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Labour</Label>
-                                    <Input value={labour} onChange={(e) => setLabour(Number(e.target.value) || 0)} />
+                                    <Input value={labour || 0} onChange={(e) => setLabour(Number(e.target.value) || 0)} />
                                 </div>
                                  <div className="space-y-1">
                                     <Label>Crossing</Label>
-                                    <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value) || 0)} />
+                                    <Input value={crossing || 0} onChange={(e) => setCrossing(Number(e.target.value) || 0)} />
                                 </div>
                                  <div className="space-y-1">
                                     <Label>Carting</Label>
-                                    <Input value={carting} onChange={(e) => setCarting(Number(e.target.value) || 0)} />
+                                    <Input value={carting || 0} onChange={(e) => setCarting(Number(e.target.value) || 0)} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Debit/Credit Amt</Label>
