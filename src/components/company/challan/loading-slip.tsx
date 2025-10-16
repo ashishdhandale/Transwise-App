@@ -90,7 +90,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>Contents</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
-                            <TableHead className={`${thClass} text-right`}>Amount</TableHead>
+                            <TableHead className={`${thClass} text-right`}>TP</TableHead>
                             <TableHead className={`${thClass} text-right`}>Pvt.Mark</TableHead>
                         </TableRow>
                     </TableHeader>
