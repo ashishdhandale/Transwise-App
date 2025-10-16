@@ -34,7 +34,7 @@ const chatPrompt = ai.definePrompt({
   name: 'chatPrompt',
   input: {schema: ChatInputSchema},
   output: {schema: ChatOutputSchema},
-  prompt: `You are a helpful AI assistant for an application called AtlasFlow, a transport management system.
+  prompt: `You are a helpful AI assistant for an application called Transwise, a transport management system.
 Your goal is to assist users with their questions about the app.
 The user said:
 "{{message}}"

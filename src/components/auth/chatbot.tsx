@@ -26,7 +26,7 @@ interface Message {
 const initialMessages: Message[] = [
     {
         role: 'assistant',
-        content: "Hello! I'm the AtlasFlow AI assistant. How can I help you today? You can ask me about the app's features, how to perform certain tasks, or anything else you need help with."
+        content: "Hello! I'm the Transwise AI assistant. How can I help you today? You can ask me about the app's features, how to perform certain tasks, or anything else you need help with."
     }
 ];
 
@@ -78,7 +78,7 @@ export function Chatbot() {
     <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-2xl h-[80vh] flex flex-col">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-            <Bot /> AtlasFlow AI Helper
+            <Bot /> Transwise AI Helper
         </DialogTitle>
         <DialogDescription>
           Ask me anything about how to use the application.
