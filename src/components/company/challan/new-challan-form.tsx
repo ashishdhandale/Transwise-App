@@ -47,7 +47,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap px-2 py-1 h-9";
 const addedTdClass = "whitespace-nowrap px-2 py-1 h-8 text-xs";
 
 
@@ -94,6 +93,7 @@ export function NewChallanForm() {
     const [crossing, setCrossing] = useState(0);
     const [debitCreditAmount, setDebitCreditAmount] = useState(0);
     const [isFinalized, setIsFinalized] = useState(false);
+    const [fuel, setFuel] = useState(0);
     
     const [lrSearchTerm, setLrSearchTerm] = useState('');
     const [ewbSearchTerm, setEwbSearchTerm] = useState('');
@@ -177,6 +177,7 @@ export function NewChallanForm() {
                 setLabour(existingChallan.summary.labour || 0);
                 setCrossing(existingChallan.summary.crossing || 0);
                 setDebitCreditAmount(existingChallan.summary.debitCreditAmount || 0);
+                setFuel(existingChallan.summary.fuel || 0);
 
                 const added = currentBookings.filter(b => addedBookingNos.has(b.lrNo));
                 setAddedLrs(added);
@@ -329,6 +330,7 @@ export function NewChallanForm() {
                 carting: 0, 
                 balanceTruckHire: balance,
                 debitCreditAmount,
+                fuel,
             }
         };
 
@@ -626,7 +628,7 @@ export function NewChallanForm() {
                              {searchResults.length > 0 && (
                                 <div className="space-y-2 mt-4">
                                     <h4 className="text-sm font-medium">Search Results ({searchResults.length} found)</h4>
-                                     <div className="overflow-y-auto h-48 border rounded-md">
+                                     <div className="overflow-y-auto max-h-48 border rounded-md">
                                         <Table>
                                             <TableHeader className="sticky top-0 bg-card">
                                                 <TableRow>
@@ -774,6 +776,10 @@ export function NewChallanForm() {
                                 <div className="space-y-1">
                                     <Label>Advance Paid</Label>
                                     <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value))} className="font-semibold" />
+                                </div>
+                                 <div className="space-y-1">
+                                    <Label>Fuel</Label>
+                                    <Input value={fuel} onChange={(e) => setFuel(Number(e.target.value))} />
                                 </div>
                              </div>
                              <div className="space-y-1">
