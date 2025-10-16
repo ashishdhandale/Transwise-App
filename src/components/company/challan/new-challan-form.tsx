@@ -749,7 +749,7 @@ export function NewChallanForm() {
                                     </TableBody>
                                      <TableFooter>
                                         <TableRow className="font-bold bg-muted/50">
-                                            <TableCell colSpan={7} className="text-right whitespace-nowrap">Total</TableCell>
+                                            <TableCell colSpan={7} className="text-right whitespace-nowrap">Total LRs: {addedLrs.length}</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">{totalAddedQty}</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">{totalAddedChgWt.toFixed(2)}</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">To-Pay: {formatValue(totalTopayAmount)}</TableCell>
@@ -762,39 +762,54 @@ export function NewChallanForm() {
                     </Card>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4 p-4 border rounded-md bg-muted/50">
-                    <div className="space-y-1">
-                        <Label>Vehicle Hire Freight</Label>
-                        <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value))} className="font-semibold" />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Advance Paid</Label>
-                        <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value))} className="font-semibold" />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Balance</Label>
-                        <Input value={balance} readOnly className="font-bold text-green-700" />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Commission</Label>
-                        <Input value={commission} onChange={(e) => setCommission(Number(e.target.value))} />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Labour</Label>
-                        <Input value={labour} onChange={(e) => setLabour(Number(e.target.value))} />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Crossing</Label>
-                        <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>Debit/Credit Amt</Label>
-                        <Input value={debitCreditAmount.toFixed(2)} readOnly className="font-bold text-blue-700" />
-                    </div>
-                    <div className="lg:col-span-full space-y-1">
-                        <Label>Remarks / Dispatch Note</Label>
-                        <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Vehicle Hire Calculation</CardTitle></CardHeader>
+                        <CardContent className="space-y-2">
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <Label>Vehicle Hire Freight</Label>
+                                    <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value))} className="font-semibold" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Advance Paid</Label>
+                                    <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value))} className="font-semibold" />
+                                </div>
+                             </div>
+                             <div className="space-y-1">
+                                <Label>Balance</Label>
+                                <Input value={balance} readOnly className="font-bold text-green-700" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Challan Freight Summary</CardTitle></CardHeader>
+                         <CardContent className="space-y-2">
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <Label>Commission</Label>
+                                    <Input value={commission} onChange={(e) => setCommission(Number(e.target.value))} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Labour</Label>
+                                    <Input value={labour} onChange={(e) => setLabour(Number(e.target.value))} />
+                                </div>
+                                 <div className="space-y-1">
+                                    <Label>Crossing</Label>
+                                    <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Debit/Credit Amt</Label>
+                                    <Input value={debitCreditAmount.toFixed(2)} readOnly className="font-bold text-blue-700" />
+                                </div>
+                             </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                
+                <div>
+                    <Label>Remarks / Dispatch Note</Label>
+                    <Textarea placeholder="Add any special instructions for this dispatch..." value={remark} onChange={(e) => setRemark(e.target.value)} />
                 </div>
                 
                 {previewData && companyProfile && (
