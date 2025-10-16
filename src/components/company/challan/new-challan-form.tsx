@@ -13,10 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FileText, ArrowDown, ArrowUp, Save, Printer, Download, Loader2, Eye, X, Search as SearchIcon, ChevronsUpDown } from 'lucide-react';
+import { FileText, Save, Printer, Download, Loader2, Eye, X, ChevronsUpDown, PlusCircle } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -38,7 +37,6 @@ import { LoadingSlip } from './loading-slip';
 import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getVehicleHireReceipts } from '@/lib/vehicle-hire-data';
 import { ClientOnly } from '@/components/ui/client-only';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -70,12 +68,11 @@ const generatePermanentChallanId = (challans: Challan[], prefix: string): string
 };
 
 export function NewChallanForm() {
-    const [inStockLrs, setInStockLrs] = useState<Booking[]>([]);
+    const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [addedLrs, setAddedLrs] = useState<Booking[]>([]);
-    const [stockSelection, setStockSelection] = useState<Set<string>>(new Set());
     const [addedSelection, setAddedSelection] = useState<Set<string>>(new Set());
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
-    const [isStockVisible, setIsStockVisible] = useState(true);
+    const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     
     // Form fields
     const [challanId, setChallanId] = useState('');
@@ -94,14 +91,13 @@ export function NewChallanForm() {
     const [crossing, setCrossing] = useState(0);
     const [debitCreditAmount, setDebitCreditAmount] = useState(0);
     const [isFinalized, setIsFinalized] = useState(false);
-
+    
+    const [lrSearchTerm, setLrSearchTerm] = useState('');
 
     // Master data
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [cities, setCities] = useState<City[]>([]);
-    const [toStationFilter, setToStationFilter] = useState('All');
-    const [stockSearchTerm, setStockSearchTerm] = useState('');
     
     const { toast } = useToast();
     const router = useRouter();
@@ -131,7 +127,8 @@ export function NewChallanForm() {
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
 
-        const allBookings = getBookings();
+        const currentBookings = getBookings();
+        setAllBookings(currentBookings);
         const allChallans = getChallanData();
         const allCities = getCities();
         
@@ -142,7 +139,7 @@ export function NewChallanForm() {
         const existingChallanId = searchParams.get('challanId');
 
         if (existingChallanId) {
-            setIsStockVisible(false); // Collapse stock section in edit mode
+            setIsHeaderOpen(false); // Collapse header in edit mode
             const existingChallan = allChallans.find(c => c.challanId === existingChallanId);
             const lrDetails = getLrDetailsData().filter(lr => lr.challanId === existingChallanId);
             const addedBookingNos = new Set(lrDetails.map(lr => lr.lrNo));
@@ -167,17 +164,11 @@ export function NewChallanForm() {
                 setCrossing(existingChallan.summary.crossing || 0);
                 setDebitCreditAmount(existingChallan.summary.debitCreditAmount || 0);
 
-                const added = allBookings.filter(b => addedBookingNos.has(b.lrNo));
-                const inStock = allBookings.filter(b => b.status === 'In Stock' && !addedBookingNos.has(b.lrNo));
-                
+                const added = currentBookings.filter(b => addedBookingNos.has(b.lrNo));
                 setAddedLrs(added);
-                setInStockLrs(inStock);
             }
         } else {
-            const stockBookings = allBookings.filter(b => b.status === 'In Stock');
-            setInStockLrs(stockBookings);
             setAddedLrs([]);
-
             if(profile.city) {
                 const defaultStation = allCities.find((c: City) => c.name.toLowerCase() === profile.city.toLowerCase()) || null;
                 setFromStation(defaultStation);
@@ -197,8 +188,6 @@ export function NewChallanForm() {
         }
         setDispatchDate(new Date());
     }, [searchParams]);
-
-    
 
     const handleLoadFromHireReceipt = (receiptNo: string) => {
         setHireReceiptNo(receiptNo);
@@ -235,18 +224,32 @@ export function NewChallanForm() {
             setBalance(0);
         }
     };
+    
+    const handleAddLrBySearch = () => {
+        if (!lrSearchTerm.trim()) return;
 
+        const foundBooking = allBookings.find(b => b.lrNo.toLowerCase() === lrSearchTerm.trim().toLowerCase());
 
-    const handleAddToChallan = () => {
-        const toAdd = inStockLrs.filter(lr => stockSelection.has(lr.trackingId));
-        setAddedLrs(prev => [...prev, ...toAdd]);
-        setInStockLrs(prev => prev.filter(lr => !stockSelection.has(lr.trackingId)));
-        setStockSelection(new Set());
+        if (!foundBooking) {
+            toast({ title: 'Not Found', description: `LR with number "${lrSearchTerm}" was not found.`, variant: 'destructive' });
+            return;
+        }
+        
+        if (foundBooking.status !== 'In Stock') {
+            toast({ title: 'Invalid Status', description: `LR# ${foundBooking.lrNo} has status "${foundBooking.status}" and cannot be added.`, variant: 'destructive' });
+            return;
+        }
+        
+        if (addedLrs.some(lr => lr.lrNo === foundBooking.lrNo)) {
+            toast({ title: 'Duplicate', description: `LR# ${foundBooking.lrNo} is already in the list.`, variant: 'destructive' });
+            return;
+        }
+
+        setAddedLrs(prev => [...prev, foundBooking]);
+        setLrSearchTerm(''); // Clear search input
     };
 
     const handleRemoveFromChallan = () => {
-        const toRemove = addedLrs.filter(lr => addedSelection.has(lr.trackingId));
-        setInStockLrs(prev => [...prev, ...toRemove]);
         setAddedLrs(prev => prev.filter(lr => !addedSelection.has(lr.trackingId)));
         setAddedSelection(new Set());
     };
@@ -321,29 +324,19 @@ export function NewChallanForm() {
         allLrDetails.push(...tempLrDetails);
         saveLrDetailsData(allLrDetails);
 
-        const allBookings = getBookings();
+        const currentBookings = getBookings();
         const addedLrNos = new Set(tempLrDetails.map(lr => lr.lrNo));
 
-        const updatedBookings = allBookings.map(b => {
-             // If a booking is now in the temp challan, set its status to "In Loading"
+        const updatedBookings = currentBookings.map(b => {
              if (addedLrNos.has(b.lrNo)) {
                 if (b.status !== 'In Loading') {
                     addHistoryLog(b.lrNo, 'In Loading', companyProfile?.companyName || 'System', `Added to temporary challan ${challanId}`);
                     return { ...b, status: 'In Loading' as const };
                 }
              }
-             // If a booking was previously in this temp challan but is now removed, set back to "In Stock"
-             else {
-                 const lrDetail = getLrDetailsData().find(l => l.lrNo === b.lrNo);
-                 if (lrDetail && lrDetail.challanId === challanId) {
-                     addHistoryLog(b.lrNo, 'In Stock', companyProfile?.companyName || 'System', `Removed from temporary challan ${challanId}`);
-                     return { ...b, status: 'In Stock' as const };
-                 }
-             }
              return b;
         });
         saveBookings(updatedBookings);
-
 
         toast({ title: isEditMode ? "Challan Updated" : "Challan Saved", description: `Temporary challan ${challanId} has been saved.` });
         router.push('/company/challan');
@@ -356,7 +349,6 @@ export function NewChallanForm() {
         setPreviewData({ challan: data.challan, bookings: addedLrs });
         setIsPreviewOpen(true);
     };
-
 
     const handleFinalizeChallan = () => {
         if (addedLrs.length === 0) {
@@ -374,7 +366,6 @@ export function NewChallanForm() {
             newChallanId = generatePermanentChallanId(allChallans, challanPrefix);
         }
 
-
         const data = buildChallanObject('Finalized', newChallanId);
         if (!data) return;
         
@@ -382,7 +373,6 @@ export function NewChallanForm() {
 
         const existingChallanIndex = allChallans.findIndex(c => c.challanId === challanId);
         if (existingChallanIndex !== -1) {
-            // If we are finalizing a temp challan, replace it. If editing a final challan, replace it.
             allChallans[existingChallanIndex] = finalChallan;
         } else {
              allChallans.push(finalChallan);
@@ -394,9 +384,9 @@ export function NewChallanForm() {
         allLrDetails.push(...finalLrDetails);
         saveLrDetailsData(allLrDetails);
 
-        const allBookings = getBookings();
+        const currentBookings = getBookings();
         const addedLrNos = new Set(finalLrDetails.map(lr => lr.lrNo));
-        const updatedBookings = allBookings.map(b => {
+        const updatedBookings = currentBookings.map(b => {
             if (addedLrNos.has(b.lrNo)) {
                 addHistoryLog(b.lrNo, 'In Transit', companyProfile?.companyName || 'System', `Dispatched from ${finalChallan.fromStation} via Challan ${newChallanId}`);
                 return { ...b, status: 'In Transit' as const };
@@ -456,193 +446,103 @@ export function NewChallanForm() {
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
     const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name, value: d.name })), [drivers]);
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
-    
-    const stockToStationOptions = useMemo(() => {
-        const stations = new Set(inStockLrs.map(lr => lr.toCity));
-        return ['All', ...Array.from(stations)];
-    }, [inStockLrs]);
-    
-    const filteredInStockLrs = useMemo(() => {
-        let filtered = inStockLrs;
-
-        if (toStationFilter !== 'All') {
-            filtered = filtered.filter(lr => lr.toCity === toStationFilter);
-        }
-
-        if (stockSearchTerm) {
-            const lowerQuery = stockSearchTerm.toLowerCase();
-            filtered = filtered.filter(lr => 
-                lr.lrNo.toLowerCase().includes(lowerQuery) ||
-                lr.sender.toLowerCase().includes(lowerQuery) ||
-                lr.receiver.toLowerCase().includes(lowerQuery)
-            );
-        }
-        
-        return filtered;
-    }, [inStockLrs, toStationFilter, stockSearchTerm]);
-    
-    const handleStockSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter' && filteredInStockLrs.length === 1) {
-            event.preventDefault();
-            const lrToAdd = filteredInStockLrs[0];
-            if (lrToAdd.status !== 'In Stock') {
-                toast({ title: 'Cannot Add LR', description: `LR# ${lrToAdd.lrNo} has status "${lrToAdd.status}" and cannot be added.`, variant: 'destructive'});
-                return;
-            }
-            setAddedLrs(prev => [...prev, lrToAdd]);
-            setInStockLrs(prev => prev.filter(lr => lr.trackingId !== lrToAdd.trackingId));
-            setStockSearchTerm('');
-        }
-    };
-
 
     return (
         <div className="space-y-4">
             <header className="mb-4 flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                     <FileText className="h-8 w-8" />
-                    {isEditMode ? 'Edit Dispatch Challan' : 'New Dispatch Challan'}
+                    {isEditMode ? `Edit Dispatch Challan: ${challanId}` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
                     {!isFinalized && <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />{isEditMode ? 'Update Temp' : 'Save as Temp'}</Button>}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Challan'}</Button>
+                    {!isFinalized && <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save Challan'}</Button>}
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
             </header>
             <ClientOnly>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Challan Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                            <div className="space-y-1">
-                                <Label>Challan ID</Label>
-                                <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
+                <Collapsible open={isHeaderOpen} onOpenChange={setIsHeaderOpen}>
+                    <Card>
+                         <CollapsibleTrigger asChild>
+                            <div className="w-full cursor-pointer">
+                                <CardHeader className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">Challan Details</CardTitle>
+                                        <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isHeaderOpen && "rotate-180")} />
+                                    </div>
+                                </CardHeader>
                             </div>
-                            <div className="space-y-1">
-                                <Label>Dispatch Date</Label>
-                                <DatePicker date={dispatchDate} setDate={setDispatchDate} />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>Load from Hire Receipt</Label>
-                                <Input 
-                                    placeholder="Enter Hire Receipt No."
-                                    value={hireReceiptNo}
-                                    onChange={e => handleLoadFromHireReceipt(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>Vehicle No</Label>
-                                <Combobox options={vehicleOptions} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>Driver Name</Label>
-                                <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>From Station</Label>
-                                <Combobox options={cityOptions} value={fromStation?.name} onChange={(val) => setFromStation(cities.find(c => c.name === val) || null)} placeholder="Select Origin..." />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>To Station</Label>
-                                <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                            <CardContent className="pt-2 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                                    <div className="space-y-1">
+                                        <Label>Challan ID</Label>
+                                        <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label>Dispatch Date</Label>
+                                        <DatePicker date={dispatchDate} setDate={setDispatchDate} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label>Load from Hire Receipt</Label>
+                                        <Input 
+                                            placeholder="Enter Hire Receipt No."
+                                            value={hireReceiptNo}
+                                            onChange={e => handleLoadFromHireReceipt(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label>Vehicle No</Label>
+                                        <Combobox options={vehicleOptions} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label>Driver Name</Label>
+                                        <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label>From Station</Label>
+                                        <Combobox options={cityOptions} value={fromStation?.name} onChange={(val) => setFromStation(cities.find(c => c.name === val) || null)} placeholder="Select Origin..." />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label>To Station</Label>
+                                        <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </CollapsibleContent>
+                    </Card>
+                </Collapsible>
                 
                  <div className="space-y-4">
-                    <Collapsible open={isStockVisible} onOpenChange={setIsStockVisible}>
-                        <Card>
-                            <CollapsibleTrigger asChild>
-                                <div className="w-full">
-                                    <CardHeader className="cursor-pointer p-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                
-                                                <CardTitle className="text-base font-headline">LRs In Stock</CardTitle>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="relative w-full max-w-xs">
-                                                    <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                    <Input
-                                                        placeholder="Search LR, sender, receiver..."
-                                                        className="pl-8 h-8 text-xs"
-                                                        value={stockSearchTerm}
-                                                        onChange={(e) => setStockSearchTerm(e.target.value)}
-                                                        onKeyDown={handleStockSearchKeyDown}
-                                                    />
-                                                </div>
-                                                <Label htmlFor="to-station-filter" className="text-sm">To Station:</Label>
-                                                <Select value={toStationFilter} onValueChange={setToStationFilter}>
-                                                    <SelectTrigger className="w-[180px] h-8 text-xs" id="to-station-filter">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {stockToStationOptions.map(station => (
-                                                            <SelectItem key={station} value={station}>{station}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isStockVisible && "rotate-180")} />
-                                            </div>
-                                        </div>
-                                    </CardHeader>
+                     <Card>
+                        <CardHeader className="p-4">
+                            <CardTitle className="text-lg">Add LRs to Challan</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-end gap-2">
+                                 <div className="flex-grow">
+                                    <Label htmlFor="lr-search">Scan or Enter LR Number</Label>
+                                    <Input 
+                                        id="lr-search"
+                                        placeholder="Enter LR number to add"
+                                        value={lrSearchTerm}
+                                        onChange={(e) => setLrSearchTerm(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleAddLrBySearch()}
+                                    />
                                 </div>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                                <CardContent className="p-0">
-                                    <div className="overflow-y-auto h-96 border-t">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, filteredInStockLrs, (ids) => setStockSelection(ids))} checked={filteredInStockLrs.length > 0 && stockSelection.size === filteredInStockLrs.filter(lr => lr.status === 'In Stock').length && stockSelection.size > 0} /></TableHead>
-                                                    <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card">Booking Date</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card">Item & Description</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card">To</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card">Sender</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
-                                                    <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {filteredInStockLrs.map(lr => (
-                                                    <TableRow 
-                                                        key={lr.trackingId} 
-                                                        data-state={stockSelection.has(lr.trackingId) && "selected"}
-                                                        onClick={() => {
-                                                            if(lr.status === 'In Stock') {
-                                                                handleSelectRow(lr.trackingId, !stockSelection.has(lr.trackingId), stockSelection, setStockSelection)
-                                                            }
-                                                        }}
-                                                        className={lr.status === 'In Stock' ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
-                                                    >
-                                                        <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, stockSelection, setStockSelection)} checked={stockSelection.has(lr.trackingId)} disabled={lr.status !== 'In Stock'} /></TableCell>
-                                                        <TableCell>{lr.lrNo}</TableCell>
-                                                        <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
-                                                        <TableCell className="max-w-[200px] truncate">{lr.itemDescription}</TableCell>
-                                                        <TableCell>{lr.toCity}</TableCell>
-                                                        <TableCell>{lr.sender}</TableCell>
-                                                        <TableCell>{lr.receiver}</TableCell>
-                                                        <TableCell className="text-right">{lr.qty}</TableCell>
-                                                        <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                </CardContent>
-                            </CollapsibleContent>
-                        </Card>
-                    </Collapsible>
+                                <Button onClick={handleAddLrBySearch}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add LR
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    <div className="flex flex-col items-center gap-2">
-                        <Button onClick={handleAddToChallan} disabled={stockSelection.size === 0}><ArrowDown className="mr-2 h-4 w-4" /> Add to Challan</Button>
-                        <Button onClick={handleRemoveFromChallan} disabled={addedSelection.size === 0} variant="outline"><ArrowUp className="mr-2 h-4 w-4" /> Remove</Button>
+                    <div className="flex items-center justify-end">
+                        <Button onClick={handleRemoveFromChallan} disabled={addedSelection.size === 0} variant="outline" size="sm">
+                            <Trash2 className="mr-2 h-4 w-4 text-destructive"/> Remove Selected ({addedSelection.size})
+                        </Button>
                     </div>
 
                     {/* LRs Added to Challan Table */}
@@ -655,8 +555,17 @@ export function NewChallanForm() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-10 sticky top-0 bg-card"><Checkbox onCheckedChange={(c) => handleSelectAll(c as boolean, addedLrs, (ids) => setAddedSelection(ids))} checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length} /></TableHead>
+                                            <TableHead className="w-10 sticky top-0 bg-card">
+                                                <Checkbox
+                                                    onCheckedChange={(c) => {
+                                                        if (c) setSelectedLrs(new Set(addedLrs.map(lr => lr.trackingId)));
+                                                        else setSelectedLrs(new Set());
+                                                    }}
+                                                    checked={addedLrs.length > 0 && addedSelection.size === addedLrs.length}
+                                                />
+                                            </TableHead>
                                             <TableHead className="sticky top-0 bg-card">LR No</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Date</TableHead>
                                             <TableHead className="sticky top-0 bg-card">To</TableHead>
                                             <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
                                             <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
@@ -667,16 +576,28 @@ export function NewChallanForm() {
                                             <TableRow 
                                                 key={lr.trackingId} 
                                                 data-state={addedSelection.has(lr.trackingId) && "selected"}
-                                                onClick={() => handleSelectRow(lr.trackingId, !addedSelection.has(lr.trackingId), addedSelection, setAddedSelection)}
-                                                className="cursor-pointer"
                                             >
-                                                <TableCell><Checkbox onCheckedChange={(c) => handleSelectRow(lr.trackingId, c as boolean, addedSelection, setAddedSelection)} checked={addedSelection.has(lr.trackingId)} /></TableCell>
+                                                <TableCell>
+                                                    <Checkbox
+                                                        checked={addedSelection.has(lr.trackingId)}
+                                                        onCheckedChange={(checked) => {
+                                                            const newSelection = new Set(addedSelection);
+                                                            if(checked) newSelection.add(lr.trackingId);
+                                                            else newSelection.delete(lr.trackingId);
+                                                            setAddedSelection(newSelection);
+                                                        }}
+                                                    />
+                                                </TableCell>
                                                 <TableCell>{lr.lrNo}</TableCell>
+                                                <TableCell>{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
                                                 <TableCell>{lr.toCity}</TableCell>
                                                 <TableCell className="text-right">{lr.qty}</TableCell>
                                                 <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
+                                        {addedLrs.length === 0 && (
+                                            <TableRow><TableCell colSpan={6} className="h-24 text-center">No LRs added yet.</TableCell></TableRow>
+                                        )}
                                     </TableBody>
                                 </Table>
                             </div>
@@ -764,16 +685,6 @@ export function NewChallanForm() {
 }
 
 // Helper functions for table selection
-function handleSelectAll(checked: boolean, data: { trackingId: string, status?: string }[], setSelection: (ids: Set<string>) => void) {
-    if (checked) {
-        // When selecting all, only select items that are selectable (e.g., 'In Stock')
-        const stockToSelect = data.filter(item => !item.status || item.status === 'In Stock');
-        setSelection(new Set(stockToSelect.map(item => item.trackingId)));
-    } else {
-        setSelection(new Set());
-    }
-}
-
 function handleSelectRow(id: string, checked: boolean, currentSelection: Set<string>, setSelection: (ids: Set<string>) => void) {
     const newSelection = new Set(currentSelection);
     if (checked) {
