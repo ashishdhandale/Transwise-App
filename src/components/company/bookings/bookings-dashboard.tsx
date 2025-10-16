@@ -345,7 +345,7 @@ export function BookingsDashboard() {
                       <TableHead className={thClass}>LR Type</TableHead>
                       <TableHead className={thClass}>Sender</TableHead>
                       <TableHead className={thClass}>Receiver</TableHead>
-                      <TableHead className={thClass}>Item &amp; Description</TableHead>
+                      <TableHead className={thClass}>Contents</TableHead>
                       <TableHead className={`${thClass} text-right`}>Qty</TableHead>
                       <TableHead className={`${thClass} text-right`}>Chg Wt</TableHead>
                       <TableHead className={`${thClass} text-right`}>Total Amount</TableHead>
