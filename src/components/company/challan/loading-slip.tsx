@@ -20,10 +20,10 @@ interface LoadingSlipProps {
 const thClass = "text-left text-xs font-bold text-black border border-black p-1";
 const tdClass = "text-xs border border-black p-1 align-top";
 
-const SummaryItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="flex items-baseline gap-2 text-xs py-0.5">
+const SummaryItem = ({ label, value, isEmphasized = false }: { label: string; value: React.ReactNode, isEmphasized?: boolean }) => (
+    <div className="grid grid-cols-2 items-baseline text-xs py-0.5">
         <span className="font-semibold shrink-0">{label}</span>
-        <span className="font-bold">{value}</span>
+        <span className={`font-bold text-right ${isEmphasized ? 'text-blue-700' : ''}`}>{value}</span>
     </div>
 );
 
@@ -41,13 +41,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
     
     const challanTotalAmount = bookings.filter(lr => lr.lrType === 'TOPAY').reduce((sum, lr) => sum + lr.totalAmount, 0);
-
-    const paidCount = bookings.filter(b => b.lrType === 'PAID').length;
-    const toPayCount = bookings.filter(b => b.lrType === 'TOPAY').length;
-    const tbbCount = bookings.filter(b => b.lrType === 'TBB').length;
-    const focCount = bookings.filter(b => b.lrType === 'FOC').length;
-    const totalLrCount = paidCount + toPayCount + tbbCount + focCount;
-
 
     const title = challan.status === 'Finalized' ? 'DISPATCH CHALLAN' : 'LOADING SLIP';
 
@@ -152,7 +145,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <SummaryItem label="Crossing:" value={`- ${formatValue(challan.summary.crossing)}`} />
                         <SummaryItem label="Carting:" value={`- ${formatValue(challan.summary.carting)}`} />
                         <SummaryItem label="Balance Truck Hire:" value={`- ${formatValue(challan.summary.balanceTruckHire)}`} />
-                        <SummaryItem label="Debit/Credit Amount:" value={formatValue(challan.summary.debitCreditAmount)} />
+                        <SummaryItem label="Debit/Credit Amount:" value={formatValue(challan.summary.debitCreditAmount)} isEmphasized />
                     </div>
                 </div>
             </div>
