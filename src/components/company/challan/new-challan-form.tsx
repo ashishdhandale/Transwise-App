@@ -42,6 +42,7 @@ import { ClientOnly } from '@/components/ui/client-only';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -94,6 +95,7 @@ export function NewChallanForm() {
     const [isFinalized, setIsFinalized] = useState(false);
     
     const [lrSearchTerm, setLrSearchTerm] = useState('');
+    const [citySearchTerm, setCitySearchTerm] = useState<string | undefined>();
     const [searchResults, setSearchResults] = useState<Booking[]>([]);
     const [searchSelection, setSearchSelection] = useState<Set<string>>(new Set());
 
@@ -239,6 +241,17 @@ export function NewChallanForm() {
         const results = availableStock.filter(b => b.lrNo.toLowerCase().includes(lowerQuery));
         setSearchResults(results);
     }
+
+    const handleSearchByCity = (city: string | undefined) => {
+        setCitySearchTerm(city);
+        if (!city) {
+            setSearchResults([]);
+            return;
+        }
+        const availableStock = allBookings.filter(b => b.status === 'In Stock');
+        const results = availableStock.filter(b => b.toCity.toLowerCase() === city.toLowerCase());
+        setSearchResults(results);
+    };
     
     const handleAddSelectedToChallan = () => {
         const newlySelectedBookings = searchResults.filter(r => searchSelection.has(r.trackingId));
@@ -251,6 +264,7 @@ export function NewChallanForm() {
         setSearchSelection(new Set());
         setSearchResults([]);
         setLrSearchTerm('');
+        setCitySearchTerm(undefined);
     };
 
     const handleRemoveFromChallan = () => {
@@ -520,29 +534,50 @@ export function NewChallanForm() {
                 </Collapsible>
                 
                  <div className="space-y-4">
-                     <Card>
+                    <Card>
                         <CardHeader className="p-4">
                             <CardTitle className="text-lg">Add LRs to Challan</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-end gap-2">
-                                 <div className="w-full max-w-xs">
-                                    <Label htmlFor="lr-search">Scan or Enter LR Number</Label>
-                                    <Input 
-                                        id="lr-search"
-                                        placeholder="Enter LR number to search"
-                                        value={lrSearchTerm}
-                                        onChange={(e) => setLrSearchTerm(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleSearchLrs()}
-                                    />
-                                </div>
-                                <Button onClick={handleSearchLrs}>
-                                    Search LRs
-                                </Button>
-                            </div>
+                        <CardContent>
+                            <Tabs defaultValue="lr">
+                                <TabsList>
+                                    <TabsTrigger value="lr">Search by LR</TabsTrigger>
+                                    <TabsTrigger value="city">Search by City</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="lr" className="pt-4">
+                                    <div className="flex items-end gap-2">
+                                        <div className="w-full max-w-xs">
+                                            <Label htmlFor="lr-search">Scan or Enter LR Number</Label>
+                                            <Input 
+                                                id="lr-search"
+                                                placeholder="Enter LR number to search"
+                                                value={lrSearchTerm}
+                                                onChange={(e) => setLrSearchTerm(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleSearchLrs()}
+                                            />
+                                        </div>
+                                        <Button onClick={handleSearchLrs}>
+                                            Search LRs
+                                        </Button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="city" className="pt-4">
+                                     <div className="flex items-end gap-2">
+                                        <div className="w-full max-w-xs">
+                                            <Label htmlFor="city-search">Select Destination City</Label>
+                                            <Combobox 
+                                                options={cityOptions} 
+                                                value={citySearchTerm} 
+                                                onChange={handleSearchByCity} 
+                                                placeholder="Select city..." 
+                                            />
+                                        </div>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
 
                              {searchResults.length > 0 && (
-                                <div className="space-y-2">
+                                <div className="space-y-2 mt-4">
                                     <h4 className="text-sm font-medium">Search Results ({searchResults.length} found)</h4>
                                      <div className="overflow-y-auto h-48 border rounded-md">
                                         <Table>
