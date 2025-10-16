@@ -61,6 +61,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
             <header className="text-center pb-2 space-y-1">
                 <h1 className="text-lg font-bold">{profile.companyName}</h1>
                 <p className="text-xs">{profile.headOfficeAddress}</p>
+                <p className="text-xs">GSTIN: {profile.gstNo} | Ph: {profile.companyContactNo}</p>
                 <p className="text-sm font-bold underline">{title}</p>
             </header>
             
