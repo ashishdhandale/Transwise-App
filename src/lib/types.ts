@@ -57,6 +57,7 @@ export type BranchType = 'Owned' | 'Agency';
 
 export interface Branch {
   id: string;
+  branchId: string;
   name: string;
   type: BranchType;
   location: string;

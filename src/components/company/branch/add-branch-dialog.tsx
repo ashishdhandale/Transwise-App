@@ -43,6 +43,7 @@ const generateRandomPassword = () => {
 }
 
 export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBranchDialogProps) {
+    const [branchId, setBranchId] = useState('');
     const [name, setName] = useState('');
     const [type, setType] = useState<BranchType>('Owned');
     const [address, setAddress] = useState('');
@@ -62,6 +63,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
         if (isOpen) {
             setMasterCities(getCities());
             if (branch) {
+                setBranchId(branch.branchId || '');
                 setName(branch.name || '');
                 setType(branch.type || 'Owned');
                 setAddress(branch.address || '');
@@ -75,6 +77,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                 setPassword(''); // Always clear on open
             } else {
                 setName('');
+                setBranchId('');
                 setType('Owned');
                 setAddress('');
                 setCity('');
@@ -88,15 +91,25 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
             }
         }
     }, [branch, isOpen]);
+    
+    const handleNameChange = (newName: string) => {
+        setName(newName);
+        // Auto-generate branchId from name for new branches
+        if (!branch) {
+            const newBranchId = newName.toUpperCase().replace(/\s+/g, '-').substring(0, 10);
+            setBranchId(newBranchId);
+        }
+    }
 
 
     const handleSave = () => {
-        if (!name.trim() || !address.trim() || !city.trim() || !state.trim()) {
-            toast({ title: 'Validation Error', description: 'Branch Name, Address, City, and State are required.', variant: 'destructive' });
+        if (!name.trim() || !address.trim() || !city.trim() || !state.trim() || !branchId.trim()) {
+            toast({ title: 'Validation Error', description: 'Branch ID, Name, Address, City, and State are required.', variant: 'destructive' });
             return;
         }
 
         const dataToSave: Partial<Omit<Branch, 'id' | 'companyId'>> = {
+            branchId,
             name,
             type,
             location: `${city}, ${state}`,
@@ -138,9 +151,13 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                     <DialogTitle>{branch ? 'Edit Branch' : 'Add New Branch'}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-4">
-                    <div className="md:col-span-2">
+                    <div>
+                        <Label htmlFor="branch-id">Branch ID</Label>
+                        <Input id="branch-id" value={branchId} onChange={(e) => setBranchId(e.target.value.toUpperCase())} placeholder="e.g. NGP-MAIN" />
+                    </div>
+                    <div>
                         <Label htmlFor="branch-name">Branch Name</Label>
-                        <Input id="branch-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                        <Input id="branch-name" value={name} onChange={(e) => handleNameChange(e.target.value)} autoFocus />
                     </div>
                     <div>
                         <Label htmlFor="branch-type">Branch Type</Label>

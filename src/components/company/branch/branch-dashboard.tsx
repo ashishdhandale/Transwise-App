@@ -107,7 +107,8 @@ export function BranchDashboard() {
             ...branchData,
             password: branchData.password ? branchData.password : currentBranch.password,
             forcePasswordChange: branchData.password ? true : currentBranch.forcePasswordChange,
-            isActive: branchData.type === 'Agency' ? (currentBranch.isActive ?? true) : undefined
+            isActive: branchData.type === 'Agency' ? (currentBranch.isActive ?? true) : undefined,
+            branchId: branchData.branchId || currentBranch.branchId,
         };
       updatedBranches = branches.map(branch => (branch.id === currentBranch.id ? finalData : branch));
       toast({ title: 'Branch Updated', description: `"${branchData.name}" has been updated successfully.` });
@@ -115,6 +116,7 @@ export function BranchDashboard() {
       const newBranch: Branch = {
         id: `branch-${Date.now()}`,
         companyId: '1', // Placeholder companyId
+        branchId: branchData.branchId || '',
         name: branchData.name || '',
         type: branchData.type || 'Owned',
         location: branchData.location || '',
@@ -208,6 +210,7 @@ export function BranchDashboard() {
                 <Table>
                     <TableHeader>
                     <TableRow>
+                        <TableHead className={thClass}>Branch ID</TableHead>
                         <TableHead className={thClass}>Branch Name</TableHead>
                         <TableHead className={thClass}>Type</TableHead>
                         <TableHead className={thClass}>Location</TableHead>
@@ -220,6 +223,7 @@ export function BranchDashboard() {
                     <TableBody>
                     {filteredBranches.map((branch) => (
                         <TableRow key={branch.id}>
+                        <TableCell className={cn(tdClass, "font-semibold")}>{branch.branchId}</TableCell>
                         <TableCell className={cn(tdClass, "font-medium")}>{branch.name}</TableCell>
                         <TableCell className={cn(tdClass)}>
                             <Badge variant={branch.type === 'Owned' ? 'default' : 'secondary'}>{branch.type}</Badge>
