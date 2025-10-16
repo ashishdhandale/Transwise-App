@@ -91,6 +91,7 @@ export function NewChallanForm() {
     const [commission, setCommission] = useState(0);
     const [labour, setLabour] = useState(0);
     const [crossing, setCrossing] = useState(0);
+    const [carting, setCarting] = useState(0);
     const [debitCreditAmount, setDebitCreditAmount] = useState(0);
     const [isFinalized, setIsFinalized] = useState(false);
     const [fuel, setFuel] = useState(0);
@@ -133,9 +134,9 @@ export function NewChallanForm() {
     const totalAddedChgWt = useMemo(() => addedLrs.reduce((sum, b) => sum + b.chgWt, 0), [addedLrs]);
 
     useEffect(() => {
-        const calculatedDebitCredit = totalTopayAmount - (commission + labour + crossing + balance);
+        const calculatedDebitCredit = totalTopayAmount - (commission + labour + crossing + carting + balance);
         setDebitCreditAmount(calculatedDebitCredit);
-    }, [totalTopayAmount, commission, labour, crossing, balance]);
+    }, [totalTopayAmount, commission, labour, crossing, carting, balance]);
 
     const loadInitialData = useCallback(async () => {
         const profile = await getCompanyProfile();
@@ -176,6 +177,7 @@ export function NewChallanForm() {
                 setCommission(existingChallan.summary.commission || 0);
                 setLabour(existingChallan.summary.labour || 0);
                 setCrossing(existingChallan.summary.crossing || 0);
+                setCarting(existingChallan.summary.carting || 0);
                 setDebitCreditAmount(existingChallan.summary.debitCreditAmount || 0);
                 setFuel(existingChallan.summary.fuel || 0);
 
@@ -327,7 +329,7 @@ export function NewChallanForm() {
                 commission,
                 labour,
                 crossing,
-                carting: 0, 
+                carting, 
                 balanceTruckHire: balance,
                 debitCreditAmount,
                 fuel,
@@ -803,6 +805,10 @@ export function NewChallanForm() {
                                  <div className="space-y-1">
                                     <Label>Crossing</Label>
                                     <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
+                                </div>
+                                 <div className="space-y-1">
+                                    <Label>Carting</Label>
+                                    <Input value={carting} onChange={(e) => setCarting(Number(e.target.value))} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Debit/Credit Amt</Label>
