@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -85,6 +84,7 @@ export function NewChallanForm() {
     const [dispatchDate, setDispatchDate] = useState<Date | undefined>(undefined);
     const [vehicleNo, setVehicleNo] = useState<string | undefined>(undefined);
     const [driverName, setDriverName] = useState<string | undefined>(undefined);
+    const [driverMobile, setDriverMobile] = useState<string>('');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
     const [billTo, setBillTo] = useState<string | undefined>();
@@ -149,6 +149,12 @@ export function NewChallanForm() {
         setDebitCreditAmount(calculatedDebitCredit);
     }, [totalTopayAmount, commission, labour, crossing, carting, balance]);
 
+    const handleDriverSelect = (driverName: string) => {
+        setDriverName(driverName);
+        const driver = drivers.find(d => d.name === driverName);
+        setDriverMobile(driver?.mobile || '');
+    };
+
     const loadInitialData = useCallback(async () => {
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
@@ -157,9 +163,10 @@ export function NewChallanForm() {
         setAllBookings(currentBookings);
         const allChallans = getChallanData();
         const allCities = getCities();
+        const allDrivers = getDrivers();
         
         setVehicles(getVehicles());
-        setDrivers(getDrivers());
+        setDrivers(allDrivers);
         setCities(allCities);
         setBranches(getBranches());
         
@@ -180,6 +187,8 @@ export function NewChallanForm() {
                 setDispatchDate(new Date(existingChallan.dispatchDate));
                 setVehicleNo(existingChallan.vehicleNo);
                 setDriverName(existingChallan.driverName);
+                const driver = allDrivers.find(d => d.name === existingChallan.driverName);
+                setDriverMobile(driver?.mobile || '');
                 setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
                 setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
                 setBillTo(existingChallan.dispatchToParty);
@@ -225,6 +234,7 @@ export function NewChallanForm() {
             // Clear fields if input is empty
             setVehicleNo('');
             setDriverName('');
+            setDriverMobile('');
             setFromStation(null);
             setToStation(null);
             setVehicleHireFreight(0);
@@ -240,6 +250,7 @@ export function NewChallanForm() {
         if (receipt) {
             setVehicleNo(receipt.vehicleNo);
             setDriverName(receipt.driverName);
+            setDriverMobile(receipt.driverMobile || '');
             setFromStation(cities.find(c => c.name.toLowerCase() === receipt.fromStation.toLowerCase()) || null);
             setToStation(cities.find(c => c.name.toLowerCase() === receipt.toStation.toLowerCase()) || null);
             setVehicleHireFreight(receipt.freight);
@@ -251,6 +262,7 @@ export function NewChallanForm() {
             // If not found, clear the details
             setVehicleNo('');
             setDriverName('');
+            setDriverMobile('');
             setVehicleHireFreight(0);
             setAdvance(0);
             setFuel(0);
@@ -559,11 +571,11 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {isEditMode && !isFinalized ? (
-                        <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
-                    ) : !isEditMode ? (
+                    {isEditMode ? (
+                         <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
+                    ) : (
                          <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
-                    ) : null}
+                    )}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
                     {isFinalized && isEditMode ? (
                          <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Update Finalized Challan</Button>
@@ -588,7 +600,7 @@ export function NewChallanForm() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <CardContent className="pt-2 space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
                                     <div className="space-y-1">
                                         <Label>Challan ID</Label>
                                         <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
@@ -611,7 +623,11 @@ export function NewChallanForm() {
                                     </div>
                                     <div className="space-y-1">
                                         <Label>Driver Name</Label>
-                                        <Combobox options={driverOptions} value={driverName} onChange={setDriverName} placeholder="Select Driver..." />
+                                        <Combobox options={driverOptions} value={driverName} onChange={handleDriverSelect} placeholder="Select Driver..." />
+                                    </div>
+                                     <div className="space-y-1">
+                                        <Label>Driver Mobile</Label>
+                                        <Input value={driverMobile} readOnly className="bg-muted" />
                                     </div>
                                     <div className="space-y-1">
                                         <Label>From Station</Label>
@@ -621,7 +637,7 @@ export function NewChallanForm() {
                                         <Label>To Station</Label>
                                         <Combobox options={cityOptions} value={toStation?.name} onChange={(val) => setToStation(cities.find(c => c.name === val) || null)} placeholder="Select Destination..." />
                                     </div>
-                                    <div className="space-y-1 md:col-span-2 xl:col-span-1">
+                                    <div className="space-y-1 md:col-span-2">
                                         <Label>Bill To</Label>
                                         <Combobox options={billToOptions} value={billTo} onChange={setBillTo} placeholder="Select Billing Party..." />
                                     </div>
@@ -980,5 +996,7 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
+
+    
 
     
