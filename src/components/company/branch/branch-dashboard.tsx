@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pencil, Trash2, PlusCircle, Search, Building, Copy, Shield, ShieldOff, KeyRound, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddBranchDialog } from './add-branch-dialog';
-import type { Branch } from '@/lib/types';
+import type { Branch, ExistingUser } from '@/lib/types';
 import { getBranches, saveBranches } from '@/lib/branch-data';
 import { getStaff, saveStaff } from '@/lib/staff-data';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { sampleExistingUsers } from '@/lib/sample-data';
+
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -54,10 +56,17 @@ export function BranchDashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentBranch, setCurrentBranch] = useState<Branch | null>(null);
   const { toast } = useToast();
+  
+  // For prototype purposes, we'll assume we are logged in as the first company user.
+  const [currentUser] = useState<ExistingUser | undefined>(sampleExistingUsers[0]);
 
   useEffect(() => {
-    setBranches(getBranches());
-  }, []);
+    // Filter branches to only show those for the current user's company
+    const allBranches = getBranches();
+    if (currentUser) {
+        setBranches(allBranches.filter(b => b.companyId === String(currentUser.id)));
+    }
+  }, [currentUser]);
 
   const filteredBranches = useMemo(() => {
     return branches.filter(branch => 
@@ -88,9 +97,13 @@ export function BranchDashboard() {
     saveStaff(staffToKeep);
 
     // Delete the branch
-    const updatedBranches = branches.filter(branch => branch.id !== id);
+    const allBranches = getBranches();
+    const updatedBranches = allBranches.filter(branch => branch.id !== id);
     saveBranches(updatedBranches);
-    setBranches(updatedBranches);
+    // Re-filter for current user
+    if(currentUser) {
+        setBranches(updatedBranches.filter(b => b.companyId === String(currentUser.id)));
+    }
 
     toast({
       title: 'Branch Deleted',
@@ -101,6 +114,8 @@ export function BranchDashboard() {
 
   const handleSave = (branchData: Partial<Omit<Branch, 'id' | 'companyId'>>) => {
     let updatedBranches;
+    const allBranches = getBranches(); // get all branches for saving
+
     if (currentBranch) {
        const finalData: Branch = {
             ...currentBranch,
@@ -110,12 +125,16 @@ export function BranchDashboard() {
             isActive: branchData.type === 'Agency' ? (currentBranch.isActive ?? true) : undefined,
             branchId: branchData.branchId || currentBranch.branchId,
         };
-      updatedBranches = branches.map(branch => (branch.id === currentBranch.id ? finalData : branch));
+      updatedBranches = allBranches.map(branch => (branch.id === currentBranch.id ? finalData : branch));
       toast({ title: 'Branch Updated', description: `"${branchData.name}" has been updated successfully.` });
     } else {
+        if (!currentUser) {
+            toast({ title: 'Error', description: 'No company context found to create a branch.', variant: 'destructive'});
+            return false;
+        }
       const newBranch: Branch = {
         id: `branch-${Date.now()}`,
-        companyId: '1', // Placeholder companyId
+        companyId: String(currentUser.id), // Set the correct parent company ID
         branchId: branchData.branchId || '',
         name: branchData.name || '',
         type: branchData.type || 'Owned',
@@ -132,23 +151,28 @@ export function BranchDashboard() {
         forcePasswordChange: branchData.forcePasswordChange,
         isActive: branchData.isActive,
       };
-      updatedBranches = [newBranch, ...branches];
+      updatedBranches = [newBranch, ...allBranches];
       toast({ title: 'Branch Added', description: `"${branchData.name}" has been added.` });
     }
     saveBranches(updatedBranches);
-    setBranches(updatedBranches);
+    if(currentUser) {
+        setBranches(updatedBranches.filter(b => b.companyId === String(currentUser.id)));
+    }
     return true;
   };
 
   const handleToggleActive = (id: string) => {
-      const updatedBranches = branches.map(branch => {
+      const allBranches = getBranches();
+      const updatedBranches = allBranches.map(branch => {
           if (branch.id === id) {
               return { ...branch, isActive: !branch.isActive };
           }
           return branch;
       });
       saveBranches(updatedBranches);
-      setBranches(updatedBranches);
+       if(currentUser) {
+            setBranches(updatedBranches.filter(b => b.companyId === String(currentUser.id)));
+        }
       const branch = branches.find(s => s.id === id);
       toast({
           title: `Account ${branch?.isActive ? 'Blocked' : 'Activated'}`,
@@ -158,14 +182,17 @@ export function BranchDashboard() {
 
   const handleResetPassword = (id: string) => {
       const newPassword = generateRandomPassword();
-      const updatedBranches = branches.map(branch => {
+      const allBranches = getBranches();
+      const updatedBranches = allBranches.map(branch => {
           if (branch.id === id) {
               return { ...branch, password: newPassword, forcePasswordChange: true };
           }
           return branch;
       });
       saveBranches(updatedBranches);
-      setBranches(updatedBranches);
+       if(currentUser) {
+            setBranches(updatedBranches.filter(b => b.companyId === String(currentUser.id)));
+        }
       const branch = branches.find(s => s.id === id);
       toast({
           title: 'Password Reset',
