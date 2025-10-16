@@ -45,6 +45,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { addVoucher } from '@/lib/accounts-data';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -176,9 +177,9 @@ export function NewChallanForm() {
                 setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
                 setBillTo(existingChallan.dispatchToParty);
                 setRemark(existingChallan.remark || '');
-                setVehicleHireFreight(existingChallan.vehicleHireFreight);
-                setAdvance(existingChallan.advance);
-                setBalance(existingChallan.balance);
+                setVehicleHireFreight(existingChallan.vehicleHireFreight || 0);
+                setAdvance(existingChallan.advance || 0);
+                setBalance(existingChallan.balance || 0);
                 setCommission(existingChallan.summary.commission || 0);
                 setLabour(existingChallan.summary.labour || 0);
                 setCrossing(existingChallan.summary.crossing || 0);
@@ -237,6 +238,7 @@ export function NewChallanForm() {
             setVehicleHireFreight(receipt.freight);
             setAdvance(receipt.advance);
             setBalance(receipt.balance);
+            setFuel(0);
             toast({ title: 'Details Loaded', description: `Details from hire receipt ${receipt.receiptNo} have been loaded.` });
         } else {
             // If not found, clear the details
@@ -326,20 +328,20 @@ export function NewChallanForm() {
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
             totalActualWeight: addedLrs.reduce((sum, b) => sum + b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), 0),
             totalChargeWeight: totalAddedChgWt,
-            vehicleHireFreight,
-            advance,
-            balance,
+            vehicleHireFreight: vehicleHireFreight || 0,
+            advance: advance || 0,
+            balance: balance || 0,
             senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '', remark: remark || '',
             summary: {
                 grandTotal: totalFreight,
                 totalTopayAmount,
-                commission,
-                labour,
-                crossing,
-                carting, 
-                balanceTruckHire: balance,
-                debitCreditAmount,
-                fuel,
+                commission: commission || 0,
+                labour: labour || 0,
+                crossing: crossing || 0,
+                carting: carting || 0, 
+                balanceTruckHire: balance || 0,
+                debitCreditAmount: debitCreditAmount || 0,
+                fuel: fuel || 0,
             }
         };
 
@@ -446,6 +448,17 @@ export function NewChallanForm() {
             return b;
         });
         saveBookings(updatedBookings);
+        
+        // Add Journal Voucher for financial tracking
+        if (finalChallan.summary.totalTopayAmount > 0 && finalChallan.dispatchToParty) {
+            addVoucher({
+                type: 'Journal',
+                date: finalChallan.dispatchDate,
+                account: finalChallan.dispatchToParty,
+                amount: finalChallan.summary.totalTopayAmount,
+                narration: `To-Pay amount for Challan #${finalChallan.challanId}`,
+            });
+        }
         
         toast({ title: isEditMode ? "Challan Updated & Finalized" : "Challan Finalized", description: `Challan ${newChallanId} has been saved.` });
         
