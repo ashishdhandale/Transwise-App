@@ -24,7 +24,7 @@ const tdClass = "text-xs border border-black p-1 align-top";
 const SummaryItem = ({ label, value, isEmphasized = false }: { label: string; value: React.ReactNode, isEmphasized?: boolean }) => (
     <div className="grid grid-cols-[1fr_auto] items-baseline text-xs py-0.5 gap-2">
         <span className="font-semibold shrink-0">{label}</span>
-        <span className={cn('font-bold', isEmphasized ? 'text-blue-700' : '')}>{value}</span>
+        <span className={cn('font-bold text-right', isEmphasized ? 'text-blue-700' : '')}>{value}</span>
     </div>
 );
 
@@ -78,7 +78,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <TableRow>
                             <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>LR No</TableHead>
-                            <TableHead className={thClass}>LR Type</TableHead>
                             <TableHead className={thClass}>Consignee</TableHead>
                             <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Contents</TableHead>
@@ -100,7 +99,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                 <TableRow key={booking.trackingId}>
                                     <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                                     <TableCell className={tdClass}>{booking.lrNo}</TableCell>
-                                    <TableCell className={tdClass}>{booking.lrType}</TableCell>
                                     <TableCell className={tdClass}>{booking.receiver}</TableCell>
                                     <TableCell className={tdClass}>{booking.toCity}</TableCell>
                                     <TableCell className={`${tdClass} p-0`}>
@@ -122,7 +120,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell className={`${tdClass} text-right`} colSpan={6}>TOTAL:</TableCell>
+                            <TableCell className={`${tdClass} text-right`} colSpan={5}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(challanTotalAmount)}</TableCell>
