@@ -118,8 +118,8 @@ export function NewChallanForm() {
     const [isDownloading, setIsDownloading] = useState(false);
     
     useEffect(() => {
-        setBalance(vehicleHireFreight - advance);
-    }, [vehicleHireFreight, advance]);
+        setBalance(vehicleHireFreight - advance - fuel);
+    }, [vehicleHireFreight, advance, fuel]);
 
     const totalTopayAmount = useMemo(() => {
         return addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0);
