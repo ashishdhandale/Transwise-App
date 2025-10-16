@@ -27,7 +27,7 @@ interface AddBranchDialogProps {
     branch?: Partial<Branch> | null;
 }
 
-const branchTypes: BranchType[] = ['Owned', 'Agency', 'Delivery Agency'];
+const branchTypes: BranchType[] = ['Owned', 'Agency'];
 
 export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBranchDialogProps) {
     const [name, setName] = useState('');
