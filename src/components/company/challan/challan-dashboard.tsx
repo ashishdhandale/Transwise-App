@@ -65,7 +65,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, onCancel, 
       <CardTitle className="font-headline">{title}</CardTitle>
     </CardHeader>
     <CardContent>
-      <div className="overflow-x-auto border rounded-md">
+      <div className="overflow-x-auto border rounded-md uppercase">
         <Table>
           <TableHeader>
             <TableRow>
