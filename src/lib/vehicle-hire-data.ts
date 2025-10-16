@@ -1,4 +1,5 @@
 
+
 export interface VehicleHireReceipt {
     id: number;
     receiptNo: string;
@@ -15,6 +16,7 @@ export interface VehicleHireReceipt {
     toStation: string;
     freight: number;
     advance: number;
+    fuel?: number;
     balance: number;
     remarks?: string;
 }

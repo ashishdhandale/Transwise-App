@@ -41,6 +41,7 @@ const hireSchema = z.object({
   toStation: z.string().min(1, 'To station is required'),
   freight: z.coerce.number().min(0),
   advance: z.coerce.number().min(0),
+  fuel: z.coerce.number().min(0).optional(),
   balance: z.coerce.number(),
   remarks: z.string().optional(),
 });
@@ -86,6 +87,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
             toStation: '',
             freight: 0,
             advance: 0,
+            fuel: 0,
             balance: 0,
             remarks: '',
             capacity: 0,
@@ -121,10 +123,11 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
 
     const freight = form.watch('freight');
     const advance = form.watch('advance');
+    const fuel = form.watch('fuel');
 
     useEffect(() => {
-        form.setValue('balance', freight - advance);
-    }, [freight, advance, form]);
+        form.setValue('balance', (freight || 0) - (advance || 0) - (fuel || 0));
+    }, [freight, advance, fuel, form]);
     
     const handleOpenAddVendor = (query?: string) => {
         setInitialVendorData(query ? { name: query, type: 'Vehicle Supplier' } : null);
@@ -283,12 +286,15 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                 )}/>
                             </div>
                             <Card className="p-4 bg-muted/50">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                      <FormField name="freight" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Freight Amount</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage/></FormItem>
                                     )}/>
                                      <FormField name="advance" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Advance Paid</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage/></FormItem>
+                                    )}/>
+                                     <FormField name="fuel" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Fuel</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage/></FormItem>
                                     )}/>
                                      <FormField name="balance" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Balance</FormLabel><FormControl><Input type="number" {...field} readOnly className="font-bold"/></FormControl><FormMessage/></FormItem>
