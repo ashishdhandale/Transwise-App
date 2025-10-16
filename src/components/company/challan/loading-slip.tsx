@@ -142,21 +142,6 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                 <div className="border border-black p-2">
                     <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
                     <p className="text-xs min-h-[40px] whitespace-pre-line border-b border-dashed pb-2 mb-2">{remark || 'No remarks.'}</p>
-                    <div className="space-y-1">
-                        <h3 className="font-bold underline text-xs mb-1">Challan Summary</h3>
-                        <SummaryItem label="Total LR:" value={
-                            <span className="font-bold">
-                                {paidCount > 0 && `Paid(${paidCount}) `}
-                                {toPayCount > 0 && `Topay(${toPayCount}) `}
-                                {tbbCount > 0 && `TBB(${tbbCount}) `}
-                                {focCount > 0 && `FOC(${focCount}) `}
-                                Total {totalLrCount}
-                            </span>
-                        } />
-                        <SummaryItem label="Total Packages:" value={totalPackages} />
-                        <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
-                        <SummaryItem label="Challan Total:" value={formatValue(challanTotalAmount)} />
-                    </div>
                 </div>
                 <div className="border border-black p-2 min-h-[150px]">
                     <h3 className="font-bold underline text-xs mb-1">Challan Calculation</h3>
