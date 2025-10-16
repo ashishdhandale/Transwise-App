@@ -147,11 +147,11 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                     <h3 className="font-bold underline text-xs mb-1">Challan Calculation</h3>
                     <div className="space-y-1 text-xs">
                         <SummaryItem label="Total ToPay Amount:" value={formatValue(challan.summary.totalTopayAmount)} />
-                        <SummaryItem label="Commission:" value={formatValue(challan.summary.commission)} />
-                        <SummaryItem label="Labour:" value={formatValue(challan.summary.labour)} />
-                        <SummaryItem label="Crossing:" value={formatValue(challan.summary.crossing)} />
-                        <SummaryItem label="Carting:" value={formatValue(challan.summary.carting)} />
-                        <SummaryItem label="Balance Truck Hire:" value={formatValue(challan.summary.balanceTruckHire)} />
+                        <SummaryItem label="Commission:" value={`- ${formatValue(challan.summary.commission)}`} />
+                        <SummaryItem label="Labour:" value={`- ${formatValue(challan.summary.labour)}`} />
+                        <SummaryItem label="Crossing:" value={`- ${formatValue(challan.summary.crossing)}`} />
+                        <SummaryItem label="Carting:" value={`- ${formatValue(challan.summary.carting)}`} />
+                        <SummaryItem label="Balance Truck Hire:" value={`- ${formatValue(challan.summary.balanceTruckHire)}`} />
                         <SummaryItem label="Debit/Credit Amount:" value={formatValue(challan.summary.debitCreditAmount)} />
                     </div>
                 </div>
