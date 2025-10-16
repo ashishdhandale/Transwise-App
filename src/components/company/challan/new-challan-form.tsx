@@ -96,6 +96,7 @@ export function NewChallanForm() {
     const [isFinalized, setIsFinalized] = useState(false);
     
     const [lrSearchTerm, setLrSearchTerm] = useState('');
+    const [ewbSearchTerm, setEwbSearchTerm] = useState('');
     const [citySearchTerm, setCitySearchTerm] = useState<string | undefined>();
     const [searchResults, setSearchResults] = useState<Booking[]>([]);
     const [searchSelection, setSearchSelection] = useState<Set<string>>(new Set());
@@ -249,6 +250,19 @@ export function NewChallanForm() {
         const results = availableStock.filter(b => b.lrNo.toLowerCase().includes(lowerQuery));
         setSearchResults(results);
     }
+    
+    const handleSearchByEwb = () => {
+        if (!ewbSearchTerm.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        const lowerQuery = ewbSearchTerm.toLowerCase().trim();
+        const availableStock = allBookings.filter(b => b.status === 'In Stock');
+        const results = availableStock.filter(b => 
+            b.itemRows.some(item => item.ewbNo && item.ewbNo.toLowerCase().includes(lowerQuery))
+        );
+        setSearchResults(results);
+    };
 
     const handleSearchByCity = (city: string | undefined) => {
         setCitySearchTerm(city);
@@ -272,6 +286,7 @@ export function NewChallanForm() {
         setSearchSelection(new Set());
         setSearchResults([]);
         setLrSearchTerm('');
+        setEwbSearchTerm('');
         setCitySearchTerm(undefined);
     };
 
@@ -552,7 +567,9 @@ export function NewChallanForm() {
                             <Tabs defaultValue="lr">
                                 <TabsList>
                                     <TabsTrigger value="lr">Search by LR</TabsTrigger>
+                                    <TabsTrigger value="ewb">Search by EWB</TabsTrigger>
                                     <TabsTrigger value="city">Search by City</TabsTrigger>
+                                    <TabsTrigger value="scan">Scan Barcode</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="lr" className="pt-4">
                                     <div className="flex items-end gap-2">
@@ -571,6 +588,21 @@ export function NewChallanForm() {
                                         </Button>
                                     </div>
                                 </TabsContent>
+                                <TabsContent value="ewb" className="pt-4">
+                                     <div className="flex items-end gap-2">
+                                        <div className="w-full max-w-xs">
+                                            <Label htmlFor="ewb-search">Enter E-Way Bill Number</Label>
+                                            <Input 
+                                                id="ewb-search"
+                                                placeholder="Enter EWB number"
+                                                value={ewbSearchTerm}
+                                                onChange={(e) => setEwbSearchTerm(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleSearchByEwb()}
+                                            />
+                                        </div>
+                                        <Button onClick={handleSearchByEwb}>Search by EWB</Button>
+                                    </div>
+                                </TabsContent>
                                 <TabsContent value="city" className="pt-4">
                                      <div className="flex items-end gap-2">
                                         <div className="w-full max-w-xs">
@@ -582,6 +614,11 @@ export function NewChallanForm() {
                                                 placeholder="Select city..." 
                                             />
                                         </div>
+                                    </div>
+                                </TabsContent>
+                                 <TabsContent value="scan" className="pt-4">
+                                    <div className="text-muted-foreground p-4 border rounded-md">
+                                        Barcode scanning functionality will be implemented here.
                                     </div>
                                 </TabsContent>
                             </Tabs>
@@ -601,6 +638,8 @@ export function NewChallanForm() {
                                                         checked={searchResults.length > 0 && searchSelection.size === searchResults.length}
                                                     /></TableHead>
                                                     <TableHead>LR No</TableHead>
+                                                    <TableHead>Booking Date</TableHead>
+                                                    <TableHead>Item & Description</TableHead>
                                                     <TableHead>To</TableHead>
                                                     <TableHead>Receiver</TableHead>
                                                     <TableHead>Qty</TableHead>
@@ -618,10 +657,12 @@ export function NewChallanForm() {
                                                                 setSearchSelection(newSelection);
                                                             }}
                                                         /></TableCell>
-                                                        <TableCell>{lr.lrNo}</TableCell>
-                                                        <TableCell>{lr.toCity}</TableCell>
-                                                        <TableCell>{lr.receiver}</TableCell>
-                                                        <TableCell>{lr.qty}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">{lr.lrNo}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
+                                                        <TableCell className="max-w-xs truncate whitespace-nowrap">{lr.itemDescription}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">{lr.receiver}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">{lr.qty}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -708,7 +749,7 @@ export function NewChallanForm() {
                                     </TableBody>
                                      <TableFooter>
                                         <TableRow className="font-bold bg-muted/50">
-                                            <TableCell colSpan={7} className="text-right whitespace-nowrap">Total LRs: {addedLrs.length}</TableCell>
+                                            <TableCell colSpan={7} className="text-right whitespace-nowrap">Total</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">{totalAddedQty}</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">{totalAddedChgWt.toFixed(2)}</TableCell>
                                             <TableCell className="text-right whitespace-nowrap">To-Pay: {formatValue(totalTopayAmount)}</TableCell>
