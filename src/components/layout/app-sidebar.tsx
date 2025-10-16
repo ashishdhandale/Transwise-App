@@ -65,7 +65,6 @@ export function AppSidebar() {
   // Menu states
   const [openUserMenu, setOpenUserMenu] = React.useState(false);
   const [openDashboardMenu, setOpenDashboardMenu] = React.useState(false);
-  const [openBranchMenu, setOpenBranchMenu] = React.useState(false);
   const [openConsignmentMenu, setOpenConsignmentMenu] = React.useState(false);
   const [openAccountsMenu, setOpenAccountsMenu] = React.useState(false);
   const [openMasterMenu, setOpenMasterMenu] = React.useState(false);
@@ -84,9 +83,6 @@ export function AppSidebar() {
 
     const shouldOpenDashboard = pathname === '/company' || pathname.startsWith('/company/package-tracking') || pathname.startsWith('/company/challan-tracking') || pathname.startsWith('/company/history');
     setOpenDashboardMenu(shouldOpenDashboard);
-
-    const shouldOpenBranchMenu = pathname.startsWith('/company/branch');
-    setOpenBranchMenu(shouldOpenBranchMenu);
 
     const shouldOpenConsignmentMenu = pathname.startsWith('/company/bookings') || pathname.startsWith('/company/stock') || pathname.startsWith('/company/challan') || pathname.startsWith('/company/vehicle-hire') || pathname.startsWith('/company/deliveries');
     setOpenConsignmentMenu(shouldOpenConsignmentMenu);
@@ -109,7 +105,6 @@ export function AppSidebar() {
     if (state === 'collapsed') {
       setOpenUserMenu(false);
       setOpenDashboardMenu(false);
-      setOpenBranchMenu(false);
       setOpenConsignmentMenu(false);
       setOpenAccountsMenu(false);
       setOpenMasterMenu(false);

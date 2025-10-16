@@ -44,8 +44,8 @@ export function CompanyDashboard() {
 
   const todaysBusinessData = useMemo(() => {
     const todaysBookings = dashboardBookings.filter(b => isToday(parseISO(b.bookingDate)));
-    const todaysDeliveries = dashboardBookings.filter(b => b.status === 'Delivered' && isToday(parseISO(b.bookingDate))); // Assuming delivery date is booking date for simplicity
-    const todaysCancellations = dashboardBookings.filter(b => b.status === 'Cancelled' && isToday(parseISO(b.bookingDate)));
+    const todaysDeliveries = dashboardBookings.filter(b => b.status === 'Delivered' && b.bookingDate && isToday(parseISO(b.bookingDate)));
+    const todaysCancellations = dashboardBookings.filter(b => b.status === 'Cancelled' && b.bookingDate && isToday(parseISO(b.bookingDate)));
 
     const bookingsRevenue = todaysBookings.reduce((sum, b) => sum + b.totalAmount, 0);
 
@@ -64,7 +64,7 @@ export function CompanyDashboard() {
     return last13Days.map(date => {
       const dateString = format(date, 'yyyy-MM-dd');
       const day = format(date, 'dd');
-      const count = dashboardBookings.filter(b => format(parseISO(b.bookingDate), 'yyyy-MM-dd') === dateString).length;
+      const count = dashboardBookings.filter(b => b.bookingDate && format(parseISO(b.bookingDate), 'yyyy-MM-dd') === dateString).length;
       return { name: day, count };
     });
   }, [dashboardBookings]);
