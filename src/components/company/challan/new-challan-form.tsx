@@ -119,7 +119,7 @@ export function NewChallanForm() {
     const [isDownloading, setIsDownloading] = useState(false);
     
     useEffect(() => {
-        setBalance(vehicleHireFreight - advance - fuel);
+        setBalance((vehicleHireFreight || 0) - (advance || 0) - (fuel || 0));
     }, [vehicleHireFreight, advance, fuel]);
 
     const totalTopayAmount = useMemo(() => {
@@ -134,7 +134,7 @@ export function NewChallanForm() {
     const totalAddedChgWt = useMemo(() => addedLrs.reduce((sum, b) => sum + b.chgWt, 0), [addedLrs]);
 
     useEffect(() => {
-        const calculatedDebitCredit = totalTopayAmount - (commission + labour + crossing + carting + balance);
+        const calculatedDebitCredit = (totalTopayAmount || 0) - ((commission || 0) + (labour || 0) + (crossing || 0) + (carting || 0) + (balance || 0));
         setDebitCreditAmount(calculatedDebitCredit);
     }, [totalTopayAmount, commission, labour, crossing, carting, balance]);
 
@@ -773,15 +773,15 @@ export function NewChallanForm() {
                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <Label>Vehicle Hire Freight</Label>
-                                    <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value))} className="font-semibold" />
+                                    <Input value={vehicleHireFreight} onChange={(e) => setVehicleHireFreight(Number(e.target.value) || 0)} className="font-semibold" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Advance Paid</Label>
-                                    <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value))} className="font-semibold" />
+                                    <Input value={advance} onChange={(e) => setAdvance(Number(e.target.value) || 0)} className="font-semibold" />
                                 </div>
                                  <div className="space-y-1">
                                     <Label>Fuel</Label>
-                                    <Input value={fuel} onChange={(e) => setFuel(Number(e.target.value))} />
+                                    <Input value={fuel} onChange={(e) => setFuel(Number(e.target.value) || 0)} />
                                 </div>
                              </div>
                              <div className="space-y-1">
@@ -796,19 +796,19 @@ export function NewChallanForm() {
                              <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <Label>Commission</Label>
-                                    <Input value={commission} onChange={(e) => setCommission(Number(e.target.value))} />
+                                    <Input value={commission} onChange={(e) => setCommission(Number(e.target.value) || 0)} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Labour</Label>
-                                    <Input value={labour} onChange={(e) => setLabour(Number(e.target.value))} />
+                                    <Input value={labour} onChange={(e) => setLabour(Number(e.target.value) || 0)} />
                                 </div>
                                  <div className="space-y-1">
                                     <Label>Crossing</Label>
-                                    <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value))} />
+                                    <Input value={crossing} onChange={(e) => setCrossing(Number(e.target.value) || 0)} />
                                 </div>
                                  <div className="space-y-1">
                                     <Label>Carting</Label>
-                                    <Input value={carting} onChange={(e) => setCarting(Number(e.target.value))} />
+                                    <Input value={carting} onChange={(e) => setCarting(Number(e.target.value) || 0)} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Debit/Credit Amt</Label>
