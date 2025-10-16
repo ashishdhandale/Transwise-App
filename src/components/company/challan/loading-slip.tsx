@@ -67,6 +67,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
             <div className="grid grid-cols-2 gap-x-4 text-xs border-y border-black py-2">
                 <div>
                     <p><span className="font-semibold">Challan No:</span> {challan.challanId}</p>
+                    <p><span className="font-semibold">From:</span> {challan.fromStation}</p>
                     <p><span className="font-semibold">To:</span> {challan.toStation}</p>
                 </div>
                 <div>
@@ -88,7 +89,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>Item & Description</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
-                            <TableHead className={`${thClass} text-right`}>Grand Total</TableHead>
+                            <TableHead className={`${thClass} text-right`}>Challan Total</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
