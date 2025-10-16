@@ -243,7 +243,7 @@ export function BookingsDashboard() {
 
   const filteredBookings = useMemo(() => {
     const sortedBookings = [...bookings]
-        .filter(b => !b.lrNo.includes('-R')) // Exclude return bookings
+        .filter(b => b.source !== 'Inward' && !b.lrNo.includes('-R')) // Exclude inward and return bookings
         .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 
     if (!debouncedSearchQuery) {
@@ -332,7 +332,7 @@ export function BookingsDashboard() {
               </div>
 
               {/* Bookings Table */}
-              <div className="mt-4 overflow-x-auto border-2 border-cyan-500 rounded-sm">
+              <div className="mt-4 overflow-x-auto border-2 border-cyan-500 rounded-sm uppercase">
                 <Table>
                   <TableHeader>
                     <TableRow>
