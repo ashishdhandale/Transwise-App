@@ -9,6 +9,7 @@ export interface ChallanSummary {
   carting: number;
   balanceTruckHire: number;
   debitCreditAmount: number;
+  fuel?: number;
 }
 
 export interface Challan {
@@ -36,6 +37,7 @@ export interface Challan {
   originalChallanNo?: string;
   summary: ChallanSummary;
   remark?: string;
+  hireReceiptNo?: string;
 }
 
 export interface LrDetail {
@@ -79,3 +81,5 @@ export const saveLrDetailsData = (data: LrDetail[]) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(LR_DETAILS_KEY, JSON.stringify(data));
 }
+
+    

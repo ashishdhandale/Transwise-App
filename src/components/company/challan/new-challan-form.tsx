@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -193,6 +194,7 @@ export function NewChallanForm() {
                 setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
                 setBillTo(existingChallan.dispatchToParty);
                 setRemark(existingChallan.remark || '');
+                setHireReceiptNo(existingChallan.hireReceiptNo || '');
                 setVehicleHireFreight(existingChallan.vehicleHireFreight || 0);
                 setAdvance(existingChallan.advance || 0);
                 setBalance(existingChallan.balance || 0);
@@ -230,6 +232,21 @@ export function NewChallanForm() {
 
     const handleLoadFromHireReceipt = (receiptNo: string) => {
         setHireReceiptNo(receiptNo);
+        const allChallans = getChallanData();
+        const existingChallanId = searchParams.get('challanId');
+        
+        // Check if another challan is already using this hire receipt number
+        const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== existingChallanId);
+        if (usedChallan) {
+            toast({
+                title: 'Hire Receipt Already Used',
+                description: `This hire receipt number is already used in challan ${usedChallan.challanId}.`,
+                variant: 'destructive',
+            });
+            setHireReceiptNo('');
+            return;
+        }
+
         if (!receiptNo) {
             // Clear fields if input is empty
             setVehicleNo('');
@@ -256,7 +273,7 @@ export function NewChallanForm() {
             setVehicleHireFreight(receipt.freight);
             setAdvance(receipt.advance);
             setBalance(receipt.balance);
-            setFuel(0);
+            setFuel(receipt.fuel || 0);
             toast({ title: 'Details Loaded', description: `Details from hire receipt ${receipt.receiptNo} have been loaded.` });
         } else {
             // If not found, clear the details
@@ -350,6 +367,7 @@ export function NewChallanForm() {
             status,
             vehicleNo,
             driverName,
+            hireReceiptNo: hireReceiptNo,
             fromStation: fromStation?.name || companyProfile?.city || 'N/A',
             toStation: toStation.name,
             dispatchToParty: billTo || toStation.name,
@@ -571,8 +589,10 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {isEditMode ? (
-                         <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
+                    {isFinalized && isEditMode ? (
+                        <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
+                    ) : isEditMode ? (
+                         <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Temp Challan</Button>
                     ) : (
                          <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
                     )}
@@ -832,7 +852,7 @@ export function NewChallanForm() {
                                                 <TableCell className="whitespace-nowrap">{lr.lrType}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap">{formatValue(lr.totalAmount)}</TableCell>
                                                 <TableCell className="text-center whitespace-nowrap">
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditLrClick(lr)}>
+                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditLrClick(lr)}>
                                                         <Pencil className="h-4 w-4 text-blue-600" />
                                                     </Button>
                                                 </TableCell>
@@ -944,8 +964,6 @@ export function NewChallanForm() {
                                             challan={previewData.challan} 
                                             bookings={previewData.bookings}
                                             profile={companyProfile}
-                                            driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
-                                            remark={previewData.challan.remark || ''}
                                         />
                                     )}
                                 </div>
@@ -996,7 +1014,5 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
-
-    
 
     
