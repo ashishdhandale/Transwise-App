@@ -22,7 +22,7 @@ const thClass = "text-left text-xs font-bold text-black border border-black p-1"
 const tdClass = "text-xs border border-black p-1 align-top";
 
 const SummaryItem = ({ label, value, isEmphasized = false }: { label: string; value: React.ReactNode, isEmphasized?: boolean }) => (
-    <div className="grid grid-cols-[1fr_auto] items-baseline text-xs py-0.5 gap-2">
+    <div className="grid grid-cols-[auto_1fr] items-baseline text-xs py-0.5 gap-x-2">
         <span className="font-semibold shrink-0">{label}</span>
         <span className={cn('font-bold text-right', isEmphasized ? 'text-blue-700' : '')}>{value}</span>
     </div>
@@ -143,7 +143,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         <SummaryItem label="Labour:" value={`- ${formatValue(challan.summary.labour)}`} />
                         <SummaryItem label="Crossing:" value={`- ${formatValue(challan.summary.crossing)}`} />
                         <SummaryItem label="Carting:" value={`- ${formatValue(challan.summary.carting)}`} />
-                        <SummaryItem label="Balance Truck Hire:" value={`- ${formatValue(challan.summary.balanceTruckHire)}`} />
+                        <SummaryItem label="Vehicle Freight Balance:" value={`- ${formatValue(challan.summary.balanceTruckHire)}`} />
                         <SummaryItem label="Debited your account." value={formatValue(challan.summary.debitCreditAmount)} isEmphasized />
                     </div>
                 </div>
