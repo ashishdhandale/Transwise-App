@@ -35,7 +35,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { LoadingSlip } from './loading-slip';
+import { DispatchChallan } from './dispatch-challan';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import { getDrivers } from '@/lib/driver-data';
@@ -413,7 +413,7 @@ export function ChallanDashboard() {
                 </DialogHeader>
                 <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
                     <div ref={printRef} className="bg-white">
-                        <LoadingSlip 
+                        <DispatchChallan 
                             challan={previewData.challan} 
                             bookings={previewData.bookings}
                             profile={companyProfile}

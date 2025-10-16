@@ -36,6 +36,7 @@ import { getBranches } from '@/lib/branch-data';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSlip } from './loading-slip';
+import { DispatchChallan } from './dispatch-challan';
 import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -373,7 +374,7 @@ export function NewChallanForm() {
         return { challan: challanDataObject, lrDetails: lrDetailsObject };
     }
     
-    const handleSaveAsTemp = () => {
+    const handleSaveOrUpdateChallan = () => {
         const data = buildChallanObject('Pending');
         if (!data) return;
 
@@ -556,9 +557,9 @@ export function NewChallanForm() {
                 </h1>
                 <div className="flex justify-end gap-2">
                     {isEditMode ? (
-                        <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
+                        <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
                     ) : (
-                         <Button onClick={handleSaveAsTemp} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
+                         <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
                     )}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
                     {!isFinalized && <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save'}</Button>}
@@ -902,18 +903,26 @@ export function NewChallanForm() {
                         <DialogContent className="max-w-4xl">
                             <DialogHeader>
                                 <DialogTitle>
-                                    {previewData.challan.status === 'Finalized' ? 'Challan Finalized' : 'Loading Slip Preview'}: {previewData.challan.challanId}
+                                    {previewData.challan.status === 'Finalized' ? 'Dispatch Challan' : 'Loading Slip Preview'}: {previewData.challan.challanId}
                                 </DialogTitle>
                             </DialogHeader>
                             <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
                                 <div ref={printRef} className="bg-white">
-                                    <LoadingSlip 
-                                        challan={previewData.challan} 
-                                        bookings={previewData.bookings}
-                                        profile={companyProfile}
-                                        driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
-                                        remark={previewData.challan.remark || ''}
-                                    />
+                                    {previewData.challan.status === 'Finalized' ? (
+                                        <DispatchChallan
+                                            challan={previewData.challan} 
+                                            bookings={previewData.bookings}
+                                            profile={companyProfile}
+                                            driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
+                                            remark={previewData.challan.remark || ''}
+                                        />
+                                    ) : (
+                                        <LoadingSlip 
+                                            challan={previewData.challan} 
+                                            bookings={previewData.bookings}
+                                            profile={companyProfile}
+                                        />
+                                    )}
                                 </div>
                             </div>
                             <DialogFooter>
