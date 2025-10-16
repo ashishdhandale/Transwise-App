@@ -40,12 +40,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
     
-    const grandTotalAmount = bookings.reduce((sum, lr) => {
-        if (lr.lrType === 'TOPAY' || lr.lrType === 'TBB') {
-            return sum + lr.totalAmount;
-        }
-        return sum;
-    }, 0);
+    const challanTotalAmount = bookings.reduce((sum, lr) => sum + lr.totalAmount, 0);
 
     const paidCount = bookings.filter(b => b.lrType === 'PAID').length;
     const toPayCount = bookings.filter(b => b.lrType === 'TOPAY').length;
@@ -149,7 +144,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableCell colSpan={4}></TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
-                            <TableCell className={`${tdClass} text-right`}>{formatValue(grandTotalAmount)}</TableCell>
+                            <TableCell className={`${tdClass} text-right`}>{formatValue(challanTotalAmount)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
@@ -172,7 +167,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         } />
                         <SummaryItem label="Total Packages:" value={totalPackages} />
                         <SummaryItem label="Total Actual Wt:" value={`${totalWeight.toFixed(2)} kg`} />
-                        <SummaryItem label="Total To-Pay Freight:" value={formatValue(grandTotalAmount)} />
+                        <SummaryItem label="Challan Total:" value={formatValue(challanTotalAmount)} />
                     </div>
                 </div>
                 <div className="border border-black p-2 min-h-[150px]">
@@ -200,4 +195,3 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
         </div>
     );
 }
-
