@@ -22,6 +22,9 @@ import { getCities } from '@/lib/city-data';
 import { Combobox } from '@/components/ui/combobox';
 import { Separator } from '@/components/ui/separator';
 import { Copy } from 'lucide-react';
+import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getBranches } from '@/lib/branch-data';
 
 interface AddBranchDialogProps {
     isOpen: boolean;
@@ -42,6 +45,30 @@ const generateRandomPassword = () => {
     return retVal;
 }
 
+const generateBranchId = (
+    companyName: string,
+    station: string,
+    type: BranchType,
+    allBranches: Branch[]
+): string => {
+    if (!companyName || !station || !type) return '';
+
+    const companyInitials = companyName
+        .split(' ')
+        .map(word => word.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 3);
+
+    const stationCode = station.substring(0, 3).toUpperCase();
+    const typeCode = type === 'Agency' ? 'AG' : 'OW';
+    
+    const branchesInStation = allBranches.filter(b => b.city.toLowerCase() === station.toLowerCase()).length;
+    const sequenceNumber = String(branchesInStation + 1).padStart(2, '0');
+
+    return `${companyInitials}${stationCode}${typeCode}${sequenceNumber}`;
+};
+
 export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBranchDialogProps) {
     const [branchId, setBranchId] = useState('');
     const [name, setName] = useState('');
@@ -56,50 +83,57 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [masterCities, setMasterCities] = useState<City[]>([]);
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [allBranches, setAllBranches] = useState<Branch[]>([]);
     
     const { toast } = useToast();
 
     useEffect(() => {
         if (isOpen) {
-            setMasterCities(getCities());
-            if (branch) {
-                setBranchId(branch.branchId || '');
-                setName(branch.name || '');
-                setType(branch.type || 'Owned');
-                setAddress(branch.address || '');
-                setCity(branch.city || '');
-                setState(branch.state || '');
-                setContactNo(branch.contactNo || '');
-                setEmail(branch.email || '');
-                setGstin(branch.gstin || '');
-                setLrPrefix(branch.lrPrefix || '');
-                setUsername(branch.username || '');
-                setPassword(''); // Always clear on open
-            } else {
-                setName('');
-                setBranchId('');
-                setType('Owned');
-                setAddress('');
-                setCity('');
-                setState('');
-                setContactNo('');
-                setEmail('');
-                setGstin('');
-                setLrPrefix('');
-                setUsername('');
-                setPassword(generateRandomPassword());
+            async function loadData() {
+                setMasterCities(getCities());
+                const profile = await getCompanyProfile();
+                setCompanyProfile(profile);
+                setAllBranches(getBranches());
+
+                if (branch) {
+                    setBranchId(branch.branchId || '');
+                    setName(branch.name || '');
+                    setType(branch.type || 'Owned');
+                    setAddress(branch.address || '');
+                    setCity(branch.city || '');
+                    setState(branch.state || '');
+                    setContactNo(branch.contactNo || '');
+                    setEmail(branch.email || '');
+                    setGstin(branch.gstin || '');
+                    setLrPrefix(branch.lrPrefix || '');
+                    setUsername(branch.username || '');
+                    setPassword(''); // Always clear on open
+                } else {
+                    setName('');
+                    setBranchId('');
+                    setType('Owned');
+                    setAddress('');
+                    setCity('');
+                    setState('');
+                    setContactNo('');
+                    setEmail('');
+                    setGstin('');
+                    setLrPrefix('');
+                    setUsername('');
+                    setPassword(generateRandomPassword());
+                }
             }
+            loadData();
         }
     }, [branch, isOpen]);
     
-    const handleNameChange = (newName: string) => {
-        setName(newName);
-        // Auto-generate branchId from name for new branches
-        if (!branch) {
-            const newBranchId = newName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 4);
-            setBranchId(newBranchId);
+    useEffect(() => {
+        if (!branch && companyProfile && city && type) { // Only for new branches
+             const newBranchId = generateBranchId(companyProfile.companyName, city, type, allBranches);
+             setBranchId(newBranchId);
         }
-    }
+    }, [branch, city, type, companyProfile, allBranches]);
 
 
     const handleSave = () => {
@@ -153,11 +187,11 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-4">
                     <div>
                         <Label htmlFor="branch-name">Branch Name</Label>
-                        <Input id="branch-name" value={name} onChange={(e) => handleNameChange(e.target.value)} autoFocus />
+                        <Input id="branch-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
                     </div>
                      <div>
                         <Label htmlFor="branch-id">Branch ID</Label>
-                        <Input id="branch-id" value={branchId} onChange={(e) => setBranchId(e.target.value.toUpperCase())} placeholder="e.g. NGPMAIN" disabled={!!branch} />
+                        <Input id="branch-id" value={branchId} readOnly disabled className="font-bold bg-muted" />
                     </div>
                     <div>
                         <Label htmlFor="branch-type">Branch Type</Label>
