@@ -5,18 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { User, Loader2 } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UserRole } from "@/lib/types";
 import { ClientOnly } from "@/components/ui/client-only";
+import { Chatbot } from "./chatbot";
 
 export default function LoginForm() {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole | ''>('');
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const router = useRouter();
 
   const handleSignin = () => {
@@ -60,9 +62,9 @@ export default function LoginForm() {
             <p className="text-xs text-primary-foreground/80">Simplifying Logistics Businesses</p>
         </div>
         <div className="flex items-center">
-            <a href="#" className="bg-white text-primary px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-100">
+            <Button onClick={() => setIsHelpOpen(true)} className="bg-white text-primary px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-100">
                 HELP
-            </a>
+            </Button>
         </div>
       </header>
       <main className="flex-1 grid grid-cols-1 md:grid-cols-2 items-center justify-center p-4">
@@ -155,6 +157,9 @@ export default function LoginForm() {
             </ClientOnly>
           </div>
       </main>
+      <Dialog open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+          <Chatbot />
+      </Dialog>
     </div>
   );
 }

@@ -6,6 +6,11 @@ import {
   type OptimizeDeliveryRoutesInput,
   type OptimizeDeliveryRoutesOutput,
 } from '@/ai/flows/optimize-delivery-routes';
+import {
+  chat,
+  type ChatInput,
+  type ChatOutput
+} from '@/ai/flows/chat-flow';
 import { deliveries as allDeliveries } from '@/lib/data';
 
 export type OptimizerState = {
@@ -13,6 +18,12 @@ export type OptimizerState = {
   message?: string;
   data?: OptimizeDeliveryRoutesOutput;
 };
+
+export type ChatState = {
+    success: boolean;
+    message?: string;
+    data?: ChatOutput;
+}
 
 export async function handleOptimizeRoute(
   prevState: OptimizerState,
@@ -60,5 +71,26 @@ export async function handleOptimizeRoute(
   } catch (error) {
     console.error('Error optimizing route:', error);
     return { success: false, message: 'An unexpected error occurred while optimizing the route.' };
+  }
+}
+
+
+export async function handleChat(
+  prevState: ChatState,
+  formData: FormData
+): Promise<ChatState> {
+  try {
+    const message = formData.get('message') as string;
+    if (!message) {
+      return { success: false, message: 'Please enter a message.' };
+    }
+
+    const input: ChatInput = { message };
+    const result = await chat(input);
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Error in chat:', error);
+    return { success: false, message: 'An unexpected error occurred in the chat.' };
   }
 }
