@@ -91,6 +91,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
                             <TableHead className={`${thClass} text-right`}>Challan Total</TableHead>
+                            <TableHead className={`${thClass} text-right`}>Pvt.Mark</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -121,6 +122,9 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                         <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>
                                             {formatValue(booking.totalAmount)}
                                         </TableCell>
+                                        <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>
+                                            {booking.itemRows.map(item => item.pvtMark).filter(Boolean).join(', ')}
+                                        </TableCell>
                                     </TableRow>
                                     
                                     {booking.itemRows.slice(1).map((item, itemIndex) => (
@@ -147,6 +151,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(challanTotalAmount)}</TableCell>
+                             <TableCell className={tdClass}></TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
