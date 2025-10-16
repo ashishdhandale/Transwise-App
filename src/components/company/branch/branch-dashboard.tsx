@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2, PlusCircle, Search, Building, Copy, Shield, ShieldOff, KeyRound } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Search, Building, Copy, Shield, ShieldOff, KeyRound, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AddBranchDialog } from './add-branch-dialog';
 import type { Branch } from '@/lib/types';
