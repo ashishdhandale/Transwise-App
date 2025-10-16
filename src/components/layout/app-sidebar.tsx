@@ -100,7 +100,7 @@ export function AppSidebar() {
     const shouldOpenReportsMenu = pathname.startsWith('/company/reports');
     setOpenReportsMenu(shouldOpenReportsMenu);
 
-    const shouldOpenUtilityMenu = pathname.startsWith('/company/vehicle-expenses') || pathname.startsWith('/company/utility/staff');
+    const shouldOpenUtilityMenu = pathname.startsWith('/company/vehicle-expenses') || pathname.startsWith('/company/utility/staff') || pathname.startsWith('/company/branch');
     setOpenUtilityMenu(shouldOpenUtilityMenu);
     
   }, [pathname]);
@@ -282,30 +282,6 @@ export function AppSidebar() {
           </CollapsibleContent>
         </Collapsible>
         
-        {isCompany && (
-            <Collapsible open={openBranchMenu} onOpenChange={setOpenBranchMenu}>
-            <CollapsibleTrigger asChild>
-                <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Branch">
-                <Building />
-                <span>Branch</span>
-                <ChevronDown
-                    className={cn(
-                    'size-4 transition-transform ml-auto',
-                    openBranchMenu && 'rotate-180'
-                    )}
-                />
-                </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-                <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
-                <SidebarMenuItem>
-                    <SidebarMenuButton href="/company/branch" size="sm" isActive={pathname.startsWith('/company/branch')} tooltip="Branch Management"><Building />Branch Management</SidebarMenuButton>
-                </SidebarMenuItem>
-                </div>
-            </CollapsibleContent>
-            </Collapsible>
-        )}
-
         {consignmentMenu}
 
         {!isBranch && accountsMenu}
@@ -370,6 +346,9 @@ export function AppSidebar() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                     <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+                    <SidebarMenuItem>
+                        <SidebarMenuButton href="/company/branch" size="sm" isActive={pathname.startsWith('/company/branch')} tooltip="Branch Management"><Building />Branch Management</SidebarMenuButton>
+                    </SidebarMenuItem>
                     <SidebarMenuItem>
                         <SidebarMenuButton href="/company/vehicle-expenses" size="sm" isActive={pathname.startsWith('/company/vehicle-expenses')} tooltip="Vehicle Expenses"><Wrench />Vehicle Expenses</SidebarMenuButton>
                     </SidebarMenuItem>
