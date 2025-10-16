@@ -708,7 +708,7 @@ export function NewChallanForm() {
                                     </TableBody>
                                      <TableFooter>
                                         <TableRow className="font-bold bg-muted/50">
-                                            <TableCell colSpan={7} className="text-right">Total</TableCell>
+                                            <TableCell colSpan={7} className="text-right">Total LRs: {addedLrs.length}</TableCell>
                                             <TableCell className="text-right">{totalAddedQty}</TableCell>
                                             <TableCell className="text-right">{totalAddedChgWt.toFixed(2)}</TableCell>
                                             <TableCell className="text-right">To-Pay: {formatValue(totalTopayAmount)}</TableCell>
