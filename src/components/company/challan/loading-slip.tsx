@@ -59,7 +59,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     return (
         <div className="p-4 font-sans text-black bg-white uppercase">
             <header className="text-center pb-2 space-y-1">
-                <h1 className="text-lg font-bold">{profile.companyName}</h1>
+                <h1 className="text-xl font-bold">{profile.companyName}</h1>
                 <p className="text-xs">{profile.headOfficeAddress}</p>
                 <p className="text-xs">GSTIN: {profile.gstNo} | Ph: {profile.companyContactNo}</p>
                 <p className="text-sm font-bold underline">{title}</p>
@@ -90,7 +90,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>Contents</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
-                            <TableHead className={`${thClass} text-right`}>TP</TableHead>
+                            <TableHead className={`${thClass} text-right`}>Topay Amt.</TableHead>
                             <TableHead className={`${thClass} text-right`}>Pvt.Mark</TableHead>
                         </TableRow>
                     </TableHeader>
