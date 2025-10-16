@@ -87,7 +87,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                             <TableHead className={thClass}>LR Type</TableHead>
                             <TableHead className={thClass}>Consignee</TableHead>
                             <TableHead className={thClass}>To</TableHead>
-                            <TableHead className={thClass}>Item & Description</TableHead>
+                            <TableHead className={thClass}>Contents</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Act. Wt.</TableHead>
                             <TableHead className={`${thClass} text-right`}>Challan Total</TableHead>
@@ -95,59 +95,40 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bookings.map((booking, lrIndex) => {
+                        {bookings.map((booking) => {
                             const totalActWt = booking.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
                             const totalQty = booking.itemRows.reduce((sum, item) => sum + Number(item.qty), 0);
-                            
-                            return (
-                                <React.Fragment key={booking.trackingId}>
-                                    <TableRow>
-                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.fromCity}</TableCell>
-                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrNo}</TableCell>
-                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.lrType}</TableCell>
-                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.receiver}</TableCell>
-                                        <TableCell className={tdClass} rowSpan={booking.itemRows.length || 1}>{booking.toCity}</TableCell>
+                            const allItemsDescription = booking.itemRows
+                                .map(item => `${item.itemName} - ${item.description}`)
+                                .join(', ');
 
-                                        <TableCell className={`${tdClass} p-0`}>
-                                            <div className="whitespace-pre-wrap p-1">
-                                                <span>
-                                                    {booking.itemRows[0]?.itemName || booking.itemRows[0]?.description}
-                                                     {booking.itemRows.length > 1 && ` (${booking.itemRows[0]?.qty} Pkgs, ${Number(booking.itemRows[0]?.actWt).toFixed(2)}kg)`}
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                        
-                                        <TableCell className={`${tdClass} text-center`} rowSpan={booking.itemRows.length || 1}>{totalQty}</TableCell>
-                                        <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>{totalActWt.toFixed(2)}</TableCell>
-                                        <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>
-                                            {formatValue(booking.totalAmount)}
-                                        </TableCell>
-                                        <TableCell className={`${tdClass} text-right`} rowSpan={booking.itemRows.length || 1}>
-                                            {booking.itemRows.map(item => item.pvtMark).filter(Boolean).join(', ')}
-                                        </TableCell>
-                                    </TableRow>
-                                    
-                                    {booking.itemRows.slice(1).map((item, itemIndex) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className={`${tdClass} p-0`}>
-                                                <div className="whitespace-pre-wrap p-1 border-t border-black">
-                                                    <span>
-                                                        {item.itemName || item.description}
-                                                        {` (${item.qty} Pkgs, ${Number(item.actWt).toFixed(2)}kg)`}
-                                                    </span>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </React.Fragment>
+                            return (
+                                <TableRow key={booking.trackingId}>
+                                    <TableCell className={tdClass}>{booking.fromCity}</TableCell>
+                                    <TableCell className={tdClass}>{booking.lrNo}</TableCell>
+                                    <TableCell className={tdClass}>{booking.lrType}</TableCell>
+                                    <TableCell className={tdClass}>{booking.receiver}</TableCell>
+                                    <TableCell className={tdClass}>{booking.toCity}</TableCell>
+                                    <TableCell className={`${tdClass} p-0`}>
+                                        <div className="whitespace-pre-wrap p-1">
+                                            {allItemsDescription}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className={`${tdClass} text-center`}>{totalQty}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>{totalActWt.toFixed(2)}</TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>
+                                        {formatValue(booking.totalAmount)}
+                                    </TableCell>
+                                    <TableCell className={`${tdClass} text-right`}>
+                                        {booking.itemRows.map(item => item.pvtMark).filter(Boolean).join(', ')}
+                                    </TableCell>
+                                </TableRow>
                             );
                         })}
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell className={`${tdClass} text-right`}>TOTAL:</TableCell>
-                            <TableCell className={`${tdClass} text-center`}>{totalLrCount}</TableCell>
-                            <TableCell colSpan={4}></TableCell>
+                            <TableCell className={`${tdClass} text-right`} colSpan={6}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
                             <TableCell className={`${tdClass} text-right`}>{formatValue(challanTotalAmount)}</TableCell>
