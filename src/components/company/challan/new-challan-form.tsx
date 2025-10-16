@@ -12,6 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter
 } from '@/components/ui/table';
 import { FileText, Save, Printer, Download, Loader2, Eye, X, ChevronsUpDown, PlusCircle, Trash2 } from 'lucide-react';
 import type { Booking } from '@/lib/bookings-dashboard-data';
@@ -121,6 +122,10 @@ export function NewChallanForm() {
 
     const totalTopayAmount = useMemo(() => {
         return addedLrs.filter(b => b.lrType === 'TOPAY').reduce((sum, b) => sum + b.totalAmount, 0);
+    }, [addedLrs]);
+    
+    const totalFreight = useMemo(() => {
+        return addedLrs.reduce((sum, b) => sum + b.totalAmount, 0);
     }, [addedLrs]);
 
     useEffect(() => {
@@ -464,6 +469,8 @@ export function NewChallanForm() {
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
     const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name, value: d.name })), [drivers]);
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
+    const formatValue = (amount: number) => companyProfile ? amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount.toFixed(2);
+
 
     return (
         <div className="space-y-4">
@@ -659,6 +666,8 @@ export function NewChallanForm() {
                                             <TableHead className="sticky top-0 bg-card">Receiver</TableHead>
                                             <TableHead className="sticky top-0 bg-card text-right">Packages</TableHead>
                                             <TableHead className="sticky top-0 bg-card text-right">Charge Wt.</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Booking Type</TableHead>
+                                            <TableHead className="sticky top-0 bg-card text-right">Amount</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -686,12 +695,21 @@ export function NewChallanForm() {
                                                 <TableCell>{lr.receiver}</TableCell>
                                                 <TableCell className="text-right">{lr.qty}</TableCell>
                                                 <TableCell className="text-right">{lr.chgWt.toFixed(2)}</TableCell>
+                                                <TableCell>{lr.lrType}</TableCell>
+                                                <TableCell className="text-right">{formatValue(lr.totalAmount)}</TableCell>
                                             </TableRow>
                                         ))}
                                         {addedLrs.length === 0 && (
-                                            <TableRow><TableCell colSpan={9} className="h-24 text-center">No LRs added yet.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={11} className="h-24 text-center">No LRs added yet.</TableCell></TableRow>
                                         )}
                                     </TableBody>
+                                     <TableFooter>
+                                        <TableRow>
+                                            <TableCell colSpan={9} className="text-right font-bold">Total</TableCell>
+                                            <TableCell className="text-right font-bold">{formatValue(totalTopayAmount)}</TableCell>
+                                            <TableCell className="text-right font-bold">{formatValue(totalFreight)}</TableCell>
+                                        </TableRow>
+                                    </TableFooter>
                                 </Table>
                             </div>
                         </CardContent>
