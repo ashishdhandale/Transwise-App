@@ -40,7 +40,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
     
-    const challanTotalAmount = bookings.reduce((sum, lr) => sum + lr.totalAmount, 0);
+    const challanTotalAmount = bookings.filter(lr => lr.lrType === 'TOPAY').reduce((sum, lr) => sum + lr.totalAmount, 0);
 
     const paidCount = bookings.filter(b => b.lrType === 'PAID').length;
     const toPayCount = bookings.filter(b => b.lrType === 'TOPAY').length;
@@ -117,7 +117,7 @@ export function LoadingSlip({ challan, bookings, profile, driverMobile, remark }
                                     <TableCell className={`${tdClass} text-center`}>{totalQty}</TableCell>
                                     <TableCell className={`${tdClass} text-right`}>{totalActWt.toFixed(2)}</TableCell>
                                     <TableCell className={`${tdClass} text-right`}>
-                                        {formatValue(booking.totalAmount)}
+                                        {booking.lrType === 'TOPAY' ? formatValue(booking.totalAmount) : booking.lrType}
                                     </TableCell>
                                     <TableCell className={`${tdClass} text-right`}>
                                         {booking.itemRows.map(item => item.pvtMark).filter(Boolean).join(', ')}
