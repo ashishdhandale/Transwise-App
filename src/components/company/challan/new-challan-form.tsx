@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -233,7 +234,7 @@ export function NewChallanForm() {
             return;
         };
 
-        const lowerQuery = lrSearchTerm.toLowerCase();
+        const lowerQuery = lrSearchTerm.toLowerCase().trim();
         const availableStock = allBookings.filter(b => b.status === 'In Stock');
         const results = availableStock.filter(b => b.lrNo.toLowerCase().includes(lowerQuery));
         setSearchResults(results);
