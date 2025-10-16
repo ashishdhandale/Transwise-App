@@ -96,7 +96,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
         setName(newName);
         // Auto-generate branchId from name for new branches
         if (!branch) {
-            const newBranchId = newName.toUpperCase().replace(/\s+/g, '-').substring(0, 10);
+            const newBranchId = newName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10);
             setBranchId(newBranchId);
         }
     }
@@ -152,12 +152,12 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                 </DialogHeader>
                 <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-4">
                     <div>
-                        <Label htmlFor="branch-id">Branch ID</Label>
-                        <Input id="branch-id" value={branchId} onChange={(e) => setBranchId(e.target.value.toUpperCase())} placeholder="e.g. NGP-MAIN" />
-                    </div>
-                    <div>
                         <Label htmlFor="branch-name">Branch Name</Label>
                         <Input id="branch-name" value={name} onChange={(e) => handleNameChange(e.target.value)} autoFocus />
+                    </div>
+                     <div>
+                        <Label htmlFor="branch-id">Branch ID</Label>
+                        <Input id="branch-id" value={branchId} onChange={(e) => setBranchId(e.target.value.toUpperCase())} placeholder="e.g. NGPMAIN" />
                     </div>
                     <div>
                         <Label htmlFor="branch-type">Branch Type</Label>
