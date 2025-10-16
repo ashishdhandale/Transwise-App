@@ -525,7 +525,7 @@ export function NewChallanForm() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-end gap-2">
-                                 <div className="flex-grow">
+                                 <div className="w-full max-w-xs">
                                     <Label htmlFor="lr-search">Scan or Enter LR Number</Label>
                                     <Input 
                                         id="lr-search"
@@ -602,7 +602,7 @@ export function NewChallanForm() {
                             <CardTitle className="text-base font-headline">LRs Added to Challan</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0 flex-grow">
-                             <div className="overflow-y-auto h-60 border-t">
+                             <div className="overflow-y-auto h-96 border-t">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -616,7 +616,7 @@ export function NewChallanForm() {
                                                 />
                                             </TableHead>
                                             <TableHead className="sticky top-0 bg-card">LR No</TableHead>
-                                            <TableHead className="sticky top-0 bg-card">Date</TableHead>
+                                            <TableHead className="sticky top-0 bg-card">Booking Date</TableHead>
                                             <TableHead className="sticky top-0 bg-card">Item & Description</TableHead>
                                             <TableHead className="sticky top-0 bg-card">To</TableHead>
                                             <TableHead className="sticky top-0 bg-card">Sender</TableHead>
