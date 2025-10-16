@@ -126,6 +126,7 @@ export function NewChallanForm() {
     const printRef = React.useRef<HTMLDivElement>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<{ challan: Challan, bookings: Booking[] } | null>(null);
+    const [previewType, setPreviewType] = useState<'loading' | 'dispatch'>('loading');
     const [isDownloading, setIsDownloading] = useState(false);
     
     useEffect(() => {
@@ -418,6 +419,7 @@ export function NewChallanForm() {
         if (!data) return;
 
         setPreviewData({ challan: data.challan, bookings: addedLrs });
+        setPreviewType('loading');
         setIsPreviewOpen(true);
     };
 
@@ -480,6 +482,7 @@ export function NewChallanForm() {
         toast({ title: isEditMode ? "Challan Updated & Finalized" : "Challan Finalized", description: `Challan ${newChallanId} has been saved.` });
         
         setPreviewData({ challan: finalChallan, bookings: addedLrs });
+        setPreviewType('dispatch');
         setIsPreviewOpen(true);
     };
     
@@ -494,7 +497,7 @@ export function NewChallanForm() {
 
         setIsDownloading(true);
 
-        const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+        const canvas = await html2canvas(input, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
             orientation: 'portrait',
@@ -556,13 +559,17 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {isEditMode ? (
+                    {isEditMode && !isFinalized ? (
                         <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
-                    ) : (
+                    ) : !isEditMode ? (
                          <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
-                    )}
+                    ) : null}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    {!isFinalized && <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> {isEditMode ? 'Update & Finalize' : 'Finalize & Save'}</Button>}
+                    {isFinalized && isEditMode ? (
+                         <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Update Finalized Challan</Button>
+                    ) : (
+                        <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize & Save</Button>
+                    )}
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
             </header>
@@ -903,13 +910,13 @@ export function NewChallanForm() {
                         <DialogContent className="max-w-4xl">
                             <DialogHeader>
                                 <DialogTitle>
-                                    {previewData.challan.status === 'Finalized' ? 'Dispatch Challan' : 'Loading Slip Preview'}: {previewData.challan.challanId}
+                                    {previewType === 'loading' ? 'Loading Slip Preview' : 'Dispatch Challan'}: {previewData.challan.challanId}
                                 </DialogTitle>
                             </DialogHeader>
                             <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
                                 <div ref={printRef} className="bg-white">
-                                    {previewData.challan.status === 'Finalized' ? (
-                                        <DispatchChallan
+                                    {previewType === 'dispatch' ? (
+                                        <DispatchChallan 
                                             challan={previewData.challan} 
                                             bookings={previewData.bookings}
                                             profile={companyProfile}
@@ -921,6 +928,8 @@ export function NewChallanForm() {
                                             challan={previewData.challan} 
                                             bookings={previewData.bookings}
                                             profile={companyProfile}
+                                            driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
+                                            remark={previewData.challan.remark || ''}
                                         />
                                     )}
                                 </div>
@@ -947,6 +956,7 @@ export function NewChallanForm() {
                             </DialogHeader>
                             <div className="flex-grow overflow-auto pr-6">
                                 <BookingForm 
+                                    isOfflineMode={true}
                                     bookingData={bookingDataToEdit}
                                     onSaveSuccess={handleUpdateLrInList}
                                     onClose={() => setIsEditDialogOpen(false)}

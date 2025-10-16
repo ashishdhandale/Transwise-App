@@ -21,20 +21,12 @@ const thClass = "text-left text-xs font-bold text-black border border-black p-1"
 const tdClass = "text-xs border border-black p-1 align-top";
 
 const SummaryItem = ({ label, value, isEmphasized = false }: { label: string; value: React.ReactNode, isEmphasized?: boolean }) => (
-    <div className="grid grid-cols-2 items-baseline text-xs py-0.5 gap-2">
+    <div className="grid grid-cols-[1fr_auto] items-baseline text-xs py-0.5 gap-2">
         <span className="font-semibold shrink-0">{label}</span>
         <span className={cn('font-bold text-right', isEmphasized ? 'text-blue-700' : '')}>{value}</span>
     </div>
 );
 
-
-export function LorryHireChallan({ receipt, profile }: { receipt: any, profile: CompanyProfileFormValues }) {
-    return (
-        <div className="p-6 font-sans text-sm text-black bg-white" style={{ width: '210mm' }}>
-           {/* Lorry Hire Challan Content */}
-        </div>
-    );
-}
 
 export function DispatchChallan({ challan, bookings, profile, driverMobile, remark }: DispatchChallanProps) {
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
@@ -159,3 +151,4 @@ export function DispatchChallan({ challan, bookings, profile, driverMobile, rema
         </div>
     );
 }
+
