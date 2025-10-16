@@ -34,6 +34,7 @@ const hireSchema = z.object({
   vehicleNo: z.string().min(1, 'Vehicle number is required'),
   vehicleType: z.string().optional(),
   driverName: z.string().min(1, 'Driver name is required'),
+  driverMobile: z.string().optional(),
   capacity: z.coerce.number().optional(),
   overloadCapacity: z.coerce.number().optional(),
   fromStation: z.string().min(1, 'From station is required'),
@@ -80,6 +81,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
             vehicleNo: '',
             vehicleType: '',
             driverName: '',
+            driverMobile: '',
             fromStation: '',
             toStation: '',
             freight: 0,
@@ -262,7 +264,10 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
                                     <FormItem><FormLabel>Vehicle Type</FormLabel><FormControl><Input placeholder="e.g. Truck, Trailer" {...field} /></FormControl></FormItem>
                                 )}/>
                                 <FormField name="driverName" control={form.control} render={({ field }) => (
-                                    <FormItem className="md:col-span-2"><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Enter Driver Name" {...field} /></FormControl></FormItem>
+                                    <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Enter Driver Name" {...field} /></FormControl></FormItem>
+                                )}/>
+                                 <FormField name="driverMobile" control={form.control} render={({ field }) => (
+                                    <FormItem><FormLabel>Driver Mobile</FormLabel><FormControl><Input placeholder="Enter Driver Mobile" {...field} /></FormControl></FormItem>
                                 )}/>
                                  <FormField name="capacity" control={form.control} render={({ field }) => (
                                     <FormItem><FormLabel>Vehicle Capacity (Kg)</FormLabel><FormControl><Input type="number" placeholder="e.g. 10000" {...field} /></FormControl></FormItem>

@@ -8,6 +8,7 @@ export interface VehicleHireReceipt {
     vehicleNo: string;
     vehicleType?: string;
     driverName: string;
+    driverMobile?: string;
     capacity?: number;
     overloadCapacity?: number;
     fromStation: string;
