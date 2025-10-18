@@ -599,16 +599,14 @@ export function NewChallanForm() {
         const options = new Set<string>();
         const lowerToStation = toStation?.name.toLowerCase();
 
-        // 1. Add branch at destination if it exists
         if (toStation) {
+            // 1. Add branch at destination if it exists
             const branch = branches.find(b => b.city.toLowerCase() === lowerToStation);
             if (branch) {
                 options.add(branch.name);
             }
-        }
 
-        // 2. Add customers from master list whose city matches the destination
-        if (toStation) {
+            // 2. Add customers from master list whose city matches the destination
             customers.forEach(c => {
                 if (c.city && c.city.toLowerCase() === lowerToStation) {
                     options.add(c.name);
@@ -616,18 +614,8 @@ export function NewChallanForm() {
             });
         }
         
-        // 3. Add consignees from LRs already added to the challan (ensures they are in the list)
-        addedLrs.forEach(lr => {
-            if (lr.toCity.toLowerCase() === lowerToStation) {
-                options.add(lr.receiver);
-            }
-        });
-
-        // 4. Add all customers as a fallback
-        customers.forEach(c => options.add(c.name));
-
         return Array.from(options).map(opt => ({ label: opt, value: opt }));
-    }, [toStation, branches, addedLrs, customers]);
+    }, [toStation, branches, customers]);
 
 
     const handleAddNewCustomer = (customerData: Omit<Customer, 'id'>) => {
