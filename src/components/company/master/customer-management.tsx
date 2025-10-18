@@ -143,6 +143,7 @@ export function CustomerManagement() {
                 <TableRow>
                   <TableHead className={thClass}>Customer Name</TableHead>
                   <TableHead className={thClass}>Type</TableHead>
+                  <TableHead className={thClass}>City</TableHead>
                   <TableHead className={thClass}>GSTIN</TableHead>
                   <TableHead className={thClass}>Address</TableHead>
                   <TableHead className={thClass}>Mobile</TableHead>
@@ -160,6 +161,7 @@ export function CustomerManagement() {
                       </Tooltip>
                     </TableCell>
                     <TableCell className={cn(tdClass)}><Badge variant="secondary">{customer.type}</Badge></TableCell>
+                    <TableCell className={cn(tdClass)}>{customer.city}</TableCell>
                     <TableCell className={cn(tdClass)}>{customer.gstin}</TableCell>
                     <TableCell className={cn(tdClass)}>
                        <Tooltip>
