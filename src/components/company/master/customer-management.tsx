@@ -37,7 +37,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function CustomerManagement() {
   const [customers, setCustomers] = useState<Customer[]>([]);
