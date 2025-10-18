@@ -573,7 +573,15 @@ export function NewChallanForm() {
         setIsExitConfirmationOpen(true);
     };
 
-    const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
+    const vehicleOptions = useMemo(() => {
+        if (!vehicleOwner) return vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
+        if (vehicleOwner === 'Company Owned') {
+            return vehicles.filter(v => v.ownerType === 'Own').map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
+        }
+        return vehicles.filter(v => v.ownerType === 'Supplier' && v.supplierName === vehicleOwner).map(v => ({ label: v.vehicleNo, value: v.vehicleNo }));
+
+    }, [vehicles, vehicleOwner]);
+
     const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name, value: d.name })), [drivers]);
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
     const vehicleOwnerOptions = useMemo(() => [
@@ -657,11 +665,15 @@ export function NewChallanForm() {
                                     </div>
                                      <div className="space-y-1">
                                         <Label>Driver Name</Label>
-                                        <Combobox options={driverOptions} value={driverName} onChange={handleDriverSelect} placeholder="Select Driver..." />
+                                        {vehicleOwner === 'Company Owned' ? (
+                                            <Combobox options={driverOptions} value={driverName} onChange={handleDriverSelect} placeholder="Select Driver..." />
+                                        ) : (
+                                            <Input value={driverName} onChange={(e) => setDriverName(e.target.value)} placeholder="Enter Driver Name" />
+                                        )}
                                     </div>
                                      <div className="space-y-1">
                                         <Label>Driver Mobile</Label>
-                                        <Input value={driverMobile} readOnly className="bg-muted" />
+                                        <Input value={driverMobile} onChange={(e) => setDriverMobile(e.target.value)} />
                                     </div>
                                     <div className="space-y-1">
                                         <Label>From Station</Label>
@@ -1047,3 +1059,6 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
 
 
 
+
+
+    
