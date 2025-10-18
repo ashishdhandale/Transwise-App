@@ -74,7 +74,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     // Personal Details
     const [name, setName] = useState('');
     const [role, setRole] = useState<StaffRole>('Booking Clerk');
-    const [branch, setBranch] = useState<string>('');
+    const [branch, setBranch] = useState('');
     const [mobile, setMobile] = useState('');
     const [address, setAddress] = useState('');
     const [monthlySalary, setMonthlySalary] = useState<number | ''>('');
@@ -89,7 +89,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
     // Identification
     const [emergencyContactName, setEmergencyContactName] = useState('');
     const [emergencyContactNo, setEmergencyContactNo] = useState('');
-    const [idProofType, setIdProofType] = useState<string | undefined>();
+    const [idProofType, setIdProofType] = useState<string>('');
     const [idProofNo, setIdProofNo] = useState('');
     
     // Login Details
@@ -124,7 +124,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setIfscCode(staff.ifscCode || '');
                 setEmergencyContactName(staff.emergencyContactName || '');
                 setEmergencyContactNo(staff.emergencyContactNo || '');
-                setIdProofType(staff.idProofType);
+                setIdProofType(staff.idProofType || '');
                 setIdProofNo(staff.idProofNo || '');
                 setPermissions(staff.permissions || { dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true });
             } else {
@@ -144,7 +144,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                 setIfscCode('');
                 setEmergencyContactName('');
                 setEmergencyContactNo('');
-                setIdProofType(undefined);
+                setIdProofType('');
                 setIdProofNo('');
                 setPermissions({ dashboard: true, booking: true, stock: true, accounts: true, master: true, reports: true, challan: true, vehicleHire: true, vehicleExpense: true, utility: true });
             }
