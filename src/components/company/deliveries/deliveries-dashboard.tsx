@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { ClientOnly } from '@/components/ui/client-only';
+import { isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -29,13 +30,32 @@ export function DeliveriesDashboard() {
   }, []);
 
   const filteredBookings = useMemo(() => {
-    // This is a placeholder for actual filtering logic
-    return allBookings.filter(b => 
-        b.lrNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.receiver.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [allBookings, searchTerm, fromDate, toDate]);
+    let bookings = allBookings;
+
+    if (fromDate && toDate) {
+        const start = startOfDay(fromDate);
+        const end = endOfDay(toDate);
+        bookings = bookings.filter(b => {
+            try {
+                const bookingDate = parseISO(b.bookingDate);
+                return isWithinInterval(bookingDate, { start, end });
+            } catch {
+                return false;
+            }
+        });
+    }
+
+    if (searchTerm) {
+        const lowerQuery = searchTerm.toLowerCase();
+        bookings = bookings.filter(b =>
+            b.lrNo.toLowerCase().includes(lowerQuery) ||
+            b.sender.toLowerCase().includes(lowerQuery) ||
+            b.receiver.toLowerCase().includes(lowerQuery)
+        );
+    }
+
+    return bookings;
+}, [allBookings, searchTerm, fromDate, toDate]);
 
   return (
     <main className="flex-1 p-4 md:p-6 bg-white">
