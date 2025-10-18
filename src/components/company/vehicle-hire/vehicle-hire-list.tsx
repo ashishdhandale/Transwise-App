@@ -78,7 +78,6 @@ export function VehicleHireList({ receipts, onEdit, reloadReceipts }: VehicleHir
                                     <TableCell className="text-right font-bold">{r.balance.toFixed(2)}</TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="icon" onClick={() => onEdit(r)}><Pencil className="h-4 w-4"/></Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(r.id)}><Trash2 className="h-4 w-4"/></Button>
                                     </TableCell>
                                 </TableRow>
                             )) : (
