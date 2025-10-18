@@ -12,19 +12,18 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { ClientOnly } from '@/components/ui/client-only';
 import { isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import Link from 'next/link';
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
-  const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [fromDate, setFromDate] = useState<Date | undefined>(new Date());
+  const [toDate, setToDate] = useState<Date | undefined>(new Date());
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     // In a real app, you might filter for deliveries here.
     // For now, we'll use all bookings that are not cancelled.
     setAllBookings(getBookings().filter(b => b.status !== 'Cancelled'));
-    setFromDate(new Date());
-    setToDate(new Date());
   }, []);
 
   const filteredBookings = useMemo(() => {
@@ -47,8 +46,8 @@ export function DeliveriesDashboard() {
         const lowerQuery = searchTerm.toLowerCase();
         bookings = bookings.filter(b =>
             b.lrNo.toLowerCase().includes(lowerQuery) ||
-            b.sender.toLowerCase().includes(lowerQuery) ||
-            b.receiver.toLowerCase().includes(lowerQuery)
+            b.sender.toLowerCase().includes(lowercasedQuery) ||
+            b.receiver.toLowerCase().includes(lowercasedQuery)
         );
     }
 
@@ -64,15 +63,19 @@ export function DeliveriesDashboard() {
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button variant="outline"><FilePlus className="mr-2 h-4 w-4" />Create New Delivery</Button>
-          <Button variant="outline"><Layers className="mr-2 h-4 w-4" />Bulk Delivery</Button>
+          <Button asChild variant="outline">
+            <Link href="/company/deliveries/bulk">
+              <Layers className="mr-2 h-4 w-4" />Bulk Delivery
+            </Link>
+          </Button>
           <Button variant="outline"><CreditCard className="mr-2 h-4 w-4" />Update Payment</Button>
         </div>
 
         {/* Filters and Search */}
         <Card className="border-gray-300">
             <CardContent className="p-4">
+              <ClientOnly>
                 <div className="flex flex-wrap items-end justify-between gap-4">
-                    <ClientOnly>
                         <div className="flex items-end gap-2 p-2 border rounded-md">
                             <span className="text-sm font-semibold text-gray-600">Delivery Information</span>
                             <div className="flex items-end gap-2">
@@ -86,7 +89,6 @@ export function DeliveriesDashboard() {
                                 </div>
                             </div>
                         </div>
-                    </ClientOnly>
                     <div className="relative w-full max-w-xs">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input 
@@ -97,6 +99,7 @@ export function DeliveriesDashboard() {
                         />
                     </div>
                 </div>
+              </ClientOnly>
             </CardContent>
         </Card>
 
