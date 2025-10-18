@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -46,7 +47,6 @@ export function DeliveriesList({ deliveries }: DeliveriesListProps) {
         <TableBody>
           {deliveries.length > 0 ? (
             deliveries.map((delivery, index) => {
-              const totalActWt = delivery.itemRows.reduce((sum, item) => sum + Number(item.actWt), 0);
               return (
               <TableRow key={delivery.trackingId}>
                 <TableCell className={cn(tdClass)}>{index + 1}</TableCell>
