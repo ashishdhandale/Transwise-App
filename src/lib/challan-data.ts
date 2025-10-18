@@ -38,6 +38,7 @@ export interface Challan {
   summary: ChallanSummary;
   remark?: string;
   hireReceiptNo?: string;
+  lorrySupplier?: string;
 }
 
 export interface LrDetail {

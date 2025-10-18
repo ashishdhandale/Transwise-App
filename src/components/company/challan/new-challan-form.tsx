@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Combobox } from '@/components/ui/combobox';
-import type { Driver, VehicleMaster, City, Branch } from '@/lib/types';
+import type { Driver, VehicleMaster, City, Branch, Vendor } from '@/lib/types';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { useToast } from '@/hooks/use-toast';
@@ -61,6 +61,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { getVendors } from '@/lib/vendor-data';
 
 
 const generatePermanentChallanId = (challans: Challan[], prefix: string): string => {
@@ -97,6 +98,7 @@ export function NewChallanForm() {
     const [driverMobile, setDriverMobile] = useState<string>('');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
+    const [vehicleOwner, setVehicleOwner] = useState<string | undefined>();
     const [billTo, setBillTo] = useState<string | undefined>();
     const [remark, setRemark] = useState('');
     const [hireReceiptNo, setHireReceiptNo] = useState('');
@@ -122,6 +124,7 @@ export function NewChallanForm() {
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [branches, setBranches] = useState<Branch[]>([]);
+    const [vendors, setVendors] = useState<Vendor[]>([]);
     
     // Edit Dialog state
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
@@ -182,6 +185,7 @@ export function NewChallanForm() {
         setDrivers(allDrivers);
         setCities(allCities);
         setBranches(getBranches());
+        setVendors(getVendors());
         
         const existingChallanId = searchParams.get('challanId');
 
@@ -204,6 +208,7 @@ export function NewChallanForm() {
                 setDriverMobile(driver?.mobile || '');
                 setFromStation(allCities.find(c => c.name === existingChallan.fromStation) || null);
                 setToStation(allCities.find(c => c.name === existingChallan.toStation) || null);
+                setVehicleOwner(existingChallan.lorrySupplier);
                 setBillTo(existingChallan.dispatchToParty);
                 setRemark(existingChallan.remark || '');
                 setHireReceiptNo(existingChallan.hireReceiptNo || '');
@@ -257,6 +262,7 @@ export function NewChallanForm() {
             setAdvance(0);
             setFuel(0);
             setBalance(0);
+            setVehicleOwner(undefined);
             return;
         }
 
@@ -286,6 +292,7 @@ export function NewChallanForm() {
             setAdvance(receipt.advance);
             setFuel(receipt.fuel || 0);
             setBalance(receipt.balance);
+            setVehicleOwner(receipt.supplierName);
             toast({ title: 'Details Loaded', description: `Details from hire receipt ${receipt.receiptNo} have been loaded.` });
         } else {
             // If not found, clear the details
@@ -296,6 +303,7 @@ export function NewChallanForm() {
             setAdvance(0);
             setFuel(0);
             setBalance(0);
+            setVehicleOwner(undefined);
         }
     };
     
@@ -383,6 +391,7 @@ export function NewChallanForm() {
             fromStation: fromStation?.name || companyProfile?.city || 'N/A',
             toStation: toStation.name,
             dispatchToParty: billTo || toStation.name,
+            lorrySupplier: vehicleOwner,
             totalLr: addedLrs.length,
             totalPackages: totalAddedQty,
             totalItems: addedLrs.reduce((sum, b) => sum + (b.itemRows?.length || 0), 0),
@@ -567,6 +576,11 @@ export function NewChallanForm() {
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
     const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name, value: d.name })), [drivers]);
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
+    const vehicleOwnerOptions = useMemo(() => [
+        { label: 'Company Owned', value: 'Company Owned' },
+        ...vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name, value: v.name })),
+        { label: 'Others', value: 'Others' }
+    ], [vendors]);
 
     const billToOptions = useMemo(() => {
         const options = new Set<string>();
@@ -644,6 +658,10 @@ export function NewChallanForm() {
                                      <div className="space-y-1">
                                         <Label>Driver Mobile</Label>
                                         <Input value={driverMobile} readOnly className="bg-muted" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label>Vehicle Owner</Label>
+                                        <Combobox options={vehicleOwnerOptions} value={vehicleOwner} onChange={setVehicleOwner} placeholder="Select Owner..." />
                                     </div>
                                     <div className="space-y-1">
                                         <Label>From Station</Label>
