@@ -15,15 +15,11 @@ import { isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  const [fromDate, setFromDate] = useState<Date | undefined>();
-  const [toDate, setToDate] = useState<Date | undefined>();
+  const [fromDate, setFromDate] = useState<Date | undefined>(new Date());
+  const [toDate, setToDate] = useState<Date | undefined>(new Date());
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Set initial dates after client-side mount
-    setFromDate(new Date());
-    setToDate(new Date());
-
     // In a real app, you might filter for deliveries here.
     // For now, we'll use all bookings that are not cancelled.
     setAllBookings(getBookings().filter(b => b.status !== 'Cancelled'));
