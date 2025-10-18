@@ -57,7 +57,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 
@@ -591,10 +590,13 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save Challan</Button>
+                    {isEditMode && !isFinalized && (
+                         <Button onClick={handleSaveOrUpdateChallan}><Save className="mr-2 h-4 w-4" />Update Challan</Button>
+                    )}
                     {!isFinalized && (
                         <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize</Button>
                     )}
+                    {isFinalized && <Button onClick={handleSaveOrUpdateChallan}>Update Finalized Challan</Button>}
                     <Button onClick={handleExit} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
             </header>
@@ -623,7 +625,7 @@ export function NewChallanForm() {
                                         <DatePicker date={dispatchDate} setDate={setDispatchDate} />
                                     </div>
                                     <div className="space-y-1">
-                                        <Label>Load from Hire Receipt</Label>
+                                        <Label>Vehicle Hire Receipt</Label>
                                         <Input 
                                             placeholder="Enter Hire Receipt No."
                                             value={hireReceiptNo}
