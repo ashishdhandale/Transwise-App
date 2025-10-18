@@ -35,7 +35,6 @@ import { getCities } from '@/lib/city-data';
 import { getBranches } from '@/lib/branch-data';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { LoadingSlip } from './loading-slip';
 import { DispatchChallan } from './dispatch-challan';
 import React from 'react';
 import jsPDF from 'jspdf';
@@ -48,6 +47,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { addVoucher } from '@/lib/accounts-data';
 import { BookingForm } from '../bookings/booking-form';
+import { LoadingSlip } from './loading-slip';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -233,10 +233,11 @@ export function NewChallanForm() {
     const handleLoadFromHireReceipt = (receiptNo: string) => {
         setHireReceiptNo(receiptNo);
         const allChallans = getChallanData();
-        const existingChallanId = searchParams.get('challanId');
+        const currentChallanId = searchParams.get('challanId');
         
         // Check if another challan is already using this hire receipt number
-        const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== existingChallanId);
+        const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== currentChallanId);
+        
         if (receiptNo && usedChallan) {
             toast({
                 title: 'Hire Receipt Already Used',
@@ -589,10 +590,8 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {isFinalized && isEditMode ? (
-                        <Button onClick={handleFinalizeChallan}><Save className="mr-2 h-4 w-4" />Update Finalized Challan</Button>
-                    ) : isEditMode ? (
-                         <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Temp Challan</Button>
+                    {isEditMode ? (
+                        <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
                     ) : (
                          <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
                     )}
@@ -1012,5 +1011,3 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
-
-    
