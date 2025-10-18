@@ -9,16 +9,19 @@ import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
+import { ClientOnly } from '@/components/ui/client-only';
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
-  const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [fromDate, setFromDate] = useState<Date | undefined>();
+  const [toDate, setToDate] = useState<Date | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    // Set initial dates after client-side mount
     setFromDate(new Date());
     setToDate(new Date());
+
     // In a real app, you might filter for deliveries here.
     // For now, we'll use all bookings that are not cancelled.
     setAllBookings(getBookings().filter(b => b.status !== 'Cancelled'));
@@ -50,20 +53,22 @@ export function DeliveriesDashboard() {
         <Card className="border-gray-300">
             <CardContent className="p-4">
                 <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="flex items-end gap-2 p-2 border rounded-md">
-                        <span className="text-sm font-semibold text-gray-600">Delivery Information</span>
-                        <div className="flex items-end gap-2">
-                             <div className="grid w-full max-w-sm items-center gap-1.5">
-                                <label className="text-xs">From Date</label>
-                                <DatePicker date={fromDate} setDate={setFromDate} />
+                    <ClientOnly>
+                        <div className="flex items-end gap-2 p-2 border rounded-md">
+                            <span className="text-sm font-semibold text-gray-600">Delivery Information</span>
+                            <div className="flex items-end gap-2">
+                                <div className="grid w-full max-w-sm items-center gap-1.5">
+                                    <label className="text-xs">From Date</label>
+                                    <DatePicker date={fromDate} setDate={setFromDate} />
+                                </div>
+                                <div className="grid w-full max-w-sm items-center gap-1.5">
+                                    <label className="text-xs">To Date</label>
+                                    <DatePicker date={toDate} setDate={setToDate} />
+                                </div>
+                                <Button>LOAD INFO</Button>
                             </div>
-                             <div className="grid w-full max-w-sm items-center gap-1.5">
-                                <label className="text-xs">To Date</label>
-                                <DatePicker date={toDate} setDate={setToDate} />
-                            </div>
-                            <Button>LOAD INFO</Button>
                         </div>
-                    </div>
+                    </ClientOnly>
                     <div className="relative w-full max-w-xs">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input 
