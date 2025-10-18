@@ -41,6 +41,8 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
     const [name, setName] = useState('');
     const [gstin, setGstin] = useState('');
     const [address, setAddress] = useState('');
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [type, setType] = useState<CustomerType>('Company');
@@ -53,6 +55,8 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             setName(customer.name || '');
             setGstin(customer.gstin || '');
             setAddress(customer.address || '');
+            setCity(customer.city || '');
+            setState(customer.state || '');
             setMobile(customer.mobile || '');
             setEmail(customer.email || '');
             setType(customer.type || 'Company');
@@ -61,6 +65,8 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             setName('');
             setGstin('');
             setAddress('');
+            setCity('');
+            setState('');
             setMobile('');
             setEmail('');
             setType('Company');
@@ -79,6 +85,8 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             name,
             gstin,
             address,
+            city,
+            state,
             mobile,
             email,
             type,
@@ -92,7 +100,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>{customer && 'id' in customer ? 'Edit Customer' : 'Add New Customer'}</DialogTitle>
                 </DialogHeader>
@@ -121,6 +129,14 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                     <div className="md:col-span-2">
                         <Label htmlFor="address">Address</Label>
                         <Textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
+                    </div>
+                     <div>
+                        <Label htmlFor="city">City</Label>
+                        <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+                    </div>
+                     <div>
+                        <Label htmlFor="state">State</Label>
+                        <Input id="state" value={state} onChange={(e) => setState(e.target.value)} />
                     </div>
                     <div>
                         <Label htmlFor="mobile">Mobile No.</Label>

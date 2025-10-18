@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -164,8 +163,8 @@ export function CustomerManagement() {
                     <TableCell className={cn(tdClass)}>{customer.gstin}</TableCell>
                     <TableCell className={cn(tdClass)}>
                        <Tooltip>
-                        <TooltipTrigger asChild><p className="truncate max-w-[250px]">{customer.address}</p></TooltipTrigger>
-                        <TooltipContent><p>{customer.address}</p></TooltipContent>
+                        <TooltipTrigger asChild><p className="truncate max-w-[250px]">{customer.address}, {customer.city}, {customer.state}</p></TooltipTrigger>
+                        <TooltipContent><p>{customer.address}, {customer.city}, {customer.state}</p></TooltipContent>
                       </Tooltip>
                     </TableCell>
                     <TableCell className={cn(tdClass)}>{customer.mobile}</TableCell>

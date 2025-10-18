@@ -100,6 +100,8 @@ export interface Customer {
   name: string;
   gstin: string;
   address: string;
+  city: string;
+  state: string;
   mobile: string;
   email: string;
   type: CustomerType;
