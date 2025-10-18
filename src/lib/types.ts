@@ -126,6 +126,11 @@ export interface Vendor {
   mobile: string;
   email: string;
   openingBalance: number;
+  gstin?: string;
+  pan?: string;
+  bankName?: string;
+  accountNo?: string;
+  ifscCode?: string;
 }
 
 export type NewRequest = {

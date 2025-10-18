@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Vendor, VendorType } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 interface AddVendorDialogProps {
     isOpen: boolean;
@@ -39,6 +40,12 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [openingBalance, setOpeningBalance] = useState<number | ''>('');
+    const [gstin, setGstin] = useState('');
+    const [pan, setPan] = useState('');
+    const [bankName, setBankName] = useState('');
+    const [accountNo, setAccountNo] = useState('');
+    const [ifscCode, setIfscCode] = useState('');
+
 
     const { toast } = useToast();
 
@@ -50,6 +57,11 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             setMobile(vendor.mobile || '');
             setEmail(vendor.email || '');
             setOpeningBalance(vendor.openingBalance || 0);
+            setGstin(vendor.gstin || '');
+            setPan(vendor.pan || '');
+            setBankName(vendor.bankName || '');
+            setAccountNo(vendor.accountNo || '');
+            setIfscCode(vendor.ifscCode || '');
         } else {
             setName('');
             setType('Vehicle Supplier');
@@ -57,6 +69,11 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             setMobile('');
             setEmail('');
             setOpeningBalance(0);
+            setGstin('');
+            setPan('');
+            setBankName('');
+            setAccountNo('');
+            setIfscCode('');
         }
     }, [vendor, isOpen]);
 
@@ -74,6 +91,11 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             mobile,
             email,
             openingBalance: Number(openingBalance) || 0,
+            gstin,
+            pan,
+            bankName,
+            accountNo,
+            ifscCode
         });
 
         if (success) {
@@ -83,11 +105,11 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>{vendor && 'id' in vendor ? 'Edit Vendor' : 'Add New Vendor'}</DialogTitle>
                 </DialogHeader>
-                <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-2">
                     <div className="md:col-span-2">
                         <Label htmlFor="vendor-name">Vendor Name</Label>
                         <Input id="vendor-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
@@ -120,6 +142,37 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
                     <div className="md:col-span-2">
                         <Label htmlFor="opening-balance">Opening Balance</Label>
                         <Input id="opening-balance" type="number" value={openingBalance} onChange={(e) => setOpeningBalance(Number(e.target.value))} />
+                    </div>
+
+                    <div className="md:col-span-2"><Separator className="my-2" /></div>
+                    
+                    <div className="md:col-span-2">
+                        <h3 className="font-semibold text-base">Financial Details</h3>
+                    </div>
+
+                     <div>
+                        <Label htmlFor="gstin">GSTIN</Label>
+                        <Input id="gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} />
+                    </div>
+                     <div>
+                        <Label htmlFor="pan">PAN</Label>
+                        <Input id="pan" value={pan} onChange={(e) => setPan(e.target.value)} />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                        <h4 className="font-medium text-sm mt-2">Bank Details</h4>
+                    </div>
+                     <div>
+                        <Label htmlFor="bank-name">Bank Name</Label>
+                        <Input id="bank-name" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+                    </div>
+                     <div>
+                        <Label htmlFor="account-no">Account Number</Label>
+                        <Input id="account-no" value={accountNo} onChange={(e) => setAccountNo(e.target.value)} />
+                    </div>
+                     <div>
+                        <Label htmlFor="ifsc-code">IFSC Code</Label>
+                        <Input id="ifsc-code" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} />
                     </div>
                 </div>
                 <DialogFooter>
