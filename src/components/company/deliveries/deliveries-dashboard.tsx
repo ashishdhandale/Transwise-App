@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -65,7 +66,6 @@ export function DeliveriesDashboard() {
                                     <label className="text-xs">To Date</label>
                                     <DatePicker date={toDate} setDate={setToDate} />
                                 </div>
-                                <Button>LOAD INFO</Button>
                             </div>
                         </div>
                     </ClientOnly>
