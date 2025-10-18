@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -94,14 +93,14 @@ export function NewChallanForm() {
     
     // Form fields
     const [challanId, setChallanId] = useState('');
-    const [dispatchDate, setDispatchDate] = useState<Date | undefined>(undefined);
-    const [vehicleNo, setVehicleNo] = useState<string | undefined>(undefined);
-    const [driverName, setDriverName] = useState<string | undefined>(undefined);
+    const [dispatchDate, setDispatchDate] = useState<Date | undefined>(new Date());
+    const [vehicleNo, setVehicleNo] = useState<string | undefined>('');
+    const [driverName, setDriverName] = useState<string | undefined>('');
     const [driverMobile, setDriverMobile] = useState<string>('');
     const [fromStation, setFromStation] = useState<City | null>(null);
     const [toStation, setToStation] = useState<City | null>(null);
-    const [vehicleOwner, setVehicleOwner] = useState<string | undefined>();
-    const [billTo, setBillTo] = useState<string | undefined>();
+    const [vehicleOwner, setVehicleOwner] = useState<string | undefined>('');
+    const [billTo, setBillTo] = useState<string | undefined>('');
     const [remark, setRemark] = useState('');
     const [hireReceiptNo, setHireReceiptNo] = useState('');
     const [vehicleHireFreight, setVehicleHireFreight] = useState(0);
@@ -694,7 +693,7 @@ export function NewChallanForm() {
                                         {vehicleOwner === 'Company Owned' ? (
                                             <Combobox options={driverOptions} value={driverName} onChange={handleDriverSelect} placeholder="Select Driver..." />
                                         ) : (
-                                            <Input value={driverName} onChange={(e) => setDriverName(e.target.value)} placeholder="Enter Driver Name" />
+                                            <Input value={driverName || ''} onChange={(e) => setDriverName(e.target.value)} placeholder="Enter Driver Name" />
                                         )}
                                     </div>
                                      <div className="space-y-1">
