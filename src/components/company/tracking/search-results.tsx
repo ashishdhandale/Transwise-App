@@ -19,6 +19,7 @@ import {
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+import type { LrDetail } from '@/lib/challan-data';
 
 const thClass = 'bg-primary/10 text-primary font-semibold';
 const tdClass = "whitespace-nowrap uppercase";
@@ -27,9 +28,15 @@ interface SearchResultsProps {
   results: Booking[];
   onSelectResult: (booking: Booking) => void;
   selectedTrackingId?: string;
+  lrDetails: LrDetail[];
 }
 
-export function SearchResults({ results, onSelectResult, selectedTrackingId }: SearchResultsProps) {
+export function SearchResults({ results, onSelectResult, selectedTrackingId, lrDetails }: SearchResultsProps) {
+  
+  const findChallanForLr = (lrNo: string): string | null => {
+      const detail = lrDetails.find(d => d.lrNo === lrNo);
+      return detail ? detail.challanId : null;
+  }
 
   return (
     <Card className="border-primary/30">
@@ -47,6 +54,7 @@ export function SearchResults({ results, onSelectResult, selectedTrackingId }: S
                         <TableHeader>
                         <TableRow>
                             <TableHead className={thClass}>L.R. No.</TableHead>
+                            <TableHead className={thClass}>Challan No</TableHead>
                             <TableHead className={thClass}>Date</TableHead>
                             <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>To</TableHead>
@@ -64,6 +72,7 @@ export function SearchResults({ results, onSelectResult, selectedTrackingId }: S
                                 onClick={() => onSelectResult(row)}
                             >
                                 <TableCell className={cn(tdClass, 'font-bold text-primary')}>{row.lrNo}</TableCell>
+                                <TableCell className={cn(tdClass)}>{findChallanForLr(row.lrNo) || 'N/A'}</TableCell>
                                 <TableCell className={cn(tdClass)}>{format(parseISO(row.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                                 <TableCell className={cn(tdClass)}>{row.fromCity}</TableCell>
                                 <TableCell className={cn(tdClass)}>{row.toCity}</TableCell>

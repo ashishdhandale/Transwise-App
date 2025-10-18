@@ -13,7 +13,7 @@ import { getBookings } from '@/lib/bookings-dashboard-data';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { Card } from '@/components/ui/card';
-import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
+import { getChallanData, getLrDetailsData, type LrDetail } from '@/lib/challan-data';
 
 export function PackageTracking() {
   const [allTrackableItems, setAllTrackableItems] = useState<Booking[]>([]);
@@ -22,6 +22,7 @@ export function PackageTracking() {
   const [selectedBookingHistory, setSelectedBookingHistory] = useState<BookingHistory | null>(null);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
 
   useEffect(() => {
     async function loadData() {
@@ -29,6 +30,7 @@ export function PackageTracking() {
         setAllTrackableItems(bookings);
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
+        setAllLrDetails(getLrDetailsData());
     }
     loadData();
   }, []);
@@ -80,7 +82,8 @@ export function PackageTracking() {
             <SearchResults 
                 results={searchResults} 
                 onSelectResult={handleSelectBooking} 
-                selectedTrackingId={selectedBooking?.trackingId} 
+                selectedTrackingId={selectedBooking?.trackingId}
+                lrDetails={allLrDetails}
             />
         )}
         

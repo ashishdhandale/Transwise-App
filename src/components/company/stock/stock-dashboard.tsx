@@ -304,7 +304,7 @@ export function StockDashboard() {
                                     {item.dispatchStatus || item.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell className={cn(tdClass)}>
+                            <TableCell className={cn(tdClass, "whitespace-nowrap font-semibold")}>
                                 {item.status === 'In Loading' ? findChallanForLr(item.lrNo) : 'N/A'}
                             </TableCell>
                         </TableRow>
