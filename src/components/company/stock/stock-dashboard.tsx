@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -53,6 +54,7 @@ const dispatchStatusColors: { [key: string]: string } = {
 export function StockDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [stock, setStock] = useState<Booking[]>([]);
+  const [lrDetails, setLrDetails] = useState<LrDetail[]>([]);
   const [selectedLrs, setSelectedLrs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const router = useRouter();
@@ -64,6 +66,7 @@ export function StockDashboard() {
             ['In Stock', 'In Loading', 'In HOLD'].includes(booking.status)
         );
         setStock(currentStockBookings);
+        setLrDetails(getLrDetailsData());
     } catch (error) {
         console.error("Failed to load stock from localStorage", error);
     }
@@ -196,6 +199,11 @@ export function StockDashboard() {
     router.push(`/company/challan/new?challanId=${newChallanId}`);
   };
 
+  const findChallanForLr = (lrNo: string): string | null => {
+      const detail = lrDetails.find(d => d.lrNo === lrNo);
+      return detail ? detail.challanId : null;
+  }
+
   return (
     <main className="flex-1 p-4 md:p-6 bg-secondary/30">
        <header className="mb-4">
@@ -262,6 +270,7 @@ export function StockDashboard() {
                         <TableHead className={cn(thClass, 'text-right')}>Qty</TableHead>
                         <TableHead className={cn(thClass, 'text-right')}>Chg. Wt.</TableHead>
                         <TableHead className={cn(thClass)}>Status</TableHead>
+                        <TableHead className={cn(thClass)}>Challan No</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -295,11 +304,14 @@ export function StockDashboard() {
                                     {item.dispatchStatus || item.status}
                                 </Badge>
                             </TableCell>
+                            <TableCell className={cn(tdClass)}>
+                                {item.status === 'In Loading' ? findChallanForLr(item.lrNo) : 'N/A'}
+                            </TableCell>
                         </TableRow>
                     ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={12} className="text-center h-24">No stock items found.</TableCell>
+                        <TableCell colSpan={13} className="text-center h-24">No stock items found.</TableCell>
                       </TableRow>
                     )}
                     </TableBody>
