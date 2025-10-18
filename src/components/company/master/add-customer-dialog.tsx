@@ -28,13 +28,11 @@ interface AddCustomerDialogProps {
 }
 
 const customerTypes: CustomerType[] = [
-    'Company', 
-    'Individual', 
+    'Consignor / Consignee',
     'Commission Agent', 
     'Booking Agent', 
     'Delivery Agent', 
     'Freight Forwarder',
-    'Consignor / Consignee',
     'Agency',
 ];
 
@@ -54,7 +52,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
     const [state, setState] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
-    const [type, setType] = useState<CustomerType>('Company');
+    const [type, setType] = useState<CustomerType>('Consignor / Consignee');
     const [openingBalance, setOpeningBalance] = useState<number | ''>('');
     const [masterCities, setMasterCities] = useState<City[]>([]);
 
@@ -71,7 +69,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                 setState(customer.state || '');
                 setMobile(customer.mobile || '');
                 setEmail(customer.email || '');
-                setType(customer.type || 'Company');
+                setType(customer.type || 'Consignor / Consignee');
                 setOpeningBalance(customer.openingBalance || 0);
             } else {
                 setName('');
@@ -81,7 +79,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                 setState('');
                 setMobile('');
                 setEmail('');
-                setType('Company');
+                setType('Consignor / Consignee');
                 setOpeningBalance(0);
             }
         }

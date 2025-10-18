@@ -85,8 +85,6 @@ export interface City {
 }
 
 export type CustomerType = 
-  | 'Company' 
-  | 'Individual' 
   | 'Commission Agent' 
   | 'Booking Agent' 
   | 'Delivery Agent' 
