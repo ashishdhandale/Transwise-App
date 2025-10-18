@@ -17,7 +17,6 @@ export function DeliveriesDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Initialize date state on the client to avoid hydration errors
     setFromDate(new Date());
     setToDate(new Date());
     // In a real app, you might filter for deliveries here.
