@@ -129,6 +129,8 @@ export function NewChallanForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const isEditMode = !!searchParams.get('challanId');
+    
+    const lrNumberInputRef = useRef<HTMLInputElement>(null);
 
     // PDF Preview state
     const printRef = React.useRef<HTMLDivElement>(null);
@@ -596,7 +598,7 @@ export function NewChallanForm() {
                     {!isFinalized && (
                         <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize</Button>
                     )}
-                    {isFinalized && <Button onClick={handleSaveOrUpdateChallan}>Update Finalized Challan</Button>}
+                    {isFinalized && <Button onClick={handleSaveOrUpdateChallan}>Update Challan</Button>}
                     <Button onClick={handleExit} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
             </header>
