@@ -37,6 +37,7 @@ export interface Booking {
   ftlDetails?: FtlDetails;
   branchName?: string; // Link to the branch that created the booking
   source?: 'System' | 'Inward'; // To distinguish origin of the booking
+  deliveryMemoNo?: string;
 }
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';

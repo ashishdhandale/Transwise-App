@@ -20,7 +20,7 @@ interface DeliveriesListProps {
 }
 
 const thClass = "bg-[#00796b] text-white font-semibold whitespace-nowrap h-10 uppercase";
-const tdClass = "whitespace-nowrap uppercase";
+const tdClass = "whitespace-nowrap uppercase text-xs";
 
 export function DeliveriesList({ deliveries }: DeliveriesListProps) {
   return (
@@ -51,7 +51,11 @@ export function DeliveriesList({ deliveries }: DeliveriesListProps) {
               <TableRow key={delivery.trackingId}>
                 <TableCell className={cn(tdClass)}>{index + 1}</TableCell>
                 <TableCell className={cn(tdClass)}>
-                    <Link href="#" className="text-blue-600 underline">Link</Link>
+                    {delivery.deliveryMemoNo ? (
+                        <span className="font-semibold text-primary">{delivery.deliveryMemoNo}</span>
+                    ) : (
+                        'N/A'
+                    )}
                 </TableCell>
                 <TableCell className={cn(tdClass)}>{format(parseISO(delivery.bookingDate), 'dd/MM/yyyy')}</TableCell>
                 <TableCell className={cn(tdClass, 'font-medium')}>{delivery.lrNo}</TableCell>
