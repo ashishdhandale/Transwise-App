@@ -57,6 +57,7 @@ const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 const LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES = 'transwise_additional_charges_settings';
+const LOCAL_STORAGE_KEY_BOOKING_SETTINGS = 'transwise_booking_settings';
 
 
 const createEmptyRow = (id: number): ItemRow => ({
@@ -403,7 +404,17 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(bookingsForPrefix, lrPrefix));
         
         let keyCounter = 1;
-        setItemRows(Array.from({ length: 2 }, () => createEmptyRow(keyCounter++)));
+        let defaultRows = 1;
+        try {
+            const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKING_SETTINGS);
+            if (savedSettings) {
+                defaultRows = JSON.parse(savedSettings).defaultItemRows || 1;
+            }
+        } catch {
+            defaultRows = 1;
+        }
+
+        setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
         setLoadType('LTL');
         setFromStation(null);
