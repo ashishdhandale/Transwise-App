@@ -86,11 +86,20 @@ export const getBookings = (): Booking[] => {
                     dataWasCorrected = true;
                     newBooking.trackingId = `TRK-${Date.now()}-${Math.random()}`;
                 }
+
+                // 4. Reset delivered items to 'In Stock' to avoid conflicts with new delivery module.
+                if (newBooking.status === 'Delivered' || newBooking.status === 'Partially Delivered') {
+                    dataWasCorrected = true;
+                    newBooking.status = 'In Stock';
+                    if (newBooking.deliveryMemoNo) {
+                        delete newBooking.deliveryMemoNo;
+                    }
+                }
                 
                 return newBooking;
             });
             
-            // 4. Remove any bookings that have source: 'Inward' from the main list.
+            // 5. Remove any bookings that have source: 'Inward' from the main list.
             const bookingsToKeep = correctedBookings.filter(b => b.source !== 'Inward');
             if (bookingsToKeep.length !== correctedBookings.length) {
                 dataWasCorrected = true;
