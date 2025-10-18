@@ -3,6 +3,9 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -242,7 +245,7 @@ export function NewChallanForm() {
     const handleLoadFromHireReceipt = (receiptNo: string) => {
         setHireReceiptNo(receiptNo);
         const allChallans = getChallanData();
-        const currentChallanId = searchParams.get('challanId');
+        const currentChallanId = challanId;
         
         const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== currentChallanId);
         
@@ -281,8 +284,8 @@ export function NewChallanForm() {
             setToStation(cities.find(c => c.name.toLowerCase() === receipt.toStation.toLowerCase()) || null);
             setVehicleHireFreight(receipt.freight);
             setAdvance(receipt.advance);
-            setBalance(receipt.balance);
             setFuel(receipt.fuel || 0);
+            setBalance(receipt.balance);
             toast({ title: 'Details Loaded', description: `Details from hire receipt ${receipt.receiptNo} have been loaded.` });
         } else {
             // If not found, clear the details
@@ -592,12 +595,8 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {isEditMode && !isFinalized && (
-                         <Button onClick={handleSaveOrUpdateChallan}><Save className="mr-2 h-4 w-4" />Update Challan</Button>
-                    )}
-                    {!isFinalized && (
-                        <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize</Button>
-                    )}
+                    {!isFinalized && <Button onClick={handleSaveOrUpdateChallan}><Save className="mr-2 h-4 w-4" />Save Challan</Button>}
+                    {!isFinalized && <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize</Button>}
                     {isFinalized && <Button onClick={handleSaveOrUpdateChallan}>Update Challan</Button>}
                     <Button onClick={handleExit} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
