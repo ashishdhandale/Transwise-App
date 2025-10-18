@@ -87,10 +87,10 @@ export const getBookings = (): Booking[] => {
                     newBooking.trackingId = `TRK-${Date.now()}-${Math.random()}`;
                 }
 
-                // 4. Reset delivered items to 'In Stock' to avoid conflicts with new delivery module.
+                // 4. Reset delivered items to 'In Transit' to avoid conflicts with new delivery module.
                 if (newBooking.status === 'Delivered' || newBooking.status === 'Partially Delivered') {
                     dataWasCorrected = true;
-                    newBooking.status = 'In Stock';
+                    newBooking.status = 'In Transit';
                     if (newBooking.deliveryMemoNo) {
                         delete newBooking.deliveryMemoNo;
                     }
