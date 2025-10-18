@@ -14,7 +14,6 @@ interface DispatchChallanProps {
     bookings: Booking[];
     profile: CompanyProfileFormValues;
     driverMobile?: string;
-    remark: string;
 }
 
 const thClass = "text-left text-xs font-bold text-black border border-black p-1";
@@ -28,7 +27,7 @@ const SummaryItem = ({ label, value, isEmphasized = false }: { label: string; va
 );
 
 
-export function DispatchChallan({ challan, bookings, profile, driverMobile, remark }: DispatchChallanProps) {
+export function DispatchChallan({ challan, bookings, profile, driverMobile }: DispatchChallanProps) {
     const totalPackages = bookings.reduce((sum, lr) => sum + lr.qty, 0);
     const totalWeight = bookings.reduce((sum, lr) => sum + lr.itemRows.reduce((itemSum, item) => itemSum + Number(item.actWt), 0), 0);
     
@@ -124,7 +123,7 @@ export function DispatchChallan({ challan, bookings, profile, driverMobile, rema
             <div className="grid grid-cols-2 gap-4 mt-2">
                 <div className="border border-black p-2">
                     <h3 className="font-bold underline text-xs mb-1">Remarks / Dispatch Note</h3>
-                    <p className="text-xs min-h-[40px] whitespace-pre-line border-b border-dashed pb-2 mb-2">{remark || 'No remarks.'}</p>
+                    <p className="text-xs min-h-[40px] whitespace-pre-line">{challan.remark || 'No remarks.'}</p>
                 </div>
                 <div className="border border-black p-2 min-h-[150px]">
                     <h3 className="font-bold underline text-xs mb-1">Challan Calculation</h3>
@@ -151,4 +150,3 @@ export function DispatchChallan({ challan, bookings, profile, driverMobile, rema
         </div>
     );
 }
-

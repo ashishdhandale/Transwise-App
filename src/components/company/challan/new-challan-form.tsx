@@ -48,10 +48,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { addVoucher } from '@/lib/accounts-data';
 import { BookingForm } from '../bookings/booking-form';
 import { LoadingSlip } from './loading-slip';
-
-
-const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const addedTdClass = "whitespace-nowrap px-2 py-1 h-8 text-xs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 
 const generatePermanentChallanId = (challans: Challan[], prefix: string): string => {
@@ -117,6 +124,7 @@ export function NewChallanForm() {
     // Edit Dialog state
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isExitConfirmationOpen, setIsExitConfirmationOpen] = useState(false);
 
     const { toast } = useToast();
     const router = useRouter();
@@ -235,7 +243,6 @@ export function NewChallanForm() {
         const allChallans = getChallanData();
         const currentChallanId = searchParams.get('challanId');
         
-        // Check if another challan is already using this hire receipt number
         const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== currentChallanId);
         
         if (receiptNo && usedChallan) {
@@ -441,17 +448,7 @@ export function NewChallanForm() {
         });
         saveBookings(updatedBookings);
 
-        toast({ title: isEditMode ? "Challan Updated" : "Challan Saved", description: `Temporary challan ${challanId} has been saved.` });
-        router.push('/company/challan');
-    };
-
-    const handlePreview = () => {
-        const data = buildChallanObject('Pending');
-        if (!data) return;
-
-        setPreviewData({ challan: data.challan, bookings: addedLrs });
-        setPreviewType('loading');
-        setIsPreviewOpen(true);
+        toast({ title: isEditMode ? "Challan Updated" : "Challan Saved", description: `Challan ${challanId} has been saved.` });
     };
 
     const handleFinalizeChallan = () => {
@@ -559,6 +556,10 @@ export function NewChallanForm() {
         setIsDownloading(false);
     };
 
+    const handleExit = () => {
+        setIsExitConfirmationOpen(true);
+    };
+
     const vehicleOptions = useMemo(() => vehicles.map(v => ({ label: v.vehicleNo, value: v.vehicleNo })), [vehicles]);
     const driverOptions = useMemo(() => drivers.map(d => ({ label: d.name, value: d.name })), [drivers]);
     const cityOptions = useMemo(() => cities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [cities]);
@@ -590,16 +591,11 @@ export function NewChallanForm() {
                     {isEditMode ? `Edit Dispatch Challan` : 'New Dispatch Challan'}
                 </h1>
                 <div className="flex justify-end gap-2">
-                    {isEditMode ? (
-                        <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
-                    ) : (
-                         <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
-                    )}
-                    <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
+                    <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save Challan</Button>
                     {!isFinalized && (
-                        <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize & Save</Button>
+                        <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize</Button>
                     )}
-                    <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
+                    <Button onClick={handleExit} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
                 </div>
             </header>
             <ClientOnly>
@@ -617,7 +613,7 @@ export function NewChallanForm() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <CardContent className="pt-2 space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
+                                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                                     <div className="space-y-1">
                                         <Label>Challan ID</Label>
                                         <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
@@ -954,7 +950,6 @@ export function NewChallanForm() {
                                             bookings={previewData.bookings}
                                             profile={companyProfile}
                                             driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
-                                            remark={previewData.challan.remark || ''}
                                         />
                                     ) : (
                                         <LoadingSlip 
@@ -996,6 +991,23 @@ export function NewChallanForm() {
                         </DialogContent>
                     </Dialog>
                 )}
+                 <AlertDialog open={isExitConfirmationOpen} onOpenChange={setIsExitConfirmationOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to exit?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You have unsaved changes. Would you like to save this challan before exiting?
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => router.push('/company/challan')}>Exit Without Saving</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => {
+                                handleSaveOrUpdateChallan();
+                                router.push('/company/challan');
+                            }}>Save and Exit</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </ClientOnly>
         </div>
     );
