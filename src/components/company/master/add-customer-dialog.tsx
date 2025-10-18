@@ -34,8 +34,7 @@ const customerTypes: CustomerType[] = [
     'Booking Agent', 
     'Delivery Agent', 
     'Freight Forwarder',
-    'Consignor',
-    'Consignee',
+    'Consignor / Consignee',
     'Agency',
 ];
 
