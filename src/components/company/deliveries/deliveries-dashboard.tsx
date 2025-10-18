@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -11,11 +12,14 @@ import { Input } from '@/components/ui/input';
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  const [fromDate, setFromDate] = useState<Date | undefined>(new Date());
-  const [toDate, setToDate] = useState<Date | undefined>(new Date());
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    // Defer setting date state to client-side only to prevent hydration errors.
+    setFromDate(new Date());
+    setToDate(new Date());
     // In a real app, you might filter for deliveries here.
     // For now, we'll use all bookings that are not cancelled.
     setAllBookings(getBookings().filter(b => b.status !== 'Cancelled'));
