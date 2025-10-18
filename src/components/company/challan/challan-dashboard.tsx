@@ -418,7 +418,6 @@ export function ChallanDashboard() {
                             bookings={previewData.bookings}
                             profile={companyProfile}
                             driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
-                            remark={previewData.challan.remark || ''}
                         />
                     </div>
                 </div>
