@@ -237,7 +237,7 @@ export function NewChallanForm() {
         
         // Check if another challan is already using this hire receipt number
         const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== existingChallanId);
-        if (usedChallan) {
+        if (receiptNo && usedChallan) {
             toast({
                 title: 'Hire Receipt Already Used',
                 description: `This hire receipt number is already used in challan ${usedChallan.challanId}.`,
@@ -590,16 +590,14 @@ export function NewChallanForm() {
                 </h1>
                 <div className="flex justify-end gap-2">
                     {isFinalized && isEditMode ? (
-                        <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Challan</Button>
+                        <Button onClick={handleFinalizeChallan}><Save className="mr-2 h-4 w-4" />Update Finalized Challan</Button>
                     ) : isEditMode ? (
                          <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Update Temp Challan</Button>
                     ) : (
                          <Button onClick={handleSaveOrUpdateChallan} variant="outline"><Save className="mr-2 h-4 w-4" />Save as Temp</Button>
                     )}
                     <Button onClick={handlePreview} variant="secondary"><Eye className="mr-2 h-4 w-4" /> Preview Loading Slip</Button>
-                    {isFinalized && isEditMode ? (
-                         <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Update Finalized Challan</Button>
-                    ) : (
+                    {!isFinalized && (
                         <Button onClick={handleFinalizeChallan} size="lg"><Save className="mr-2 h-4 w-4" /> Finalize & Save</Button>
                     )}
                     <Button onClick={() => router.push('/company/challan')} variant="destructive"><X className="mr-2 h-4 w-4" /> Exit</Button>
