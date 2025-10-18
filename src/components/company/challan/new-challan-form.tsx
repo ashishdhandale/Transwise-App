@@ -639,6 +639,10 @@ export function NewChallanForm() {
                                         <Label>Dispatch Date</Label>
                                         <DatePicker date={dispatchDate} setDate={setDispatchDate} />
                                     </div>
+                                     <div className="space-y-1">
+                                        <Label>Vehicle Owner</Label>
+                                        <Combobox options={vehicleOwnerOptions} value={vehicleOwner} onChange={setVehicleOwner} placeholder="Select Owner..." />
+                                    </div>
                                     <div className="space-y-1">
                                         <Label>Vehicle Hire Receipt</Label>
                                         <Input 
@@ -651,17 +655,13 @@ export function NewChallanForm() {
                                         <Label>Vehicle No</Label>
                                         <Combobox options={vehicleOptions} value={vehicleNo} onChange={setVehicleNo} placeholder="Select Vehicle..." />
                                     </div>
-                                    <div className="space-y-1">
+                                     <div className="space-y-1">
                                         <Label>Driver Name</Label>
                                         <Combobox options={driverOptions} value={driverName} onChange={handleDriverSelect} placeholder="Select Driver..." />
                                     </div>
                                      <div className="space-y-1">
                                         <Label>Driver Mobile</Label>
                                         <Input value={driverMobile} readOnly className="bg-muted" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label>Vehicle Owner</Label>
-                                        <Combobox options={vehicleOwnerOptions} value={vehicleOwner} onChange={setVehicleOwner} placeholder="Select Owner..." />
                                     </div>
                                     <div className="space-y-1">
                                         <Label>From Station</Label>
@@ -1044,4 +1044,6 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
+
+
 
