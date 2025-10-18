@@ -33,7 +33,8 @@ const customerTypes: CustomerType[] = [
     'Delivery Agent', 
     'Freight Forwarder',
     'Consignor',
-    'Consignee'
+    'Consignee',
+    'Agency',
 ];
 
 export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: AddCustomerDialogProps) {

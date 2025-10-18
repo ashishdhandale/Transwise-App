@@ -92,7 +92,8 @@ export type CustomerType =
   | 'Delivery Agent' 
   | 'Freight Forwarder'
   | 'Consignor'
-  | 'Consignee';
+  | 'Consignee'
+  | 'Agency';
 
 export interface Customer {
   id: number;
