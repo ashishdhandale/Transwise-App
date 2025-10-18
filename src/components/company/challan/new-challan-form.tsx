@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -596,16 +597,20 @@ export function NewChallanForm() {
 
     const billToOptions = useMemo(() => {
         const options = new Set<string>();
+        // Add branch at destination if it exists
         if (toStation) {
             const branch = branches.find(b => b.city.toLowerCase() === toStation.name.toLowerCase());
             if (branch) {
                 options.add(branch.name);
             }
         }
+        // Add consignees from LRs for the selected destination
         addedLrs.forEach(lr => {
-            options.add(lr.sender);
-            options.add(lr.receiver);
+            if (lr.toCity.toLowerCase() === toStation?.name.toLowerCase()) {
+                options.add(lr.receiver);
+            }
         });
+        // Add all customers as fallback
         customers.forEach(c => options.add(c.name));
         return Array.from(options).map(opt => ({ label: opt, value: opt }));
     }, [toStation, branches, addedLrs, customers]);
