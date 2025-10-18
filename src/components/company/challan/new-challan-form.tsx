@@ -594,26 +594,41 @@ export function NewChallanForm() {
         ...vendors.filter(v => v.type === 'Vehicle Supplier').map(v => ({ label: v.name, value: v.name })),
         { label: 'Others', value: 'Others' }
     ], [vendors]);
-
+    
     const billToOptions = useMemo(() => {
         const options = new Set<string>();
-        // Add branch at destination if it exists
+        const lowerToStation = toStation?.name.toLowerCase();
+
+        // 1. Add branch at destination if it exists
         if (toStation) {
-            const branch = branches.find(b => b.city.toLowerCase() === toStation.name.toLowerCase());
+            const branch = branches.find(b => b.city.toLowerCase() === lowerToStation);
             if (branch) {
                 options.add(branch.name);
             }
         }
-        // Add consignees from LRs for the selected destination
+
+        // 2. Add customers from master list whose city matches the destination
+        if (toStation) {
+            customers.forEach(c => {
+                if (c.city && c.city.toLowerCase() === lowerToStation) {
+                    options.add(c.name);
+                }
+            });
+        }
+        
+        // 3. Add consignees from LRs already added to the challan (ensures they are in the list)
         addedLrs.forEach(lr => {
-            if (lr.toCity.toLowerCase() === toStation?.name.toLowerCase()) {
+            if (lr.toCity.toLowerCase() === lowerToStation) {
                 options.add(lr.receiver);
             }
         });
-        // Add all customers as fallback
+
+        // 4. Add all customers as a fallback
         customers.forEach(c => options.add(c.name));
+
         return Array.from(options).map(opt => ({ label: opt, value: opt }));
     }, [toStation, branches, addedLrs, customers]);
+
 
     const handleAddNewCustomer = (customerData: Omit<Customer, 'id'>) => {
         const allCustomers = getCustomers();
