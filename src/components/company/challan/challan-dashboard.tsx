@@ -87,7 +87,11 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, onCancel, 
                   <TableCell className={cn(tdClass, 'font-medium')}>
                     {challan.challanType === 'Inward' ? challan.inwardId : challan.challanId}
                   </TableCell>
-                  {showTypeColumn && <TableCell className={tdClass}><Badge variant="outline">{challan.challanType}</Badge></TableCell>}
+                  {showTypeColumn && <TableCell className={tdClass}>
+                    <Badge variant="outline" className={cn(challan.challanType === 'Dispatch' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800')}>
+                        {challan.challanType}
+                    </Badge>
+                  </TableCell>}
                   <TableCell className={tdClass}>{challan.dispatchDate}</TableCell>
                   <TableCell className={tdClass}>{challan.fromStation}</TableCell>
                   <TableCell className={tdClass}>{challan.toStation}</TableCell>
