@@ -243,22 +243,9 @@ export function NewChallanForm() {
     }, [searchParams]);
 
     const handleLoadFromHireReceipt = (receiptNo: string) => {
+        const currentChallanId = searchParams.get('challanId') || challanId;
         setHireReceiptNo(receiptNo);
-        const allChallans = getChallanData();
-        const currentChallanId = challanId;
         
-        const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== currentChallanId);
-        
-        if (receiptNo && usedChallan) {
-            toast({
-                title: 'Hire Receipt Already Used',
-                description: `This hire receipt number is already used in challan ${usedChallan.challanId}.`,
-                variant: 'destructive',
-            });
-            setHireReceiptNo('');
-            return;
-        }
-
         if (!receiptNo) {
             // Clear fields if input is empty
             setVehicleNo('');
@@ -270,6 +257,19 @@ export function NewChallanForm() {
             setAdvance(0);
             setFuel(0);
             setBalance(0);
+            return;
+        }
+
+        const allChallans = getChallanData();
+        const usedChallan = allChallans.find(c => c.hireReceiptNo === receiptNo && c.challanId !== currentChallanId);
+        
+        if (usedChallan) {
+            toast({
+                title: 'Hire Receipt Already Used',
+                description: `This hire receipt number is already used in challan ${usedChallan.challanId}.`,
+                variant: 'destructive',
+            });
+            setHireReceiptNo('');
             return;
         }
 
@@ -616,7 +616,7 @@ export function NewChallanForm() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                             <CardContent className="pt-2 space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                                     <div className="space-y-1">
                                         <Label>Challan ID</Label>
                                         <Input value={challanId} readOnly className="font-bold text-red-600 bg-red-50 border-red-200" />
@@ -1026,3 +1026,4 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
+
