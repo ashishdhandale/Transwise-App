@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -24,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Combobox } from '@/components/ui/combobox';
-import type { Driver, VehicleMaster, City, Branch, Vendor } from '@/lib/types';
+import type { Driver, VehicleMaster, City, Branch, Vendor, Customer } from '@/lib/types';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +61,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getVendors } from '@/lib/vendor-data';
+import { getCustomers, saveCustomers } from '@/lib/customer-data';
+import { AddCustomerDialog } from '../master/add-customer-dialog';
 
 
 const generatePermanentChallanId = (challans: Challan[], prefix: string): string => {
@@ -125,8 +126,10 @@ export function NewChallanForm() {
     const [cities, setCities] = useState<City[]>([]);
     const [branches, setBranches] = useState<Branch[]>([]);
     const [vendors, setVendors] = useState<Vendor[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
     
-    // Edit Dialog state
+    // Dialog state
+    const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isExitConfirmationOpen, setIsExitConfirmationOpen] = useState(false);
@@ -174,6 +177,7 @@ export function NewChallanForm() {
     const loadInitialData = useCallback(async () => {
         const profile = await getCompanyProfile();
         setCompanyProfile(profile);
+        setCustomers(getCustomers());
 
         const currentBookings = getBookings();
         setAllBookings(currentBookings);
@@ -602,8 +606,22 @@ export function NewChallanForm() {
             options.add(lr.sender);
             options.add(lr.receiver);
         });
+        customers.forEach(c => options.add(c.name));
         return Array.from(options).map(opt => ({ label: opt, value: opt }));
-    }, [toStation, branches, addedLrs]);
+    }, [toStation, branches, addedLrs, customers]);
+
+    const handleAddNewCustomer = (customerData: Omit<Customer, 'id'>) => {
+        const allCustomers = getCustomers();
+        const newCustomer: Customer = {
+            id: allCustomers.length > 0 ? Math.max(...allCustomers.map(c => c.id)) + 1 : 1,
+            ...customerData,
+        };
+        saveCustomers([newCustomer, ...allCustomers]);
+        setCustomers(prev => [newCustomer, ...prev]);
+        setBillTo(newCustomer.name);
+        toast({ title: "Customer Added", description: `${newCustomer.name} has been added.` });
+        return true;
+    }
 
 
     const formatValue = (amount: number) => companyProfile ? amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount.toFixed(2);
@@ -647,7 +665,7 @@ export function NewChallanForm() {
                                         <Label>Dispatch Date</Label>
                                         <DatePicker date={dispatchDate} setDate={setDispatchDate} />
                                     </div>
-                                     <div className="space-y-1">
+                                    <div className="space-y-1">
                                         <Label>Vehicle Owner</Label>
                                         <Combobox options={vehicleOwnerOptions} value={vehicleOwner} onChange={setVehicleOwner} placeholder="Select Owner..." />
                                     </div>
@@ -685,7 +703,14 @@ export function NewChallanForm() {
                                     </div>
                                     <div className="space-y-1 md:col-span-2">
                                         <Label>Bill To</Label>
-                                        <Combobox options={billToOptions} value={billTo} onChange={setBillTo} placeholder="Select Billing Party..." />
+                                        <Combobox 
+                                            options={billToOptions} 
+                                            value={billTo} 
+                                            onChange={setBillTo} 
+                                            placeholder="Select Billing Party..." 
+                                            addMessage="Add New Party"
+                                            onAdd={() => setIsAddCustomerOpen(true)}
+                                        />
                                     </div>
                                 </div>
                             </CardContent>
@@ -1041,6 +1066,11 @@ export function NewChallanForm() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+                <AddCustomerDialog 
+                    isOpen={isAddCustomerOpen}
+                    onOpenChange={setIsAddCustomerOpen}
+                    onSave={handleAddNewCustomer}
+                />
             </ClientOnly>
         </div>
     );
@@ -1056,9 +1086,3 @@ function handleSelectRow(id: string, checked: boolean, currentSelection: Set<str
     }
     setSelection(newSelection);
 }
-
-
-
-
-
-    

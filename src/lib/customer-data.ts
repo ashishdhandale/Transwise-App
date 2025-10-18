@@ -15,3 +15,14 @@ export const getCustomers = (): Customer[] => {
         return [];
     }
 };
+
+export const saveCustomers = (customers: Customer[]) => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY_CUSTOMERS, JSON.stringify(customers));
+    } catch (error) {
+        console.error("Failed to save customers to local storage", error);
+    }
+}
