@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -34,7 +35,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { getAccounts, saveAccounts } from '@/lib/account-data';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function AccountManagement() {
   const [accounts, setAccounts] = useState<Account[]>([]);

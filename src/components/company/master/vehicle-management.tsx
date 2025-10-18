@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -39,7 +40,7 @@ const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 
 const initialVehicles: VehicleMaster[] = [];
 
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 const DateCell = ({ dateString }: { dateString?: string }) => {
     if (!dateString) return <TableCell className={tdClass}>N/A</TableCell>;

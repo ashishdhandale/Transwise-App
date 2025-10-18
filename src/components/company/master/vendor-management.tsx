@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -39,7 +40,7 @@ const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
 const initialVendors: Vendor[] = [];
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function VendorManagement() {
   const [vendors, setVendors] = useState<Vendor[]>([]);

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,7 +24,7 @@ import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 const CUSTOMERS_KEY = 'transwise_customers';
 
 

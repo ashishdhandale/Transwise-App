@@ -38,7 +38,7 @@ import { sampleExistingUsers } from '@/lib/sample-data';
 
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 const generateRandomPassword = () => {
     const length = 8;

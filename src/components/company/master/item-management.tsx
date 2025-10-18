@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -36,7 +37,7 @@ const initialItems: Item[] = [
     { id: 1, name: 'Frm MAS', hsnCode: '996511', description: 'General Goods' },
 ];
 
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function ItemManagement() {
   const [items, setItems] = useState<Item[]>([]);

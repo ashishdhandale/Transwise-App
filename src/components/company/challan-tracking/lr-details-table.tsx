@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 
 const thClass = 'bg-primary/10 text-primary font-bold border-r';
-const tdClass = "whitespace-nowrap border-r";
+const tdClass = "whitespace-nowrap border-r uppercase";
 
 interface LrDetailsTableProps {
     lrDetails: LrDetail[];
@@ -63,7 +64,7 @@ export function LrDetailsTable({ lrDetails, profile }: LrDetailsTableProps) {
                         <TableCell className={cn(tdClass)}>{row.quantity}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.actualWeight}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.chargeWeight}</TableCell>
-                        <TableCell className="whitespace-nowrap">{formatValue(row.grandTotal)}</TableCell>
+                        <TableCell className="whitespace-nowrap uppercase">{formatValue(row.grandTotal)}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

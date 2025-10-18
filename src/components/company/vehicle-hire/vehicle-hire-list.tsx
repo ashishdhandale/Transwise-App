@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -23,7 +24,7 @@ interface VehicleHireListProps {
     reloadReceipts: () => void;
 }
 
-const thClass = "bg-primary/10 text-primary font-semibold";
+const thClass = "bg-primary/10 text-primary font-semibold uppercase";
 
 export function VehicleHireList({ receipts, onEdit, reloadReceipts }: VehicleHireListProps) {
     const { toast } = useToast();

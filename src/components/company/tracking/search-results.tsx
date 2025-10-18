@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 
 const thClass = 'bg-primary/10 text-primary font-semibold';
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 interface SearchResultsProps {
   results: Booking[];

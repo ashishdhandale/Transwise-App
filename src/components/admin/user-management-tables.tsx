@@ -35,7 +35,7 @@ import { getBranches } from '@/lib/branch-data';
 
 
 const thClass = "bg-primary text-primary-foreground";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function UserManagementTables() {
   const [inquirySearch, setInquirySearch] = useState('');

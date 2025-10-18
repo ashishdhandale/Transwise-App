@@ -13,7 +13,7 @@ import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 const DetailRow = ({ label, value, children }: { label?: string; value?: string | number; children?: React.ReactNode }) => (
   <div className="grid grid-cols-[140px_1fr] text-sm items-start">
     <div className="text-muted-foreground">{label}</div>
-    <div className="font-semibold break-words flex items-center">: {value}{children || ''}</div>
+    <div className="font-semibold break-words flex items-center uppercase">: {value}{children || ''}</div>
   </div>
 );
 
@@ -39,7 +39,7 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
   return (
     <Card className="border-primary/30 w-full">
       <CardHeader className="p-4 border-b-2 border-primary/20">
-        <CardTitle className="text-lg font-headline text-primary">Shipping & Delivery Details for: {booking.lrNo}</CardTitle>
+        <CardTitle className="text-lg font-headline text-primary uppercase">Shipping & Delivery Details for: {booking.lrNo}</CardTitle>
       </CardHeader>
       <CardContent className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left Column: Booking & Parties */}
@@ -96,8 +96,8 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                                     <Truck className={cn('size-5', event.action === 'Delivered' ? 'text-green-500' : 'text-primary')} />
                                 </div>
                                 <div className="flex-1 ml-10">
-                                    <p className="font-semibold text-sm">{event.action}</p>
-                                    <p className="text-xs text-muted-foreground">{event.details}</p>
+                                    <p className="font-semibold text-sm uppercase">{event.action}</p>
+                                    <p className="text-xs text-muted-foreground uppercase">{event.details}</p>
                                     <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="size-3" />{event.timestamp}</p>
                                 </div>
                             </div>
@@ -117,7 +117,7 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                     <CardTitle className="text-base font-semibold flex items-center gap-2"><MapPin className="size-5 text-primary" />Delivery Status</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 text-center">
-                    <p className={cn("text-2xl font-bold", booking.status === 'Delivered' ? 'text-green-600' : 'text-amber-600')}>
+                    <p className={cn("text-2xl font-bold uppercase", booking.status === 'Delivered' ? 'text-green-600' : 'text-amber-600')}>
                         {booking.status}
                     </p>
                     {deliveredEvent && (
@@ -133,8 +133,8 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                 </CardHeader>
                  <CardContent className="p-3 space-y-2">
                     <div className="text-sm">
-                        <p className="font-semibold">Transwise - {booking.toCity} Office</p>
-                        <p className="text-muted-foreground">MIDC, Main Road, {booking.toCity}</p>
+                        <p className="font-semibold uppercase">Transwise - {booking.toCity} Office</p>
+                        <p className="text-muted-foreground uppercase">MIDC, Main Road, {booking.toCity}</p>
                         <p className="text-muted-foreground flex items-center gap-1.5"><Phone className="size-3" />+91 98765 43210</p>
                     </div>
                 </CardContent>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -43,7 +44,7 @@ const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
 
 const initialCities: City[] = [];
 
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function CityManagement() {
   const [cities, setCities] = useState<City[]>([]);

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -38,7 +39,7 @@ const statusColors: { [key: string]: string } = {
 };
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, onQuickDeliver, onRevertDelivery }: DeliveriesListProps) {
   return (

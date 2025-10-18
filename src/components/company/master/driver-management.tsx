@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -36,7 +37,7 @@ const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 
 const initialDrivers: Driver[] = [];
 
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function DriverManagement() {
   const [drivers, setDrivers] = useState<Driver[]>([]);

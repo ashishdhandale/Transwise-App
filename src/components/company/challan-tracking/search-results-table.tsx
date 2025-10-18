@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -20,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 
 const thClass = 'bg-primary/10 text-primary font-bold border-r';
-const tdClass = "whitespace-nowrap border-r";
+const tdClass = "whitespace-nowrap border-r uppercase";
 
 interface SearchResultsTableProps {
     challans: Challan[];
@@ -56,7 +57,7 @@ export function SearchResultsTable({ challans, onSelectChallan, selectedChallanI
                  {challans.map((row) => (
                     <TableRow 
                       key={row.challanId} 
-                      className={cn('cursor-pointer', selectedChallanId === row.challanId && 'bg-primary/20 hover:bg-primary/20')}
+                      className={cn('cursor-pointer hover:bg-primary/10', selectedChallanId === row.challanId && 'bg-primary/20 hover:bg-primary/20')}
                       onClick={() => onSelectChallan(row)}
                     >
                         <TableCell className={cn(tdClass)}>{row.challanId}</TableCell>
@@ -69,7 +70,7 @@ export function SearchResultsTable({ challans, onSelectChallan, selectedChallanI
                         <TableCell className={cn(tdClass)}>{row.senderId}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.inwardId}</TableCell>
                         <TableCell className={cn(tdClass)}>{row.inwardDate}</TableCell>
-                        <TableCell className="whitespace-nowrap">{row.receivedFromParty}</TableCell>
+                        <TableCell className="whitespace-nowrap uppercase">{row.receivedFromParty}</TableCell>
                     </TableRow>
                 ))}
                 </TableBody>

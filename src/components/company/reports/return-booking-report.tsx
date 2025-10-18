@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -24,7 +25,7 @@ import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 const thClass = "bg-blue-500/10 text-blue-700 font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function ReturnBookingReport() {
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
