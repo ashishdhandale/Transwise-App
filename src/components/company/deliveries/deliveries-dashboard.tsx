@@ -15,14 +15,16 @@ import { isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  const [fromDate, setFromDate] = useState<Date | undefined>(new Date());
-  const [toDate, setToDate] = useState<Date | undefined>(new Date());
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     // In a real app, you might filter for deliveries here.
     // For now, we'll use all bookings that are not cancelled.
     setAllBookings(getBookings().filter(b => b.status !== 'Cancelled'));
+    setFromDate(new Date());
+    setToDate(new Date());
   }, []);
 
   const filteredBookings = useMemo(() => {
