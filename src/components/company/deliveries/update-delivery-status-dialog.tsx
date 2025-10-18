@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,8 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import type { Booking, ItemRow } from '@/lib/bookings-dashboard-data';
 import { useToast } from '@/hooks/use-toast';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Upload } from 'lucide-react';
 
 interface UpdateDeliveryStatusDialogProps {
   isOpen: boolean;
@@ -43,11 +43,12 @@ export function UpdateDeliveryStatusDialog({
   booking,
   onUpdate,
 }: UpdateDeliveryStatusDialogProps) {
-  const [status, setStatus] = useState<'Delivered' | 'In HOLD'>('Delivered');
   const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(new Date());
   const [receivedBy, setReceivedBy] = useState('');
   const [remarks, setRemarks] = useState('');
   const [itemUpdates, setItemUpdates] = useState<(ItemRow & { deliveredQty: number, returnQty: number })[]>([]);
+  const [podFileName, setPodFileName] = useState<string | null>(null);
+  const podInputRef = useRef<HTMLInputElement>(null);
   
   const { toast } = useToast();
 
@@ -58,10 +59,10 @@ export function UpdateDeliveryStatusDialog({
             deliveredQty: Number(item.qty),
             returnQty: 0,
         })));
-        setStatus('Delivered');
         setReceivedBy('');
         setRemarks('');
         setDeliveryDate(new Date());
+        setPodFileName(null);
     }
   }, [booking, isOpen]);
 
@@ -83,9 +84,18 @@ export function UpdateDeliveryStatusDialog({
     }));
   };
 
+  const handlePodFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPodFileName(file.name);
+      // In a real app, you would handle the file upload here.
+      // For this prototype, we'll just store the name.
+    }
+  };
+
 
   const handleSave = () => {
-    if (status === 'Delivered' && (!deliveryDate || !receivedBy.trim())) {
+    if (!deliveryDate || !receivedBy.trim()) {
       toast({
         title: 'Missing Information',
         description: 'Delivery Date and Received By are required for delivered consignments.',
@@ -176,6 +186,17 @@ export function UpdateDeliveryStatusDialog({
                 onChange={(e) => setReceivedBy(e.target.value)}
                 placeholder="Enter name of person who received"
                 />
+            </div>
+            <div>
+                <Label htmlFor="pod-upload">Proof of Delivery (POD)</Label>
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" onClick={() => podInputRef.current?.click()}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload File
+                    </Button>
+                    <Input id="pod-upload" type="file" className="hidden" ref={podInputRef} onChange={handlePodFileChange} />
+                    {podFileName && <span className="text-sm text-muted-foreground">{podFileName}</span>}
+                </div>
             </div>
              <div>
                 <Label htmlFor="remarks">Remarks</Label>

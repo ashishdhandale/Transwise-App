@@ -75,17 +75,8 @@ export function DeliveriesDashboard() {
   }
 
   const handleQuickDeliver = (booking: Booking) => {
-    const bookings = getBookings();
-    const updatedBookings = bookings.map(b => {
-      if (b.trackingId === booking.trackingId) {
-        addHistoryLog(b.lrNo, 'Delivered', 'System', `Quick delivery update.`);
-        return { ...b, status: 'Delivered' as const };
-      }
-      return b;
-    });
-    saveBookings(updatedBookings);
-    loadData();
-    toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as Delivered.`});
+    // This function is no longer a "quick" deliver, it should open the dialog.
+    handleUpdateClick(booking);
   }
 
   const handleRevertDelivery = (booking: Booking) => {

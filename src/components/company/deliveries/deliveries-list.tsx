@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import {
@@ -15,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, Printer, CheckCircle, Undo2 } from 'lucide-react';
+import { MoreHorizontal, Printer, CheckCircle, Undo2, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,13 +87,13 @@ export function DeliveriesList({ deliveries, onUpdateClick, onPrintMemoClick, on
                       <DropdownMenuContent>
                         {delivery.status !== 'Delivered' ? (
                           <>
-                            <DropdownMenuItem onClick={() => onQuickDeliver(delivery)}>
+                            <DropdownMenuItem onClick={() => onUpdateClick(delivery)}>
                               <CheckCircle className="mr-2 h-4 w-4" /> Mark as Delivered
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => onUpdateClick(delivery)} 
                             >
-                              Update Status (Partial/Return)
+                              <Pencil className="mr-2 h-4 w-4" />Update Status (Partial/Return)
                             </DropdownMenuItem>
                           </>
                         ) : (
