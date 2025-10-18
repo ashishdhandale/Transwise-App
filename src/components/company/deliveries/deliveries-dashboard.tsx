@@ -1,266 +1,82 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Truck } from 'lucide-react';
+import { FilePlus, Layers, CreditCard, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { DeliveriesList } from './deliveries-list';
-import { UpdateDeliveryStatusDialog } from './update-delivery-status-dialog';
-import { getBookings, saveBookings, type Booking, type ItemRow } from '@/lib/bookings-dashboard-data';
-import { useToast } from '@/hooks/use-toast';
-import { addHistoryLog } from '@/lib/history-data';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
-import { DeliveryMemoDialog } from './delivery-memo-dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
-import type { Challan, LrDetail } from '@/lib/challan-data';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-
-interface PopulatedChallan extends Challan {
-  bookings: Booking[];
-}
+import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
+import { Card, CardContent } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Input } from '@/components/ui/input';
 
 export function DeliveriesDashboard() {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
-  const [allChallans, setAllChallans] = useState<Challan[]>([]);
-  const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
-
-  const [selectedBookingForUpdate, setSelectedBookingForUpdate] = useState<Booking | null>(null);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [selectedBookingForMemo, setSelectedBookingForMemo] = useState<Booking | null>(null);
-  const [isMemoDialogOpen, setIsMemoDialogOpen] = useState(false);
-  
-  const { toast } = useToast();
-
-  const loadData = async () => {
-    const bookings = getBookings();
-    const challans = getChallanData();
-    const lrDetails = getLrDetailsData();
-    const profile = await getCompanyProfile();
-    
-    setAllBookings(bookings);
-    setAllChallans(challans);
-    setAllLrDetails(lrDetails);
-    setCompanyProfile(profile);
-  };
+  const [fromDate, setFromDate] = useState<Date | undefined>(new Date());
+  const [toDate, setToDate] = useState<Date | undefined>(new Date());
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    loadData();
+    // In a real app, you might filter for deliveries here.
+    // For now, we'll use all bookings that are not cancelled.
+    setAllBookings(getBookings().filter(b => b.status !== 'Cancelled'));
   }, []);
 
-  const { pendingChallans, deliveredChallans } = useMemo(() => {
-    const populatedChallans = allChallans.map(challan => {
-      const lrNosForChallan = new Set(allLrDetails.filter(lr => lr.challanId === challan.challanId).map(lr => lr.lrNo));
-      const bookingsForChallan = allBookings.filter(b => lrNosForChallan.has(b.lrNo));
-      return { ...challan, bookings: bookingsForChallan };
-    });
-
-    const pending = populatedChallans.filter(c => c.bookings.some(b => b.status === 'In Transit' || b.status === 'Partially Delivered'));
-    
-    const delivered = populatedChallans.filter(c => c.bookings.length > 0 && c.bookings.every(b => b.status === 'Delivered'));
-
-    return { pendingChallans: pending, deliveredChallans: delivered };
-  }, [allBookings, allChallans, allLrDetails]);
-
-
-  const handleUpdateClick = (booking: Booking) => {
-    setSelectedBookingForUpdate(booking);
-    setIsUpdateDialogOpen(true);
-  };
-
-  const handlePrintMemoClick = (booking: Booking) => {
-    setSelectedBookingForMemo(booking);
-    setIsMemoDialogOpen(true);
-  }
-
-  const handleQuickDeliver = (booking: Booking) => {
-    // This function is no longer a "quick" deliver, it should open the dialog.
-    handleUpdateClick(booking);
-  }
-
-  const handleRevertDelivery = (booking: Booking) => {
-    const bookings = getBookings();
-    const updatedBookings = bookings.map(b => {
-      if (b.trackingId === booking.trackingId) {
-        addHistoryLog(b.lrNo, 'In Transit', 'System', 'Delivery status reverted by user.');
-        return { ...b, status: 'In Transit' as const };
-      }
-      return b;
-    });
-    saveBookings(updatedBookings);
-    loadData();
-    toast({ title: 'Status Reverted', description: `LR #${booking.lrNo} has been marked as In Transit.`});
-  };
-
-  const handleStatusUpdate = (
-    booking: Booking,
-    updates: {
-        status: 'Delivered' | 'Partially Delivered';
-        deliveryDate: Date;
-        receivedBy: string;
-        remarks: string;
-        updatedItems: (ItemRow & { deliveredQty: number; returnQty: number })[];
-    }
-  ) => {
-    const { status, deliveryDate, receivedBy, remarks, updatedItems } = updates;
-    const bookings = getBookings();
-    
-    const returnItems = updatedItems.filter(item => item.returnQty > 0);
-    let finalStatus = status;
-
-    if (returnItems.length > 0) {
-      finalStatus = 'Partially Delivered';
-      const existingReturnsCount = bookings.filter(b => b.lrNo.startsWith(`${booking.lrNo}-R`)).length;
-      const returnBookingId = `${booking.lrNo}-R${existingReturnsCount + 1}`;
-      
-      const newReturnBooking: Booking = {
-        ...booking,
-        lrNo: returnBookingId,
-        trackingId: `TRK-${Date.now()}`,
-        status: 'In Stock',
-        itemRows: returnItems.map(item => {
-            const originalQty = parseFloat(item.qty) || 1;
-            const originalActWt = parseFloat(item.actWt) || 0;
-            const originalChgWt = parseFloat(item.chgWt) || 0;
-            const returnQty = item.returnQty;
-
-            return {
-                ...item,
-                qty: String(returnQty),
-                actWt: String((originalActWt / originalQty) * returnQty),
-                chgWt: String((originalChgWt / originalQty) * returnQty),
-                lumpsum: String(((parseFloat(item.lumpsum) || 0) / originalQty) * returnQty),
-            }
-        }),
-        totalAmount: 0, 
-        bookingDate: new Date().toISOString(),
-      };
-
-      bookings.push(newReturnBooking);
-      addHistoryLog(newReturnBooking.lrNo, 'Booking Created', 'System', `Return from LR ${booking.lrNo}.`);
-      toast({ title: 'Return Booking Created', description: `New LR #${newReturnBooking.lrNo} created for returned items.` });
-    }
-
-    const updatedBookings = bookings.map(b => {
-      if (b.trackingId === booking.trackingId) {
-        addHistoryLog(b.lrNo, finalStatus, receivedBy, `Remarks: ${remarks}`);
-        const deliveredItems = updatedItems
-            .filter(item => item.deliveredQty > 0)
-            .map(item => ({...item, qty: String(item.deliveredQty) }));
-            
-        return { 
-            ...b, 
-            status: finalStatus,
-            itemRows: deliveredItems,
-        };
-      }
-      return b;
-    });
-
-    saveBookings(updatedBookings);
-    loadData();
-    
-    toast({ title: 'Status Updated', description: `LR #${booking.lrNo} has been marked as ${finalStatus}.`});
-    setIsUpdateDialogOpen(false);
-  };
+  const filteredBookings = useMemo(() => {
+    // This is a placeholder for actual filtering logic
+    return allBookings.filter(b => 
+        b.lrNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.receiver.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [allBookings, searchTerm, fromDate, toDate]);
 
   return (
-    <main className="flex-1 p-4 md:p-6 bg-secondary/30">
-      <header className="mb-4">
-        <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
-          <Truck className="h-8 w-8" />
-          Consignment Delivery Management
-        </h1>
+    <main className="flex-1 p-4 md:p-6 bg-white">
+      <header className="text-center mb-4">
+        <h1 className="text-3xl font-bold text-primary">Delivery</h1>
       </header>
-      <div className="space-y-6">
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Pending for Delivery</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                    {pendingChallans.map(challan => (
-                        <AccordionItem value={challan.challanId} key={challan.challanId}>
-                            <AccordionTrigger className="hover:bg-muted/50 px-4">
-                                <div className="flex items-center gap-4 text-sm">
-                                    <span className="font-bold text-primary">{challan.challanId}</span>
-                                    <span>{challan.vehicleNo}</span>
-                                    <span>{challan.fromStation} to {challan.toStation}</span>
-                                    <span className="text-muted-foreground">({challan.bookings.filter(b => b.status !== 'Delivered').length} LRs pending)</span>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                               <DeliveriesList 
-                                    deliveries={challan.bookings.filter(b => b.status !== 'Delivered')} 
-                                    onUpdateClick={handleUpdateClick}
-                                    onPrintMemoClick={handlePrintMemoClick}
-                                    onQuickDeliver={handleQuickDeliver}
-                                    onRevertDelivery={handleRevertDelivery}
-                                />
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-                {pendingChallans.length === 0 && (
-                    <div className="text-center p-8 text-muted-foreground">
-                        No challans are currently pending for delivery.
+      <div className="space-y-4">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Button variant="outline"><FilePlus className="mr-2 h-4 w-4" />Create New Delivery</Button>
+          <Button variant="outline"><Layers className="mr-2 h-4 w-4" />Bulk Delivery</Button>
+          <Button variant="outline"><CreditCard className="mr-2 h-4 w-4" />Update Payment</Button>
+        </div>
+
+        {/* Filters and Search */}
+        <Card className="border-gray-300">
+            <CardContent className="p-4">
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div className="flex items-end gap-2 p-2 border rounded-md">
+                        <span className="text-sm font-semibold text-gray-600">Delivery Information</span>
+                        <div className="flex items-end gap-2">
+                             <div className="grid w-full max-w-sm items-center gap-1.5">
+                                <label className="text-xs">From Date</label>
+                                <DatePicker date={fromDate} setDate={setFromDate} />
+                            </div>
+                             <div className="grid w-full max-w-sm items-center gap-1.5">
+                                <label className="text-xs">To Date</label>
+                                <DatePicker date={toDate} setDate={setToDate} />
+                            </div>
+                            <Button>LOAD INFO</Button>
+                        </div>
                     </div>
-                )}
+                    <div className="relative w-full max-w-xs">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search Within list"
+                            className="pl-8"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
             </CardContent>
         </Card>
-         <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Recently Delivered Challans</CardTitle>
-            </CardHeader>
-            <CardContent>
-                 <Accordion type="single" collapsible className="w-full">
-                    {deliveredChallans.map(challan => (
-                        <AccordionItem value={challan.challanId} key={challan.challanId}>
-                            <AccordionTrigger className="hover:bg-muted/50 px-4">
-                                <div className="flex items-center gap-4 text-sm">
-                                    <span className="font-bold text-primary">{challan.challanId}</span>
-                                    <span>{challan.vehicleNo}</span>
-                                    <span>{challan.fromStation} to {challan.toStation}</span>
-                                    <span className="text-muted-foreground">({challan.bookings.length} LRs)</span>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                               <DeliveriesList 
-                                    deliveries={challan.bookings} 
-                                    onUpdateClick={handleUpdateClick}
-                                    onPrintMemoClick={handlePrintMemoClick}
-                                    onQuickDeliver={handleQuickDeliver}
-                                    onRevertDelivery={handleRevertDelivery}
-                                />
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-                {deliveredChallans.length === 0 && (
-                    <div className="text-center p-8 text-muted-foreground">
-                        No fully delivered challans found.
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+
+        {/* Deliveries List */}
+        <DeliveriesList deliveries={filteredBookings} />
       </div>
-      {selectedBookingForUpdate && (
-        <UpdateDeliveryStatusDialog
-          isOpen={isUpdateDialogOpen}
-          onOpenChange={setIsUpdateDialogOpen}
-          booking={selectedBookingForUpdate}
-          onUpdate={handleStatusUpdate}
-        />
-      )}
-      {selectedBookingForMemo && companyProfile && (
-        <DeliveryMemoDialog
-          isOpen={isMemoDialogOpen}
-          onOpenChange={setIsMemoDialogOpen}
-          booking={selectedBookingForMemo}
-          profile={companyProfile}
-        />
-      )}
     </main>
   );
 }
