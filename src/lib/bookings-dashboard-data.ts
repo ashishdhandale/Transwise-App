@@ -90,7 +90,7 @@ export const getBookings = (): Booking[] => {
                 // 4. Reset delivered items to 'In Transit' to avoid conflicts with new delivery module.
                 if (newBooking.status === 'Delivered' || newBooking.status === 'Partially Delivered') {
                     dataWasCorrected = true;
-                    newBooking.status = 'In Transit';
+                    newBooking.status = 'In Transit'; // Corrected from 'In Stock'
                     if (newBooking.deliveryMemoNo) {
                         delete newBooking.deliveryMemoNo;
                     }
