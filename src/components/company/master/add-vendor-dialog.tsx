@@ -37,6 +37,8 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
     const [name, setName] = useState('');
     const [type, setType] = useState<VendorType>('Vehicle Supplier');
     const [address, setAddress] = useState('');
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [openingBalance, setOpeningBalance] = useState<number | ''>('');
@@ -54,6 +56,8 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             setName(vendor.name || '');
             setType(vendor.type || 'Vehicle Supplier');
             setAddress(vendor.address || '');
+            setCity(vendor.city || '');
+            setState(vendor.state || '');
             setMobile(vendor.mobile || '');
             setEmail(vendor.email || '');
             setOpeningBalance(vendor.openingBalance || 0);
@@ -66,6 +70,8 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             setName('');
             setType('Vehicle Supplier');
             setAddress('');
+            setCity('');
+            setState('');
             setMobile('');
             setEmail('');
             setOpeningBalance(0);
@@ -88,6 +94,8 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
             name,
             type,
             address,
+            city,
+            state,
             mobile,
             email,
             openingBalance: Number(openingBalance) || 0,
@@ -134,6 +142,14 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
                     <div className="md:col-span-2">
                         <Label htmlFor="address">Address</Label>
                         <Textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
+                    </div>
+                    <div>
+                        <Label htmlFor="city">City</Label>
+                        <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+                    </div>
+                     <div>
+                        <Label htmlFor="state">State</Label>
+                        <Input id="state" value={state} onChange={(e) => setState(e.target.value)} />
                     </div>
                      <div className="md:col-span-2">
                         <Label htmlFor="email">Email Address</Label>

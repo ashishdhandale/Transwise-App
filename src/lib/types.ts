@@ -123,6 +123,8 @@ export interface Vendor {
   name: string;
   type: VendorType;
   address: string;
+  city: string;
+  state: string;
   mobile: string;
   email: string;
   openingBalance: number;

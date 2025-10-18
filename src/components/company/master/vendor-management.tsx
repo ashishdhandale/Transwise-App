@@ -68,7 +68,7 @@ export function VendorManagement() {
         vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         vendor.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         vendor.mobile.includes(searchTerm) ||
-        vendor.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (vendor.email && vendor.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [vendors, searchTerm]);
 
@@ -104,7 +104,7 @@ export function VendorManagement() {
   const handleSave = (vendorData: Omit<Vendor, 'id'>) => {
     let updatedVendors;
     if (currentVendor) {
-      updatedVendors = vendors.map(vendor => (vendor.id === currentVendor.id ? { ...vendor, ...vendorData } : vendor));
+      updatedVendors = vendors.map(vendor => (vendor.id === currentVendor.id ? { ...currentVendor, ...vendorData } : vendor));
       toast({ title: 'Vendor Updated', description: `"${vendorData.name}" has been updated successfully.` });
     } else {
       const newVendor: Vendor = {
