@@ -20,7 +20,7 @@ interface DeliveriesListProps {
 }
 
 const thClass = "bg-[#00796b] text-white font-semibold whitespace-nowrap h-10 uppercase";
-const tdClass = "whitespace-nowrap uppercase text-xs";
+const tdClass = "whitespace-nowrap uppercase";
 
 export function DeliveriesList({ deliveries }: DeliveriesListProps) {
   return (
