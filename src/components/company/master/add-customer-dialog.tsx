@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,9 +14,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { Customer, CustomerType } from '@/lib/types';
+import type { Customer, CustomerType, City } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getCities } from '@/lib/city-data';
+import { Combobox } from '@/components/ui/combobox';
 
 interface AddCustomerDialogProps {
     isOpen: boolean;
@@ -37,6 +39,14 @@ const customerTypes: CustomerType[] = [
     'Agency',
 ];
 
+const indianStates = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+    "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+    "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
+];
+
 export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: AddCustomerDialogProps) {
     const [name, setName] = useState('');
     const [gstin, setGstin] = useState('');
@@ -47,30 +57,34 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
     const [email, setEmail] = useState('');
     const [type, setType] = useState<CustomerType>('Company');
     const [openingBalance, setOpeningBalance] = useState<number | ''>('');
+    const [masterCities, setMasterCities] = useState<City[]>([]);
 
     const { toast } = useToast();
 
     useEffect(() => {
-        if (customer) {
-            setName(customer.name || '');
-            setGstin(customer.gstin || '');
-            setAddress(customer.address || '');
-            setCity(customer.city || '');
-            setState(customer.state || '');
-            setMobile(customer.mobile || '');
-            setEmail(customer.email || '');
-            setType(customer.type || 'Company');
-            setOpeningBalance(customer.openingBalance || 0);
-        } else {
-            setName('');
-            setGstin('');
-            setAddress('');
-            setCity('');
-            setState('');
-            setMobile('');
-            setEmail('');
-            setType('Company');
-            setOpeningBalance(0);
+        if (isOpen) {
+            setMasterCities(getCities());
+            if (customer) {
+                setName(customer.name || '');
+                setGstin(customer.gstin || '');
+                setAddress(customer.address || '');
+                setCity(customer.city || '');
+                setState(customer.state || '');
+                setMobile(customer.mobile || '');
+                setEmail(customer.email || '');
+                setType(customer.type || 'Company');
+                setOpeningBalance(customer.openingBalance || 0);
+            } else {
+                setName('');
+                setGstin('');
+                setAddress('');
+                setCity('');
+                setState('');
+                setMobile('');
+                setEmail('');
+                setType('Company');
+                setOpeningBalance(0);
+            }
         }
     }, [customer, isOpen]);
 
@@ -97,6 +111,8 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             onOpenChange(false);
         }
     };
+    
+    const cityOptions = useMemo(() => masterCities.map(c => ({ label: c.name, value: c.name })), [masterCities]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -132,11 +148,25 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                     </div>
                      <div>
                         <Label htmlFor="city">City</Label>
-                        <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+                        <Combobox
+                            options={cityOptions}
+                            value={city}
+                            onChange={setCity}
+                            placeholder="Select city..."
+                            searchPlaceholder="Search stations..."
+                            notFoundMessage="No station found in master."
+                        />
                     </div>
                      <div>
                         <Label htmlFor="state">State</Label>
-                        <Input id="state" value={state} onChange={(e) => setState(e.target.value)} />
+                        <Select value={state} onValueChange={setState}>
+                            <SelectTrigger id="state">
+                                <SelectValue placeholder="Select a state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {indianStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <Label htmlFor="mobile">Mobile No.</Label>
