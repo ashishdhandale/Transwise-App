@@ -379,7 +379,7 @@ export function AppSidebar() {
                                 <List /> Booking Type Wise
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                        <SidebarMenuItem>
+                         <SidebarMenuItem>
                             <SidebarMenuButton href="/company/reports/return-booking" size="sm" isActive={pathname === '/company/reports/return-booking'} tooltip="Return Booking Report">
                                 <Undo2 /> Return Booking Report
                             </SidebarMenuButton>
