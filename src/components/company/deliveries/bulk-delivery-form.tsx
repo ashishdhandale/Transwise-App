@@ -239,8 +239,8 @@ export function BulkDeliveryForm() {
                                             <TableHead className={thClass}>Contents</TableHead>
                                             <TableHead className={`${thClass} text-right`}>Qty</TableHead>
                                             <TableHead className={`${thClass} text-right`}>Amount</TableHead>
-                                            <TableHead className={thClass}>Payment</TableHead>
                                             <TableHead className={thClass}>Status</TableHead>
+                                            <TableHead className={thClass}>Payment</TableHead>
                                             <TableHead className={thClass}>Received By</TableHead>
                                             <TableHead className={thClass}>Delivery Date</TableHead>
                                             <TableHead className={thClass}>POD</TableHead>
@@ -257,8 +257,21 @@ export function BulkDeliveryForm() {
                                                 <TableCell className={`${tdClass} p-2 text-right`}>{item.quantity}</TableCell>
                                                 <TableCell className={`${tdClass} p-2 text-right`}>{item.grandTotal.toFixed(2)}</TableCell>
                                                 <TableCell className="p-2">
+                                                    <Select value={item.deliveryStatus} onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryStatus', value)}>
+                                                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Delivered">Delivered</SelectItem>
+                                                            <SelectItem value="Return">Return</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </TableCell>
+                                                <TableCell className="p-2">
                                                     {item.lrType === 'TOPAY' ? (
-                                                        <Select value={item.deliveryPaymentMode} onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryPaymentMode', value as DeliveryPaymentMode)}>
+                                                        <Select 
+                                                            value={item.deliveryPaymentMode} 
+                                                            onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryPaymentMode', value as DeliveryPaymentMode)}
+                                                            disabled={item.deliveryStatus === 'Return'}
+                                                        >
                                                             <SelectTrigger className="h-8"><SelectValue placeholder="Select..." /></SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="Cash">Cash</SelectItem>
@@ -269,15 +282,6 @@ export function BulkDeliveryForm() {
                                                     ) : (
                                                         <span className="text-sm font-semibold">{item.lrType}</span>
                                                     )}
-                                                </TableCell>
-                                                <TableCell className="p-2">
-                                                    <Select value={item.deliveryStatus} onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryStatus', value)}>
-                                                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="Delivered">Delivered</SelectItem>
-                                                            <SelectItem value="Return">Return</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
                                                 </TableCell>
                                                 <TableCell className="p-2">
                                                     <Input className="h-8" value={item.receivedBy} onChange={(e) => handleItemChange(item.lrNo, 'receivedBy', e.target.value)} placeholder="Receiver's name" />
