@@ -94,7 +94,8 @@ function CompanySettingsPage() {
             form.reset(settings);
         }
         loadSettings();
-    }, [form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     async function onSubmit(values: AllCompanySettings) {
         setIsSubmitting(true);
