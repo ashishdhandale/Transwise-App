@@ -40,7 +40,7 @@ import { Download, Loader2, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { VehicleDetailsSection } from './vehicle-details-section';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { FtlChallan } from '../challan-tracking/ftl-challan';
@@ -250,7 +250,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
     const [branches, setBranches] = useState<Branch[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
@@ -417,7 +417,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
         setLoadType('LTL');
-        setFromStation(null);
+        setFromStation(profile?.defaultFromStation ? { id: 0, name: profile.defaultFromStation, aliasCode: '', pinCode: '' } : null);
         setToStation(null);
         setSender(null);
         setReceiver(null);

@@ -39,6 +39,7 @@ export const defaultSettings: AllCompanySettings = {
     countryCode: 'en-IN',
     grnFormat: 'with_char',
     // General Instructions
+    defaultFromStation: 'Nagpur',
     printCopy: ['printAll', 'printSender', 'printReceiver', 'printDriver', 'printOffice'],
     sendNotification: ['notifSms', 'notifWhatsapp'],
     // Booking Settings
@@ -78,15 +79,17 @@ export function getDefaultCompanySettings(): AllCompanySettings {
 
 // This function should only be called on the client side, inside a useEffect.
 export function loadCompanySettingsFromStorage(): AllCompanySettings {
-    try {
-        const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY_COMPANY_SETTINGS);
-        if (savedSettings) {
-            const parsed = JSON.parse(savedSettings);
-            // Merge with defaults to ensure all keys are present
-            return { ...defaultSettings, ...parsed };
+    if (typeof window !== 'undefined') {
+        try {
+            const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY_COMPANY_SETTINGS);
+            if (savedSettings) {
+                const parsed = JSON.parse(savedSettings);
+                // Merge with defaults to ensure all keys are present
+                return { ...defaultSettings, ...parsed };
+            }
+        } catch (error) {
+            console.error("Could not load company settings from localStorage", error);
         }
-    } catch (error) {
-        console.error("Could not load company settings from localStorage", error);
     }
     return defaultSettings;
 }

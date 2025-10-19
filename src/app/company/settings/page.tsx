@@ -41,6 +41,7 @@ const combinedSettingsSchema = z.object({
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
   
   // General Instructions fields
+  defaultFromStation: z.string().optional(),
   printCopy: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: 'You have to select at least one print option.',
   }),

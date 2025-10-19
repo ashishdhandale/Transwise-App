@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const profileSchema = z.object({
+export const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
   lrPrefix: z.string().optional(),
   challanPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
@@ -107,7 +107,7 @@ export function CompanyProfileSettings() {
                         name="city"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Head Office City (for Default Station)</FormLabel>
+                            <FormLabel>Head Office City</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -121,7 +121,7 @@ export function CompanyProfileSettings() {
                                         <SelectItem value="Delhi">Delhi</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            <FormDescription>This city will be the default "From Station" on new bookings.</FormDescription>
+                            <FormDescription>This city defines your company's legal jurisdiction.</FormDescription>
                             <FormMessage />
                             </FormItem>
                         )}
