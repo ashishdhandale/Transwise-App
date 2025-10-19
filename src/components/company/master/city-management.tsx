@@ -77,7 +77,27 @@ export function CityManagement() {
     setCityListSource(source);
     try {
         localStorage.setItem(LOCAL_STORAGE_KEY_SOURCE, source);
-        toast({ title: 'Setting Saved', description: `Station list source set to "${source === 'default' ? 'Default List' : 'Custom List'}".` });
+        
+        // If switching to custom list for the first time, populate it with defaults.
+        if (source === 'custom') {
+            const savedCitiesJSON = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
+            const savedCities = savedCitiesJSON ? JSON.parse(savedCitiesJSON) : [];
+            if (savedCities.length === 0) {
+                const defaultCities: City[] = bookingOptions.stations.map((name, index) => ({
+                    id: index + 1,
+                    name,
+                    aliasCode: name.substring(0, 3).toUpperCase(),
+                    pinCode: '',
+                }));
+                saveCities(defaultCities);
+                toast({ title: 'Default Stations Imported', description: `Your custom list has been populated with the default system stations.` });
+            } else {
+                 toast({ title: 'Setting Saved', description: `Station list source set to "Custom List".` });
+            }
+        } else {
+            toast({ title: 'Setting Saved', description: `Station list source set to "Default List".` });
+        }
+
     } catch (error) {
         toast({ title: 'Error', description: 'Could not save setting.', variant: 'destructive'});
     }
