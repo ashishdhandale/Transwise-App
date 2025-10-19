@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -34,8 +33,8 @@ import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
-const tdClass = "whitespace-nowrap";
+const thClass = "bg-gray-100 text-black font-semibold whitespace-nowrap text-xs h-10";
+const tdClass = "whitespace-nowrap text-xs";
 
 const bookingTypes = ['ALL', 'TOPAY', 'PAID', 'TBB', 'FOC'];
 
@@ -184,13 +183,16 @@ export function BookingTypeReport() {
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent>
-                     <div ref={reportRef} className="overflow-x-auto border rounded-md p-4 bg-white">
-                        <div className="text-center mb-4">
-                            <h2 className="text-xl font-bold">{companyProfile?.companyName}</h2>
-                            <h3 className="text-lg font-semibold">Booking Type Wise Report</h3>
-                            {customerFilter && <p className="text-sm">Customer: {customerFilter}</p>}
-                            {dateRange?.from && <p className="text-sm">Date Range: {format(dateRange.from, "dd-MMM-yy")} to {dateRange.to ? format(dateRange.to, "dd-MMM-yy") : ''}</p>}
+                <CardContent className="bg-gray-100 p-4">
+                     <div ref={reportRef} className="overflow-x-auto p-8 bg-white shadow-lg font-sans">
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800">{companyProfile?.companyName || 'Your Company'}</h2>
+                            <h3 className="text-xl font-semibold text-gray-600">Booking Type Wise Report</h3>
+                            <div className="text-xs text-gray-500 mt-1">
+                                {bookingTypeFilter !== 'ALL' && <p>Booking Type: {bookingTypeFilter}</p>}
+                                {customerFilter && <p>Customer: {customerFilter}</p>}
+                                {dateRange?.from && <p>Date Range: {format(dateRange.from, "dd-MMM-yy")} to {dateRange.to ? format(dateRange.to, "dd-MMM-yy") : ''}</p>}
+                            </div>
                         </div>
                         <Table>
                             <TableHeader>
@@ -212,7 +214,7 @@ export function BookingTypeReport() {
                                 {filteredBookings.length > 0 ? (
                                     filteredBookings.map((booking, index) => (
                                         <TableRow key={booking.trackingId}>
-                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell className={tdClass}>{index + 1}</TableCell>
                                             <TableCell className={`${tdClass} font-medium`}>{booking.lrNo}</TableCell>
                                             <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                                             <TableCell className={tdClass}>{booking.lrType}</TableCell>
@@ -235,11 +237,11 @@ export function BookingTypeReport() {
                             </TableBody>
                             {filteredBookings.length > 0 && (
                                 <ShadcnTableFooter>
-                                    <TableRow>
-                                        <TableCell colSpan={8} className="text-right font-bold text-lg">Total</TableCell>
-                                        <TableCell className="text-right font-bold text-lg">{totals.qty}</TableCell>
-                                        <TableCell className="text-right font-bold text-lg">{totals.chgWt.toFixed(2)}</TableCell>
-                                        <TableCell className="text-right font-bold text-lg">{formatValue(totals.totalAmount)}</TableCell>
+                                    <TableRow className="bg-gray-100">
+                                        <TableCell colSpan={8} className="text-right font-bold text-base">Total</TableCell>
+                                        <TableCell className="text-right font-bold text-base">{totals.qty}</TableCell>
+                                        <TableCell className="text-right font-bold text-base">{totals.chgWt.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-bold text-base">{formatValue(totals.totalAmount)}</TableCell>
                                     </TableRow>
                                 </ShadcnTableFooter>
                             )}
