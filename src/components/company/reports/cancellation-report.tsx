@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { format, parseISO, isWithinInterval } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { getCompanyProfile } from '@/app/company/settings/actions';
@@ -30,7 +30,10 @@ const tdClass = "whitespace-nowrap uppercase";
 export function CancellationReport() {
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
-    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+      from: new Date(),
+      to: new Date(),
+    });
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -45,11 +48,12 @@ export function CancellationReport() {
     const cancelledBookings = useMemo(() => {
         let bookings = allBookings.filter(b => b.status === 'Cancelled');
 
-        if (dateRange?.from && dateRange?.to) {
+        if (dateRange?.from) {
             bookings = bookings.filter(b => {
                 try {
                     const bookingDate = parseISO(b.bookingDate);
-                    return isWithinInterval(bookingDate, { start: dateRange.from!, end: dateRange.to! });
+                    const toDate = dateRange.to || dateRange.from;
+                    return isWithinInterval(bookingDate, { start: startOfDay(dateRange.from!), end: endOfDay(toDate) });
                 } catch {
                     return false;
                 }
