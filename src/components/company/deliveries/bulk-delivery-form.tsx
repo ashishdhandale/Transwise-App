@@ -96,48 +96,28 @@ export function BulkDeliveryForm() {
         }
 
         const itemsToProcess = deliveryItems.filter(item => selectedLrs.has(item.lrNo));
-        const invalidItems = itemsToProcess.filter(item => !item.receivedBy || !item.deliveryDate);
+        const invalidItems = itemsToProcess.filter(item => item.deliveryStatus === 'Delivered' && (!item.receivedBy || !item.deliveryDate));
         if (invalidItems.length > 0) {
-            toast({ title: 'Missing Details', description: 'Please fill "Received By" and "Delivery Date" for all selected items.', variant: 'destructive'});
+            toast({ title: 'Missing Details', description: 'Please fill "Received By" and "Delivery Date" for all selected delivered items.', variant: 'destructive'});
             return;
         }
 
         const allBookings = getBookings();
-        const bookingsToUpdate: Booking[] = [];
-        const bookingsToAdd: Booking[] = [];
+        const updatedBookings = [...allBookings];
         const deliveryMemoNo = `DM-BLK-${Date.now()}`;
         
         itemsToProcess.forEach(item => {
-            const originalBooking = allBookings.find(b => b.lrNo === item.lrNo);
-            if (!originalBooking) return;
+            const bookingIndex = updatedBookings.findIndex(b => b.lrNo === item.lrNo);
+            if (bookingIndex === -1) return;
 
             if (item.deliveryStatus === 'Delivered') {
                 addHistoryLog(item.lrNo, 'Delivered', 'System (Bulk)', `Delivered via bulk update from Challan #${foundChallan.challanId}. Received by: ${item.receivedBy}. Remarks: ${item.remarks}`);
-                bookingsToUpdate.push({ ...originalBooking, status: 'Delivered', deliveryMemoNo });
+                updatedBookings[bookingIndex] = { ...updatedBookings[bookingIndex], status: 'Delivered', deliveryMemoNo };
             } else { // Return
-                addHistoryLog(item.lrNo, 'Partially Delivered', 'System (Bulk)', `Returned via bulk update from Challan #${foundChallan.challanId}. Remarks: ${item.remarks}`);
-                
-                const returnLrNo = `${item.lrNo}-R`;
-                const returnBooking: Booking = {
-                    ...originalBooking,
-                    trackingId: `TRK-RET-${Date.now()}`,
-                    lrNo: returnLrNo,
-                    fromCity: originalBooking.toCity, // Reverse route
-                    toCity: originalBooking.fromCity,
-                    lrType: 'TBB', // Typically returns are To Be Billed
-                    status: 'In Stock',
-                    bookingDate: new Date().toISOString(),
-                };
-                bookingsToUpdate.push({ ...originalBooking, status: 'Partially Delivered' });
-                bookingsToAdd.push(returnBooking);
-                addHistoryLog(returnLrNo, 'Booking Created', 'System (Return)', `Return generated from LR #${item.lrNo}.`);
+                addHistoryLog(item.lrNo, 'In Stock', 'System (Bulk)', `Returned to stock via bulk update from Challan #${foundChallan.challanId}. Remarks: ${item.remarks}`);
+                updatedBookings[bookingIndex] = { ...updatedBookings[bookingIndex], status: 'In Stock' };
             }
         });
-        
-        const updatedBookings = allBookings.map(b => {
-            const updatedVersion = bookingsToUpdate.find(ub => ub.trackingId === b.trackingId);
-            return updatedVersion || b;
-        }).concat(bookingsToAdd);
 
         saveBookings(updatedBookings);
         toast({ title: 'Success', description: `${selectedLrs.size} consignments have been processed.`});
