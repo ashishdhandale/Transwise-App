@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { FilePlus, Layers, CreditCard, Search } from 'lucide-react';
+import { FilePlus, Layers, CreditCard, Search, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DeliveriesList } from './deliveries-list';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
@@ -46,8 +46,8 @@ export function DeliveriesDashboard() {
         const lowerQuery = searchTerm.toLowerCase();
         bookings = bookings.filter(b =>
             b.lrNo.toLowerCase().includes(lowerQuery) ||
-            b.sender.toLowerCase().includes(lowercasedQuery) ||
-            b.receiver.toLowerCase().includes(lowercasedQuery)
+            b.sender.toLowerCase().includes(lowerQuery) ||
+            b.receiver.toLowerCase().includes(lowerQuery)
         );
     }
 
@@ -66,6 +66,11 @@ export function DeliveriesDashboard() {
           <Button asChild variant="outline">
             <Link href="/company/deliveries/bulk">
               <Layers className="mr-2 h-4 w-4" />Bulk Delivery
+            </Link>
+          </Button>
+           <Button asChild variant="outline">
+            <Link href="/company/deliveries/pending">
+              <Clock className="mr-2 h-4 w-4" />Pending Deliveries
             </Link>
           </Button>
           <Button variant="outline"><CreditCard className="mr-2 h-4 w-4" />Update Payment</Button>
