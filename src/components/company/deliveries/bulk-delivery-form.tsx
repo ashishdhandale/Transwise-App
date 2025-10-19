@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, Layers, FileText, Undo2, Upload } from 'lucide-react';
+import { Search, Loader2, Layers, FileText, Undo2, Upload, Camera } from 'lucide-react';
 import { getChallanData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { ClientOnly } from '@/components/ui/client-only';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
@@ -42,12 +44,84 @@ interface DeliveryItem extends LrDetail {
     deliveryPaymentMode?: DeliveryPaymentMode;
 }
 
+const CameraComponent = ({ onCapture, onClose }: { onCapture: (dataUrl: string) => void; onClose: () => void }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState(true);
+
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+      }
+    };
+
+    getCameraPermission();
+
+    return () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+        }
+    }
+  }, []);
+
+  const handleCapture = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0, videoRef.current.videoWidth, videoRef.current.videoHeight);
+        const dataUrl = canvasRef.current.toDataURL('image/jpeg');
+        onCapture(dataUrl);
+      }
+    }
+  };
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Capture Proof of Delivery</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4">
+        <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+        <canvas ref={canvasRef} className="hidden" />
+        {!hasCameraPermission && (
+            <Alert variant="destructive">
+                <AlertTitle>Camera Access Required</AlertTitle>
+                <AlertDescription>
+                Please allow camera access in your browser settings to use this feature.
+                </AlertDescription>
+            </Alert>
+        )}
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button onClick={handleCapture} disabled={!hasCameraPermission}>Take Photo</Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+};
+
+
 export function BulkDeliveryForm() {
     const [challanId, setChallanId] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [foundChallan, setFoundChallan] = useState<Challan | null>(null);
     const [deliveryItems, setDeliveryItems] = useState<DeliveryItem[]>([]);
     const [selectedLrs, setSelectedLrs] = useState<Set<string>>(new Set());
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
+    const [capturingPodForLr, setCapturingPodForLr] = useState<string | null>(null);
+
 
     const { toast } = useToast();
     const router = useRouter();
@@ -144,6 +218,21 @@ export function BulkDeliveryForm() {
             item.lrNo === lrNo ? { ...item, podFile: file, podFileName: file?.name || '' } : item
         ));
     };
+
+    const handleOpenCamera = (lrNo: string) => {
+        setCapturingPodForLr(lrNo);
+        setIsCameraOpen(true);
+    }
+    
+    const handleCapturePhoto = (dataUrl: string) => {
+        if(capturingPodForLr) {
+            setDeliveryItems(prev => prev.map(item => 
+                item.lrNo === capturingPodForLr ? {...item, podFileName: `pod_${capturingPodForLr}.jpg`} : item
+            ));
+        }
+        setIsCameraOpen(false);
+        setCapturingPodForLr(null);
+    }
 
     const totals = useMemo(() => {
         const lrsToTotal = deliveryItems.filter(lr => selectedLrs.size > 0 ? selectedLrs.has(lr.lrNo) : true);
@@ -270,10 +359,15 @@ export function BulkDeliveryForm() {
                                                     <DatePicker date={item.deliveryDate} setDate={(date) => handleItemChange(item.lrNo, 'deliveryDate', date)} />
                                                 </TableCell>
                                                 <TableCell className="p-2">
-                                                     <Button variant="outline" size="sm" className="h-8" onClick={() => fileInputRefs.current[item.lrNo]?.click()}>
-                                                        <Upload className="mr-2 h-4 w-4"/> 
-                                                        {item.podFileName ? 'Change' : 'Upload'}
-                                                     </Button>
+                                                    <div className="flex gap-1">
+                                                         <Button variant="outline" size="sm" className="h-8" onClick={() => fileInputRefs.current[item.lrNo]?.click()}>
+                                                            <Upload className="mr-2 h-4 w-4"/> 
+                                                            {item.podFileName ? 'Change' : 'File'}
+                                                         </Button>
+                                                         <Button variant="outline" size="icon" className="h-8" onClick={() => handleOpenCamera(item.lrNo)}>
+                                                            <Camera className="h-4 w-4"/>
+                                                         </Button>
+                                                    </div>
                                                      <Input 
                                                         type="file" 
                                                         className="hidden" 
@@ -301,6 +395,9 @@ export function BulkDeliveryForm() {
                     </div>
                 </div>
             )}
+             <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+                <CameraComponent onCapture={handleCapturePhoto} onClose={() => setIsCameraOpen(false)} />
+            </Dialog>
         </div>
     );
 }
