@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import {
   Table,
@@ -15,7 +16,7 @@ import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { getCustomers, type Customer } from '@/lib/customer-data';
 import { getCities, type City } from '@/lib/city-data';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
-import { List, Search } from 'lucide-react';
+import { List, Search, Printer, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -29,6 +30,8 @@ import { DatePicker } from '@/components/ui/date-picker';
 import type { DateRange } from 'react-day-picker';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -45,6 +48,9 @@ export function BookingTypeReport() {
     const [customerFilter, setCustomerFilter] = useState<string | null>(null);
     const [destinationFilter, setDestinationFilter] = useState<string | null>(null);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [isDownloading, setIsDownloading] = useState(false);
+    
+    const reportRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         async function loadData() {
@@ -91,6 +97,41 @@ export function BookingTypeReport() {
         setDestinationFilter(null);
         setDateRange(undefined);
     }
+    
+    const handleDownloadPdf = async () => {
+        const input = reportRef.current;
+        if (!input) return;
+
+        setIsDownloading(true);
+
+        const canvas = await html2canvas(input, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4',
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgProps= pdf.getImageProperties(imgData);
+        const imgWidth = imgProps.width;
+        const imgHeight = imgProps.height;
+        const ratio = imgWidth / imgHeight;
+        let finalImgHeight = pdfHeight - 20; // 10mm margin top and bottom
+        let finalImgWidth = finalImgHeight * ratio;
+
+        if (finalImgWidth > pdfWidth - 20) {
+            finalImgWidth = pdfWidth - 20;
+            finalImgHeight = finalImgWidth / ratio;
+        }
+
+        const x = (pdfWidth - finalImgWidth) / 2;
+        const y = 10;
+        
+        pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
+        pdf.save(`booking-type-report-${new Date().toISOString().split('T')[0]}.pdf`);
+        setIsDownloading(false);
+    };
 
     return (
         <div className="space-y-4">
@@ -130,11 +171,20 @@ export function BookingTypeReport() {
             </Card>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Filtered Bookings ({totals.count})</CardTitle>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleDownloadPdf} disabled={isDownloading}>
+                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                            PDF
+                        </Button>
+                        <Button variant="outline" onClick={() => window.print()}>
+                            <Printer className="mr-2 h-4 w-4" /> Print
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                     <div className="overflow-x-auto border rounded-md">
+                     <div ref={reportRef} className="overflow-x-auto border rounded-md p-4 bg-white">
                         <Table>
                             <TableHeader>
                                 <TableRow>
