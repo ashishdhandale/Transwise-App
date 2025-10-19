@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ import { DashboardSettings } from '@/components/company/settings/dashboard-setti
 import { saveCompanySettings, type AllCompanySettings, getDefaultCompanySettings, loadCompanySettingsFromStorage } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { ClientOnly } from '@/components/ui/client-only';
 
 // Combined schema for the entire settings page
 const combinedSettingsSchema = z.object({
@@ -114,52 +116,54 @@ function CompanySettingsPage() {
             </Button>
           </div>
           
-          <Tabs defaultValue="profile" className="space-y-4">
-              <TabsList className="h-auto flex-wrap">
-                  <TabsTrigger value="profile">Company Profile</TabsTrigger>
-                  <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
-                  <TabsTrigger value="print-formats">Print Formats</TabsTrigger>
-                  <TabsTrigger value="challan-formats">Challan Formats</TabsTrigger>
-                  <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              </TabsList>
-              <TabsContent value="profile">
-                  <CompanyProfileSettings />
-              </TabsContent>
-              <TabsContent value="booking-form">
-                  <div className="space-y-6">
-                      <GeneralInstructionsSettings />
-                      <Card>
-                          <CardContent className="p-4">
-                              <Tabs defaultValue="item-table-rows" className="space-y-4">
-                                  <TabsList>
-                                      <TabsTrigger value="item-table-rows">Item Table Rows</TabsTrigger>
-                                      <TabsTrigger value="item-table-columns">Item Table Columns</TabsTrigger>
-                                      <TabsTrigger value="charges">Additional Charges</TabsTrigger>
-                                  </TabsList>
-                                  <TabsContent value="item-table-rows">
-                                      <BookingSettings />
-                                  </TabsContent>
-                                  <TabsContent value="item-table-columns">
-                                      <ItemDetailsSettings />
-                                  </TabsContent>
-                                  <TabsContent value="charges">
-                                      <AdditionalChargesSettings />
-                                  </TabsContent>
-                              </Tabs>
-                          </CardContent>
-                      </Card>
-                  </div>
-              </TabsContent>
-              <TabsContent value="print-formats">
-                  <PrintFormatSettings />
-              </TabsContent>
-              <TabsContent value="challan-formats">
-                  <ChallanFormatSettings />
-              </TabsContent>
-              <TabsContent value="dashboard">
-                  <DashboardSettings />
-              </TabsContent>
-          </Tabs>
+          <ClientOnly>
+            <Tabs defaultValue="profile" className="space-y-4">
+                <TabsList className="h-auto flex-wrap">
+                    <TabsTrigger value="profile">Company Profile</TabsTrigger>
+                    <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
+                    <TabsTrigger value="print-formats">Print Formats</TabsTrigger>
+                    <TabsTrigger value="challan-formats">Challan Formats</TabsTrigger>
+                    <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                </TabsList>
+                <TabsContent value="profile">
+                    <CompanyProfileSettings />
+                </TabsContent>
+                <TabsContent value="booking-form">
+                    <div className="space-y-6">
+                        <GeneralInstructionsSettings />
+                        <Card>
+                            <CardContent className="p-4">
+                                <Tabs defaultValue="item-table-rows" className="space-y-4">
+                                    <TabsList>
+                                        <TabsTrigger value="item-table-rows">Item Table Rows</TabsTrigger>
+                                        <TabsTrigger value="item-table-columns">Item Table Columns</TabsTrigger>
+                                        <TabsTrigger value="charges">Additional Charges</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="item-table-rows">
+                                        <BookingSettings />
+                                    </TabsContent>
+                                    <TabsContent value="item-table-columns">
+                                        <ItemDetailsSettings />
+                                    </TabsContent>
+                                    <TabsContent value="charges">
+                                        <AdditionalChargesSettings />
+                                    </TabsContent>
+                                </Tabs>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+                <TabsContent value="print-formats">
+                    <PrintFormatSettings />
+                </TabsContent>
+                <TabsContent value="challan-formats">
+                    <ChallanFormatSettings />
+                </TabsContent>
+                <TabsContent value="dashboard">
+                    <DashboardSettings />
+                </TabsContent>
+            </Tabs>
+          </ClientOnly>
         </form>
       </FormProvider>
     </main>

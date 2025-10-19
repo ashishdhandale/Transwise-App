@@ -38,7 +38,7 @@ const formSchema = z.object({
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   state: z.string().min(1, { message: 'State is required.' }),
-  city: zstring().min(1, { message: 'City is required.' }),
+  city: z.string().min(1, { message: 'City is required.' }),
   transportId: z.string().optional(),
   pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }).optional().or(z.literal('')),
   gstNo: z.string().length(15, { message: 'GST Number must be 15 characters.' }).optional().or(z.literal('')),
