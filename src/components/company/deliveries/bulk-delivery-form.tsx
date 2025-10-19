@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -20,6 +21,7 @@ import { format } from 'date-fns';
 import { ClientOnly } from '@/components/ui/client-only';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { addVoucher } from '@/lib/accounts-data';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
@@ -187,6 +189,17 @@ export function BulkDeliveryForm() {
             if (item.deliveryStatus === 'Delivered') {
                 addHistoryLog(item.lrNo, 'Delivered', 'System (Bulk)', `Delivered via bulk update from Challan #${foundChallan.challanId}. Received by: ${item.receivedBy}. Remarks: ${item.remarks}`);
                 updatedBookings[bookingIndex] = { ...updatedBookings[bookingIndex], status: 'Delivered', deliveryMemoNo };
+
+                if (updatedBookings[bookingIndex].lrType === 'TBB') {
+                    addVoucher({
+                        type: 'Journal',
+                        date: item.deliveryDate.toISOString(),
+                        account: item.sender,
+                        amount: item.grandTotal,
+                        narration: `To Freight A/c - GR #${item.lrNo}`,
+                    });
+                }
+
             } else { // Return
                 addHistoryLog(item.lrNo, 'In Stock', 'System (Bulk)', `Returned to stock via bulk update from Challan #${foundChallan.challanId}. Remarks: ${item.remarks}`);
                 updatedBookings[bookingIndex] = { ...updatedBookings[bookingIndex], status: 'In Stock' };
