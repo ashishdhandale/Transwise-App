@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
-import { DateRange } from 'react-day-picker';
+import type { DateRange } from 'react-day-picker';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import jsPDF from 'jspdf';
@@ -142,7 +142,7 @@ export function BookingTypeReport() {
         const y = 10;
         
         pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
-        pdf.save(`booking-type-report-${new Date().toISOString().split('T')[0]}.pdf`);
+        pdf.save(`booking-report-${new Date().toISOString().split('T')[0]}.pdf`);
         setIsDownloading(false);
     };
 
@@ -151,7 +151,7 @@ export function BookingTypeReport() {
             <header className="mb-4">
                 <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
                     <List className="h-8 w-8" />
-                    Booking Type Wise Report
+                    Booking Report
                 </h1>
             </header>
 
@@ -248,7 +248,7 @@ export function BookingTypeReport() {
                      <div ref={reportRef} className="p-8 bg-white shadow-lg font-sans">
                         <div className="text-center mb-6">
                             <h2 className="text-2xl font-bold text-gray-800">{companyProfile?.companyName || 'Your Company'}</h2>
-                            <h3 className="text-xl font-semibold text-gray-600">Booking Type Wise Report</h3>
+                            <h3 className="text-xl font-semibold text-gray-600">Booking Report</h3>
                             <p className="text-xs text-gray-500">Generated on: {format(generationDate, "dd-MMM-yyyy hh:mm a")}</p>
                             <div className="text-xs text-gray-500 mt-1">
                                 {bookingTypeFilter !== 'ALL' && <p>Booking Type: {bookingTypeFilter}</p>}
