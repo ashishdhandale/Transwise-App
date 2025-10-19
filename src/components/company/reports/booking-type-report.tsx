@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -40,6 +41,7 @@ const thClass = "text-left text-xs font-bold text-black border border-black p-1"
 const tdClass = "text-xs border border-black p-1";
 
 const bookingTypes = ['ALL', 'TOPAY', 'PAID', 'TBB', 'FOC'];
+const sourceTypes = ['ALL', 'System', 'Inward'];
 
 export function BookingTypeReport() {
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -48,6 +50,7 @@ export function BookingTypeReport() {
     const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
 
     const [bookingTypeFilter, setBookingTypeFilter] = useState('ALL');
+    const [sourceFilter, setSourceFilter] = useState('ALL');
     const [customerFilter, setCustomerFilter] = useState<string | null>(null);
     const [destinationFilter, setDestinationFilter] = useState<string | null>(null);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -69,6 +72,7 @@ export function BookingTypeReport() {
     const filteredBookings = useMemo(() => {
         return allBookings.filter(booking => {
             if (bookingTypeFilter !== 'ALL' && booking.lrType !== bookingTypeFilter) return false;
+            if (sourceFilter !== 'ALL' && (booking.source || 'System') !== sourceFilter) return false;
             if (customerFilter && booking.sender !== customerFilter && booking.receiver !== customerFilter) return false;
             if (destinationFilter && booking.toCity !== destinationFilter) return false;
             if (dateRange?.from && dateRange?.to) {
@@ -79,7 +83,7 @@ export function BookingTypeReport() {
             }
             return true;
         });
-    }, [allBookings, bookingTypeFilter, customerFilter, destinationFilter, dateRange]);
+    }, [allBookings, bookingTypeFilter, sourceFilter, customerFilter, destinationFilter, dateRange]);
 
     const totals = useMemo(() => {
         return {
@@ -96,6 +100,7 @@ export function BookingTypeReport() {
     
     const resetFilters = () => {
         setBookingTypeFilter('ALL');
+        setSourceFilter('ALL');
         setCustomerFilter(null);
         setDestinationFilter(null);
         setDateRange(undefined);
@@ -149,13 +154,22 @@ export function BookingTypeReport() {
                 <CardHeader>
                     <CardTitle className="font-headline">Filter Report</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                     <div>
                         <label className="text-sm font-medium">Booking Type</label>
                         <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 {bookingTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div>
+                        <label className="text-sm font-medium">Booking Source</label>
+                        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                {sourceTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
@@ -226,7 +240,7 @@ export function BookingTypeReport() {
                     </div>
                 </CardHeader>
                 <CardContent className="bg-gray-100 p-4">
-                     <div ref={reportRef} className="overflow-x-auto p-8 bg-white shadow-lg font-sans">
+                     <div ref={reportRef} className="p-8 bg-white shadow-lg font-sans">
                         <div className="text-center mb-6">
                             <h2 className="text-2xl font-bold text-gray-800">{companyProfile?.companyName || 'Your Company'}</h2>
                             <h3 className="text-xl font-semibold text-gray-600">Booking Type Wise Report</h3>
