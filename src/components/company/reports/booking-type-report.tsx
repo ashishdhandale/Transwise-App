@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -185,6 +186,12 @@ export function BookingTypeReport() {
                 </CardHeader>
                 <CardContent>
                      <div ref={reportRef} className="overflow-x-auto border rounded-md p-4 bg-white">
+                        <div className="text-center mb-4">
+                            <h2 className="text-xl font-bold">{companyProfile?.companyName}</h2>
+                            <h3 className="text-lg font-semibold">Booking Type Wise Report</h3>
+                            {customerFilter && <p className="text-sm">Customer: {customerFilter}</p>}
+                            {dateRange?.from && <p className="text-sm">Date Range: {format(dateRange.from, "dd-MMM-yy")} to {dateRange.to ? format(dateRange.to, "dd-MMM-yy") : ''}</p>}
+                        </div>
                         <Table>
                             <TableHeader>
                                 <TableRow>
