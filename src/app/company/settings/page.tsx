@@ -1,8 +1,8 @@
 
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Suspense } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import DashboardLayout from '../../(dashboard)/layout';
@@ -102,7 +102,7 @@ function CompanySettingsPage() {
 
   return (
     <main className="flex-1 p-4 md:p-8">
-      <Form {...form}>
+      <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -165,7 +165,7 @@ function CompanySettingsPage() {
               </TabsContent>
           </Tabs>
         </form>
-      </Form>
+      </FormProvider>
     </main>
   );
 }
@@ -179,3 +179,5 @@ export default function CompanySettingsRootPage() {
     </Suspense>
   );
 }
+
+    

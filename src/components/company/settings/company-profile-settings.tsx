@@ -146,8 +146,8 @@ export function CompanyProfileSettings() {
             <CardDescription>Manage your company's information. This will be used in reports, receipts, and document numbers.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* The Form and form elements are now part of the parent page's form, so we don't need a new one here. */}
+            <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <FormField
                         control={form.control}
@@ -354,14 +354,10 @@ export function CompanyProfileSettings() {
                         )}
                     />
                 </div>
-
-                <Button type="submit" disabled={isSubmitting || isLoading}>
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Server className="mr-2 h-4 w-4" />}
-                    Save Profile
-                </Button>
-            </form>
-            </Form>
+            </div>
         </CardContent>
     </Card>
   );
 }
+
+    
