@@ -234,6 +234,10 @@ export function BulkDeliveryForm() {
                                             <TableHead className={`${thClass} w-12`}><Checkbox checked={selectedLrs.size > 0 && selectedLrs.size === deliveryItems.length} onCheckedChange={handleSelectAll}/></TableHead>
                                             <TableHead className={thClass}>LR No.</TableHead>
                                             <TableHead className={thClass}>Receiver</TableHead>
+                                            <TableHead className={thClass}>Contents</TableHead>
+                                            <TableHead className={`${thClass} text-right`}>Qty</TableHead>
+                                            <TableHead className={`${thClass} text-right`}>Amount</TableHead>
+                                            <TableHead className={thClass}>Payment</TableHead>
                                             <TableHead className={thClass}>Status</TableHead>
                                             <TableHead className={thClass}>Received By</TableHead>
                                             <TableHead className={thClass}>Delivery Date</TableHead>
@@ -247,6 +251,10 @@ export function BulkDeliveryForm() {
                                                 <TableCell className="p-2"><Checkbox checked={selectedLrs.has(item.lrNo)} onCheckedChange={() => handleSelectRow(item.lrNo)}/></TableCell>
                                                 <TableCell className={`${tdClass} p-2`}>{item.lrNo}</TableCell>
                                                 <TableCell className={`${tdClass} p-2`}>{item.receiver}</TableCell>
+                                                <TableCell className={`${tdClass} p-2 max-w-xs truncate`}>{item.itemDescription}</TableCell>
+                                                <TableCell className={`${tdClass} p-2 text-right`}>{item.quantity}</TableCell>
+                                                <TableCell className={`${tdClass} p-2 text-right`}>{item.grandTotal.toFixed(2)}</TableCell>
+                                                <TableCell className={`${tdClass} p-2`}>{item.lrType}</TableCell>
                                                 <TableCell className="p-2">
                                                     <Select value={item.deliveryStatus} onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryStatus', value)}>
                                                         <SelectTrigger><SelectValue /></SelectTrigger>
