@@ -21,7 +21,6 @@ import { DashboardSettings } from '@/components/company/settings/dashboard-setti
 import { saveCompanySettings, type AllCompanySettings, getDefaultCompanySettings, loadCompanySettingsFromStorage } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ClientOnly } from '@/components/ui/client-only';
 
 // Combined schema for the entire settings page
 const combinedSettingsSchema = z.object({
@@ -103,9 +102,7 @@ function CompanySettingsPage() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <ClientOnly>
-                <BackButton />
-              </ClientOnly>
+              <BackButton />
               <h1 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
                   <Settings className="h-8 w-8" />
                   Company Settings
