@@ -20,6 +20,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
 
+const SummaryItem = ({ label, value }: { label: string; value?: string | number }) => (
+    <div>
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="font-semibold">{value || 'N/A'}</p>
+    </div>
+);
+
+
 export function BulkDeliveryForm() {
     const [challanId, setChallanId] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -157,10 +165,14 @@ export function BulkDeliveryForm() {
                             <CardTitle>Challan Summary</CardTitle>
                         </CardHeader>
                         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div><span className="font-semibold">Challan No:</span> {foundChallan.challanId}</div>
-                            <div><span className="font-semibold">Date:</span> {foundChallan.dispatchDate}</div>
-                            <div><span className="font-semibold">Vehicle No:</span> {foundChallan.vehicleNo}</div>
-                            <div><span className="font-semibold">To:</span> {foundChallan.toStation}</div>
+                            <SummaryItem label="Challan No" value={foundChallan.challanId} />
+                            <SummaryItem label="Date" value={foundChallan.dispatchDate} />
+                            <SummaryItem label="Vehicle No" value={foundChallan.vehicleNo} />
+                            <SummaryItem label="Driver Name" value={foundChallan.driverName} />
+                            <SummaryItem label="From" value={foundChallan.fromStation} />
+                            <SummaryItem label="To" value={foundChallan.toStation} />
+                            <SummaryItem label="Total LRs" value={foundChallan.totalLr} />
+                            <SummaryItem label="Total Packages" value={foundChallan.totalPackages} />
                         </CardContent>
                     </Card>
 
@@ -261,3 +273,5 @@ export function BulkDeliveryForm() {
         </div>
     );
 }
+
+    
