@@ -10,8 +10,8 @@ import { ShippingDetails } from './shipping-details';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getHistoryLogs, type BookingHistory } from '@/lib/history-data';
 import { getBookings } from '@/lib/bookings-dashboard-data';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Card } from '@/components/ui/card';
 import { getChallanData, getLrDetailsData, type LrDetail } from '@/lib/challan-data';
 
@@ -20,7 +20,7 @@ export function PackageTracking() {
   const [searchResults, setSearchResults] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedBookingHistory, setSelectedBookingHistory] = useState<BookingHistory | null>(null);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
 
@@ -28,7 +28,7 @@ export function PackageTracking() {
     async function loadData() {
         const bookings = getBookings();
         setAllTrackableItems(bookings);
-        const profile = await getCompanyProfile();
+        const profile = await getCompanySettings();
         setCompanyProfile(profile);
         setAllLrDetails(getLrDetailsData());
     }
