@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChallanFormatPreview } from './challan-format-preview';
 import type { PrintFormat } from './print-format-settings';
 import { fieldGroupSchema } from './print-format-settings';
+import type { CompanyProfileFormValues } from './company-profile-settings';
 
 
 const challanFormatSchema = z.object({
@@ -61,7 +62,11 @@ const createNewFormat = (id: string, name: string, isDefault = false): ChallanFo
     fieldGroups: JSON.parse(JSON.stringify(ALL_FIELDS_CONFIG)), // Deep copy
 });
 
-export function ChallanFormatSettings() {
+interface ChallanFormatSettingsProps {
+    profileForm: UseFormReturn<CompanyProfileFormValues>;
+}
+
+export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeFormatId, setActiveFormatId] = useState<string | null>(null);
   const [openCollapsibles, setOpenCollapsibles] = useState<string[]>(ALL_FIELDS_CONFIG.map(g => g.groupLabel));
@@ -166,6 +171,24 @@ export function ChallanFormatSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+         <div className="mb-6">
+            <FormField
+                control={profileForm.control}
+                name="challanPrefix"
+                render={({ field }) => (
+                    <FormItem className="max-w-xs">
+                        <FormLabel>Challan Prefix</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g., CHLN" {...field} />
+                        </FormControl>
+                        <FormDescription>Prefix for new challan IDs.</FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+        <Separator className="my-6" />
+
         <div className="flex items-start gap-6">
           <div className="w-1/4 space-y-2">
              <h3 className="font-semibold px-1">My Formats</h3>
@@ -270,7 +293,7 @@ export function ChallanFormatSettings() {
                   <div className="flex items-center gap-4">
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save All Formats
+                        Save Formats
                     </Button>
                     <Dialog>
                         <DialogTrigger asChild>

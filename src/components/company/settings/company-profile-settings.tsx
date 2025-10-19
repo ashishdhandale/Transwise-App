@@ -84,7 +84,7 @@ export function CompanyProfileSettings() {
                 if (result.success) {
                     form.reset(result.data);
                 } else {
-                    // If parsing fails (e.g. new field 'challanPrefix' is missing), set defaults
+                    // If parsing fails (e.g. new field is missing), set defaults
                     form.reset({
                         ...form.getValues(), // keep existing valid values
                         ...profileData, // override with loaded data
@@ -153,25 +153,11 @@ export function CompanyProfileSettings() {
                         control={form.control}
                         name="companyName"
                         render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="lg:col-span-2">
                                 <FormLabel>Company Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Your Company Name" {...field} />
                                 </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="challanPrefix"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Challan Prefix</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g., CHLN" {...field} />
-                                </FormControl>
-                                 <FormDescription>Prefix for new challan IDs.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -379,5 +365,3 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
-
-    
