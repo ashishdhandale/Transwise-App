@@ -30,6 +30,7 @@ const SummaryItem = ({ label, value }: { label: string; value?: string | number 
 );
 
 type DeliveryItemStatus = 'Delivered' | 'Return';
+type DeliveryPaymentMode = 'Cash' | 'Online' | 'Cheque';
 
 interface DeliveryItem extends LrDetail {
     deliveryStatus: DeliveryItemStatus;
@@ -38,6 +39,7 @@ interface DeliveryItem extends LrDetail {
     remarks: string;
     podFile?: File | null;
     podFileName?: string;
+    deliveryPaymentMode?: DeliveryPaymentMode;
 }
 
 export function BulkDeliveryForm() {
@@ -254,10 +256,23 @@ export function BulkDeliveryForm() {
                                                 <TableCell className={`${tdClass} p-2 max-w-xs truncate`}>{item.itemDescription}</TableCell>
                                                 <TableCell className={`${tdClass} p-2 text-right`}>{item.quantity}</TableCell>
                                                 <TableCell className={`${tdClass} p-2 text-right`}>{item.grandTotal.toFixed(2)}</TableCell>
-                                                <TableCell className={`${tdClass} p-2`}>{item.lrType}</TableCell>
+                                                <TableCell className="p-2">
+                                                    {item.lrType === 'TOPAY' ? (
+                                                        <Select value={item.deliveryPaymentMode} onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryPaymentMode', value as DeliveryPaymentMode)}>
+                                                            <SelectTrigger className="h-8"><SelectValue placeholder="Select..." /></SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="Cash">Cash</SelectItem>
+                                                                <SelectItem value="Online">Online</SelectItem>
+                                                                <SelectItem value="Cheque">Cheque</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    ) : (
+                                                        <span className="text-sm font-semibold">{item.lrType}</span>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="p-2">
                                                     <Select value={item.deliveryStatus} onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryStatus', value)}>
-                                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="Delivered">Delivered</SelectItem>
                                                             <SelectItem value="Return">Return</SelectItem>
@@ -265,13 +280,13 @@ export function BulkDeliveryForm() {
                                                     </Select>
                                                 </TableCell>
                                                 <TableCell className="p-2">
-                                                    <Input value={item.receivedBy} onChange={(e) => handleItemChange(item.lrNo, 'receivedBy', e.target.value)} placeholder="Receiver's name" />
+                                                    <Input className="h-8" value={item.receivedBy} onChange={(e) => handleItemChange(item.lrNo, 'receivedBy', e.target.value)} placeholder="Receiver's name" />
                                                 </TableCell>
                                                 <TableCell className="p-2">
                                                     <DatePicker date={item.deliveryDate} setDate={(date) => handleItemChange(item.lrNo, 'deliveryDate', date)} />
                                                 </TableCell>
                                                 <TableCell className="p-2">
-                                                     <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[item.lrNo]?.click()}>
+                                                     <Button variant="outline" size="sm" className="h-8" onClick={() => fileInputRefs.current[item.lrNo]?.click()}>
                                                         <Upload className="mr-2 h-4 w-4"/> 
                                                         {item.podFileName ? 'Change' : 'Upload'}
                                                      </Button>
@@ -284,7 +299,7 @@ export function BulkDeliveryForm() {
                                                      {item.podFileName && <p className="text-xs text-muted-foreground truncate max-w-20 mt-1">{item.podFileName}</p>}
                                                 </TableCell>
                                                 <TableCell className="p-2">
-                                                    <Input value={item.remarks} onChange={(e) => handleItemChange(item.lrNo, 'remarks', e.target.value)} placeholder="Optional remarks"/>
+                                                    <Input className="h-8" value={item.remarks} onChange={(e) => handleItemChange(item.lrNo, 'remarks', e.target.value)} placeholder="Optional remarks"/>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
