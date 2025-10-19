@@ -1,31 +1,23 @@
-
 'use client';
 
 import { Suspense } from 'react';
 import DashboardLayout from '../../../(dashboard)/layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BookingTypeReport } from '@/components/company/reports/booking-type-report';
 
 function BookingTypeReportPage() {
   return (
-    <main className="flex-1 p-4 md:p-8">
-        <Card>
-            <CardHeader>
-                <CardTitle>Booking Type Wise Report</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>Report content will be implemented here.</p>
-            </CardContent>
-        </Card>
-    </main>
+    <DashboardLayout>
+      <main className="flex-1 p-4 md:p-6">
+        <BookingTypeReport />
+      </main>
+    </DashboardLayout>
   );
 }
 
 export default function BookingTypeReportRootPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <DashboardLayout>
-        <BookingTypeReportPage />
-      </DashboardLayout>
+      <BookingTypeReportPage />
     </Suspense>
   );
 }
