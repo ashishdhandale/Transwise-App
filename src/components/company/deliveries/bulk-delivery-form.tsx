@@ -1,44 +1,48 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { useState, useMemo, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, Layers, FileText } from 'lucide-react';
+import { Search, Loader2, Layers, FileText, Undo2 } from 'lucide-react';
 import { getChallanData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { saveBookings, getBookings } from '@/lib/bookings-dashboard-data';
+import { saveBookings, getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { addHistoryLog } from '@/lib/history-data';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
 
 const SummaryItem = ({ label, value }: { label: string; value?: string | number }) => (
     <div>
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium text-muted-foreground uppercase">{label}</p>
         <p className="font-semibold uppercase">{value || 'N/A'}</p>
     </div>
 );
 
+type DeliveryItemStatus = 'Delivered' | 'Return';
+
+interface DeliveryItem extends LrDetail {
+    deliveryStatus: DeliveryItemStatus;
+    deliveryDate: Date;
+    receivedBy: string;
+    remarks: string;
+}
 
 export function BulkDeliveryForm() {
     const [challanId, setChallanId] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [foundChallan, setFoundChallan] = useState<Challan | null>(null);
-    const [foundLrs, setFoundLrs] = useState<LrDetail[]>([]);
+    const [deliveryItems, setDeliveryItems] = useState<DeliveryItem[]>([]);
     const [selectedLrs, setSelectedLrs] = useState<Set<string>>(new Set());
-    
-    // Delivery confirmation fields
-    const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(new Date());
-    const [receivedBy, setReceivedBy] = useState('');
-    const [remarks, setRemarks] = useState('');
 
     const { toast } = useToast();
     const router = useRouter();
@@ -46,9 +50,8 @@ export function BulkDeliveryForm() {
     const handleSearchChallan = () => {
         if (!challanId) return;
         setIsLoading(true);
-        // Clear previous results
         setFoundChallan(null);
-        setFoundLrs([]);
+        setDeliveryItems([]);
         setSelectedLrs(new Set());
         
         setTimeout(() => {
@@ -57,8 +60,15 @@ export function BulkDeliveryForm() {
             if (challan) {
                 const allLrDetails = getLrDetailsData();
                 const lrs = allLrDetails.filter(lr => lr.challanId === challan.challanId);
+                const items: DeliveryItem[] = lrs.map(lr => ({
+                    ...lr,
+                    deliveryStatus: 'Delivered',
+                    deliveryDate: new Date(),
+                    receivedBy: '',
+                    remarks: ''
+                }));
                 setFoundChallan(challan);
-                setFoundLrs(lrs);
+                setDeliveryItems(items);
             } else {
                 toast({
                     title: 'Not Found',
@@ -71,60 +81,78 @@ export function BulkDeliveryForm() {
     };
 
     const handleConfirmDelivery = () => {
-        if (!foundChallan || selectedLrs.size === 0 || !deliveryDate || !receivedBy) {
-            toast({ title: 'Missing Information', description: 'Please select LRs and fill all delivery details.', variant: 'destructive'});
+        if (!foundChallan || selectedLrs.size === 0) {
+            toast({ title: 'Missing Information', description: 'Please select LRs to confirm.', variant: 'destructive'});
+            return;
+        }
+
+        const itemsToProcess = deliveryItems.filter(item => selectedLrs.has(item.lrNo));
+        const invalidItems = itemsToProcess.filter(item => !item.receivedBy || !item.deliveryDate);
+        if (invalidItems.length > 0) {
+            toast({ title: 'Missing Details', description: 'Please fill "Received By" and "Delivery Date" for all selected items.', variant: 'destructive'});
             return;
         }
 
         const allBookings = getBookings();
+        const bookingsToUpdate: Booking[] = [];
+        const bookingsToAdd: Booking[] = [];
         const deliveryMemoNo = `DM-BLK-${Date.now()}`;
         
-        const updatedBookings = allBookings.map(booking => {
-            if (selectedLrs.has(booking.lrNo)) {
-                addHistoryLog(
-                    booking.lrNo,
-                    'Delivered',
-                    'System (Bulk)',
-                    `Delivered via bulk update from Challan #${foundChallan.challanId}. Received by: ${receivedBy}`
-                );
-                return { 
-                    ...booking, 
-                    status: 'Delivered' as const,
-                    deliveryMemoNo,
+        itemsToProcess.forEach(item => {
+            const originalBooking = allBookings.find(b => b.lrNo === item.lrNo);
+            if (!originalBooking) return;
+
+            if (item.deliveryStatus === 'Delivered') {
+                addHistoryLog(item.lrNo, 'Delivered', 'System (Bulk)', `Delivered via bulk update from Challan #${foundChallan.challanId}. Received by: ${item.receivedBy}. Remarks: ${item.remarks}`);
+                bookingsToUpdate.push({ ...originalBooking, status: 'Delivered', deliveryMemoNo });
+            } else { // Return
+                addHistoryLog(item.lrNo, 'Partially Delivered', 'System (Bulk)', `Returned via bulk update from Challan #${foundChallan.challanId}. Remarks: ${item.remarks}`);
+                
+                const returnLrNo = `${item.lrNo}-R`;
+                const returnBooking: Booking = {
+                    ...originalBooking,
+                    trackingId: `TRK-RET-${Date.now()}`,
+                    lrNo: returnLrNo,
+                    fromCity: originalBooking.toCity, // Reverse route
+                    toCity: originalBooking.fromCity,
+                    lrType: 'TBB', // Typically returns are To Be Billed
+                    status: 'In Stock',
+                    bookingDate: new Date().toISOString(),
                 };
+                bookingsToUpdate.push({ ...originalBooking, status: 'Partially Delivered' });
+                bookingsToAdd.push(returnBooking);
+                addHistoryLog(returnLrNo, 'Booking Created', 'System (Return)', `Return generated from LR #${item.lrNo}.`);
             }
-            return booking;
         });
+        
+        const updatedBookings = allBookings.map(b => {
+            const updatedVersion = bookingsToUpdate.find(ub => ub.trackingId === b.trackingId);
+            return updatedVersion || b;
+        }).concat(bookingsToAdd);
 
         saveBookings(updatedBookings);
-        toast({ title: 'Success', description: `${selectedLrs.size} consignments marked as delivered.`});
+        toast({ title: 'Success', description: `${selectedLrs.size} consignments have been processed.`});
         router.push('/company/deliveries');
     };
     
     const handleSelectAll = (checked: boolean | string) => {
-        if (checked) {
-            setSelectedLrs(new Set(foundLrs.map(lr => lr.lrNo)));
-        } else {
-            setSelectedLrs(new Set());
-        }
+        setSelectedLrs(checked ? new Set(deliveryItems.map(lr => lr.lrNo)) : new Set());
     };
     
     const handleSelectRow = (lrNo: string) => {
         const newSelection = new Set(selectedLrs);
-        if (newSelection.has(lrNo)) {
-            newSelection.delete(lrNo);
-        } else {
-            newSelection.add(lrNo);
-        }
+        newSelection.has(lrNo) ? newSelection.delete(lrNo) : newSelection.add(lrNo);
         setSelectedLrs(newSelection);
+    };
+    
+    const handleItemChange = (lrNo: string, field: keyof DeliveryItem, value: any) => {
+        setDeliveryItems(prev => prev.map(item => item.lrNo === lrNo ? { ...item, [field]: value } : item));
     };
 
     const totals = useMemo(() => {
-        const lrsToTotal = foundLrs.filter(lr => selectedLrs.size > 0 ? selectedLrs.has(lr.lrNo) : true);
-        const totalQty = lrsToTotal.reduce((sum, lr) => sum + lr.quantity, 0);
-        const totalAmount = lrsToTotal.reduce((sum, lr) => sum + lr.grandTotal, 0);
-        return { totalQty, totalAmount, count: lrsToTotal.length };
-    }, [foundLrs, selectedLrs]);
+        const lrsToTotal = deliveryItems.filter(lr => selectedLrs.size > 0 ? selectedLrs.has(lr.lrNo) : true);
+        return { count: lrsToTotal.length };
+    }, [deliveryItems, selectedLrs]);
 
 
     return (
@@ -178,94 +206,58 @@ export function BulkDeliveryForm() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Consignments in Challan</CardTitle>
+                            <CardTitle>Update Delivery Status for Consignments</CardTitle>
                         </CardHeader>
                         <CardContent>
-                             <div className="overflow-x-auto border rounded-md max-h-[40vh]">
+                             <div className="overflow-x-auto border rounded-md">
                                 <Table>
-                                    <TableHeader className="sticky top-0 bg-card z-10">
+                                    <TableHeader>
                                         <TableRow>
-                                            <TableHead className={`${thClass} w-12`}>
-                                                <Checkbox
-                                                    checked={selectedLrs.size > 0 && selectedLrs.size === foundLrs.length}
-                                                    onCheckedChange={handleSelectAll}
-                                                />
-                                            </TableHead>
+                                            <TableHead className={`${thClass} w-12`}><Checkbox checked={selectedLrs.size > 0 && selectedLrs.size === deliveryItems.length} onCheckedChange={handleSelectAll}/></TableHead>
                                             <TableHead className={thClass}>LR No.</TableHead>
-                                            <TableHead className={thClass}>From</TableHead>
-                                            <TableHead className={thClass}>To</TableHead>
                                             <TableHead className={thClass}>Receiver</TableHead>
-                                            <TableHead className={`${thClass} text-right`}>Qty</TableHead>
-                                            <TableHead className={`${thClass} text-right`}>Total Amt.</TableHead>
+                                            <TableHead className={thClass}>Status</TableHead>
+                                            <TableHead className={thClass}>Received By</TableHead>
+                                            <TableHead className={thClass}>Delivery Date</TableHead>
+                                            <TableHead className={thClass}>Remarks</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {foundLrs.map(lr => (
-                                            <TableRow 
-                                                key={lr.lrNo}
-                                                data-state={selectedLrs.has(lr.lrNo) && "selected"}
-                                            >
+                                        {deliveryItems.map(item => (
+                                            <TableRow key={item.lrNo} data-state={selectedLrs.has(item.lrNo) && "selected"}>
+                                                <TableCell className="p-2"><Checkbox checked={selectedLrs.has(item.lrNo)} onCheckedChange={() => handleSelectRow(item.lrNo)}/></TableCell>
+                                                <TableCell className={`${tdClass} p-2`}>{item.lrNo}</TableCell>
+                                                <TableCell className={`${tdClass} p-2`}>{item.receiver}</TableCell>
                                                 <TableCell className="p-2">
-                                                    <Checkbox
-                                                        checked={selectedLrs.has(lr.lrNo)}
-                                                        onCheckedChange={() => handleSelectRow(lr.lrNo)}
-                                                    />
+                                                    <Select value={item.deliveryStatus} onValueChange={(value) => handleItemChange(item.lrNo, 'deliveryStatus', value)}>
+                                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Delivered">Delivered</SelectItem>
+                                                            <SelectItem value="Return">Return</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </TableCell>
-                                                <TableCell className={`${tdClass} p-2`}>{lr.lrNo}</TableCell>
-                                                <TableCell className={`${tdClass} p-2`}>{lr.from}</TableCell>
-                                                <TableCell className={`${tdClass} p-2`}>{lr.to}</TableCell>
-                                                <TableCell className={`${tdClass} p-2`}>{lr.receiver}</TableCell>
-                                                <TableCell className={`${tdClass} p-2 text-right`}>{lr.quantity}</TableCell>
-                                                <TableCell className={`${tdClass} p-2 text-right`}>{lr.grandTotal.toFixed(2)}</TableCell>
+                                                <TableCell className="p-2">
+                                                    <Input value={item.receivedBy} onChange={(e) => handleItemChange(item.lrNo, 'receivedBy', e.target.value)} placeholder="Receiver's name" />
+                                                </TableCell>
+                                                <TableCell className="p-2">
+                                                    <DatePicker date={item.deliveryDate} setDate={(date) => handleItemChange(item.lrNo, 'deliveryDate', date)} />
+                                                </TableCell>
+                                                <TableCell className="p-2">
+                                                    <Input value={item.remarks} onChange={(e) => handleItemChange(item.lrNo, 'remarks', e.target.value)} placeholder="Optional remarks"/>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
-                                     <TableFooter>
-                                        <TableRow className="font-bold bg-muted">
-                                            <td colSpan={5} className="p-2 text-right">{selectedLrs.size > 0 ? `Selected Total (${totals.count} LRs):` : `Grand Total (${totals.count} LRs):`}</td>
-                                            <td className="p-2 text-right">{totals.totalQty}</td>
-                                            <td className="p-2 text-right">{totals.totalAmount.toFixed(2)}</td>
-                                        </TableRow>
-                                    </TableFooter>
                                 </Table>
                             </div>
                         </CardContent>
                     </Card>
-                    
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Delivery Confirmation Details</CardTitle>
-                            <CardDescription>Enter the details for this bulk delivery. This will apply to all selected consignments.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             <div>
-                                <Label>Delivery Date</Label>
-                                <DatePicker date={deliveryDate} setDate={setDeliveryDate} />
-                            </div>
-                            <div className="md:col-span-2">
-                                <Label htmlFor="received-by">Received By</Label>
-                                <Input
-                                    id="received-by"
-                                    value={receivedBy}
-                                    onChange={(e) => setReceivedBy(e.target.value)}
-                                    placeholder="Enter name of person who received the goods"
-                                />
-                            </div>
-                            <div className="md:col-span-3">
-                                <Label htmlFor="remarks">Remarks</Label>
-                                <Textarea
-                                    id="remarks"
-                                    value={remarks}
-                                    onChange={(e) => setRemarks(e.target.value)}
-                                    placeholder="Add any delivery notes or remarks..."
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
+
                     <div className="flex justify-end">
                         <Button size="lg" onClick={handleConfirmDelivery} disabled={selectedLrs.size === 0}>
-                            <FileText className="mr-2 h-5 w-5"/>
-                            Confirm Delivery for {selectedLrs.size} LR(s)
+                           {selectedLrs.has('Return') ? <Undo2 className="mr-2 h-5 w-5"/> : <FileText className="mr-2 h-5 w-5"/>}
+                            Confirm & Process {selectedLrs.size} Selected LR(s)
                         </Button>
                     </div>
                 </div>
@@ -274,4 +266,3 @@ export function BulkDeliveryForm() {
     );
 }
 
-    
