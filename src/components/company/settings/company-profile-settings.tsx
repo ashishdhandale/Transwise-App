@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -53,27 +53,9 @@ export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
 
 export function CompanyProfileSettings() {
     const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-
-    const form = useForm<CompanyProfileFormValues>({
-        resolver: zodResolver(profileSchema),
-        defaultValues: {
-            companyName: '',
-            lrPrefix: '',
-            challanPrefix: '',
-            headOfficeAddress: '',
-            officeAddress2: '',
-            city: '',
-            pan: '',
-            gstNo: '',
-            companyContactNo: '',
-            companyEmail: '',
-            currency: 'INR',
-            countryCode: 'en-IN',
-            grnFormat: 'with_char',
-        },
-    });
+    // We get the form context from the parent page
+    const form = useFormContext<CompanyProfileFormValues>();
 
     useEffect(() => {
         async function loadProfile() {
@@ -88,7 +70,6 @@ export function CompanyProfileSettings() {
                     form.reset({
                         ...form.getValues(), // keep existing valid values
                         ...profileData, // override with loaded data
-                        challanPrefix: profileData.challanPrefix || 'CHLN' // provide default for new field
                     });
                 }
             } catch (error) {
@@ -104,24 +85,6 @@ export function CompanyProfileSettings() {
         }
         loadProfile();
     }, [form, toast]);
-
-    async function onSubmit(values: CompanyProfileFormValues) {
-        setIsSubmitting(true);
-        const result = await saveCompanyProfile(values);
-        if (result.success) {
-            toast({
-                title: "Profile Updated",
-                description: "Your company profile has been saved successfully.",
-            });
-        } else {
-             toast({
-                title: "Error",
-                description: result.message,
-                variant: "destructive"
-            });
-        }
-        setIsSubmitting(false);
-    }
     
     if (isLoading) {
         return (
@@ -148,12 +111,12 @@ export function CompanyProfileSettings() {
         <CardContent>
             {/* The Form and form elements are now part of the parent page's form, so we don't need a new one here. */}
             <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <FormField
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                     <FormField
                         control={form.control}
                         name="companyName"
                         render={({ field }) => (
-                            <FormItem className="lg:col-span-2">
+                            <FormItem className="md:col-span-2">
                                 <FormLabel>Company Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Your Company Name" {...field} />
@@ -162,35 +125,34 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
-                </div>
-                
-                <FormField
-                    control={form.control}
-                    name="headOfficeAddress"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Head Office Address</FormLabel>
-                            <FormControl>
-                                <Textarea placeholder="Head Office Address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="officeAddress2"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Office Address 2 (Optional)</FormLabel>
-                            <FormControl>
-                                <Textarea placeholder="Branch or secondary address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <FormField
+                        control={form.control}
+                        name="headOfficeAddress"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Head Office Address</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Head Office Address" {...field} rows={2} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="officeAddress2"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Office Address 2 (Optional)</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Branch or secondary address" {...field} rows={2} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                     <FormField
                         control={form.control}
                         name="city"
@@ -236,7 +198,7 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
-                    <FormField
+                     <FormField
                         control={form.control}
                         name="lrPrefix"
                         render={({ field }) => (
@@ -250,8 +212,6 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="pan"
@@ -278,8 +238,6 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="companyContactNo"
@@ -309,8 +267,6 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="currency"
@@ -359,5 +315,3 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
-
-    
