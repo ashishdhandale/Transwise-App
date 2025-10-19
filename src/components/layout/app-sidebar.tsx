@@ -460,20 +460,6 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className="flex items-center gap-3 p-2 rounded-lg">
-          <Avatar className="size-8">
-            <AvatarImage
-              src={`https://picsum.photos/seed/${avatarSeed}/40/40`}
-              alt="User"
-            />
-            <AvatarFallback>{avatarFallback}</AvatarFallback>
-          </Avatar>
-           <div className={cn("flex-1 overflow-hidden", state === 'collapsed' && 'group-hover/sidebar-wrapper:block hidden', state === 'expanded' && 'block')}>
-            <p className="text-sm font-medium truncate">{user}</p>
-            <p className="text-sm text-muted-foreground truncate">{email}</p>
-          </div>
-          <MoreHorizontal className={cn("size-5", state === 'collapsed' && 'group-hover/sidebar-wrapper:block hidden', state === 'expanded' && 'block')} />
-        </div>
       </SidebarFooter>
     </Sidebar>
   );

@@ -52,26 +52,29 @@ export function AppHeader() {
     router.push('/');
   };
   
-  let user, userRole, avatarSeed, avatarFallback;
+  let user, email, userRole, avatarSeed, avatarFallback;
 
   if (isAdmin) {
     user = 'Sup.Admin';
+    email = 'admin@transwise.in';
     userRole = 'Sup.Admin';
     avatarSeed = 'admin-avatar';
     avatarFallback = 'SA';
   } else if (isCompany) {
     user = profile?.companyName || 'Company Admin';
+    email = profile?.companyEmail || 'company@transwise.in';
     userRole = 'My Account';
     avatarSeed = 'company-avatar';
     avatarFallback = user.charAt(0) || 'C';
   } else if (isBranch) {
     user = 'Priya Singh (Branch)';
+    email = 'priya.singh@branch.com';
     userRole = 'My Account';
     avatarSeed = 'branch-avatar';
     avatarFallback = 'PS';
   } else {
     user = 'Guest';
-    userRole = 'Guest';
+    email = 'guest@transwise.in';
     avatarSeed = 'guest-avatar';
     avatarFallback = 'G';
   }
@@ -105,7 +108,10 @@ export function AppHeader() {
             </Button>
           </PreviousBookingDialog>
         )}
-        <span className="text-sm font-medium">{user}</span>
+        <div className="text-right">
+            <p className="text-sm font-medium">{user}</p>
+            <p className="text-xs text-primary-foreground/80">{email}</p>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative hover:bg-primary-foreground/10">
