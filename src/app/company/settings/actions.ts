@@ -11,7 +11,7 @@ export type AllCompanySettings = CompanyProfileFormValues & GeneralInstructionsS
 const LOCAL_STORAGE_KEY_COMPANY_SETTINGS = 'transwise_company_settings';
 
 
-const defaultSettings: AllCompanySettings = {
+export const defaultSettings: AllCompanySettings = {
     // Company Profile
     companyName: 'My Transwise Company',
     lrPrefix: 'CONAG',
@@ -33,11 +33,13 @@ const defaultSettings: AllCompanySettings = {
     defaultItemRows: 2,
 };
 
+// This function is safe to call on the server and client. It returns only the default values.
+export function getDefaultCompanySettings(): AllCompanySettings {
+    return defaultSettings;
+}
 
-export async function getCompanySettings(): Promise<AllCompanySettings> {
-    if (typeof window === 'undefined') {
-        return defaultSettings;
-    }
+// This function should only be called on the client side, inside a useEffect.
+export function loadCompanySettingsFromStorage(): AllCompanySettings {
     try {
         const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY_COMPANY_SETTINGS);
         if (savedSettings) {
@@ -50,6 +52,7 @@ export async function getCompanySettings(): Promise<AllCompanySettings> {
     }
     return defaultSettings;
 }
+
 
 export async function saveCompanySettings(data: AllCompanySettings): Promise<{ success: boolean; message: string }> {
     if (typeof window === 'undefined') {

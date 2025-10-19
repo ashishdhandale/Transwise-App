@@ -18,9 +18,10 @@ import { PrintFormatSettings } from '@/components/company/settings/print-format-
 import { ChallanFormatSettings } from '@/components/company/settings/challan-format-settings';
 import { BackButton } from '@/components/ui/back-button';
 import { DashboardSettings } from '@/components/company/settings/dashboard-settings';
-import { getCompanySettings, saveCompanySettings, type AllCompanySettings } from './actions';
+import { saveCompanySettings, type AllCompanySettings, getDefaultCompanySettings, loadCompanySettingsFromStorage } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { ClientOnly } from '@/components/ui/client-only';
 
 // Combined schema for the entire settings page
 const combinedSettingsSchema = z.object({
@@ -68,34 +69,15 @@ function CompanySettingsPage() {
   // A single form for the entire settings page
   const form = useForm<AllCompanySettings>({
     resolver: zodResolver(combinedSettingsSchema),
-    defaultValues: {
-      companyName: '',
-      lrPrefix: '',
-      challanPrefix: '',
-      headOfficeAddress: '',
-      officeAddress2: '',
-      city: '',
-      pan: '',
-      gstNo: '',
-      companyContactNo: '',
-      companyEmail: '',
-      currency: 'INR',
-      countryCode: 'en-IN',
-      grnFormat: 'with_char',
-      printCopy: [],
-      sendNotification: [],
-      defaultItemRows: 2,
-    },
+    // Initialize with default settings to avoid hydration mismatch
+    defaultValues: getDefaultCompanySettings(),
   });
 
    useEffect(() => {
-        async function loadSettings() {
-            const settings = await getCompanySettings();
-            form.reset(settings);
-        }
-        loadSettings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        // Load settings from localStorage only on the client side
+        const settings = loadCompanySettingsFromStorage();
+        form.reset(settings);
+    }, [form]);
 
     async function onSubmit(values: AllCompanySettings) {
         setIsSubmitting(true);
@@ -121,7 +103,9 @@ function CompanySettingsPage() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <BackButton />
+              <ClientOnly>
+                <BackButton />
+              </ClientOnly>
               <h1 className="text-3xl font-bold tracking-tight font-headline flex items-center gap-2">
                   <Settings className="h-8 w-8" />
                   Company Settings
