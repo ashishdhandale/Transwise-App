@@ -23,7 +23,7 @@ const tdClass = "whitespace-nowrap uppercase";
 const SummaryItem = ({ label, value }: { label: string; value?: string | number }) => (
     <div>
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <p className="font-semibold">{value || 'N/A'}</p>
+        <p className="font-semibold uppercase">{value || 'N/A'}</p>
     </div>
 );
 
