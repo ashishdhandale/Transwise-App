@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { PreviousBookingDialog } from '../company/bookings/previous-booking-dialog';
 import { useEffect, useState } from 'react';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 const notifications: {id: number, message: string}[] = [
@@ -32,8 +32,8 @@ export function AppHeader() {
   const [profile, setProfile] = useState<AllCompanySettings | null>(null);
 
   useEffect(() => {
-    async function loadProfile() {
-      const profileData = await getCompanySettings();
+    function loadProfile() {
+      const profileData = loadCompanySettingsFromStorage();
       setProfile(profileData);
     }
     if(pathname.startsWith('/company')) {
