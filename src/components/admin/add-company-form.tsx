@@ -38,7 +38,7 @@ const formSchema = z.object({
   headOfficeAddress: z.string().min(10, { message: 'Address must be at least 10 characters.' }),
   officeAddress2: z.string().optional(),
   state: z.string().min(1, { message: 'State is required.' }),
-  city: z.string().min(1, { message: 'City is required.' }),
+  city: zstring().min(1, { message: 'City is required.' }),
   transportId: z.string().optional(),
   pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, { message: 'Invalid PAN format.' }).optional().or(z.literal('')),
   gstNo: z.string().length(15, { message: 'GST Number must be 15 characters.' }).optional().or(z.literal('')),
@@ -77,10 +77,6 @@ export default function AddCompanyForm() {
   const [licenceTypes, setLicenceTypes] = useState<LicenceType[]>([]);
   const [companyId, setCompanyId] = useState('');
 
-  useEffect(() => {
-    setLicenceTypes(getLicenceTypes());
-  }, []);
-
   const form = useForm<AddCompanyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -111,13 +107,14 @@ export default function AddCompanyForm() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    // Set client-side only values after resetting
     setCompanyId(generateCompanyId());
     form.setValue('password', generateRandomPassword());
   }, [form]);
 
 
   useEffect(() => {
+    setLicenceTypes(getLicenceTypes());
+
     if (userId) { // View or Edit mode
       const userToView = sampleExistingUsers.find(u => String(u.id) === userId);
       if (userToView) {
@@ -144,8 +141,9 @@ export default function AddCompanyForm() {
           password: '' // Clear password field for security
         });
       }
-    } else { // New mode - set these values on mount for client only
+    } else { // New mode
       setFormTitle('Add New User Business Details');
+      // Set client-side only values after initial render
       setCompanyId(generateCompanyId());
       form.setValue('password', generateRandomPassword());
     }

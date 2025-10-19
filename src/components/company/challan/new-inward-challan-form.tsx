@@ -89,11 +89,15 @@ export function NewInwardChallanForm() {
     
     const watchedChallanValues = form.watch();
 
-    const tempChallanId = useMemo(() => `TEMP-INW-${Date.now()}`, []);
+    const [tempChallanId, setTempChallanId] = useState('');
+
+    useEffect(() => {
+        setTempChallanId(`TEMP-INW-${Date.now()}`);
+    }, []);
 
     useEffect(() => {
         async function loadInitialData() {
-            const profile = await getCompanyProfile();
+            const profile = await getCompanySettings();
             setCompanyProfile(profile);
             setCities(getCities());
             setCustomers(getCustomers());
