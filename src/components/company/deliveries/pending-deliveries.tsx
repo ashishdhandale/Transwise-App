@@ -5,7 +5,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { Clock, Search } from 'lucide-react';
+import { getChallanData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
+import { Clock, Search, ChevronDown } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { getBranches, type Branch } from '@/lib/branch-data';
@@ -18,42 +19,98 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ClientOnly } from '@/components/ui/client-only';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
 
+interface ChallanWithBookings extends Challan {
+    bookings: Booking[];
+}
+
 export function PendingDeliveries() {
-    const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
+    const [allChallans, setAllChallans] = useState<Challan[]>([]);
+    const [allBookings, setAllBookings] = useState<Booking[]>([]);
+    const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [branches, setBranches] = useState<Branch[]>([]);
     const [selectedBranch, setSelectedBranch] = useState('ALL');
+    const [openChallanIds, setOpenChallanIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
-        const allBookings = getBookings();
-        // Pending deliveries are those that are "In Transit"
-        const pending = allBookings.filter(b => b.status === 'In Transit');
-        setPendingBookings(pending);
+        const allBookingsData = getBookings();
+        setAllBookings(allBookingsData);
+        setAllChallans(getChallanData());
+        setAllLrDetails(getLrDetailsData());
         setBranches(getBranches());
     }, []);
 
-    const filteredBookings = useMemo(() => {
-        let bookings = pendingBookings;
+    const challansWithPendingDeliveries = useMemo(() => {
+        // Find bookings that are 'In Transit'
+        const pendingBookings = allBookings.filter(b => b.status === 'In Transit');
+        const pendingBookingMap = new Map(pendingBookings.map(b => [b.lrNo, b]));
+
+        // Find which challans these bookings belong to
+        const challanToLrMap = new Map<string, string[]>();
+        allLrDetails.forEach(lr => {
+            if (pendingBookingMap.has(lr.lrNo)) {
+                if (!challanToLrMap.has(lr.challanId)) {
+                    challanToLrMap.set(lr.challanId, []);
+                }
+                challanToLrMap.get(lr.challanId)!.push(lr.lrNo);
+            }
+        });
+        
+        // Construct the final data structure
+        const result: ChallanWithBookings[] = [];
+        challanToLrMap.forEach((lrNos, challanId) => {
+            const challan = allChallans.find(c => c.challanId === challanId);
+            if (challan) {
+                const bookingsForChallan = lrNos.map(lrNo => pendingBookingMap.get(lrNo)).filter((b): b is Booking => !!b);
+                result.push({ ...challan, bookings: bookingsForChallan });
+            }
+        });
+
+        return result;
+
+    }, [allBookings, allChallans, allLrDetails]);
+    
+    const filteredData = useMemo(() => {
+        let data = challansWithPendingDeliveries;
 
         if (selectedBranch !== 'ALL') {
-            bookings = bookings.filter(b => b.branchName === selectedBranch);
+            data = data.filter(c => c.bookings.some(b => b.branchName === selectedBranch));
         }
 
-        if (!searchTerm) return bookings;
+        if (!searchTerm) return data;
         
         const lowerQuery = searchTerm.toLowerCase();
-        return bookings.filter(b => 
-            b.lrNo.toLowerCase().includes(lowerQuery) ||
-            b.toCity.toLowerCase().includes(lowerQuery) ||
-            b.receiver.toLowerCase().includes(lowerQuery)
+        return data.filter(c => 
+            c.challanId.toLowerCase().includes(lowerQuery) ||
+            c.vehicleNo.toLowerCase().includes(lowerQuery) ||
+            c.toStation.toLowerCase().includes(lowerQuery) ||
+            c.bookings.some(b => b.lrNo.toLowerCase().includes(lowerQuery) || b.receiver.toLowerCase().includes(lowerQuery))
         );
-    }, [pendingBookings, searchTerm, selectedBranch]);
+    }, [challansWithPendingDeliveries, searchTerm, selectedBranch]);
 
-    const totalQty = useMemo(() => filteredBookings.reduce((sum, b) => sum + b.qty, 0), [filteredBookings]);
+
+    const totalQty = useMemo(() => filteredData.flatMap(c => c.bookings).reduce((sum, b) => sum + b.qty, 0), [filteredData]);
+    const totalConsignments = useMemo(() => filteredData.reduce((sum, c) => sum + c.bookings.length, 0), [filteredData]);
+
+    const toggleChallan = (challanId: string) => {
+        setOpenChallanIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(challanId)) {
+                newSet.delete(challanId);
+            } else {
+                newSet.add(challanId);
+            }
+            return newSet;
+        })
+    }
+
 
     return (
         <div className="space-y-4">
@@ -67,7 +124,7 @@ export function PendingDeliveries() {
                 <CardHeader>
                     <ClientOnly>
                         <div className="flex justify-between items-center">
-                            <CardTitle className="font-headline">Consignments Ready for Delivery</CardTitle>
+                            <CardTitle className="font-headline">Consignments In Transit</CardTitle>
                             <div className="flex items-center gap-4">
                                 <div className="w-full max-w-xs">
                                     <Label htmlFor="branch-filter">Filter by Branch</Label>
@@ -87,7 +144,7 @@ export function PendingDeliveries() {
                                     <Label>Search</Label>
                                     <Search className="absolute left-2.5 top-8 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                        placeholder="by LR, City, or Receiver..."
+                                        placeholder="Challan, Vehicle, LR, City..."
                                         className="pl-8"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -99,48 +156,66 @@ export function PendingDeliveries() {
                 </CardHeader>
                 <CardContent>
                     <ClientOnly>
-                        <div className="overflow-x-auto border rounded-md">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className={thClass}>#</TableHead>
-                                        <TableHead className={thClass}>LR No.</TableHead>
-                                        <TableHead className={thClass}>Booking Date</TableHead>
-                                        <TableHead className={thClass}>From</TableHead>
-                                        <TableHead className={thClass}>To</TableHead>
-                                        <TableHead className={thClass}>Receiver</TableHead>
-                                        <TableHead className={thClass}>Item</TableHead>
-                                        <TableHead className={`${thClass} text-right`}>Qty</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredBookings.length > 0 ? (
-                                        filteredBookings.map((booking, index) => (
-                                            <TableRow key={booking.trackingId}>
-                                                <TableCell>{index + 1}</TableCell>
-                                                <TableCell className={`${tdClass} font-medium`}>{booking.lrNo}</TableCell>
-                                                <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')}</TableCell>
-                                                <TableCell className={tdClass}>{booking.fromCity}</TableCell>
-                                                <TableCell className={tdClass}>{booking.toCity}</TableCell>
-                                                <TableCell className={tdClass}>{booking.receiver}</TableCell>
-                                                <TableCell className={`${tdClass} max-w-xs truncate`}>{booking.itemDescription}</TableCell>
-                                                <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
-                                                No pending deliveries found.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                        <div className="space-y-2">
+                            {filteredData.length > 0 ? (
+                                filteredData.map((challan) => (
+                                    <Collapsible key={challan.challanId} open={openChallanIds.has(challan.challanId)} onOpenChange={() => toggleChallan(challan.challanId)} className="border rounded-md">
+                                        <CollapsibleTrigger asChild>
+                                            <div className="flex items-center justify-between p-3 bg-muted/50 cursor-pointer hover:bg-muted">
+                                                <div className="flex items-center gap-4">
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                                                        <ChevronDown className={cn("h-5 w-5 transition-transform", openChallanIds.has(challan.challanId) && 'rotate-180')}/>
+                                                    </Button>
+                                                    <span className="font-bold text-primary">{challan.challanId}</span>
+                                                    <span>({challan.bookings.length} LRs)</span>
+                                                    <span className="text-sm text-muted-foreground">To: <span className="font-semibold text-foreground">{challan.toStation}</span></span>
+                                                    <span className="text-sm text-muted-foreground">Vehicle: <span className="font-semibold text-foreground">{challan.vehicleNo}</span></span>
+                                                </div>
+                                                <span className="text-sm text-muted-foreground">Date: {format(parseISO(challan.dispatchDate), 'dd-MMM-yyyy')}</span>
+                                            </div>
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent>
+                                            <div className="overflow-x-auto p-2">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>#</TableHead>
+                                                            <TableHead>LR No.</TableHead>
+                                                            <TableHead>Booking Date</TableHead>
+                                                            <TableHead>From</TableHead>
+                                                            <TableHead>Receiver</TableHead>
+                                                            <TableHead>Item</TableHead>
+                                                            <TableHead className="text-right">Qty</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {challan.bookings.map((booking, index) => (
+                                                            <TableRow key={booking.trackingId}>
+                                                                <TableCell>{index + 1}</TableCell>
+                                                                <TableCell className="font-medium">{booking.lrNo}</TableCell>
+                                                                <TableCell>{format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')}</TableCell>
+                                                                <TableCell>{booking.fromCity}</TableCell>
+                                                                <TableCell>{booking.receiver}</TableCell>
+                                                                <TableCell className="max-w-xs truncate">{booking.itemDescription}</TableCell>
+                                                                <TableCell className="text-right">{booking.qty}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </CollapsibleContent>
+                                    </Collapsible>
+                                ))
+                            ) : (
+                                <div className="text-center p-8 h-24 text-muted-foreground">
+                                    No pending deliveries found.
+                                </div>
+                            )}
                         </div>
                     </ClientOnly>
                 </CardContent>
                 <CardFooter className="justify-end font-semibold">
-                    Total Pending Consignments: {filteredBookings.length} | Total Packages: {totalQty}
+                    Total Pending Consignments: {totalConsignments} | Total Packages: {totalQty}
                 </CardFooter>
             </Card>
         </div>
