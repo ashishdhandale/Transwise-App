@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, GripVertical } from 'lucide-react';
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -20,6 +19,8 @@ import {
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
+
 
 const columnSchema = z.object({
   id: z.string(),
@@ -30,11 +31,12 @@ const columnSchema = z.object({
   width: z.string().optional(),
 });
 
-const settingsSchema = z.object({
+export const itemDetailsSchema = z.object({
   columns: z.array(columnSchema),
 });
 
-export type ItemDetailsSettingsValues = z.infer<typeof settingsSchema>;
+
+export type ItemDetailsSettingsValues = z.infer<typeof itemDetailsSchema>;
 export type ColumnSetting = z.infer<typeof columnSchema>;
 
 const LOCAL_STORAGE_KEY = 'transwise_item_details_settings';
@@ -56,63 +58,15 @@ const defaultColumns: ColumnSetting[] = [
 
 
 export function ItemDetailsSettings() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const form = useForm<ItemDetailsSettingsValues>({
-    resolver: zodResolver(settingsSchema),
-    defaultValues: { columns: [] },
-  });
+  // We get the form context from the parent page
+  const form = useFormContext<AllCompanySettings>();
 
   const { fields, append, remove, move } = useFieldArray({
     control: form.control,
-    name: 'columns',
+    name: 'itemColumns',
   });
   
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        if (parsed.columns) {
-          // Merge saved with default to ensure all columns are present
-          const savedCustom = parsed.columns.filter((c: ColumnSetting) => c.isCustom);
-          const mergedColumns = defaultColumns.map(dc => parsed.columns.find((sc: ColumnSetting) => sc.id === dc.id) || dc);
-          form.reset({ columns: [...mergedColumns, ...savedCustom] });
-        } else {
-            form.reset({ columns: defaultColumns });
-        }
-      } else {
-         form.reset({ columns: defaultColumns });
-      }
-    } catch (error) {
-      console.error("Failed to load item details settings", error);
-      form.reset({ columns: defaultColumns });
-    }
-  }, [form]);
-
-  const onSubmit = async (data: ItemDetailsSettingsValues) => {
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-      toast({
-        title: 'Settings Saved',
-        description: 'Item table preferences have been updated.',
-      });
-    } catch (error) {
-      console.error("Failed to save settings", error);
-      toast({
-        title: 'Error',
-        description: 'Could not save settings. Please try again.',
-        variant: 'destructive',
-      });
-    }
-    setIsSubmitting(false);
-  };
   
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -136,8 +90,6 @@ export function ItemDetailsSettings() {
         <CardDescription>Drag to reorder, toggle visibility, and add custom columns to the item details table on the booking form.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-3">
               {fields.map((field, index) => (
                 <div 
@@ -154,12 +106,12 @@ export function ItemDetailsSettings() {
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                       <FormField
                           control={form.control}
-                          name={`columns.${index}.label`}
+                          name={`itemColumns.${index}.label`}
                           render={({ field }) => (
                               <FormItem>
                               <FormLabel>Column Label</FormLabel>
                               <FormControl>
-                                  <Input placeholder="e.g., Batch No." {...field} disabled={!form.getValues(`columns.${index}.isCustom`)} />
+                                  <Input placeholder="e.g., Batch No." {...field} disabled={!form.getValues(`itemColumns.${index}.isCustom`)} />
                               </FormControl>
                               <FormMessage />
                               </FormItem>
@@ -167,7 +119,7 @@ export function ItemDetailsSettings() {
                       />
                        <FormField
                           control={form.control}
-                          name={`columns.${index}.width`}
+                          name={`itemColumns.${index}.width`}
                           render={({ field }) => (
                               <FormItem>
                               <FormLabel>Column Width</FormLabel>
@@ -182,7 +134,7 @@ export function ItemDetailsSettings() {
                   <div className="flex items-center gap-3 pl-4">
                       <FormField
                           control={form.control}
-                          name={`columns.${index}.isVisible`}
+                          name={`itemColumns.${index}.isVisible`}
                           render={({ field }) => (
                               <FormItem className="flex flex-col items-center gap-2">
                                   <FormLabel>Visible</FormLabel>
@@ -224,18 +176,7 @@ export function ItemDetailsSettings() {
                   Add Custom Column
               </Button>
             </div>
-            
-            <Separator />
-
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Table Preferences
-            </Button>
-          </form>
-        </Form>
       </CardContent>
     </Card>
   );
 }
-
-

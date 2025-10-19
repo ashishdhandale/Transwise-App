@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
@@ -9,8 +8,8 @@ import { z } from 'zod';
 import DashboardLayout from '../../(dashboard)/layout';
 import { BookingSettings } from '@/components/company/settings/booking-settings';
 import { Settings, Server, Loader2 } from 'lucide-react';
-import { AdditionalChargesSettings } from '@/components/company/settings/additional-charges-settings';
-import { ItemDetailsSettings } from '@/components/company/settings/item-details-settings';
+import { AdditionalChargesSettings, chargeSchema } from '@/components/company/settings/additional-charges-settings';
+import { ItemDetailsSettings, itemDetailsSchema } from '@/components/company/settings/item-details-settings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { GeneralInstructionsSettings } from '@/components/company/settings/general-instructions-settings';
@@ -18,7 +17,7 @@ import { CompanyProfileSettings } from '@/components/company/settings/company-pr
 import { PrintFormatSettings } from '@/components/company/settings/print-format-settings';
 import { ChallanFormatSettings } from '@/components/company/settings/challan-format-settings';
 import { BackButton } from '@/components/ui/back-button';
-import { DashboardSettings } from '@/components/company/settings/dashboard-settings';
+import { DashboardSettings, dashboardSettingsSchema } from '@/components/company/settings/dashboard-settings';
 import { saveCompanySettings, type AllCompanySettings, getDefaultCompanySettings, loadCompanySettingsFromStorage } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -51,6 +50,11 @@ const combinedSettingsSchema = z.object({
   
   // Booking Settings fields
   defaultItemRows: z.coerce.number().min(1, 'Must have at least 1 row.').max(10, 'Cannot exceed 10 rows.'),
+  
+  // Fields from other child components
+  additionalCharges: z.array(chargeSchema),
+  itemColumns: z.array(itemDetailsSchema.shape.columns.element),
+  vehicleDocReminderDays: dashboardSettingsSchema.shape.vehicleDocReminderDays,
 
 }).superRefine((data, ctx) => {
     if (data.grnFormat === 'with_char' && (!data.lrPrefix || data.lrPrefix.length < 2)) {
