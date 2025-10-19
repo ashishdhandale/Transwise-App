@@ -12,7 +12,7 @@ import type { Account } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
 import { getLedgerForCustomer } from '@/lib/accounts-data';
 import { getLedgerForVendor } from '@/lib/vendor-accounts-data';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { getAccounts } from '@/lib/account-data';
 
@@ -23,9 +23,9 @@ export function AccountsDashboard() {
     const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
     useEffect(() => {
-        async function loadData() {
+        function loadData() {
             try {
-                const profile = await getCompanySettings();
+                const profile = loadCompanySettingsFromStorage();
                 setCompanyProfile(profile);
                 setAccounts(getAccounts());
             } catch (error) {

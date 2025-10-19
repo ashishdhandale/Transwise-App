@@ -37,7 +37,7 @@ import {
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DispatchChallan } from './dispatch-challan';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import { getDrivers } from '@/lib/driver-data';
 import type { Driver } from '@/lib/types';
 import jsPDF from 'jspdf';
@@ -192,8 +192,8 @@ export function ChallanDashboard() {
   const router = useRouter();
 
 
-  const loadChallanData = async () => {
-      const profile = await getCompanySettings();
+  const loadChallanData = () => {
+      const profile = loadCompanySettingsFromStorage();
       setCompanyProfile(profile);
       setDrivers(getDrivers());
       setAllChallans(getChallanData());

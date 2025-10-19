@@ -10,7 +10,7 @@ import { ShippingDetails } from './shipping-details';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { getHistoryLogs, type BookingHistory } from '@/lib/history-data';
 import { getBookings } from '@/lib/bookings-dashboard-data';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Card } from '@/components/ui/card';
 import { getChallanData, getLrDetailsData, type LrDetail } from '@/lib/challan-data';
@@ -25,10 +25,10 @@ export function PackageTracking() {
   const [allLrDetails, setAllLrDetails] = useState<LrDetail[]>([]);
 
   useEffect(() => {
-    async function loadData() {
+    function loadData() {
         const bookings = getBookings();
         setAllTrackableItems(bookings);
-        const profile = await getCompanySettings();
+        const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         setAllLrDetails(getLrDetailsData());
     }

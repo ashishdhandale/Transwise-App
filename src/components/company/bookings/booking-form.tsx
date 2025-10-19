@@ -39,7 +39,7 @@ import { Button } from '@/components/ui/button';
 import { Download, Loader2, Printer } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { VehicleDetailsSection } from './vehicle-details-section';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
@@ -352,10 +352,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, []);
 
     useEffect(() => {
-        const loadInitialData = async () => {
+        const loadInitialData = () => {
             try {
                 loadMasterData();
-                const profile = await getCompanySettings();
+                const profile = loadCompanySettingsFromStorage();
                 setCompanyProfile(profile);
 
                 if (bookingData) {

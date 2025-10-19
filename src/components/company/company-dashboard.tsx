@@ -9,7 +9,7 @@ import { TodaysBusinessCards } from './todays-business-cards';
 import { Monitor } from 'lucide-react';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { isToday, subDays, format, parseISO } from 'date-fns';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { Reminders } from './reminders';
 import { useSearchParams } from 'next/navigation';
@@ -25,9 +25,9 @@ export function CompanyDashboard() {
   const userBranchName = userRole === 'Company' ? undefined : 'Pune Hub'; 
 
   useEffect(() => {
-    async function loadData() {
+    function loadData() {
         setAllBookings(getBookings());
-        const profile = await getCompanySettings();
+        const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
     }
     loadData();

@@ -21,7 +21,7 @@ import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
-import { getCompanyProfile } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
 
 const thClass = "bg-destructive/10 text-destructive font-semibold whitespace-nowrap";
@@ -37,9 +37,9 @@ export function CancellationReport() {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        async function loadData() {
+        function loadData() {
             setAllBookings(getBookings());
-            const profile = await getCompanyProfile();
+            const profile = loadCompanySettingsFromStorage();
             setCompanyProfile(profile);
         }
         loadData();

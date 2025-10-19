@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
 import type { DateRange } from 'react-day-picker';
-import { getCompanyProfile } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -64,11 +65,11 @@ export function BookingTypeReport() {
 
 
     useEffect(() => {
-        async function loadData() {
+        function loadData() {
             setAllBookings(getBookings());
             setAllCustomers(getCustomers());
             setAllCities(getCities());
-            const profile = await getCompanyProfile();
+            const profile = loadCompanySettingsFromStorage();
             setCompanyProfile(profile);
         }
         loadData();

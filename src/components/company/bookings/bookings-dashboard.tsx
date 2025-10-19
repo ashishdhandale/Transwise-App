@@ -52,7 +52,7 @@ import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
 import { ViewBookingDialog } from './view-booking-dialog';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import { BookingReceipt } from './booking-receipt';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -103,7 +103,7 @@ export function BookingsDashboard() {
 
   const loadBookings = async () => {
     try {
-        const profile = await getCompanySettings();
+        const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         setBookings(getBookings());
     } catch (error) {
@@ -548,5 +548,3 @@ export function BookingsDashboard() {
     </ClientOnly>
   );
 }
-
-    

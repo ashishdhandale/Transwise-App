@@ -20,7 +20,7 @@ import { Combobox } from '@/components/ui/combobox';
 import type { Customer } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
@@ -45,9 +45,9 @@ export function TaxReport() {
     const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
     useEffect(() => {
-        async function loadData() {
+        function loadData() {
             setAllBookings(getBookings());
-            const profile = await getCompanySettings();
+            const profile = loadCompanySettingsFromStorage();
             setCompanyProfile(profile);
             try {
                 const savedCustomers = localStorage.getItem(CUSTOMERS_KEY);
@@ -145,7 +145,7 @@ export function TaxReport() {
                             <TableBody>
                                 {taxBookings.length > 0 ? (
                                     taxBookings.map((booking, index) => (
-                                        <TableRow key={booking.id}>
+                                        <TableRow key={booking.trackingId}>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell className={`${tdClass} font-medium`}>{booking.lrNo}</TableCell>
                                             <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')}</TableCell>
