@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -57,6 +56,8 @@ export function BookingTypeReport() {
     const [isDownloading, setIsDownloading] = useState(false);
     
     const reportRef = useRef<HTMLDivElement>(null);
+    const generationDate = useMemo(() => new Date(), []);
+
 
     useEffect(() => {
         async function loadData() {
@@ -248,6 +249,7 @@ export function BookingTypeReport() {
                         <div className="text-center mb-6">
                             <h2 className="text-2xl font-bold text-gray-800">{companyProfile?.companyName || 'Your Company'}</h2>
                             <h3 className="text-xl font-semibold text-gray-600">Booking Type Wise Report</h3>
+                            <p className="text-xs text-gray-500">Generated on: {format(generationDate, "dd-MMM-yyyy hh:mm a")}</p>
                             <div className="text-xs text-gray-500 mt-1">
                                 {bookingTypeFilter !== 'ALL' && <p>Booking Type: {bookingTypeFilter}</p>}
                                 {customerFilter && <p>Customer: {customerFilter}</p>}
