@@ -1,13 +1,22 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { Clock, Search } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Input } from '@/components/ui/input';
+import { getBranches, type Branch } from '@/lib/branch-data';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
@@ -15,23 +24,33 @@ const tdClass = "whitespace-nowrap uppercase";
 export function PendingDeliveries() {
     const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [branches, setBranches] = useState<Branch[]>([]);
+    const [selectedBranch, setSelectedBranch] = useState('ALL');
 
     useEffect(() => {
         const allBookings = getBookings();
         // Pending deliveries are those that are "In Transit"
         const pending = allBookings.filter(b => b.status === 'In Transit');
         setPendingBookings(pending);
+        setBranches(getBranches());
     }, []);
 
     const filteredBookings = useMemo(() => {
-        if (!searchTerm) return pendingBookings;
+        let bookings = pendingBookings;
+
+        if (selectedBranch !== 'ALL') {
+            bookings = bookings.filter(b => b.branchName === selectedBranch);
+        }
+
+        if (!searchTerm) return bookings;
+        
         const lowerQuery = searchTerm.toLowerCase();
-        return pendingBookings.filter(b => 
+        return bookings.filter(b => 
             b.lrNo.toLowerCase().includes(lowerQuery) ||
             b.toCity.toLowerCase().includes(lowerQuery) ||
             b.receiver.toLowerCase().includes(lowerQuery)
         );
-    }, [pendingBookings, searchTerm]);
+    }, [pendingBookings, searchTerm, selectedBranch]);
 
     const totalQty = useMemo(() => filteredBookings.reduce((sum, b) => sum + b.qty, 0), [filteredBookings]);
 
@@ -47,14 +66,31 @@ export function PendingDeliveries() {
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <CardTitle className="font-headline">Consignments Ready for Delivery</CardTitle>
-                        <div className="relative w-full max-w-sm">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search by LR, City, or Receiver..."
-                                className="pl-8"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                        <div className="flex items-center gap-4">
+                            <div className="w-full max-w-xs">
+                                <Label htmlFor="branch-filter">Filter by Branch</Label>
+                                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                                    <SelectTrigger id="branch-filter">
+                                        <SelectValue placeholder="Select Branch" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">ALL (Default)</SelectItem>
+                                        {branches.map(branch => (
+                                            <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="relative w-full max-w-sm">
+                                <Label>Search</Label>
+                                <Search className="absolute left-2.5 top-8 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="by LR, City, or Receiver..."
+                                    className="pl-8"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
                 </CardHeader>
