@@ -51,7 +51,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
 import { ViewBookingDialog } from './view-booking-dialog';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { getCompanySettings } from '@/app/company/settings/actions';
 import { BookingReceipt } from './booking-receipt';
 import jsPDF from 'jspdf';
@@ -85,7 +85,7 @@ export function BookingsDashboard() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPartialCancelDialogOpen, setIsPartialCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
   
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [bookingToPrint, setBookingToPrint] = useState<Booking | null>(null);
@@ -186,7 +186,7 @@ export function BookingsDashboard() {
       pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
       height -= pdfHeight;
     }
-    pdf.save(\`receipt-\${bookingToPrint.lrNo}-\${copyTypeToPrint}.pdf\`);
+    pdf.save(`receipt-${bookingToPrint.lrNo}-${copyTypeToPrint}.pdf`);
     setIsDownloading(false);
     setIsPrintDialogOpen(false);
   };
@@ -233,7 +233,7 @@ export function BookingsDashboard() {
     addHistoryLog(bookingToCancel.lrNo, 'Booking Cancelled', 'Admin', 'Booking status set to Cancelled.');
     toast({
       title: 'Booking Cancelled',
-      description: \`LR No: \${bookingToCancel.lrNo} has been successfully cancelled.\`,
+      description: `LR No: ${bookingToCancel.lrNo} has been successfully cancelled.`,
     });
     setIsCancelConfirmationOpen(false);
     setCancelConfirmationInput('');
@@ -336,8 +336,8 @@ export function BookingsDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className={\`\${thClass} w-[80px]\`}>Action</TableHead>
-                      <TableHead className={\`\${thClass} w-[50px]\`}>#</TableHead>
+                      <TableHead className={`${thClass} w-[80px]`}>Action</TableHead>
+                      <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                       <TableHead className={thClass}>LR No</TableHead>
                       <TableHead className={thClass}>Date</TableHead>
                       <TableHead className={thClass}>From City</TableHead>
@@ -346,9 +346,9 @@ export function BookingsDashboard() {
                       <TableHead className={thClass}>Sender</TableHead>
                       <TableHead className={thClass}>Receiver</TableHead>
                       <TableHead className={thClass}>Contents</TableHead>
-                      <TableHead className={\`\${thClass} text-right\`}>Qty</TableHead>
-                      <TableHead className={\`\${thClass} text-right\`}>Chg Wt</TableHead>
-                      <TableHead className={\`\${thClass} text-right\`}>Total Amount</TableHead>
+                      <TableHead className={`${thClass} text-right`}>Qty</TableHead>
+                      <TableHead className={`${thClass} text-right`}>Chg Wt</TableHead>
+                      <TableHead className={`${thClass} text-right`}>Total Amount</TableHead>
                       <TableHead className={thClass}>Status</TableHead>
                       <TableHead className={thClass}>Load Type</TableHead>
                     </TableRow>
@@ -403,7 +403,7 @@ export function BookingsDashboard() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
-                          <TableCell className={\`\${tdClass} text-center\`}>{index + 1}</TableCell>
+                          <TableCell className={`${tdClass} text-center`}>{index + 1}</TableCell>
                           <TableCell className={tdClass}>
                             <Tooltip>
                               <TooltipTrigger asChild><p className="cursor-help">{booking.lrNo}</p></TooltipTrigger>
@@ -426,9 +426,9 @@ export function BookingsDashboard() {
                               </TooltipContent>
                             </Tooltip>
                           </TableCell>
-                          <TableCell className={\`\${tdClass} text-right\`}>{booking.qty}</TableCell>
-                          <TableCell className={\`\${tdClass} text-right\`}>{booking.chgWt}</TableCell>
-                          <TableCell className={\`\${tdClass} text-right\`}>{formatCurrency(booking.totalAmount)}</TableCell>
+                          <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
+                          <TableCell className={`${tdClass} text-right`}>{booking.chgWt}</TableCell>
+                          <TableCell className={`${tdClass} text-right`}>{formatCurrency(booking.totalAmount)}</TableCell>
                           <TableCell className={tdClass}>
                             <Badge variant="outline" className={cn('font-bold', statusColors[booking.status])}>
                                 {booking.status}
@@ -548,3 +548,5 @@ export function BookingsDashboard() {
     </ClientOnly>
   );
 }
+
+    
