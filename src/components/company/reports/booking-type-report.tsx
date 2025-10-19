@@ -56,7 +56,11 @@ export function BookingTypeReport() {
     const [isDownloading, setIsDownloading] = useState(false);
     
     const reportRef = useRef<HTMLDivElement>(null);
-    const generationDate = useMemo(() => new Date(), []);
+    const [generationDate, setGenerationDate] = useState<Date | null>(null);
+
+    useEffect(() => {
+        setGenerationDate(new Date());
+    }, []);
 
 
     useEffect(() => {
@@ -102,8 +106,8 @@ export function BookingTypeReport() {
         const customerNames = new Set<string>();
         allCustomers.forEach(c => customerNames.add(c.name));
         allBookings.forEach(b => {
-            customerNames.add(b.sender);
-            customerNames.add(b.receiver);
+            if(b.sender) customerNames.add(b.sender);
+            if(b.receiver) customerNames.add(b.receiver);
         });
         return Array.from(customerNames).sort().map(name => ({ label: name, value: name }));
     }, [allCustomers, allBookings]);
@@ -257,7 +261,7 @@ export function BookingTypeReport() {
                         <div className="text-center mb-6">
                             <h2 className="text-2xl font-bold text-gray-800">{companyProfile?.companyName || 'Your Company'}</h2>
                             <h3 className="text-xl font-semibold text-gray-600">Booking Report</h3>
-                            <p className="text-xs text-gray-500">Generated on: {format(generationDate, "dd-MMM-yyyy hh:mm a")}</p>
+                            {generationDate && <p className="text-xs text-gray-500">Generated on: {format(generationDate, "dd-MMM-yyyy hh:mm a")}</p>}
                             <div className="text-xs text-gray-500 mt-1">
                                 {bookingTypeFilter !== 'ALL' && <p>Booking Type: {bookingTypeFilter}</p>}
                                 {customerFilter && <p>Customer: {customerFilter}</p>}
