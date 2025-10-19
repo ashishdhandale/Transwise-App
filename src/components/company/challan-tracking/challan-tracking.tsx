@@ -11,8 +11,8 @@ import { LrDetailsTable } from './lr-details-table';
 import { SummarySection } from './summary-section';
 import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
 import type { Challan, LrDetail } from '@/lib/challan-data';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
-import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '../settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
 import { Card } from '@/components/ui/card';
 
 export function ChallanTracking() {
@@ -21,13 +21,13 @@ export function ChallanTracking() {
   const [filteredChallans, setFilteredChallans] = useState<Challan[]>([]);
   const [selectedChallan, setSelectedChallan] = useState<Challan | null>(null);
   const [selectedLrDetails, setSelectedLrDetails] = useState<LrDetail[]>([]);
-  const [profile, setProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [profile, setProfile] = useState<AllCompanySettings | null>(null);
 
   useEffect(() => {
     async function loadData() {
         const challans = getChallanData();
         const lrDetails = getLrDetailsData();
-        const companyProfile = await getCompanyProfile();
+        const companyProfile = await getCompanySettings();
         
         setAllChallans(challans);
         setAllLrDetails(lrDetails);

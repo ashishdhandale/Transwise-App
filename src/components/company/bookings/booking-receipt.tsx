@@ -4,13 +4,13 @@
 
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import { format, parseISO } from 'date-fns';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Separator } from '@/components/ui/separator';
 import React from 'react';
 
 interface BookingReceiptProps {
     booking: Booking;
-    companyProfile: CompanyProfileFormValues;
+    companyProfile: AllCompanySettings;
     copyType: 'Receiver' | 'Sender' | 'Driver' | 'Office';
 }
 

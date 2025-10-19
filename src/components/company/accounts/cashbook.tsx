@@ -5,8 +5,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Notebook } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
@@ -17,11 +17,11 @@ const OPENING_BALANCE = 5000; // Example opening balance
 
 export function Cashbook() {
     const [transactions, setTransactions] = useState<Booking[]>([]);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
     useEffect(() => {
         async function loadData() {
-            const profile = await getCompanyProfile();
+            const profile = await getCompanySettings();
             setCompanyProfile(profile);
             const allBookings = getBookings();
             const paidBookings = allBookings

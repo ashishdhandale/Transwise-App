@@ -3,14 +3,14 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import type { Challan } from '@/lib/challan-data';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 interface SummarySectionProps {
     challan: Challan;
-    profile: CompanyProfileFormValues | null;
+    profile: AllCompanySettings | null;
 }
 
-const SummaryItem = ({ label, value, isCurrency = true, profile, isEmphasized = false }: { label: string; value: string | number; isCurrency?: boolean; profile: CompanyProfileFormValues | null, isEmphasized?: boolean }) => (
+const SummaryItem = ({ label, value, isCurrency = true, profile, isEmphasized = false }: { label: string; value: string | number; isCurrency?: boolean; profile: AllCompanySettings | null, isEmphasized?: boolean }) => (
     <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{label}:</span>
         <span className={isEmphasized ? "font-bold text-blue-700" : "font-semibold"}>

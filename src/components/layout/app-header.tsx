@@ -18,8 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { PreviousBookingDialog } from '../company/bookings/previous-booking-dialog';
 import { useEffect, useState } from 'react';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '../company/settings/company-profile-settings';
+import { getCompanySettings } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 const notifications: {id: number, message: string}[] = [
   // Notifications will be populated dynamically
@@ -29,11 +29,11 @@ export function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [profile, setProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [profile, setProfile] = useState<AllCompanySettings | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
-      const profileData = await getCompanyProfile();
+      const profileData = await getCompanySettings();
       setProfile(profileData);
     }
     if(pathname.startsWith('/company')) {

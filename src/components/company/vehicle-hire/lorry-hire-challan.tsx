@@ -3,12 +3,12 @@
 'use client';
 
 import type { VehicleHireReceipt } from '@/lib/vehicle-hire-data';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { format } from 'date-fns';
 
 interface LorryHireChallanProps {
     receipt: VehicleHireReceipt;
-    profile: CompanyProfileFormValues;
+    profile: AllCompanySettings;
 }
 
 const DetailRow = ({ label, value }: { label: string; value?: string | number }) => (

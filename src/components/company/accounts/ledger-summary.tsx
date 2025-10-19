@@ -3,17 +3,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 interface LedgerSummaryProps {
     openingBalance: number;
     totalDebit: number;
     totalCredit: number;
     closingBalance: number;
-    profile: CompanyProfileFormValues;
+    profile: AllCompanySettings;
 }
 
-const SummaryRow = ({ label, value, className, profile }: { label: string; value: number; className?: string, profile: CompanyProfileFormValues }) => (
+const SummaryRow = ({ label, value, className, profile }: { label: string; value: number; className?: string, profile: AllCompanySettings }) => (
     <div className={cn("flex justify-between items-center p-2 rounded-md", className)}>
         <span className="font-medium">{label}</span>
         <span className="font-bold text-lg">

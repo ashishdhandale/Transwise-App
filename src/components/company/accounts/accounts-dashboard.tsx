@@ -12,20 +12,20 @@ import type { Account } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
 import { getLedgerForCustomer } from '@/lib/accounts-data';
 import { getLedgerForVendor } from '@/lib/vendor-accounts-data';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { getAccounts } from '@/lib/account-data';
 
 export function AccountsDashboard() {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
     useEffect(() => {
         async function loadData() {
             try {
-                const profile = await getCompanyProfile();
+                const profile = await getCompanySettings();
                 setCompanyProfile(profile);
                 setAccounts(getAccounts());
             } catch (error) {

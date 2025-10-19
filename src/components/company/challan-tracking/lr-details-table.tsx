@@ -13,14 +13,14 @@ import {
 import type { LrDetail } from '@/lib/challan-data';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 const thClass = 'bg-primary/10 text-primary font-bold border-r';
 const tdClass = "whitespace-nowrap border-r uppercase";
 
 interface LrDetailsTableProps {
     lrDetails: LrDetail[];
-    profile: CompanyProfileFormValues | null;
+    profile: AllCompanySettings | null;
 }
 
 export function LrDetailsTable({ lrDetails, profile }: LrDetailsTableProps) {

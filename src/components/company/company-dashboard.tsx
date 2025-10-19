@@ -9,7 +9,7 @@ import { TodaysBusinessCards } from './todays-business-cards';
 import { Monitor } from 'lucide-react';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { isToday, subDays, format, parseISO } from 'date-fns';
-import { getCompanyProfile } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { Reminders } from './reminders';
 import { useSearchParams } from 'next/navigation';
@@ -27,7 +27,7 @@ export function CompanyDashboard() {
   useEffect(() => {
     async function loadData() {
         setAllBookings(getBookings());
-        const profile = await getCompanyProfile();
+        const profile = await getCompanySettings();
         setCompanyProfile(profile);
     }
     loadData();

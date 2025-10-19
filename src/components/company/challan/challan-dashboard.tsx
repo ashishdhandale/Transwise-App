@@ -36,8 +36,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DispatchChallan } from './dispatch-challan';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
-import { getCompanyProfile } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
 import { getDrivers } from '@/lib/driver-data';
 import type { Driver } from '@/lib/types';
 import jsPDF from 'jspdf';
@@ -187,13 +187,13 @@ export function ChallanDashboard() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState<{ challan: Challan, bookings: Booking[] } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const router = useRouter();
 
 
   const loadChallanData = async () => {
-      const profile = await getCompanyProfile();
+      const profile = await getCompanySettings();
       setCompanyProfile(profile);
       setDrivers(getDrivers());
       setAllChallans(getChallanData());

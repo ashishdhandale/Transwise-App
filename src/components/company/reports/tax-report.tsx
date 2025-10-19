@@ -20,8 +20,8 @@ import { Combobox } from '@/components/ui/combobox';
 import type { Customer } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
@@ -42,12 +42,12 @@ export function TaxReport() {
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
     useEffect(() => {
         async function loadData() {
             setAllBookings(getBookings());
-            const profile = await getCompanyProfile();
+            const profile = await getCompanySettings();
             setCompanyProfile(profile);
             try {
                 const savedCustomers = localStorage.getItem(CUSTOMERS_KEY);

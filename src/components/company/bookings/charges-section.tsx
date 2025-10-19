@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { ChargeSetting } from '@/components/company/settings/additional-charges-settings';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import type { ItemRow } from './item-details-table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -26,7 +26,7 @@ interface ChargesSectionProps {
     isGstApplicable: boolean;
     onChargesChange: (charges: { [key: string]: number }) => void;
     initialCharges?: { [key: string]: number };
-    profile: CompanyProfileFormValues | null;
+    profile: AllCompanySettings | null;
     isViewOnly?: boolean;
     itemRows: ItemRow[];
 }

@@ -20,8 +20,8 @@ import { type VehicleHireReceipt, saveVehicleHireReceipts, getVehicleHireReceipt
 import { addVoucher } from '@/lib/accounts-data';
 import { LorryHireChallan } from './lorry-hire-challan';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import React from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -60,7 +60,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
     
     // Master Data
     const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
     // Dialog State
     const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
@@ -102,7 +102,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
     useEffect(() => {
         async function loadInitial() {
             loadMasterData();
-            const profile = await getCompanyProfile();
+            const profile = await getCompanySettings();
             setCompanyProfile(profile);
 
             if (existingReceipt) {

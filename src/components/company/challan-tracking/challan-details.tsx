@@ -5,14 +5,14 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import type { Challan } from '@/lib/challan-data';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 interface ChallanDetailsProps {
     challan: Challan;
-    profile: CompanyProfileFormValues | null;
+    profile: AllCompanySettings | null;
 }
 
-const DetailItem = ({ label, value, isEmphasized = false, isCurrency = false, profile }: { label: string; value: string | number; isEmphasized?: boolean, isCurrency?: boolean, profile: CompanyProfileFormValues | null }) => (
+const DetailItem = ({ label, value, isEmphasized = false, isCurrency = false, profile }: { label: string; value: string | number; isEmphasized?: boolean, isCurrency?: boolean, profile: AllCompanySettings | null }) => (
     <div>
         <span className="text-sm text-muted-foreground">{label}: </span>
         <span className={isEmphasized ? 'font-bold text-red-600 text-sm' : 'text-sm font-semibold'}>

@@ -10,8 +10,8 @@ import { LedgerSummary } from './ledger-summary';
 import type { Vendor } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
 import { getLedgerForVendor } from '@/lib/vendor-accounts-data';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 const VENDORS_KEY = 'transwise_vendors';
 
@@ -19,12 +19,12 @@ export function VendorLedgerDashboard() {
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
     useEffect(() => {
         async function loadData() {
             try {
-                const profile = await getCompanyProfile();
+                const profile = await getCompanySettings();
                 setCompanyProfile(profile);
                 const savedVendors = localStorage.getItem(VENDORS_KEY);
                 if (savedVendors) {
