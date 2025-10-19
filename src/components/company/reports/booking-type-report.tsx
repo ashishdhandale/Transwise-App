@@ -16,7 +16,7 @@ import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
 import { getCustomers, type Customer } from '@/lib/customer-data';
 import { getCities, type City } from '@/lib/city-data';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
-import { List, Search, Printer, Download, Loader2 } from 'lucide-react';
+import { List, Search, Printer, Download, Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -26,15 +26,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
-import { DatePicker } from '@/components/ui/date-picker';
-import type { DateRange } from 'react-day-picker';
+import { DateRange } from 'react-day-picker';
 import { getCompanyProfile } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
-const thClass = "bg-gray-100 text-black font-semibold whitespace-nowrap text-xs h-10";
-const tdClass = "whitespace-nowrap text-xs";
+
+const thClass = "text-left text-xs font-bold text-black border border-black p-1";
+const tdClass = "text-xs border border-black p-1";
 
 const bookingTypes = ['ALL', 'TOPAY', 'PAID', 'TBB', 'FOC'];
 
@@ -146,7 +149,7 @@ export function BookingTypeReport() {
                 <CardHeader>
                     <CardTitle className="font-headline">Filter Report</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                     <div>
                         <label className="text-sm font-medium">Booking Type</label>
                         <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
@@ -163,6 +166,45 @@ export function BookingTypeReport() {
                      <div>
                         <label className="text-sm font-medium">Destination</label>
                         <Combobox options={cityOptions} value={destinationFilter || ''} onChange={(val) => setDestinationFilter(val || null)} placeholder="All Destinations" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium">Date Range</label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <Button
+                                id="date"
+                                variant={"outline"}
+                                className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !dateRange && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateRange?.from ? (
+                                dateRange.to ? (
+                                    <>
+                                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                                    {format(dateRange.to, "LLL dd, y")}
+                                    </>
+                                ) : (
+                                    format(dateRange.from, "LLL dd, y")
+                                )
+                                ) : (
+                                <span>Pick a date range</span>
+                                )}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                initialFocus
+                                mode="range"
+                                defaultMonth={dateRange?.from}
+                                selected={dateRange}
+                                onSelect={setDateRange}
+                                numberOfMonths={2}
+                            />
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     <div className="flex gap-2">
                         <Button onClick={resetFilters}>Reset</Button>
@@ -220,8 +262,8 @@ export function BookingTypeReport() {
                                             <TableCell className={tdClass}>{booking.lrType}</TableCell>
                                             <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                                             <TableCell className={tdClass}>{booking.toCity}</TableCell>
-                                            <TableCell className={`${tdClass} max-w-xs truncate`}>{booking.sender}</TableCell>
-                                            <TableCell className={`${tdClass} max-w-xs truncate`}>{booking.receiver}</TableCell>
+                                            <TableCell className={`${tdClass} max-w-[150px] truncate`}>{booking.sender}</TableCell>
+                                            <TableCell className={`${tdClass} max-w-[150px] truncate`}>{booking.receiver}</TableCell>
                                             <TableCell className={`${tdClass} text-right`}>{booking.qty}</TableCell>
                                             <TableCell className={`${tdClass} text-right`}>{booking.chgWt.toFixed(2)}</TableCell>
                                             <TableCell className={`${tdClass} text-right`}>{formatValue(booking.totalAmount)}</TableCell>
@@ -237,7 +279,7 @@ export function BookingTypeReport() {
                             </TableBody>
                             {filteredBookings.length > 0 && (
                                 <ShadcnTableFooter>
-                                    <TableRow className="bg-gray-100">
+                                    <TableRow className="bg-gray-200">
                                         <TableCell colSpan={8} className="text-right font-bold text-base">Total</TableCell>
                                         <TableCell className="text-right font-bold text-base">{totals.qty}</TableCell>
                                         <TableCell className="text-right font-bold text-base">{totals.chgWt.toFixed(2)}</TableCell>
