@@ -2,12 +2,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm, useFormContext } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useFormContext } from 'react-hook-form';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
 import {
-  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -19,9 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Server } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getCompanyProfile, saveCompanyProfile } from '@/app/company/settings/actions';
+import { getCompanySettings } from '@/app/company/settings/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const profileSchema = z.object({
@@ -61,7 +57,7 @@ export function CompanyProfileSettings() {
         async function loadProfile() {
             try {
                 setIsLoading(true);
-                const profileData = await getCompanyProfile();
+                const profileData = await getCompanySettings();
                 const result = profileSchema.safeParse(profileData);
                 if (result.success) {
                     form.reset(result.data);
