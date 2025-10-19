@@ -41,7 +41,7 @@ const thClass = "text-left text-xs font-bold text-black border border-black p-1"
 const tdClass = "text-xs border border-black p-1";
 
 const bookingTypes = ['ALL', 'TOPAY', 'PAID', 'TBB', 'FOC'];
-const sourceTypes = ['ALL', 'System', 'Inward'];
+const sourceTypes = ['ALL', 'Regular', 'Inward'];
 
 export function BookingTypeReport() {
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -72,7 +72,11 @@ export function BookingTypeReport() {
     const filteredBookings = useMemo(() => {
         return allBookings.filter(booking => {
             if (bookingTypeFilter !== 'ALL' && booking.lrType !== bookingTypeFilter) return false;
-            if (sourceFilter !== 'ALL' && (booking.source || 'System') !== sourceFilter) return false;
+            
+            const bookingSource = booking.source || 'System';
+            if (sourceFilter === 'Regular' && bookingSource !== 'System') return false;
+            if (sourceFilter === 'Inward' && bookingSource !== 'Inward') return false;
+
             if (customerFilter && booking.sender !== customerFilter && booking.receiver !== customerFilter) return false;
             if (destinationFilter && booking.toCity !== destinationFilter) return false;
             if (dateRange?.from && dateRange?.to) {
