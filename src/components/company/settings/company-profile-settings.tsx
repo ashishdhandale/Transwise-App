@@ -49,6 +49,7 @@ export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
 export function CompanyProfileSettings() {
     // We get the form context from the parent page
     const form = useFormContext<CompanyProfileFormValues>();
+    const grnFormat = form.watch('grnFormat');
 
   return (
     <Card>
@@ -153,7 +154,7 @@ export function CompanyProfileSettings() {
                             <FormItem>
                                 <FormLabel>LR Prefix</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., CONAG" {...field} />
+                                    <Input placeholder="e.g., CONAG" {...field} disabled={grnFormat === 'plain'} />
                                 </FormControl>
                                  <FormDescription>Prefix for new LR numbers.</FormDescription>
                                 <FormMessage />
