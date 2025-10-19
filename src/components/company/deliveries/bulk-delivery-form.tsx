@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, Layers, FileText, Undo2 } from 'lucide-react';
+import { Search, Loader2, Layers, FileText, Undo2, Upload } from 'lucide-react';
 import { getChallanData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
+import { ClientOnly } from '@/components/ui/client-only';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap uppercase";
@@ -35,6 +36,8 @@ interface DeliveryItem extends LrDetail {
     deliveryDate: Date;
     receivedBy: string;
     remarks: string;
+    podFile?: File | null;
+    podFileName?: string;
 }
 
 export function BulkDeliveryForm() {
@@ -46,6 +49,8 @@ export function BulkDeliveryForm() {
 
     const { toast } = useToast();
     const router = useRouter();
+    const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
 
     const handleSearchChallan = () => {
         if (!challanId) return;
@@ -65,7 +70,9 @@ export function BulkDeliveryForm() {
                     deliveryStatus: 'Delivered',
                     deliveryDate: new Date(),
                     receivedBy: '',
-                    remarks: ''
+                    remarks: '',
+                    podFile: null,
+                    podFileName: '',
                 }));
                 setFoundChallan(challan);
                 setDeliveryItems(items);
@@ -149,6 +156,13 @@ export function BulkDeliveryForm() {
         setDeliveryItems(prev => prev.map(item => item.lrNo === lrNo ? { ...item, [field]: value } : item));
     };
 
+    const handleFileChange = (lrNo: string, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setDeliveryItems(prev => prev.map(item =>
+            item.lrNo === lrNo ? { ...item, podFile: file, podFileName: file?.name || '' } : item
+        ));
+    };
+
     const totals = useMemo(() => {
         const lrsToTotal = deliveryItems.filter(lr => selectedLrs.size > 0 ? selectedLrs.has(lr.lrNo) : true);
         return { count: lrsToTotal.length };
@@ -171,18 +185,22 @@ export function BulkDeliveryForm() {
                 <CardContent className="flex items-end gap-2">
                     <div className="w-full max-w-sm">
                         <Label htmlFor="challan-id">Challan ID</Label>
-                        <Input 
-                            id="challan-id"
-                            value={challanId}
-                            onChange={(e) => setChallanId(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearchChallan()}
-                            placeholder="Enter finalized dispatch challan ID..."
-                        />
+                         <ClientOnly>
+                            <Input 
+                                id="challan-id"
+                                value={challanId}
+                                onChange={(e) => setChallanId(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearchChallan()}
+                                placeholder="Enter finalized dispatch challan ID..."
+                            />
+                        </ClientOnly>
                     </div>
-                    <Button onClick={handleSearchChallan} disabled={isLoading}>
-                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Search className="mr-2 h-4 w-4"/>}
-                        Search
-                    </Button>
+                     <ClientOnly>
+                        <Button onClick={handleSearchChallan} disabled={isLoading}>
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Search className="mr-2 h-4 w-4"/>}
+                            Search
+                        </Button>
+                    </ClientOnly>
                 </CardContent>
             </Card>
 
@@ -192,7 +210,7 @@ export function BulkDeliveryForm() {
                         <CardHeader>
                             <CardTitle>Challan Summary</CardTitle>
                         </CardHeader>
-                        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm uppercase">
                             <SummaryItem label="Challan No" value={foundChallan.challanId} />
                             <SummaryItem label="Date" value={foundChallan.dispatchDate} />
                             <SummaryItem label="Vehicle No" value={foundChallan.vehicleNo} />
@@ -219,6 +237,7 @@ export function BulkDeliveryForm() {
                                             <TableHead className={thClass}>Status</TableHead>
                                             <TableHead className={thClass}>Received By</TableHead>
                                             <TableHead className={thClass}>Delivery Date</TableHead>
+                                            <TableHead className={thClass}>POD</TableHead>
                                             <TableHead className={thClass}>Remarks</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -244,6 +263,19 @@ export function BulkDeliveryForm() {
                                                     <DatePicker date={item.deliveryDate} setDate={(date) => handleItemChange(item.lrNo, 'deliveryDate', date)} />
                                                 </TableCell>
                                                 <TableCell className="p-2">
+                                                     <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[item.lrNo]?.click()}>
+                                                        <Upload className="mr-2 h-4 w-4"/> 
+                                                        {item.podFileName ? 'Change' : 'Upload'}
+                                                     </Button>
+                                                     <Input 
+                                                        type="file" 
+                                                        className="hidden" 
+                                                        ref={el => fileInputRefs.current[item.lrNo] = el}
+                                                        onChange={(e) => handleFileChange(item.lrNo, e)}
+                                                     />
+                                                     {item.podFileName && <p className="text-xs text-muted-foreground truncate max-w-20 mt-1">{item.podFileName}</p>}
+                                                </TableCell>
+                                                <TableCell className="p-2">
                                                     <Input value={item.remarks} onChange={(e) => handleItemChange(item.lrNo, 'remarks', e.target.value)} placeholder="Optional remarks"/>
                                                 </TableCell>
                                             </TableRow>
@@ -256,7 +288,7 @@ export function BulkDeliveryForm() {
 
                     <div className="flex justify-end">
                         <Button size="lg" onClick={handleConfirmDelivery} disabled={selectedLrs.size === 0}>
-                           {selectedLrs.has('Return') ? <Undo2 className="mr-2 h-5 w-5"/> : <FileText className="mr-2 h-5 w-5"/>}
+                           {deliveryItems.some(item => selectedLrs.has(item.lrNo) && item.deliveryStatus === 'Return') ? <Undo2 className="mr-2 h-5 w-5"/> : <FileText className="mr-2 h-5 w-5"/>}
                             Confirm & Process {selectedLrs.size} Selected LR(s)
                         </Button>
                     </div>
@@ -265,4 +297,3 @@ export function BulkDeliveryForm() {
         </div>
     );
 }
-
