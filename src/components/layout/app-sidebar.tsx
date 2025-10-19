@@ -370,13 +370,8 @@ export function AppSidebar() {
                 <CollapsibleContent>
                     <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
                         <SidebarMenuItem>
-                            <SidebarMenuButton href="/company/reports/daily-booking" size="sm" isActive={pathname === '/company/reports/daily-booking'} tooltip="Daily Booking Report">
-                                <BookCopy /> Daily Booking Report
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton href="/company/reports/booking-type" size="sm" isActive={pathname === '/company/reports/booking-type'} tooltip="Booking Type Wise Report">
-                                <List /> Booking Type Wise
+                            <SidebarMenuButton href="/company/reports/booking-type" size="sm" isActive={pathname === '/company/reports/booking-type'} tooltip="Booking Report">
+                                <List /> Booking Report
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                          <SidebarMenuItem>
