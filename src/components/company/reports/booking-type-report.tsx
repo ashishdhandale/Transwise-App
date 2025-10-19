@@ -74,9 +74,8 @@ export function BookingTypeReport() {
         return allBookings.filter(booking => {
             if (bookingTypeFilter !== 'ALL' && booking.lrType !== bookingTypeFilter) return false;
             
-            const bookingSource = booking.source || 'System';
-            if (sourceFilter === 'Regular' && bookingSource !== 'System') return false;
-            if (sourceFilter === 'Inward' && bookingSource !== 'Inward') return false;
+            const bookingSource = booking.source === 'Inward' ? 'Inward' : 'Regular';
+            if (sourceFilter !== 'ALL' && bookingSource !== sourceFilter) return false;
 
             if (customerFilter && booking.sender !== customerFilter && booking.receiver !== customerFilter) return false;
             if (destinationFilter && booking.toCity !== destinationFilter) return false;
@@ -99,7 +98,16 @@ export function BookingTypeReport() {
         };
     }, [filteredBookings]);
 
-    const customerOptions = useMemo(() => allCustomers.map(c => ({ label: c.name, value: c.name })), [allCustomers]);
+    const customerOptions = useMemo(() => {
+        const customerNames = new Set<string>();
+        allCustomers.forEach(c => customerNames.add(c.name));
+        allBookings.forEach(b => {
+            customerNames.add(b.sender);
+            customerNames.add(b.receiver);
+        });
+        return Array.from(customerNames).sort().map(name => ({ label: name, value: name }));
+    }, [allCustomers, allBookings]);
+
     const cityOptions = useMemo(() => allCities.map(c => ({ label: c.name.toUpperCase(), value: c.name })), [allCities]);
     const formatValue = (amount: number) => companyProfile ? amount.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount.toFixed(2);
     
