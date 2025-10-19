@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, type UseFormReturn } from 'react-hook-form';
+import { useForm, useFieldArray, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChallanFormatPreview } from './challan-format-preview';
 import type { PrintFormat } from './print-format-settings';
 import { fieldGroupSchema } from './print-format-settings';
-import type { CompanyProfileFormValues } from './company-profile-settings';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 
 const challanFormatSchema = z.object({
@@ -62,28 +62,25 @@ const createNewFormat = (id: string, name: string, isDefault = false): ChallanFo
     fieldGroups: JSON.parse(JSON.stringify(ALL_FIELDS_CONFIG)), // Deep copy
 });
 
-interface ChallanFormatSettingsProps {
-    profileForm: UseFormReturn<CompanyProfileFormValues>;
-}
 
-export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeFormatId, setActiveFormatId] = useState<string | null>(null);
-  const [openCollapsibles, setOpenCollapsibles] = useState<string[]>(ALL_FIELDS_CONFIG.map(g => g.groupLabel));
-
+export function ChallanFormatSettings() {
   const { toast } = useToast();
-
-  const form = useForm<ChallanSettingsFormValues>({
+  // This local form is only for managing the formats internally, not for the main page submission.
+  const localForm = useForm<ChallanSettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: { formats: [] },
   });
 
   const { fields: formatFields, append, remove } = useFieldArray({
-    control: form.control,
+    control: localForm.control,
     name: 'formats',
   });
 
-  const watchedFormats = form.watch('formats');
+  const [activeFormatId, setActiveFormatId] = useState<string | null>(null);
+  const [openCollapsibles, setOpenCollapsibles] = useState<string[]>(ALL_FIELDS_CONFIG.map(g => g.groupLabel));
+
+  const watchedFormats = localForm.watch('formats');
+  const pageForm = useFormContext<AllCompanySettings>();
 
   useEffect(() => {
     try {
@@ -91,18 +88,18 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
         if (parsed.formats && parsed.formats.length > 0) {
-          form.reset(parsed);
+          localForm.reset(parsed);
           setActiveFormatId(parsed.formats.find((f: ChallanFormat) => f.isDefault)?.id || parsed.formats[0].id);
         }
       } else {
         const defaultFormat = createNewFormat('default-1', 'Default Challan Format', true);
-        form.reset({ formats: [defaultFormat] });
+        localForm.reset({ formats: [defaultFormat] });
         setActiveFormatId(defaultFormat.id);
       }
     } catch (error) {
       console.error("Failed to load challan format settings", error);
     }
-  }, [form]);
+  }, [localForm]);
 
   const activeFormatIndex = activeFormatId ? formatFields.findIndex(f => f.id === activeFormatId) : -1;
 
@@ -119,7 +116,7 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
     remove(index);
     
     if(activeFormatId === formatToRemoveId) {
-        const remainingFormats = form.getValues('formats');
+        const remainingFormats = localForm.getValues('formats');
         if (remainingFormats.length > 0) {
             setActiveFormatId(remainingFormats[0].id);
         } else {
@@ -130,9 +127,9 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
   };
 
   const handleSetDefault = (formatId: string) => {
-      const currentFormats = form.getValues('formats');
+      const currentFormats = localForm.getValues('formats');
       const updatedFormats = currentFormats.map(f => ({ ...f, isDefault: f.id === formatId }));
-      form.setValue('formats', updatedFormats, { shouldDirty: true });
+      localForm.setValue('formats', updatedFormats, { shouldDirty: true });
   }
   
   const toggleCollapsible = (groupLabel: string) => {
@@ -141,23 +138,21 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
     );
   };
   
-  const onSubmit = async (data: ChallanSettingsFormValues) => {
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    try {
+  const handleSaveFormats = () => {
+    const data = localForm.getValues();
+     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
       toast({
-        title: 'Settings Saved',
-        description: 'Your challan format preferences have been updated.',
+        title: 'Challan Formats Saved',
+        description: 'Your challan format preferences have been updated locally.',
       });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Could not save settings.',
+        description: 'Could not save challan formats.',
         variant: 'destructive',
       });
     }
-    setIsSubmitting(false);
   };
   
   const activeFormatData = activeFormatIndex !== -1 ? watchedFormats[activeFormatIndex] : null;
@@ -173,7 +168,7 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
       <CardContent>
          <div className="mb-6">
             <FormField
-                control={profileForm.control}
+                control={pageForm.control}
                 name="challanPrefix"
                 render={({ field }) => (
                     <FormItem className="max-w-xs">
@@ -230,11 +225,10 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
 
           <div className="flex-1 border-l pl-6">
             {activeFormatIndex !== -1 && activeFormatData ? (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-6">
                   <div className="flex items-center justify-between">
                      <FormField
-                        control={form.control}
+                        control={localForm.control}
                         name={`formats.${activeFormatIndex}.name`}
                         render={({ field }) => (
                         <FormItem className="max-w-sm">
@@ -254,7 +248,7 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
 
                   <div className="space-y-2">
                     <h3 className="font-semibold">Printable Fields</h3>
-                     {form.getValues(`formats.${activeFormatIndex}.fieldGroups`).map((group, groupIndex) => (
+                     {localForm.getValues(`formats.${activeFormatIndex}.fieldGroups`).map((group, groupIndex) => (
                        <Collapsible key={group.groupLabel} open={openCollapsibles.includes(group.groupLabel)} onOpenChange={() => toggleCollapsible(group.groupLabel)} className="space-y-2">
                             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md bg-muted px-3 py-2 text-sm font-medium">
                                 {group.groupLabel}
@@ -265,7 +259,7 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
                                 {group.fields.map((field, fieldIndex) => (
                                     <FormField
                                         key={field.id}
-                                        control={form.control}
+                                        control={localForm.control}
                                         name={`formats.${activeFormatIndex}.fieldGroups.${groupIndex}.fields.${fieldIndex}.checked`}
                                         render={({ field: checkboxField }) => (
                                             <FormItem className="flex items-center space-x-2 space-y-0">
@@ -276,7 +270,7 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
                                                     />
                                                 </FormControl>
                                                 <FormLabel className="font-normal cursor-pointer">
-                                                    {form.getValues(`formats.${activeFormatIndex}.fieldGroups.${groupIndex}.fields.${fieldIndex}.label`)}
+                                                    {localForm.getValues(`formats.${activeFormatIndex}.fieldGroups.${groupIndex}.fields.${fieldIndex}.label`)}
                                                 </FormLabel>
                                             </FormItem>
                                         )}
@@ -291,8 +285,7 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
                   <Separator />
 
                   <div className="flex items-center gap-4">
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="button" onClick={handleSaveFormats}>
                         Save Formats
                     </Button>
                     <Dialog>
@@ -309,8 +302,7 @@ export function ChallanFormatSettings({ profileForm }: ChallanFormatSettingsProp
                         </DialogContent>
                     </Dialog>
                   </div>
-                </form>
-              </Form>
+                </div>
             ) : (
                 <div className="text-center text-muted-foreground p-8 h-96 flex items-center justify-center border-dashed border-2 rounded-md">
                     <p>Select a format to edit, or add a new one to begin.</p>

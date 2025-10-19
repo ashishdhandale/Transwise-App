@@ -18,14 +18,13 @@ import { PrintFormatSettings } from '@/components/company/settings/print-format-
 import { ChallanFormatSettings } from '@/components/company/settings/challan-format-settings';
 import { BackButton } from '@/components/ui/back-button';
 import { DashboardSettings } from '@/components/company/settings/dashboard-settings';
-import { Form } from '@/components/ui/form';
-import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
-import { getCompanyProfile, saveCompanyProfile } from './actions';
+import { getCompanySettings, saveCompanySettings, type AllCompanySettings } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 
-// This is a simplified combined schema. In a real app, this might be more complex.
-const profileSchema = z.object({
+// Combined schema for the entire settings page
+const combinedSettingsSchema = z.object({
+  // Company Profile fields
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
   lrPrefix: z.string().optional(),
   challanPrefix: z.string().min(2, 'Prefix must be at least 2 characters.'),
@@ -39,6 +38,18 @@ const profileSchema = z.object({
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
+  
+  // General Instructions fields
+  printCopy: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: 'You have to select at least one print option.',
+  }),
+  sendNotification: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: 'You have to select at least one notification option.',
+  }),
+  
+  // Booking Settings fields
+  defaultItemRows: z.coerce.number().min(1, 'Must have at least 1 row.').max(10, 'Cannot exceed 10 rows.'),
+
 }).superRefine((data, ctx) => {
     if (data.grnFormat === 'with_char' && (!data.lrPrefix || data.lrPrefix.length < 2)) {
         ctx.addIssue({
@@ -55,8 +66,8 @@ function CompanySettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // A single form for the entire settings page
-  const form = useForm<CompanyProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+  const form = useForm<AllCompanySettings>({
+    resolver: zodResolver(combinedSettingsSchema),
     defaultValues: {
       companyName: '',
       lrPrefix: '',
@@ -71,24 +82,27 @@ function CompanySettingsPage() {
       currency: 'INR',
       countryCode: 'en-IN',
       grnFormat: 'with_char',
+      printCopy: [],
+      sendNotification: [],
+      defaultItemRows: 2,
     },
   });
 
    useEffect(() => {
-        async function loadProfile() {
-            const profileData = await getCompanyProfile();
-            form.reset(profileData);
+        async function loadSettings() {
+            const settings = await getCompanySettings();
+            form.reset(settings);
         }
-        loadProfile();
+        loadSettings();
     }, [form]);
 
-    async function onSubmit(values: CompanyProfileFormValues) {
+    async function onSubmit(values: AllCompanySettings) {
         setIsSubmitting(true);
-        const result = await saveCompanyProfile(values);
+        const result = await saveCompanySettings(values);
         if (result.success) {
             toast({
-                title: "Profile Updated",
-                description: "Your company profile has been saved successfully.",
+                title: "Settings Saved",
+                description: "Your company settings have been successfully updated.",
             });
         } else {
              toast({
@@ -134,7 +148,7 @@ function CompanySettingsPage() {
                       <GeneralInstructionsSettings />
                       <Card>
                           <CardContent className="p-4">
-                              <Tabs defaultValue="item-table-columns" className="space-y-4">
+                              <Tabs defaultValue="item-table-rows" className="space-y-4">
                                   <TabsList>
                                       <TabsTrigger value="item-table-rows">Item Table Rows</TabsTrigger>
                                       <TabsTrigger value="item-table-columns">Item Table Columns</TabsTrigger>
@@ -158,7 +172,7 @@ function CompanySettingsPage() {
                   <PrintFormatSettings />
               </TabsContent>
               <TabsContent value="challan-formats">
-                  <ChallanFormatSettings profileForm={form} />
+                  <ChallanFormatSettings />
               </TabsContent>
               <TabsContent value="dashboard">
                   <DashboardSettings />
@@ -179,5 +193,3 @@ export default function CompanySettingsRootPage() {
     </Suspense>
   );
 }
-
-    

@@ -2,10 +2,17 @@
 'use client';
 
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
+import type { GeneralInstructionsSettingsValues } from '@/components/company/settings/general-instructions-settings';
+import type { BookingSettingsValues } from '@/components/company/settings/booking-settings';
 
-const LOCAL_STORAGE_KEY = 'transwise_company_profile';
 
-const defaultProfile: CompanyProfileFormValues = {
+export type AllCompanySettings = CompanyProfileFormValues & GeneralInstructionsSettingsValues & BookingSettingsValues;
+
+const LOCAL_STORAGE_KEY_COMPANY_SETTINGS = 'transwise_company_settings';
+
+
+const defaultSettings: AllCompanySettings = {
+    // Company Profile
     companyName: 'My Transwise Company',
     lrPrefix: 'CONAG',
     challanPrefix: 'CHLN',
@@ -18,35 +25,41 @@ const defaultProfile: CompanyProfileFormValues = {
     companyEmail: 'contact@transwise.com',
     currency: 'INR',
     countryCode: 'en-IN',
-    grnFormat: 'with_char'
+    grnFormat: 'with_char',
+    // General Instructions
+    printCopy: ['printAll', 'printSender', 'printReceiver', 'printDriver', 'printOffice'],
+    sendNotification: ['notifSms', 'notifWhatsapp'],
+    // Booking Settings
+    defaultItemRows: 2,
 };
 
-export async function getCompanyProfile(): Promise<CompanyProfileFormValues> {
+
+export async function getCompanySettings(): Promise<AllCompanySettings> {
     if (typeof window === 'undefined') {
-        // Return a default structure on the server
-        return defaultProfile;
+        return defaultSettings;
     }
     try {
-        const savedProfile = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (savedProfile) {
-            return JSON.parse(savedProfile);
+        const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY_COMPANY_SETTINGS);
+        if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            // Merge with defaults to ensure all keys are present
+            return { ...defaultSettings, ...parsed };
         }
     } catch (error) {
-        console.error("Could not load profile from localStorage", error);
+        console.error("Could not load company settings from localStorage", error);
     }
-    // Return default if nothing is saved
-    return defaultProfile;
+    return defaultSettings;
 }
 
-export async function saveCompanyProfile(data: CompanyProfileFormValues): Promise<{ success: boolean; message: string }> {
+export async function saveCompanySettings(data: AllCompanySettings): Promise<{ success: boolean; message: string }> {
     if (typeof window === 'undefined') {
       return { success: false, message: 'LocalStorage is not available.' };
     }
     try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-        return { success: true, message: 'Profile saved successfully.' };
+        localStorage.setItem(LOCAL_STORAGE_KEY_COMPANY_SETTINGS, JSON.stringify(data));
+        return { success: true, message: 'Settings saved successfully.' };
     } catch (error) {
-        console.error('Failed to save profile:', error);
+        console.error('Failed to save settings:', error);
         return { success: false, message: 'An unexpected error occurred.' };
     }
 }
