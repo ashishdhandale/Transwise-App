@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import {
@@ -15,9 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export const profileSchema = z.object({
   companyName: z.string().min(2, { message: 'Company name must be at least 2 characters.' }),
@@ -108,19 +106,9 @@ export function CompanyProfileSettings() {
                         render={({ field }) => (
                             <FormItem>
                             <FormLabel>Head Office City</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select your head office city" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="Nagpur">Nagpur</SelectItem>
-                                        <SelectItem value="Mumbai">Mumbai</SelectItem>
-                                        <SelectItem value="Pune">Pune</SelectItem>
-                                        <SelectItem value="Delhi">Delhi</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            <FormControl>
+                                <Input placeholder="Enter your head office city" {...field} />
+                            </FormControl>
                             <FormDescription>This city defines your company's legal jurisdiction.</FormDescription>
                             <FormMessage />
                             </FormItem>

@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,9 +11,7 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
-import { Combobox } from '@/components/ui/combobox';
-import type { City } from '@/lib/types';
-import { getCities } from '@/lib/city-data';
+import { Input } from '@/components/ui/input';
 
 const printOptions = [
     { id: 'printAll', label: 'ALL' },
@@ -33,15 +30,6 @@ const notificationOptions = [
 
 export function GeneralInstructionsSettings() {
   const form = useFormContext<AllCompanySettings>();
-  const [cities, setCities] = useState<City[]>([]);
-
-  useEffect(() => {
-    setCities(getCities());
-  }, []);
-
-  const cityOptions = useMemo(() => cities.map(c => ({ label: c.name, value: c.name })), [cities]);
-
-  const watchedPrintCopy = form.watch('printCopy');
 
   const handleAllChange = (checked: boolean) => {
     const allPrintIds = printOptions.map(o => o.id);
@@ -62,12 +50,9 @@ export function GeneralInstructionsSettings() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base font-semibold">Default From Station</FormLabel>
-                    <Combobox
-                      options={cityOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select a default station..."
-                    />
+                     <FormControl>
+                        <Input placeholder="Enter default station..." {...field} />
+                    </FormControl>
                      <p className="text-sm text-muted-foreground">This station will be automatically selected on the New Booking page.</p>
                   </FormItem>
                 )}
