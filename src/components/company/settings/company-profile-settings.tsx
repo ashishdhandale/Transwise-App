@@ -17,7 +17,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getCompanySettings } from '@/app/company/settings/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const profileSchema = z.object({
@@ -48,55 +47,8 @@ export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
 
 
 export function CompanyProfileSettings() {
-    const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(true);
     // We get the form context from the parent page
     const form = useFormContext<CompanyProfileFormValues>();
-
-    useEffect(() => {
-        async function loadProfile() {
-            try {
-                setIsLoading(true);
-                const profileData = await getCompanySettings();
-                const result = profileSchema.safeParse(profileData);
-                if (result.success) {
-                    form.reset(result.data);
-                } else {
-                    // If parsing fails (e.g. new field is missing), set defaults
-                    form.reset({
-                        ...form.getValues(), // keep existing valid values
-                        ...profileData, // override with loaded data
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to load company profile", error);
-                 toast({
-                    title: "Error Loading Profile",
-                    description: "Could not fetch company profile from the server.",
-                    variant: "destructive"
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        }
-        loadProfile();
-    }, [form, toast]);
-    
-    if (isLoading) {
-        return (
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-1/2" />
-                    <Skeleton className="h-4 w-3/4" />
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                </CardContent>
-            </Card>
-        )
-    }
 
   return (
     <Card>
