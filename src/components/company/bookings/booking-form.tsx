@@ -395,7 +395,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         
         let lrPrefix: string | undefined;
         if (profile?.grnFormat === 'with_char') {
-            lrPrefix = (userRole === 'Branch' ? branches.find(b => b.name === userBranchName)?.lrPrefix : profile.lrPrefix)?.trim() || undefined;
+            lrPrefix = (profile.lrPrefix)?.trim() || undefined;
         }
 
         if(profile?.grnFormat === 'plain') {
