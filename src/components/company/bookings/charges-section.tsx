@@ -50,18 +50,10 @@ export function ChargesSection({
     const [liveCalc, setLiveCalc] = useState<{[key: string]: { rate: number; type: ChargeSetting['calculationType'] } }>({});
 
     useEffect(() => {
-        try {
-            const savedSettings = localStorage.getItem('transwise_additional_charges_settings');
-            if (savedSettings) {
-                const parsed = JSON.parse(savedSettings);
-                if (parsed.charges) {
-                    setChargeSettings(parsed.charges.filter((c: ChargeSetting) => c.isVisible));
-                }
-            }
-        } catch (error) {
-            console.error("Failed to load additional charges settings", error);
-        }
-    }, []);
+      if (profile?.additionalCharges) {
+        setChargeSettings(profile.additionalCharges.filter(c => c.isVisible));
+      }
+    }, [profile]);
     
     const handleLiveCalcChange = (chargeId: string, field: 'rate' | 'type', value: string | number) => {
          setLiveCalc(prev => {
