@@ -50,7 +50,11 @@ import { ClientOnly } from '@/components/ui/client-only';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import type { ChargeSetting } from '../settings/additional-charges-settings';
 import { getBranches } from '@/lib/branch-data';
-import { getCities } from '@/lib/city-data';
+import { getCities, saveCities } from '@/lib/city-data';
+import { getCustomers, saveCustomers } from '@/lib/customer-data';
+import { getDrivers } from '@/lib/driver-data';
+import { getVendors } from '@/lib/vendor-data';
+import { getVehicles } from '@/lib/vehicle-data';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -313,24 +317,20 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const loadMasterData = useCallback(() => {
         try {
-            const savedDrivers = localStorage.getItem(LOCAL_STORAGE_KEY_DRIVERS);
-            if (savedDrivers) setDrivers(JSON.parse(savedDrivers));
-            
-            const savedVehicles = localStorage.getItem(LOCAL_STORAGE_KEY_VEHICLES);
-            if (savedVehicles) setVehicles(JSON.parse(savedVehicles));
-
-            const savedVendors = localStorage.getItem(LOCAL_STORAGE_KEY_VENDORS);
-            if (savedVendors) setVendors(JSON.parse(savedVendors));
-
+            setDrivers(getDrivers());
+            setVehicles(getVehicles());
+            setVendors(getVendors());
             setRateLists(getRateLists());
             setBranches(getBranches());
+            setCustomers(getCustomers());
+            setCities(getCities());
         } catch (error) {
             console.error("Failed to load master data", error);
         }
     }, []);
 
     const loadBookingData = useCallback((bookingToLoad: Booking) => {
-        const savedCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+        const savedCustomers: Customer[] = getCustomers();
         const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
         const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
 
@@ -339,8 +339,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setBookingDate(new Date(bookingToLoad.bookingDate));
         setBookingType(bookingToLoad.lrType);
         setLoadType(bookingToLoad.loadType || 'LTL');
-        setFromStation({ id: 0, name: bookingToLoad.fromCity, aliasCode: '', pinCode: '' });
-        setToStation({ id: 0, name: bookingToLoad.toCity, aliasCode: '', pinCode: '' });
+        const allCities = getCities();
+        setFromStation(allCities.find(c => c.name === bookingToLoad.fromCity) || null);
+        setToStation(allCities.find(c => c.name === bookingToLoad.toCity) || null);
         setSender(senderProfile);
         setReceiver(receiverProfile);
         
@@ -399,8 +400,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
         let lrPrefix: string | undefined;
 
-        if (userRole === 'Branch') {
-            const userBranch = branches.find(b => b.name === userBranchName);
+        if (userRole === 'Branch' && userBranchName) {
+            const userBranch = getBranches().find(b => b.name === userBranchName);
             if (userBranch?.lrPrefix) {
                 lrPrefix = userBranch.lrPrefix;
             }
@@ -467,7 +468,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             title: "Form Reset",
             description: "All fields have been cleared.",
         });
-    }, [companyProfile, userRole, branches, userBranchName, isOfflineMode, toast, lrNumberInputRef]);
+    }, [companyProfile, userRole, userBranchName, isOfflineMode, toast, lrNumberInputRef]);
 
 
     useEffect(() => {
@@ -489,11 +490,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     
     const maybeSaveNewParty = useCallback((party: Customer | null) => {
         if (party && party.id === 0 && party.name.trim()) { // 0 is the indicator for a new party
-            const currentCustomers: Customer[] = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
+            const currentCustomers: Customer[] = getCustomers();
             const newId = currentCustomers.length > 0 ? Math.max(...currentCustomers.map(c => c.id)) + 1 : 1;
             const newCustomer: Customer = { ...party, id: newId };
             const updatedCustomers = [newCustomer, ...currentCustomers];
-            localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(updatedCustomers));
+            saveCustomers(updatedCustomers);
             return newCustomer;
         }
         return party;
@@ -920,5 +921,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
 
 
