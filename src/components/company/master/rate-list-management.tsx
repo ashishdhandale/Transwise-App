@@ -48,8 +48,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { PrintableQuotation } from './quotation/printable-quotation';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StandardRateListEditor } from './standard-rate-list-editor';
 
@@ -60,7 +60,7 @@ const tdClass = "whitespace-nowrap";
 export function RateListManagement() {
   const [rateLists, setRateLists] = useState<RateList[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -73,11 +73,11 @@ export function RateListManagement() {
   const router = useRouter();
 
   useEffect(() => {
-    async function loadData() {
+    function loadData() {
         try {
             setRateLists(getRateLists());
             setCustomers(getCustomers());
-            const profile = await getCompanyProfile();
+            const profile = loadCompanySettingsFromStorage();
             setCompanyProfile(profile);
         } catch (error) {
           console.error("Failed to load master data", error);
@@ -259,7 +259,7 @@ export function RateListManagement() {
           </TabsContent>
         </Tabs>
       </CardContent>
-      {quotationToPrint && (
+      {quotationToPrint && companyProfile && (
         <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
