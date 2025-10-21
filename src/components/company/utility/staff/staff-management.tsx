@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -78,10 +77,18 @@ export function StaffManagement() {
     setIsDialogOpen(true);
   };
   
+  const saveStaff = (updatedStaff: Staff[]) => {
+      try {
+          localStorage.setItem('transwise_staff', JSON.stringify(updatedStaff));
+          setStaff(updatedStaff);
+      } catch (error) {
+           toast({ title: 'Error', description: 'Could not save staff data.', variant: 'destructive'});
+      }
+  }
+
   const handleDelete = (id: number) => {
     const updatedStaff = staff.filter(member => member.id !== id);
     saveStaff(updatedStaff);
-    setStaff(updatedStaff);
     toast({
       title: 'Staff Member Deleted',
       description: 'The staff member has been removed from your list.',
@@ -290,3 +297,5 @@ export function StaffManagement() {
     </Card>
   );
 }
+
+    

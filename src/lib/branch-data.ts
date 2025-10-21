@@ -23,3 +23,5 @@ export const saveBranches = (branches: Branch[]) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(branches));
 };
+
+    
