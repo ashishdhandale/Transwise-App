@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { BookingDetailsSection } from '@/components/company/bookings/booking-details-section';
@@ -227,24 +226,22 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
-    // 1. Filter for automatically generated bookings only.
+    // Filter for system-generated bookings only, which should follow a sequence.
     const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
 
-    // 2. Find the highest sequence number from the relevant bookings.
     const lastSequence = systemBookings.reduce((maxSeq, booking) => {
-        // Remove the prefix to get the number part.
-        const numPartStr = prefix ? booking.lrNo.replace(prefix, '') : booking.lrNo;
-        
-        // Use parseInt which stops at the first non-digit character. This is more robust.
-        const currentSeq = parseInt(numPartStr, 10);
-        
-        if (!isNaN(currentSeq) && currentSeq > maxSeq) {
-            return currentSeq;
+        // Use a regular expression to find the number at the end of the string.
+        // This is robust against prefixes or non-numeric parts.
+        const match = booking.lrNo.match(/\d+$/);
+        if (match) {
+            const currentSeq = parseInt(match[0], 10);
+            if (!isNaN(currentSeq) && currentSeq > maxSeq) {
+                return currentSeq;
+            }
         }
         return maxSeq;
     }, 0);
 
-    // 3. Increment and format the new number.
     const newSequence = lastSequence + 1;
     return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
 };
@@ -906,4 +903,3 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-
