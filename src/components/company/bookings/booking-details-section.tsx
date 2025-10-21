@@ -85,7 +85,13 @@ export function BookingDetailsSection({
 
     const getCityObjectByName = (name: string): City | null => {
         if (!name) return null;
-        return allCities.find(c => c.name.toLowerCase() === name.toLowerCase()) || { id: 0, name, aliasCode: '', pinCode: ''};
+        const foundCity = allCities.find(c => c.name.toLowerCase() === name.toLowerCase());
+        // If the city is not in the master list (e.g., from an old booking),
+        // create a temporary object to display its name.
+        if (!foundCity) {
+            return { id: 0, name: name, aliasCode: '', pinCode: ''};
+        }
+        return foundCity;
     };
 
     const handleFromStationChange = useCallback((stationName: string) => {
