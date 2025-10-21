@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { getBookings, type Booking } from '@/lib/bookings-dashboard-data';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Notebook } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -21,7 +21,7 @@ export function Cashbook() {
 
     useEffect(() => {
         async function loadData() {
-            const profile = await getCompanySettings();
+            const profile = await loadCompanySettingsFromStorage();
             setCompanyProfile(profile);
             const allBookings = getBookings();
             const paidBookings = allBookings

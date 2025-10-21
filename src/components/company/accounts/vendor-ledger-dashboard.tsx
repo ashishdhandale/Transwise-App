@@ -10,7 +10,7 @@ import { LedgerSummary } from './ledger-summary';
 import type { Vendor } from '@/lib/types';
 import type { LedgerEntry } from '@/lib/accounts-data';
 import { getLedgerForVendor } from '@/lib/vendor-accounts-data';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 
 const VENDORS_KEY = 'transwise_vendors';
@@ -24,7 +24,7 @@ export function VendorLedgerDashboard() {
     useEffect(() => {
         async function loadData() {
             try {
-                const profile = await getCompanySettings();
+                const profile = await loadCompanySettingsFromStorage();
                 setCompanyProfile(profile);
                 const savedVendors = localStorage.getItem(VENDORS_KEY);
                 if (savedVendors) {
@@ -85,7 +85,7 @@ export function VendorLedgerDashboard() {
                         {selectedVendor && companyProfile ? (
                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div className="lg:col-span-2">
-                                    <LedgerTable entries={ledger} customerName={selectedVendor.name} />
+                                    <LedgerTable entries={ledger} accountName={selectedVendor.name} />
                                 </div>
                                 <div className="lg:col-span-1">
                                     <LedgerSummary

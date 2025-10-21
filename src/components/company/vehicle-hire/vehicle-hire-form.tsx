@@ -20,7 +20,7 @@ import { type VehicleHireReceipt, saveVehicleHireReceipts, getVehicleHireReceipt
 import { addVoucher } from '@/lib/accounts-data';
 import { LorryHireChallan } from './lorry-hire-challan';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 import React from 'react';
 import jsPDF from 'jspdf';
@@ -102,7 +102,7 @@ export function VehicleHireForm({ onSaveSuccess, onCancel, existingReceipt }: Ve
     useEffect(() => {
         async function loadInitial() {
             loadMasterData();
-            const profile = await getCompanySettings();
+            const profile = await loadCompanySettingsFromStorage();
             setCompanyProfile(profile);
 
             if (existingReceipt) {

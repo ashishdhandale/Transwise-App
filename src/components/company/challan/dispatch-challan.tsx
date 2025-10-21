@@ -2,7 +2,7 @@
 'use client';
 
 import type { Challan } from '@/lib/challan-data';
-import type { CompanyProfileFormValues } from '../settings/company-profile-settings';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import type { Booking } from '@/lib/bookings-dashboard-data';
 import React from 'react';
@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 interface DispatchChallanProps {
     challan: Challan;
     bookings: Booking[];
-    profile: CompanyProfileFormValues;
+    profile: AllCompanySettings;
     driverMobile?: string;
 }
 

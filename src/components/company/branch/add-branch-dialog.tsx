@@ -22,8 +22,8 @@ import { getCities } from '@/lib/city-data';
 import { Combobox } from '@/components/ui/combobox';
 import { Separator } from '@/components/ui/separator';
 import { Copy } from 'lucide-react';
-import { getCompanyProfile } from '@/app/company/settings/actions';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
+import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { getBranches } from '@/lib/branch-data';
 
 interface AddBranchDialogProps {
@@ -83,7 +83,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [masterCities, setMasterCities] = useState<City[]>([]);
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
     const [allBranches, setAllBranches] = useState<Branch[]>([]);
     
     const { toast } = useToast();
@@ -92,7 +92,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
         if (isOpen) {
             async function loadData() {
                 setMasterCities(getCities());
-                const profile = await getCompanyProfile();
+                const profile = await loadCompanySettingsFromStorage();
                 setCompanyProfile(profile);
                 setAllBranches(getBranches());
 

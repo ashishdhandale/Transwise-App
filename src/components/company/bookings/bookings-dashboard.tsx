@@ -103,7 +103,7 @@ export function BookingsDashboard() {
 
   const loadBookings = async () => {
     try {
-        const profile = loadCompanySettingsFromStorage();
+        const profile = await loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         setBookings(getBookings());
     } catch (error) {

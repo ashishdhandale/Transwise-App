@@ -151,6 +151,20 @@ export function CompanyProfileSettings() {
                     />
                     <FormField
                         control={form.control}
+                        name="challanPrefix"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Challan Prefix</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g., CHLN" {...field} />
+                                </FormControl>
+                                 <FormDescription>Prefix for new challan IDs.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
                         name="pan"
                         render={({ field }) => (
                             <FormItem>
