@@ -287,23 +287,24 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, []);
 
 
-    const generateLrNumber = (bookings: Booking[], prefix: string) => {
-        const relevantLrNumbers = bookings
-            .map(b => b.lrNo)
-            .filter(lrNo => lrNo.startsWith(prefix));
-
+    const generateLrNumber = (bookings: Booking[], prefix?: string) => {
+        const isPlain = !prefix;
+        const relevantLrNumbers = isPlain
+            ? bookings.map(b => b.lrNo).filter(lrNo => /^\d+$/.test(lrNo))
+            : bookings.map(b => b.lrNo).filter(lrNo => lrNo.startsWith(prefix!));
+    
         if (relevantLrNumbers.length === 0) {
-            return `${prefix}01`;
+            return isPlain ? '1' : `${prefix}01`;
         }
-
+    
         const lastSequence = relevantLrNumbers
-            .map(lrNo => parseInt(lrNo.substring(prefix.length), 10))
+            .map(lrNo => parseInt(isPlain ? lrNo : lrNo.substring(prefix!.length), 10))
             .filter(num => !isNaN(num))
             .reduce((max, current) => Math.max(max, current), 0);
-            
+    
         const newSequence = lastSequence + 1;
-        
-        return `${prefix}${String(newSequence).padStart(2, '0')}`;
+    
+        return isPlain ? String(newSequence) : `${prefix}${String(newSequence).padStart(2, '0')}`;
     };
 
     const loadMasterData = useCallback(() => {
@@ -392,15 +393,20 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const allBookings = getBookings();
         let bookingsForPrefix = allBookings;
 
-        let lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
-         if (userRole === 'Branch') {
-            const userBranch = branches.find(b => b.name === userBranchName); 
-            if(userBranch?.lrPrefix) {
-                lrPrefix = userBranch.lrPrefix;
+        let lrPrefix: string | undefined;
+
+        if (profile?.grnFormat === 'with_char') {
+            lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
+             if (userRole === 'Branch') {
+                const userBranch = branches.find(b => b.name === userBranchName); 
+                if(userBranch?.lrPrefix) {
+                    lrPrefix = userBranch.lrPrefix;
+                }
+                // Filter bookings to only those for the current branch to get the correct sequence
+                bookingsForPrefix = allBookings.filter(b => b.branchName === userBranchName);
             }
-            // Filter bookings to only those for the current branch to get the correct sequence
-            bookingsForPrefix = allBookings.filter(b => b.branchName === userBranchName);
         }
+        
         setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(bookingsForPrefix, lrPrefix));
         
         let keyCounter = 1;
@@ -899,3 +905,4 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
