@@ -61,8 +61,7 @@ const CUSTOMERS_KEY = 'transwise_customers';
 const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
 const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
 const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
-const LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES = 'transwise_additional_charges_settings';
-const LOCAL_STORAGE_KEY_BOOKING_SETTINGS = 'transwise_booking_settings';
+const LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES = 'transwise_additional_charges';
 
 
 const createEmptyRow = (id: number): ItemRow => ({
@@ -396,26 +395,18 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const handleReset = useCallback(() => {
         const profile = companyProfile;
         const allBookings = getBookings();
-        let bookingsForPrefix = allBookings;
+        let bookingsForSequence = allBookings.filter(b => b.source !== 'Inward');
 
         let lrPrefix: string | undefined;
-
-        if (userRole === 'Branch' && userBranchName) {
-            const userBranch = getBranches().find(b => b.name === userBranchName);
-            if (userBranch?.lrPrefix) {
-                lrPrefix = userBranch.lrPrefix;
-            }
-            bookingsForPrefix = allBookings.filter(b => b.branchName === userBranchName);
-        } else if (profile?.grnFormat === 'with_char') {
+        if (profile?.grnFormat === 'with_char') {
             lrPrefix = profile.lrPrefix?.trim() || undefined;
         }
 
-        const isPlain = profile?.grnFormat === 'plain';
-        if(isPlain) {
+        if(profile?.grnFormat === 'plain') {
           lrPrefix = undefined;
         }
         
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(bookingsForPrefix, lrPrefix));
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(bookingsForSequence, lrPrefix));
         
         let keyCounter = 1;
         let defaultRows = 1;
@@ -468,7 +459,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             title: "Form Reset",
             description: "All fields have been cleared.",
         });
-    }, [companyProfile, userRole, userBranchName, isOfflineMode, toast, lrNumberInputRef]);
+    }, [companyProfile, isOfflineMode, toast, lrNumberInputRef]);
 
 
     useEffect(() => {
@@ -921,6 +912,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
 
 
 
