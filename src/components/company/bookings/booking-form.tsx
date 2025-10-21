@@ -233,6 +233,41 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     }
 };
 
+const generateLrNumber = (bookings: Booking[], prefix?: string) => {
+    // 1. Filter for automatically generated bookings only.
+    const autoBookings = bookings.filter(b => b.source === 'System');
+
+    let relevantLrNumbers: string[];
+    
+    // 2. Filter based on prefix or plain number format.
+    if (prefix) {
+        relevantLrNumbers = autoBookings
+            .map(b => b.lrNo)
+            .filter(lrNo => lrNo.startsWith(prefix));
+    } else {
+        relevantLrNumbers = autoBookings
+            .map(b => b.lrNo)
+            .filter(lrNo => /^\d+$/.test(lrNo)); // Only plain numbers
+    }
+
+    if (relevantLrNumbers.length === 0) {
+        return prefix ? `${prefix}01` : '1';
+    }
+    
+    // 3. Extract and find the highest number
+    const lastSequence = relevantLrNumbers
+        .map(lrNo => {
+            const numericPart = prefix ? lrNo.substring(prefix.length) : lrNo;
+            return parseInt(numericPart, 10);
+        })
+        .filter(num => !isNaN(num))
+        .reduce((max, current) => Math.max(max, current), 0);
+        
+    const newSequence = lastSequence + 1;
+
+    // 4. Format the new LR number
+    return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
+};
 
 export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false, lrNumberInputRef }: BookingFormProps) {
     const searchParams = useSearchParams();
@@ -291,27 +326,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const onFromStationChange = useCallback((station: City | null) => {
         setFromStation(station);
     }, []);
-
-
-    const generateLrNumber = (bookings: Booking[], prefix?: string) => {
-        const autoBookings = bookings.filter(b => b.source !== 'Inward' && b.source !== 'Offline');
-        const relevantLrNumbers = prefix
-          ? autoBookings.map(b => b.lrNo).filter(lrNo => lrNo.startsWith(prefix))
-          : autoBookings.map(b => b.lrNo).filter(lrNo => /^\d+$/.test(lrNo));
-    
-        if (relevantLrNumbers.length === 0) {
-            return prefix ? `${prefix}01` : '1';
-        }
-    
-        const lastSequence = relevantLrNumbers
-            .map(lrNo => parseInt(prefix ? lrNo.substring(prefix.length) : lrNo, 10))
-            .filter(num => !isNaN(num))
-            .reduce((max, current) => Math.max(max, current), 0);
-    
-        const newSequence = lastSequence + 1;
-    
-        return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
-    };
 
     const loadMasterData = useCallback(() => {
         try {
@@ -398,7 +412,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         let bookingsForSequence = allBookings;
         // For branch user, only consider their branch's bookings for sequencing
         if (userRole === 'Branch' && userBranchName) {
-            bookingsForSequence = allBookings.filter(b => b.branchName === userBranchName);
+            const branch = branches.find(b => b.name === userBranchName);
+            if (branch) {
+                 bookingsForSequence = allBookings.filter(b => b.branchName === branch.name);
+            }
         }
 
         let lrPrefix: string | undefined;
@@ -920,6 +937,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
 
 
 
