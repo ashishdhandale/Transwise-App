@@ -228,22 +228,18 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
 const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
     // 1. Filter for automatically generated bookings only.
-    const systemBookings = allBookings.filter(b => b.source === 'System' || !b.source);
+    const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
 
     // 2. Find the highest sequence number from the relevant bookings.
     const lastSequence = systemBookings.reduce((maxSeq, booking) => {
-        let numPartStr = booking.lrNo;
-        // If there's a prefix, remove it to get the number part.
-        if (prefix && numPartStr.startsWith(prefix)) {
-            numPartStr = numPartStr.substring(prefix.length);
-        }
+        // Remove the prefix to get the number part.
+        const numPartStr = prefix ? booking.lrNo.replace(prefix, '') : booking.lrNo;
         
-        // Ensure what's left is purely numeric before parsing.
-        if (/^\d+$/.test(numPartStr)) {
-            const currentSeq = parseInt(numPartStr, 10);
-            if (currentSeq > maxSeq) {
-                return currentSeq;
-            }
+        // Use parseInt which stops at the first non-digit character. This is more robust.
+        const currentSeq = parseInt(numPartStr, 10);
+        
+        if (!isNaN(currentSeq) && currentSeq > maxSeq) {
+            return currentSeq;
         }
         return maxSeq;
     }, 0);
@@ -268,6 +264,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [toStation, setToStation] = useState<City | null>(null);
     const [sender, setSender] = useState<Customer | null>(null);
     const [receiver, setReceiver] = useState<Customer | null>(null);
+    const [customers, setCustomers] = useState<Customer[]>([]);
     const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
     const [currentLrNumber, setCurrentLrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
@@ -278,7 +275,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [customers, setCustomers] = useState<Customer[]>([]);
     const [cities, setCities] = useState<City[]>([]);
 
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
