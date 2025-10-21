@@ -20,11 +20,7 @@ import { AddCityDialog } from '../master/add-city-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { getBookings } from '@/lib/bookings-dashboard-data';
 import { ClientOnly } from '@/components/ui/client-only';
-
-const LOCAL_STORAGE_KEY_CITIES = 'transwise_custom_cities';
-const LOCAL_STORAGE_KEY_SOURCE = 'transwise_city_list_source';
-type CityListSource = 'default' | 'custom';
-
+import { getCities, saveCities } from '@/lib/city-data';
 
 interface BookingDetailsSectionProps {
     bookingType: string;
@@ -69,66 +65,18 @@ export function BookingDetailsSection({
     lrNumberInputRef,
 }: BookingDetailsSectionProps) {
     const { toast } = useToast();
-    const [cityListSource, setCityListSource] = useState<CityListSource>('default');
-    const [allCustomCities, setAllCustomCities] = useState<City[]>([]);
+    const [allCities, setAllCities] = useState<City[]>([]);
     const [isAddCityOpen, setIsAddCityOpen] = useState(false);
     const [initialCityData, setInitialCityData] = useState<Partial<City> | null>(null);
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
     const stationOptions = useMemo(() => {
-        if (cityListSource === 'custom') {
-            return allCustomCities.map(c => ({ label: c.name.toUpperCase(), value: c.name }));
-        }
-        return bookingOptions.stations.map(name => ({ label: name.toUpperCase(), value: name }));
-    }, [cityListSource, allCustomCities]);
-
-    const fromStationOptions = stationOptions;
+        return allCities.map(c => ({ label: c.name.toUpperCase(), value: c.name }));
+    }, [allCities]);
 
     const loadCityData = useCallback(() => {
-        try {
-            const savedSource = localStorage.getItem(LOCAL_STORAGE_KEY_SOURCE) as CityListSource | null;
-            const source = savedSource || 'default';
-            setCityListSource(source);
-
-            if (source === 'custom') {
-                const savedCitiesJSON = localStorage.getItem(LOCAL_STORAGE_KEY_CITIES);
-                let savedCities: City[] = savedCitiesJSON ? JSON.parse(savedCitiesJSON) : [];
-                
-                // Auto-sync logic
-                const allBookings = getBookings();
-                const bookingCities = new Set([
-                    ...allBookings.map(b => b.fromCity.trim().toUpperCase()),
-                    ...allBookings.map(b => b.toCity.trim().toUpperCase()),
-                ]);
-
-                const existingCustomCities = new Set(savedCities.map(c => c.name.trim().toUpperCase()));
-                const missingCities = Array.from(bookingCities).filter(bc => bc && !existingCustomCities.has(bc));
-
-                if (missingCities.length > 0) {
-                    let nextId = savedCities.length > 0 ? Math.max(...savedCities.map(c => c.id)) + 1 : 1;
-                    const newCityObjects: City[] = missingCities.map(name => ({
-                        id: nextId++,
-                        name,
-                        aliasCode: name.substring(0, 3),
-                        pinCode: '',
-                    }));
-
-                    const updatedCities = [...savedCities, ...newCityObjects];
-                    localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
-                    savedCities = updatedCities; // Use the updated list immediately
-
-                    toast({
-                        title: 'Stations Synced',
-                        description: `${newCityObjects.length} new station(s) were automatically added to your master list.`,
-                    });
-                }
-
-                setAllCustomCities(savedCities);
-            }
-        } catch (error) {
-            console.error("Failed to load or sync station data", error);
-        }
-    }, [toast]);
+        setAllCities(getCities());
+    }, []);
 
     useEffect(() => {
         loadCityData();
@@ -137,41 +85,31 @@ export function BookingDetailsSection({
 
     const getCityObjectByName = (name: string): City | null => {
         if (!name) return null;
-        if (cityListSource === 'custom') {
-            return allCustomCities.find(c => c.name.toLowerCase() === name.toLowerCase()) || { id: 0, name, aliasCode: '', pinCode: ''};
-        }
-        return { id: 0, name, aliasCode: name.substring(0,3).toUpperCase(), pinCode: '' };
+        return allCities.find(c => c.name.toLowerCase() === name.toLowerCase()) || { id: 0, name, aliasCode: '', pinCode: ''};
     };
 
     const handleFromStationChange = useCallback((stationName: string) => {
         onFromStationChange(getCityObjectByName(stationName));
-    }, [onFromStationChange, allCustomCities, cityListSource]);
+    }, [onFromStationChange, allCities]);
 
     const handleToStationChange = useCallback((stationName: string) => {
         onToStationChange(getCityObjectByName(stationName));
-    }, [onToStationChange, allCustomCities, cityListSource]);
+    }, [onToStationChange, allCities]);
 
     const handleOpenAddCity = (query?: string) => {
-        if (cityListSource !== 'custom') {
-            toast({
-                title: 'Default List in Use',
-                description: 'To add a new station, please switch to your "Custom List" in Master > Stations.',
-                variant: 'destructive'
-            });
-            return;
-        }
         setInitialCityData(query ? { name: query } : null);
         setIsAddCityOpen(true);
     };
 
     const handleSaveCity = (cityData: Omit<City, 'id'>): boolean => {
         try {
-            const newId = allCustomCities.length > 0 ? Math.max(...allCustomCities.map(c => c.id)) + 1 : 1;
+            const currentCities = getCities();
+            const newId = currentCities.length > 0 ? Math.max(...currentCities.map(c => c.id)) + 1 : 1;
             const newCity: City = { id: newId, ...cityData };
-            const updatedCities = [newCity, ...allCustomCities];
-            localStorage.setItem(LOCAL_STORAGE_KEY_CITIES, JSON.stringify(updatedCities));
-            toast({ title: 'Station Added', description: `"${cityData.name}" has been added to your custom list.` });
-            loadCityData(); // Refresh the city list
+            const updatedCities = [newCity, ...currentCities];
+            saveCities(updatedCities);
+            toast({ title: 'Station Added', description: `"${cityData.name}" has been added to your master list.` });
+            loadCityData(); // Refresh the city list in this component
             return true;
         } catch (error) {
             toast({ title: 'Error', description: 'Could not save new station.', variant: 'destructive'});
@@ -252,7 +190,7 @@ export function BookingDetailsSection({
                 <div className={cn('space-y-1 rounded-md', errors.fromStation && 'ring-2 ring-red-500/50')}>
                     <Label htmlFor="fromStation">From Station</Label>
                     <Combobox
-                        options={fromStationOptions}
+                        options={stationOptions}
                         value={fromStation?.name || ''}
                         onChange={handleFromStationChange}
                         placeholder="Select station..."
