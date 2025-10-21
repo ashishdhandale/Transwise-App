@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, Printer } from 'lucide-react';
+import { Download, Loader2, Printer, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
@@ -888,7 +888,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="secondary" onClick={handleNewBooking}>Close & New Booking</Button>
+                            <Button type="button" variant="secondary" onClick={handleNewBooking}>
+                                <X className="mr-2 h-4 w-4" />
+                                Close & New Booking
+                            </Button>
                             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                                 {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                                 Download PDF
