@@ -76,15 +76,15 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <p>GSTIN: {companyProfile.gstNo || '27ABCDE1234F1Z5'}</p>
                     </div>
                     <div className="text-right">
-                        <p className="font-bold text-sm">GR / CN NOTE</p>
+                        <p className="font-bold text-sm">Lorry Receipt</p>
                         <p className="font-bold">{copyType} COPY</p>
                     </div>
                 </header>
 
                 <section className="grid grid-cols-3 gap-4 mt-2 border-b-2 border-black pb-2">
                     <div className="col-span-2">
-                        <DetailItem label="GR No" value={booking.lrNo} isBold />
-                        <DetailItem label="GR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
+                        <DetailItem label="LR No" value={booking.lrNo} isBold />
+                        <DetailItem label="LR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
                         <DetailItem label="From" value={booking.fromCity} />
                         <DetailItem label="To" value={booking.toCity} />
                         <DetailItem label="Tracking ID" value={booking.trackingId} />

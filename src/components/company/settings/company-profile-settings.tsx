@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect } from 'react';
@@ -119,16 +120,16 @@ export function CompanyProfileSettings() {
                         name="grnFormat"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>GRN Format</FormLabel>
+                                <FormLabel>LR Number Format</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select GRN format" />
+                                            <SelectValue placeholder="Select LR format" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="with_char">With Character (CONAG01)</SelectItem>
-                                        <SelectItem value="plain">Plain Number (01)</SelectItem>
+                                        <SelectItem value="with_char">With Character (e.g., ABC01)</SelectItem>
+                                        <SelectItem value="plain">Plain Number (e.g., 01)</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />

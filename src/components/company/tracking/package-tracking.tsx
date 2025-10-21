@@ -93,7 +93,7 @@ export function PackageTracking() {
             <Card className="flex h-80 items-center justify-center border-dashed border-2">
                 <div className="text-center text-muted-foreground">
                     <Search className="h-12 w-12 mx-auto" />
-                    <p className="mt-2 font-medium">Search for an LR to see its details.</p>
+                    <p className="mt-2 font-medium">Search for an LR No. to see its details.</p>
                     <p className="text-sm">The shipping and delivery details will appear here.</p>
                 </div>
             </Card>

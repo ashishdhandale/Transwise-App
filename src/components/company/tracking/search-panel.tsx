@@ -41,7 +41,7 @@ export function SearchPanel({ onSearch }: SearchPanelProps) {
              <div className="flex items-center gap-2">
                 <Input 
                     id="search-id" 
-                    placeholder="Enter LR Number or Tracking ID..."
+                    placeholder="Enter LR No. or Tracking ID..."
                     value={searchId}
                     onChange={(e) => setSearchId(e.target.value)}
                     onKeyDown={handleKeyDown}

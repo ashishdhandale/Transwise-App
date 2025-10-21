@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -84,7 +85,7 @@ export function Cashbook() {
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                                             <TableCell className={`${tdClass} font-medium`}>
-                                                To {booking.sender} (GR #{booking.lrNo})
+                                                To {booking.sender} (LR #{booking.lrNo})
                                             </TableCell>
                                             <TableCell className={tdClass}>{booking.paymentMode}</TableCell>
                                             <TableCell className={`${tdClass} text-right`}>{formatValue(booking.totalAmount)}</TableCell>

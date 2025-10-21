@@ -53,14 +53,14 @@ export function SearchResults({ results, onSelectResult, selectedTrackingId, lrD
                     <Table>
                         <TableHeader>
                         <TableRow>
-                            <TableHead className={thClass}>L.R. No.</TableHead>
+                            <TableHead className={thClass}>LR No.</TableHead>
                             <TableHead className={thClass}>Challan No</TableHead>
                             <TableHead className={thClass}>Date</TableHead>
                             <TableHead className={thClass}>From</TableHead>
                             <TableHead className={thClass}>To</TableHead>
                             <TableHead className={thClass}>Sender</TableHead>
                             <TableHead className={thClass}>Receiver</TableHead>
-                            <TableHead className={thClass}>Item &amp; Description</TableHead>
+                            <TableHead className={thClass}>Item & Description</TableHead>
                             <TableHead className={thClass}>Status</TableHead>
                         </TableRow>
                         </TableHeader>
