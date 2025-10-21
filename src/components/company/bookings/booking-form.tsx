@@ -259,6 +259,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
     const [vendors, setVendors] = useState<Vendor[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [cities, setCities] = useState<City[]>([]);
 
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
     const [isGstApplicable, setIsGstApplicable] = useState(false);
@@ -292,26 +294,23 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
 
     const generateLrNumber = (bookings: Booking[], prefix?: string) => {
-        const isPlain = !prefix;
-        // Filter out offline/manual bookings before calculating the next number
-        const autoBookings = bookings.filter(b => b.source !== 'Inward');
-
-        const relevantLrNumbers = isPlain
-            ? autoBookings.map(b => b.lrNo).filter(lrNo => /^\d+$/.test(lrNo))
-            : autoBookings.map(b => b.lrNo).filter(lrNo => lrNo.startsWith(prefix!));
+        const autoBookings = bookings.filter(b => b.source !== 'Inward' && b.source !== 'Offline');
+        const relevantLrNumbers = prefix
+          ? autoBookings.map(b => b.lrNo).filter(lrNo => lrNo.startsWith(prefix))
+          : autoBookings.map(b => b.lrNo).filter(lrNo => /^\d+$/.test(lrNo));
     
         if (relevantLrNumbers.length === 0) {
-            return isPlain ? '1' : `${prefix}01`;
+            return prefix ? `${prefix}01` : '1';
         }
     
         const lastSequence = relevantLrNumbers
-            .map(lrNo => parseInt(isPlain ? lrNo : lrNo.substring(prefix!.length), 10))
+            .map(lrNo => parseInt(prefix ? lrNo.substring(prefix.length) : lrNo, 10))
             .filter(num => !isNaN(num))
             .reduce((max, current) => Math.max(max, current), 0);
     
         const newSequence = lastSequence + 1;
     
-        return isPlain ? String(newSequence) : `${prefix}${String(newSequence).padStart(2, '0')}`;
+        return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
     };
 
     const loadMasterData = useCallback(() => {
@@ -395,11 +394,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const handleReset = useCallback(() => {
         const profile = companyProfile;
         const allBookings = getBookings();
-        let bookingsForSequence = allBookings.filter(b => b.source !== 'Inward');
+        
+        let bookingsForSequence = allBookings;
+        // For branch user, only consider their branch's bookings for sequencing
+        if (userRole === 'Branch' && userBranchName) {
+            bookingsForSequence = allBookings.filter(b => b.branchName === userBranchName);
+        }
 
         let lrPrefix: string | undefined;
         if (profile?.grnFormat === 'with_char') {
-            lrPrefix = profile.lrPrefix?.trim() || undefined;
+            lrPrefix = (userRole === 'Branch' ? branches.find(b => b.name === userBranchName)?.lrPrefix : profile.lrPrefix)?.trim() || undefined;
         }
 
         if(profile?.grnFormat === 'plain') {
@@ -423,8 +427,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setLoadType('LTL');
         
         const allCities = getCities();
-        const defaultStation = profile?.defaultFromStation
-            ? allCities.find(c => c.name.toLowerCase() === profile.defaultFromStation?.toLowerCase()) || null
+        const defaultStationName = userRole === 'Branch'
+            ? branches.find(b => b.name === userBranchName)?.city
+            : profile?.defaultFromStation;
+
+        const defaultStation = defaultStationName
+            ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null
             : null;
         setFromStation(defaultStation);
 
@@ -459,7 +467,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             title: "Form Reset",
             description: "All fields have been cleared.",
         });
-    }, [companyProfile, isOfflineMode, toast, lrNumberInputRef]);
+    }, [companyProfile, isOfflineMode, toast, lrNumberInputRef, userRole, userBranchName, branches]);
 
 
     useEffect(() => {
@@ -520,7 +528,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
             branchName: currentBooking?.branchName || finalBranchName,
-            source: isOfflineModeProp ? 'Inward' : 'System',
+            source: isOfflineModeProp ? 'Offline' : 'System',
             ...(loadType === 'FTL' && { ftlDetails }),
         };
 
@@ -548,7 +556,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 }
 
                 // If this form is used for manual inward challans, don't save to the main bookings list.
-                if (isOfflineModeProp) {
+                if (isOfflineModeProp && newBooking.source !== 'Offline') {
                      if (onSaveSuccess) onSaveSuccess(newBooking);
                      return;
                 }
@@ -912,6 +920,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
 
 
 
