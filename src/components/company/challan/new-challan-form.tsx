@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Combobox } from '@/components/ui/combobox';
 import type { Driver, VehicleMaster, City, Branch, Vendor, Customer } from '@/lib/types';
-import { getCompanyProfile } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage, type AllCompanySettings } from '@/app/company/settings/actions';
 import type { CompanyProfileFormValues } from '@/components/company/settings/company-profile-settings';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
@@ -175,7 +175,7 @@ export function NewChallanForm() {
     };
 
     const loadInitialData = useCallback(async () => {
-        const profile = await getCompanyProfile();
+        const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         setCustomers(getCustomers());
 
