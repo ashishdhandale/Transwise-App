@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -51,8 +50,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
 import { ViewBookingDialog } from './view-booking-dialog';
-import type { AllCompanySettings } from '@/app/company/settings/actions';
-import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage, type AllCompanySettings } from '@/app/company/settings/actions';
 import { BookingReceipt } from './booking-receipt';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -522,18 +520,18 @@ export function BookingsDashboard() {
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action will completely cancel the booking for LR No: <span className="font-bold">{bookingToCancel?.lrNo}</span>. This cannot be undone.
-              <div className="mt-4">
-                <Label htmlFor="cancel-confirm-input" className="text-foreground">Please type <span className="font-bold text-destructive">CANCEL</span> to confirm.</Label>
-                <Input 
-                  id="cancel-confirm-input" 
-                  value={cancelConfirmationInput}
-                  onChange={(e) => setCancelConfirmationInput(e.target.value)}
-                  className="mt-1"
-                  autoFocus
-                />
-              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="pt-2">
+            <Label htmlFor="cancel-confirm-input" className="text-foreground">Please type <span className="font-bold text-destructive">CANCEL</span> to confirm.</Label>
+            <Input 
+              id="cancel-confirm-input" 
+              value={cancelConfirmationInput}
+              onChange={(e) => setCancelConfirmationInput(e.target.value)}
+              className="mt-1"
+              autoFocus
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCancelConfirmationInput('')}>Back</AlertDialogCancel>
             <AlertDialogAction 
