@@ -33,14 +33,16 @@ export function AddAccountDialog({ isOpen, onOpenChange, onSave, account }: AddA
     const { toast } = useToast();
 
     useEffect(() => {
-        if (account) {
-            setName(account.name || '');
-            setType(account.type || 'Expense');
-            setOpeningBalance(account.openingBalance || 0);
-        } else {
-            setName('');
-            setType('Expense');
-            setOpeningBalance(0);
+        if (isOpen) {
+            if (account) {
+                setName(account.name || '');
+                setType(account.type || 'Expense');
+                setOpeningBalance(account.openingBalance || 0);
+            } else {
+                setName('');
+                setType('Expense');
+                setOpeningBalance(0);
+            }
         }
     }, [account, isOpen]);
 

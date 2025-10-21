@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Combobox } from '@/components/ui/combobox';
 import type { City, Customer } from '@/lib/types';
-import { getCompanyProfile, type CompanyProfileFormValues } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage, type CompanyProfileFormValues } from '@/app/company/settings/actions';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
@@ -97,7 +97,7 @@ export function NewInwardChallanForm() {
 
     useEffect(() => {
         async function loadInitialData() {
-            const profile = await getCompanySettings();
+            const profile = await loadCompanySettingsFromStorage();
             setCompanyProfile(profile);
             setCities(getCities());
             setCustomers(getCustomers());

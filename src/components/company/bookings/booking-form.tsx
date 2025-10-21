@@ -412,9 +412,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         let keyCounter = 1;
         let defaultRows = 1;
         try {
-            const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY_BOOKING_SETTINGS);
-            if (savedSettings) {
-                defaultRows = JSON.parse(savedSettings).defaultItemRows || 1;
+            if(companyProfile?.defaultItemRows){
+                defaultRows = companyProfile.defaultItemRows;
             }
         } catch {
             defaultRows = 1;
@@ -905,4 +904,3 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-
