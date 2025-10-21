@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -34,7 +33,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 
 const initialItems: Item[] = [
-    { id: 1, name: 'Frm MAS', hsnCode: '996511', description: 'General Goods' },
+    { id: 1, name: 'Frm MAS', aliasCode: 'FRMMAS', hsnCode: '996511', description: 'General Goods' },
 ];
 
 const tdClass = "whitespace-nowrap uppercase";
@@ -63,6 +62,7 @@ export function ItemManagement() {
   const filteredItems = useMemo(() => {
     return items.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.aliasCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.hsnCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -139,6 +139,7 @@ export function ItemManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Item Name</TableHead>
+                <TableHead>Alias Code</TableHead>
                 <TableHead>HSN Code</TableHead>
                 <TableHead>Default Description</TableHead>
                 <TableHead className="w-[120px] text-right">Actions</TableHead>
@@ -148,6 +149,7 @@ export function ItemManagement() {
               {filteredItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className={cn(tdClass, "font-medium")}>{item.name}</TableCell>
+                  <TableCell className={cn(tdClass)}>{item.aliasCode}</TableCell>
                   <TableCell className={cn(tdClass)}>{item.hsnCode}</TableCell>
                   <TableCell className={cn(tdClass)}>{item.description}</TableCell>
                   <TableCell className={cn(tdClass, "text-right")}>

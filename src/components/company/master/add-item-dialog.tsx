@@ -26,6 +26,7 @@ interface AddItemDialogProps {
 
 export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDialogProps) {
     const [name, setName] = useState('');
+    const [aliasCode, setAliasCode] = useState('');
     const [hsnCode, setHsnCode] = useState('');
     const [description, setDescription] = useState('');
     const { toast } = useToast();
@@ -33,10 +34,12 @@ export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDia
     useEffect(() => {
         if (item) {
             setName(item.name || '');
+            setAliasCode(item.aliasCode || '');
             setHsnCode(item.hsnCode || '');
             setDescription(item.description || '');
         } else {
             setName('');
+            setAliasCode('');
             setHsnCode('');
             setDescription('');
         }
@@ -51,6 +54,7 @@ export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDia
 
         const success = onSave({
             name,
+            aliasCode,
             hsnCode,
             description,
         });
@@ -70,6 +74,10 @@ export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDia
                     <div className="md:col-span-2">
                         <Label htmlFor="item-name">Item Name</Label>
                         <Input id="item-name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                    </div>
+                    <div>
+                        <Label htmlFor="alias-code">Alias Code</Label>
+                        <Input id="alias-code" value={aliasCode} onChange={(e) => setAliasCode(e.target.value.toUpperCase())} />
                     </div>
                      <div>
                         <Label htmlFor="hsn-code">HSN Code</Label>

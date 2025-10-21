@@ -85,11 +85,11 @@ export interface City {
 }
 
 export type CustomerType = 
+  | 'Consignor / Consignee'
   | 'Commission Agent' 
   | 'Booking Agent' 
   | 'Delivery Agent' 
   | 'Freight Forwarder'
-  | 'Consignor / Consignee'
   | 'Agency';
 
 export interface Customer {
@@ -108,6 +108,7 @@ export interface Customer {
 export interface Item {
   id: number;
   name: string;
+  aliasCode: string;
   hsnCode: string;
   description: string;
 }
