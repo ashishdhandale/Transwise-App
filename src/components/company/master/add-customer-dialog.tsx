@@ -167,7 +167,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                     </div>
                     <div>
                         <Label htmlFor="mobile">Mobile No.</Label>
-                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
+                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={30} />
                     </div>
                      <div>
                         <Label htmlFor="email">Email Address</Label>

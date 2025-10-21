@@ -137,7 +137,7 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
                     </div>
                     <div>
                         <Label htmlFor="mobile">Mobile No.</Label>
-                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
+                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={15} />
                     </div>
                     <div className="md:col-span-2">
                         <Label htmlFor="address">Address</Label>

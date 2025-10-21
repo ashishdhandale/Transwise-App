@@ -320,7 +320,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                          <h3 className="text-lg font-semibold border-b pb-2">Contact & Identification</h3>
                          <div>
                             <Label htmlFor="mobile">Mobile No.</Label>
-                            <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
+                            <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={15} />
                         </div>
                         <div>
                             <Label htmlFor="address">Address</Label>
@@ -333,7 +333,7 @@ export function AddStaffDialog({ isOpen, onOpenChange, onSave, staff }: AddStaff
                             </div>
                              <div>
                                 <Label htmlFor="emergency-no">Emergency Contact No.</Label>
-                                <Input id="emergency-no" value={emergencyContactNo} onChange={(e) => setEmergencyContactNo(e.target.value)} />
+                                <Input id="emergency-no" value={emergencyContactNo} onChange={(e) => setEmergencyContactNo(e.target.value)} maxLength={15} />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
