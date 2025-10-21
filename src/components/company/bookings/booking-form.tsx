@@ -290,9 +290,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const generateLrNumber = (bookings: Booking[], prefix?: string) => {
         const isPlain = !prefix;
+        // Filter out offline/manual bookings before calculating the next number
+        const autoBookings = bookings.filter(b => b.source !== 'Inward');
+
         const relevantLrNumbers = isPlain
-            ? bookings.map(b => b.lrNo).filter(lrNo => /^\d+$/.test(lrNo))
-            : bookings.map(b => b.lrNo).filter(lrNo => lrNo.startsWith(prefix!));
+            ? autoBookings.map(b => b.lrNo).filter(lrNo => /^\d+$/.test(lrNo))
+            : autoBookings.map(b => b.lrNo).filter(lrNo => lrNo.startsWith(prefix!));
     
         if (relevantLrNumbers.length === 0) {
             return isPlain ? '1' : `${prefix}01`;
@@ -917,4 +920,5 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
 
