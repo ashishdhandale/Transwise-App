@@ -1,0 +1,149 @@
+
+{
+  "entities": {
+    "Company": {
+      "title": "Company",
+      "description": "Represents a single tenant (a transport company) on the platform.",
+      "type": "object",
+      "properties": {
+        "companyId": {
+          "type": "string",
+          "description": "Unique identifier for the company, serves as the tenantId."
+        },
+        "name": {
+          "type": "string",
+          "description": "The legal name of the company."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The Firebase UID of the user who owns the company."
+        },
+        "licenceType": {
+          "type": "string",
+          "enum": ["Trial", "Bronze", "Gold", "Platinum"],
+          "description": "The subscription level of the company."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the company was created."
+        }
+      },
+      "required": ["companyId", "name", "ownerId"]
+    },
+    "Branch": {
+      "title": "Branch",
+      "description": "Represents a branch office belonging to a company.",
+      "type": "object",
+      "properties": {
+        "branchId": {
+          "type": "string",
+          "description": "Unique identifier for the branch within a company."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the branch."
+        },
+        "address": {
+          "type": "string",
+          "description": "Physical address of the branch."
+        },
+        "city": {
+          "type": "string"
+        }
+      },
+      "required": ["branchId", "name"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Represents an employee or staff member at a branch.",
+      "type": "object",
+      "properties": {
+        "employeeId": {
+          "type": "string",
+          "description": "The Firebase UID of the employee."
+        },
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Manager", "Accountant", "Booking Clerk"]
+        }
+      },
+      "required": ["employeeId", "name", "role"]
+    },
+    "Booking": {
+        "title": "Booking",
+        "description": "Represents a single consignment or booking.",
+        "type": "object",
+        "properties": {
+            "bookingId": {
+                "type": "string"
+            },
+            "lrNo": {
+                "type": "string"
+            },
+            "status": {
+                "type": "string"
+            }
+        },
+        "required": ["bookingId"]
+    },
+    "Vehicle": {
+        "title": "Vehicle",
+        "description": "A vehicle belonging to a company.",
+        "type": "object",
+        "properties": {
+            "vehicleId": {
+                "type": "string"
+            },
+            "vehicleNo": {
+                "type": "string"
+            }
+        },
+        "required": ["vehicleId", "vehicleNo"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/companies/{companyId}": {
+      "schema": {
+        "$ref": "#/entities/Company"
+      },
+      "description": "Top-level collection for company tenant information."
+    },
+    "/companies/{companyId}/branches/{branchId}": {
+      "schema": {
+        "$ref": "#/entities/Branch"
+      },
+      "description": "Sub-collection for branches within a company."
+    },
+    "/companies/{companyId}/employees/{employeeId}": {
+      "schema": {
+        "$ref": "#/entities/Employee"
+      },
+      "description": "Sub-collection for employees within a company."
+    },
+    "/companies/{companyId}/bookings/{bookingId}": {
+        "schema": {
+            "$ref": "#/entities/Booking"
+        },
+        "description": "Bookings for a specific company."
+    },
+    "/companies/{companyId}/branches/{branchId}/bookings/{bookingId}": {
+        "schema": {
+            "$ref": "#/entities/Booking"
+        },
+        "description": "Bookings specific to a branch."
+    },
+    "/companies/{companyId}/vehicles/{vehicleId}": {
+        "schema": {
+            "$ref": "#/entities/Vehicle"
+        },
+        "description": "Vehicles belonging to a specific company."
+    }
+  }
+}
