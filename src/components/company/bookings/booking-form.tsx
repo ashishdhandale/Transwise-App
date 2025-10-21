@@ -396,16 +396,19 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
         let lrPrefix: string | undefined;
 
-        if (profile?.grnFormat === 'with_char') {
-            lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : undefined;
-             if (userRole === 'Branch') {
-                const userBranch = branches.find(b => b.name === userBranchName); 
-                if(userBranch?.lrPrefix) {
-                    lrPrefix = userBranch.lrPrefix;
-                }
-                // Filter bookings to only those for the current branch to get the correct sequence
-                bookingsForPrefix = allBookings.filter(b => b.branchName === userBranchName);
+        if (userRole === 'Branch') {
+            const userBranch = branches.find(b => b.name === userBranchName);
+            if (userBranch?.lrPrefix) {
+                lrPrefix = userBranch.lrPrefix;
             }
+            bookingsForPrefix = allBookings.filter(b => b.branchName === userBranchName);
+        } else if (profile?.grnFormat === 'with_char') {
+            lrPrefix = profile.lrPrefix?.trim() || undefined;
+        }
+
+        const isPlain = profile?.grnFormat === 'plain';
+        if(isPlain) {
+          lrPrefix = undefined;
         }
         
         setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(bookingsForPrefix, lrPrefix));
@@ -914,3 +917,4 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
