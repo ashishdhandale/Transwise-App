@@ -57,14 +57,6 @@ import { getVendors } from '@/lib/vendor-data';
 import { getVehicles } from '@/lib/vehicle-data';
 
 
-const CUSTOMERS_KEY = 'transwise_customers';
-const LOCAL_STORAGE_KEY_DRIVERS = 'transwise_drivers';
-const LOCAL_STORAGE_KEY_VEHICLES = 'transwise_vehicles_master';
-const LOCAL_STORAGE_KEY_VENDORS = 'transwise_vendors';
-const LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES = 'transwise_additional_charges';
-const LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE = 'transwise_last_lr_sequence';
-
-
 const createEmptyRow = (id: number): ItemRow => ({
   id,
   ewbNo: '',
@@ -174,13 +166,13 @@ const isRowPartiallyFilled = (row: ItemRow) => {
 // --- Auto-Learn Standard Rate Logic ---
 const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Customer) => {
     const allRateLists = getRateLists();
-    const chargeSettingsJSON = localStorage.getItem(LOCAL_STORAGE_KEY_ADDITIONAL_CHARGES);
-    const chargeSettings: { charges: ChargeSetting[] } = chargeSettingsJSON ? JSON.parse(chargeSettingsJSON) : { charges: [] };
+    const chargeSettingsJSON = localStorage.getItem('transwise_company_settings');
+    const companySettings: AllCompanySettings | null = chargeSettingsJSON ? JSON.parse(chargeSettingsJSON) : null;
     
     const standardRateList = allRateLists.find(rl => rl.isStandard);
     
-    if (!standardRateList) {
-        console.error("Standard Rate List not found.");
+    if (!standardRateList || !companySettings) {
+        console.error("Standard Rate List or Company Settings not found.");
         return;
     }
     
@@ -191,7 +183,7 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
         const getChargeDetail = (chargeId: string): ChargeDetail | undefined => {
             const chargeValue = booking.additionalCharges?.[chargeId];
-            const setting = chargeSettings.charges.find(c => c.id === chargeId);
+            const setting = companySettings.additionalCharges.find(c => c.id === chargeId);
             if (chargeValue && setting) {
                 return { value: chargeValue, per: setting.calculationType === 'fixed' ? 'Fixed' : 'Chg.wt' }; // Simplified for now
             }
@@ -234,13 +226,30 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     }
 };
 
-const generateLrNumber = (prefix?: string) => {
-    if (typeof window === 'undefined') {
-        return prefix ? `${prefix}01` : '1';
-    }
-    const lastSequence = Number(localStorage.getItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE) || '0');
+const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
+    // 1. Filter for automatically generated bookings only.
+    const systemBookings = allBookings.filter(b => b.source === 'System' || !b.source);
+
+    // 2. Find the highest sequence number from the relevant bookings.
+    const lastSequence = systemBookings.reduce((maxSeq, booking) => {
+        let numPartStr = booking.lrNo;
+        // If there's a prefix, remove it to get the number part.
+        if (prefix && numPartStr.startsWith(prefix)) {
+            numPartStr = numPartStr.substring(prefix.length);
+        }
+        
+        // Ensure what's left is purely numeric before parsing.
+        if (/^\d+$/.test(numPartStr)) {
+            const currentSeq = parseInt(numPartStr, 10);
+            if (currentSeq > maxSeq) {
+                return currentSeq;
+            }
+        }
+        return maxSeq;
+    }, 0);
+
+    // 3. Increment and format the new number.
     const newSequence = lastSequence + 1;
-    // Don't save here. Save only on successful booking creation.
     return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
 };
 
@@ -382,6 +391,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleReset = useCallback(() => {
         const profile = companyProfile;
+        const allBookings = getBookings();
         
         let lrPrefix: string | undefined;
         if (profile?.grnFormat === 'with_char') {
@@ -392,7 +402,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
           lrPrefix = undefined;
         }
         
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix));
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
         
         let keyCounter = 1;
         let defaultRows = 1;
@@ -528,12 +538,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 if (onSaveSuccess) onSaveSuccess(updatedBooking);
                  if (postSaveCallback) postSaveCallback();
             } else {
-                // This is a new booking, so increment the sequence number.
-                if (!isOfflineMode) {
-                    const lastSequence = Number(localStorage.getItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE) || '0');
-                    localStorage.setItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE, String(lastSequence + 1));
-                }
-
                 const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
                 if (onSaveAndNew) {
@@ -906,12 +910,4 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-
-
-
-
-
-
-
-
 
