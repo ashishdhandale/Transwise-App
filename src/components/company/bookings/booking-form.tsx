@@ -50,6 +50,7 @@ import { ClientOnly } from '@/components/ui/client-only';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import type { ChargeSetting } from '../settings/additional-charges-settings';
 import { getBranches } from '@/lib/branch-data';
+import { getCities } from '@/lib/city-data';
 
 
 const CUSTOMERS_KEY = 'transwise_customers';
@@ -396,7 +397,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         let lrPrefix: string | undefined;
 
         if (profile?.grnFormat === 'with_char') {
-            lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : 'CONAG';
+            lrPrefix = (profile?.lrPrefix?.trim()) ? profile.lrPrefix.trim() : undefined;
              if (userRole === 'Branch') {
                 const userBranch = branches.find(b => b.name === userBranchName); 
                 if(userBranch?.lrPrefix) {
@@ -422,7 +423,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
         setLoadType('LTL');
-        setFromStation(profile?.defaultFromStation ? { id: 0, name: profile.defaultFromStation, aliasCode: '', pinCode: '' } : null);
+        
+        const allCities = getCities();
+        const defaultStation = profile?.defaultFromStation
+            ? allCities.find(c => c.name.toLowerCase() === profile.defaultFromStation?.toLowerCase()) || null
+            : null;
+        setFromStation(defaultStation);
+
         setToStation(null);
         setSender(null);
         setReceiver(null);
