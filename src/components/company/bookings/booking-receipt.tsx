@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Separator } from '@/components/ui/separator';
 import React from 'react';
+import Image from 'next/image';
 
 interface BookingReceiptProps {
     booking: Booking;
@@ -88,8 +89,16 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <DetailItem label="To" value={booking.toCity} />
                         <DetailItem label="Tracking ID" value={booking.trackingId} />
                     </div>
-                    <div className="flex items-center justify-center border-2 border-black rounded-md">
-                        <h2 className="text-lg font-extrabold text-center">{booking.lrType}</h2>
+                    <div className="flex flex-col items-center justify-center border-2 border-black rounded-md p-1">
+                        <Image
+                            src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.trackingId}&code=Code128&dpi=96`}
+                            alt={`Barcode for ${booking.trackingId}`}
+                            width={150}
+                            height={40}
+                            unoptimized // External image, next/image optimization not applicable
+                            className="object-contain"
+                        />
+                        <h2 className="text-lg font-extrabold text-center mt-1">{booking.lrType}</h2>
                     </div>
                 </section>
 
