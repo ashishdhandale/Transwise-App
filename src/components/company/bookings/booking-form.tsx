@@ -238,11 +238,9 @@ const generateLrNumber = (prefix?: string) => {
     if (typeof window === 'undefined') {
         return prefix ? `${prefix}01` : '1';
     }
-
-    let lastSequence = Number(localStorage.getItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE) || '0');
+    const lastSequence = Number(localStorage.getItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE) || '0');
     const newSequence = lastSequence + 1;
-    localStorage.setItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE, String(newSequence));
-    
+    // Don't save here. Save only on successful booking creation.
     return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
 };
 
@@ -411,9 +409,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setLoadType('LTL');
         
         const allCities = getCities();
-        const defaultStationName = userRole === 'Branch'
-            ? branches.find(b => b.name === userBranchName)?.city
-            : profile?.defaultFromStation;
+        const defaultStationName = profile?.defaultFromStation;
 
         const defaultStation = defaultStationName
             ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null
@@ -532,6 +528,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 if (onSaveSuccess) onSaveSuccess(updatedBooking);
                  if (postSaveCallback) postSaveCallback();
             } else {
+                // This is a new booking, so increment the sequence number.
+                if (!isOfflineMode) {
+                    const lastSequence = Number(localStorage.getItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE) || '0');
+                    localStorage.setItem(LOCAL_STORAGE_KEY_LAST_LR_SEQUENCE, String(lastSequence + 1));
+                }
+
                 const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
                 if (onSaveAndNew) {
@@ -615,7 +617,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset, isOfflineMode]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -904,6 +906,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
 
 
 
