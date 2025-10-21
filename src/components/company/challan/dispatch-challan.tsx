@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Challan } from '@/lib/challan-data';
@@ -12,7 +13,7 @@ import { cn } from '@/lib/utils';
 interface DispatchChallanProps {
     challan: Challan;
     bookings: Booking[];
-    profile: AllCompanySettings;
+    profile: AllCompanySettings | null;
     driverMobile?: string;
 }
 
@@ -43,9 +44,9 @@ export function DispatchChallan({ challan, bookings, profile, driverMobile }: Di
     return (
         <div className="p-4 font-sans text-black bg-white uppercase">
             <header className="text-center pb-2 space-y-1">
-                <h1 className="text-xl font-bold">{profile.companyName}</h1>
-                <p className="text-xs">{profile.headOfficeAddress}</p>
-                <p className="text-xs">GSTIN: {profile.gstNo} | Ph: {profile.companyContactNo}</p>
+                <h1 className="text-xl font-bold">{profile?.companyName}</h1>
+                <p className="text-xs">{profile?.headOfficeAddress}</p>
+                <p className="text-xs">GSTIN: {profile?.gstNo} | Ph: {profile?.companyContactNo}</p>
                 <p className="text-sm font-bold underline">{title}</p>
             </header>
             

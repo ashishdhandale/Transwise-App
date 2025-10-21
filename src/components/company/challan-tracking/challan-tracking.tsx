@@ -12,7 +12,7 @@ import { SummarySection } from './summary-section';
 import { getChallanData, getLrDetailsData } from '@/lib/challan-data';
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import type { AllCompanySettings } from '../settings/actions';
-import { getCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
 import { Card } from '@/components/ui/card';
 
 export function ChallanTracking() {
@@ -24,10 +24,10 @@ export function ChallanTracking() {
   const [profile, setProfile] = useState<AllCompanySettings | null>(null);
 
   useEffect(() => {
-    async function loadData() {
+    function loadData() {
         const challans = getChallanData();
         const lrDetails = getLrDetailsData();
-        const companyProfile = await getCompanySettings();
+        const companyProfile = loadCompanySettingsFromStorage();
         
         setAllChallans(challans);
         setAllLrDetails(lrDetails);

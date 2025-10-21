@@ -101,9 +101,9 @@ export function BookingsDashboard() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const loadBookings = async () => {
+  const loadBookings = () => {
     try {
-        const profile = await loadCompanySettingsFromStorage();
+        const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         setBookings(getBookings());
     } catch (error) {

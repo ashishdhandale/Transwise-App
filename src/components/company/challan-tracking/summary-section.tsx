@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +15,7 @@ const SummaryItem = ({ label, value, isCurrency = true, profile, isEmphasized = 
     <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{label}:</span>
         <span className={isEmphasized ? "font-bold text-blue-700" : "font-semibold"}>
-            {isCurrency && profile ? (Number(value)).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
+            {isCurrency && profile && typeof value === 'number' ? (Number(value)).toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value}
         </span>
     </div>
 );
