@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -32,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getChallanData, saveChallanData, type Challan, getLrDetailsData, saveLrDetailsData, type LrDetail } from '@/lib/challan-data';
 import { addHistoryLog } from '@/lib/history-data';
 import { useRouter } from 'next/navigation';
+import { ClientOnly } from '@/components/ui/client-only';
 
 const thClass = "text-primary font-bold";
 const tdClass = "whitespace-nowrap";
@@ -85,8 +85,8 @@ export function StockDashboard() {
           item.lrNo.toLowerCase().includes(lowercasedQuery) ||
           item.fromCity.toLowerCase().includes(lowercasedQuery) ||
           item.toCity.toLowerCase().includes(lowercasedQuery) ||
-          item.sender.toLowerCase().includes(lowercasedQuery) ||
-          item.receiver.toLowerCase().includes(lowercasedQuery)
+          item.sender.name.toLowerCase().includes(lowercasedQuery) ||
+          item.receiver.name.toLowerCase().includes(lowercasedQuery)
       );
   }, [stock, searchTerm]);
 
@@ -165,8 +165,8 @@ export function StockDashboard() {
       challanId: newChallanId,
       lrNo: b.lrNo,
       lrType: b.lrType,
-      sender: b.sender,
-      receiver: b.receiver,
+      sender: b.sender.name,
+      receiver: b.receiver.name,
       from: b.fromCity,
       to: b.toCity,
       bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
@@ -248,6 +248,7 @@ export function StockDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
+                <ClientOnly>
                 <div className="overflow-y-auto border rounded-md max-h-[70vh]">
                 <Table>
                     <TableHeader className="sticky top-0 z-10 bg-card">
@@ -294,8 +295,8 @@ export function StockDashboard() {
                             <TableCell className={cn(tdClass)}>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.fromCity}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.toCity}</TableCell>
-                            <TableCell className={cn(tdClass)}>{item.sender}</TableCell>
-                            <TableCell className={cn(tdClass)}>{item.receiver}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.sender.name}</TableCell>
+                            <TableCell className={cn(tdClass)}>{item.receiver.name}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.itemDescription}</TableCell>
                             <TableCell className={cn(tdClass, "text-right")}>{item.qty}</TableCell>
                             <TableCell className={cn(tdClass, "text-right")}>{item.chgWt} kg</TableCell>
@@ -331,6 +332,7 @@ export function StockDashboard() {
                     </div>
                 </div>
                 )}
+                </ClientOnly>
             </CardContent>
         </Card>
     </main>
