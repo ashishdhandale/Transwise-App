@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -72,6 +72,36 @@ const statusColors: { [key: string]: string } = {
 
 const thClass = 'bg-cyan-600 text-white h-10 whitespace-nowrap';
 
+// Temporary function to calculate the next LR number
+const getNextLrNumber = (): string => {
+  try {
+    const allBookings = getBookings();
+    const companyProfile = loadCompanySettingsFromStorage();
+
+    const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
+
+    const lastSequence = systemBookings.reduce((maxSeq, booking) => {
+      const match = booking.lrNo.match(/\d+$/);
+      if (match) {
+        const currentSeq = parseInt(match[0], 10);
+        if (!isNaN(currentSeq) && currentSeq > maxSeq) {
+          return currentSeq;
+        }
+      }
+      return maxSeq;
+    }, 0);
+
+    const newSequence = lastSequence + 1;
+    const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
+    
+    return `${prefix}${String(newSequence).padStart(2, '0')}`;
+  } catch (e) {
+    console.error(e);
+    return "Could not calculate";
+  }
+};
+
+
 export function BookingsDashboard() {
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
@@ -84,6 +114,7 @@ export function BookingsDashboard() {
   const [isPartialCancelDialogOpen, setIsPartialCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
+  const [nextLr, setNextLr] = useState('');
   
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [bookingToPrint, setBookingToPrint] = useState<Booking | null>(null);
@@ -112,6 +143,7 @@ export function BookingsDashboard() {
   useEffect(() => {
     setIsClient(true);
     loadBookings();
+    setNextLr(getNextLrNumber());
   }, []);
   
   useEffect(() => {
@@ -268,6 +300,16 @@ export function BookingsDashboard() {
   return (
     <ClientOnly>
       <main className="flex-1 p-4 md:p-6 bg-white">
+        {nextLr && (
+          <Card className="mb-4 bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle>Next LR Number Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg">If you create a new booking now, the next automatically generated LR number will be: <strong className="text-2xl text-blue-600">{nextLr}</strong></p>
+            </CardContent>
+          </Card>
+        )}
         <Card className="border-2 border-cyan-200">
           <div className="p-4 space-y-4">
             {/* Action Buttons */}
@@ -520,18 +562,18 @@ export function BookingsDashboard() {
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action will completely cancel the booking for LR No: <span className="font-bold">{bookingToCancel?.lrNo}</span>. This cannot be undone.
+              <div className="mt-4">
+                <Label htmlFor="cancel-confirm-input" className="text-foreground">Please type <span className="font-bold text-destructive">CANCEL</span> to confirm.</Label>
+                <Input 
+                  id="cancel-confirm-input" 
+                  value={cancelConfirmationInput}
+                  onChange={(e) => setCancelConfirmationInput(e.target.value)}
+                  className="mt-1"
+                  autoFocus
+                />
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="pt-2">
-            <Label htmlFor="cancel-confirm-input" className="text-foreground">Please type <span className="font-bold text-destructive">CANCEL</span> to confirm.</Label>
-            <Input 
-              id="cancel-confirm-input" 
-              value={cancelConfirmationInput}
-              onChange={(e) => setCancelConfirmationInput(e.target.value)}
-              className="mt-1"
-              autoFocus
-            />
-          </div>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCancelConfirmationInput('')}>Back</AlertDialogCancel>
             <AlertDialogAction 
