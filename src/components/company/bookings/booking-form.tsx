@@ -364,14 +364,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
         
         let keyCounter = 1;
-        let defaultRows = 1;
-        try {
-            if(profile?.defaultItemRows){
-                defaultRows = profile.defaultItemRows;
-            }
-        } catch {
-            defaultRows = 1;
-        }
+        const defaultRows = profile?.defaultItemRows || 1;
 
         setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
         setBookingType('TOPAY');
@@ -441,6 +434,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     const defaultStationName = profile?.defaultFromStation;
                     const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
                     setFromStation(defaultStation);
+                     // Set other defaults for new booking
+                    const allBookings = getBookings();
+                    let lrPrefix: string | undefined;
+                    if (profile?.grnFormat === 'with_char') {
+                        lrPrefix = (profile.lrPrefix)?.trim() || undefined;
+                    }
+                    setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
+                    let keyCounter = 1;
+                    const defaultRows = profile?.defaultItemRows || 1;
+                    setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
                 }
             } catch (error) {
                 console.error("Failed to process bookings or fetch profile", error);
@@ -449,31 +452,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         loadInitialData();
-    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast]);
-    
-    // Client-side only initialization for new bookings
-    useEffect(() => {
-        if (!isEditMode && !bookingData && companyProfile) {
-            // New booking state initialization
-            const allBookings = getBookings();
-            
-            let lrPrefix: string | undefined;
-            if (companyProfile?.grnFormat === 'with_char') {
-                lrPrefix = (companyProfile.lrPrefix)?.trim() || undefined;
-            }
-
-            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
-            
-            let keyCounter = 1;
-            const defaultRows = companyProfile?.defaultItemRows || 1;
-            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
-
-            const allCities = getCities();
-            const defaultStationName = companyProfile?.defaultFromStation;
-            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-            setFromStation(defaultStation);
-        }
-    }, [isEditMode, bookingData, companyProfile, isOfflineMode]);
+    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast, isOfflineMode]);
 
 
     useEffect(() => {
@@ -736,7 +715,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
-            router.push('/company/bookings');
+            if (isEditMode || isViewOnly || isPartialCancel) {
+                onClose?.();
+            } else {
+                router.push('/company/bookings');
+            }
         }
         setShowReceipt(open);
     };
