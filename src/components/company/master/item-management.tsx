@@ -66,7 +66,9 @@ export function ItemManagement() {
       if (savedItems) {
         setItems(JSON.parse(savedItems));
       } else {
+        // If no data, initialize with sample data and save it
         setItems(initialItems);
+        localStorage.setItem(LOCAL_STORAGE_KEY_ITEMS, JSON.stringify(initialItems));
       }
     } catch (error) {
       console.error("Failed to load item data from local storage", error);
