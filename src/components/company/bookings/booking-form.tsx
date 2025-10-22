@@ -240,25 +240,19 @@ const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): s
         return match ? parseInt(match[0], 10) : 0;
     };
 
-    // 3. Separate bookings into prefixed and non-prefixed groups
-    const prefixedLrs = systemBookings.filter(b => prefix && b.lrNo.startsWith(prefix));
-    const plainLrs = systemBookings.filter(b => !b.lrNo.match(/^[a-zA-Z]/));
+    // 3. Find the booking with the highest LR number
+    const lastBooking = systemBookings.reduce((latest, current) => {
+        return extractNumber(current.lrNo) > extractNumber(latest.lrNo) ? current : latest;
+    });
 
-    let lastSequence = 0;
-
-    // 4. Determine which group to use for the sequence
-    if (prefixedLrs.length > 0) {
-        // If there are LRs with the current prefix, find the max among them
-        lastSequence = Math.max(...prefixedLrs.map(b => extractNumber(b.lrNo)));
-    } else if (plainLrs.length > 0) {
-        // Otherwise, find the max among the plain number LRs
-        lastSequence = Math.max(...plainLrs.map(b => extractNumber(b.lrNo)));
-    }
-    // If neither group has entries (e.g., all LRs have a *different* prefix), lastSequence remains 0.
-
+    const lastSequence = extractNumber(lastBooking.lrNo);
     const newSequence = lastSequence + 1;
     
-    return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
+    // 4. Use the prefix from the latest booking if it exists, otherwise use the profile prefix
+    const lrPrefixMatch = lastBooking.lrNo.match(/^[a-zA-Z]+/);
+    const finalPrefix = lrPrefixMatch ? lrPrefixMatch[0] : prefix;
+
+    return finalPrefix ? `${finalPrefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
 };
 
 export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false, lrNumberInputRef }: BookingFormProps) {
@@ -472,7 +466,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         loadInitialData();
-    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast, isOfflineMode, companyProfile?.lrPrefix]); // Added dependency on companyProfile
+    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast, isOfflineMode]);
 
 
     useEffect(() => {
