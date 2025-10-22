@@ -252,8 +252,8 @@ export function BookingsDashboard() {
     const lowercasedQuery = debouncedSearchQuery.toLowerCase();
     return sortedBookings.filter((booking) => 
         booking.lrNo.toLowerCase().includes(lowercasedQuery) ||
-        booking.sender.toLowerCase().includes(lowercasedQuery) ||
-        booking.receiver.toLowerCase().includes(lowercasedQuery) ||
+        (booking.sender && booking.sender.name.toLowerCase().includes(lowercasedQuery)) ||
+        (booking.receiver && booking.receiver.name.toLowerCase().includes(lowercasedQuery)) ||
         booking.fromCity.toLowerCase().includes(lowercasedQuery) ||
         booking.toCity.toLowerCase().includes(lowercasedQuery)
     );
@@ -422,8 +422,8 @@ export function BookingsDashboard() {
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
                           <TableCell className={tdClass}>{booking.lrType}</TableCell>
-                          <TableCell className={tdClass}>{booking.sender}</TableCell>
-                          <TableCell className={tdClass}>{booking.receiver}</TableCell>
+                          <TableCell className={tdClass}>{booking.sender.name}</TableCell>
+                          <TableCell className={tdClass}>{booking.receiver.name}</TableCell>
                           <TableCell className={tdClass}>
                             <Tooltip>
                               <TooltipTrigger asChild>
