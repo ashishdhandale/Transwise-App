@@ -165,12 +165,6 @@ export function AppHeader() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{userRole}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            {!isAdmin && <DropdownMenuItem>Billing</DropdownMenuItem>}
-            <DropdownMenuItem asChild>
-              <Link href={settingsHref}>Settings</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
