@@ -231,13 +231,15 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
-         // Filter for purely numeric LR numbers
-        const numericLrs = systemBookings
-            .map(b => b.lrNo)
-            .filter(lrNo => /^\d+$/.test(lrNo)) // Ensure it's a plain number
-            .map(lrNo => parseInt(lrNo, 10));
-
-        const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
+        const systemNumericLrs = [];
+        for (const booking of systemBookings) {
+            // Check if lrNo contains only digits
+            if (/^\d+$/.test(booking.lrNo)) {
+                systemNumericLrs.push(parseInt(booking.lrNo, 10));
+            }
+        }
+        
+        const lastSequence = systemNumericLrs.length > 0 ? Math.max(0, ...systemNumericLrs) : 0;
         return String(lastSequence + 1);
 
     } else { // 'with_char' format
