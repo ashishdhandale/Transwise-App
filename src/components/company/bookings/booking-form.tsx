@@ -226,24 +226,27 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
+    // 1. Filter for system-generated bookings only.
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
+    // 2. Handle based on the GRN Format setting.
     if (profile.grnFormat === 'plain') {
         const numericLrs = systemBookings
             .map(b => parseInt(b.lrNo, 10))
-            .filter(num => !isNaN(num) && String(num) === b.lrNo);
-        const lastSequence = numericLrs.length > 0 ? Math.max(...numericLrs) : 0;
+            .filter(num => !isNaN(num) && String(num).length === b.lrNo.length); // Ensure it's purely numeric
+        
+        const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
-    } else {
+    } else { // 'with_char'
         const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
-        if (!prefix) return '1';
+        if (!prefix) return '1'; // Fallback if prefix is missing
 
         const relevantLrs = systemBookings
             .filter(b => b.lrNo.toUpperCase().startsWith(prefix))
             .map(b => parseInt(b.lrNo.substring(prefix.length), 10))
             .filter(num => !isNaN(num));
         
-        const lastSequence = relevantLrs.length > 0 ? Math.max(...relevantLrs) : 0;
+        const lastSequence = relevantLrs.length > 0 ? Math.max(0, ...relevantLrs) : 0;
         return `${prefix}${lastSequence + 1}`;
     }
 };
@@ -312,10 +315,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setFromStation(station);
     }, []);
 
-    const loadAllData = useCallback(() => {
+    // This effect loads all necessary master data when the component mounts.
+    useEffect(() => {
         try {
             setIsLoading(true);
-            setCompanyProfile(loadCompanySettingsFromStorage());
+            const profile = loadCompanySettingsFromStorage();
+            setCompanyProfile(profile);
             setAllBookings(getBookings());
             setCustomers(getCustomers());
             setDrivers(getDrivers());
@@ -331,15 +336,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setIsLoading(false);
         }
     }, [toast]);
-
-    // This effect runs only once to load all necessary data.
-    useEffect(() => {
-        loadAllData();
-    }, [loadAllData]);
     
-    // This effect runs only after all data is loaded and sets up the form.
+    // This effect initializes the form state. It runs only when `isLoading` becomes false.
     useEffect(() => {
-        if (isLoading) return; // Wait for data to be loaded
+        if (isLoading || !companyProfile) return; // Wait for data and profile to be loaded
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
 
@@ -367,17 +367,47 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             if (bookingToLoad.ftlDetails) {
                 setFtlDetails(bookingToLoad.ftlDetails);
             }
-        } else if (companyProfile) { // Ensure profile is loaded before generating LR for new booking
+        } else {
             // -- New Booking Mode --
-            handleReset(false); // Initialize form for a new booking
+             if (isOfflineMode) {
+                setCurrentLrNumber('');
+            } else {
+                setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
+            }
+            
+            const defaultRows = companyProfile.defaultItemRows || 1;
+            setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
+            
+            const defaultStationName = companyProfile.defaultFromStation;
+            const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+            setFromStation(defaultStation);
+            
+            // Reset other fields
+            setBookingType('TOPAY');
+            setLoadType('LTL');
+            setToStation(null);
+            setSender(null);
+            setReceiver(null);
+            setBookingDate(new Date());
+            setGrandTotal(0);
+            setTaxPaidBy('Not Applicable');
+            setAdditionalCharges({});
+            setInitialChargesFromBooking(undefined);
+            setDeliveryAt('Godown Deliv');
+            setErrors({});
+            setFtlDetails({ vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0 });
         }
-    }, [isLoading, companyProfile, trackingId, bookingData]);
 
+    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities, isOfflineMode]);
 
     const handleReset = useCallback((showToast = true) => {
         if (!companyProfile) return;
         
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, companyProfile));
+        if (isOfflineMode) {
+            setCurrentLrNumber('');
+        } else {
+            setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
+        }
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -719,7 +749,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             errors={errors}
             isViewOnly={readOnly}
             isOfflineMode={isOfflineMode}
-            onPartyAdded={loadAllData}
+            onPartyAdded={loadInitialData}
         />
         {loadType === 'FTL' && (
             <VehicleDetailsSection 
@@ -728,7 +758,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 drivers={drivers}
                 vehicles={vehicles}
                 vendors={vendors}
-                onMasterDataChange={loadAllData}
+                onMasterDataChange={loadInitialData}
                 loadType={loadType}
                 isViewOnly={readOnly}
             />
