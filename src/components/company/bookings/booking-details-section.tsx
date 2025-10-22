@@ -162,24 +162,22 @@ export function BookingDetailsSection({
                         value={lrNumber}
                         onChange={(e) => onLrNumberChange(e.target.value)}
                         className={cn(
-                            'font-bold',
-                            !isLrEditable && 'text-red-600 border-red-300',
-                            isLrEditable && 'text-blue-600 border-blue-300',
+                            'font-bold text-red-600 border-red-300',
                             errors.lrNumber && errorClass
                         )}
-                        readOnly={!isLrEditable || isViewOnly}
+                        readOnly={!isEditMode}
                         placeholder={isLrEditable ? "Enter Manual LRN" : ""}
                         autoFocus={!isEditMode}
                     />
                 </div>
                 {isOfflineMode && (
                      <div className="space-y-1">
-                        <Label htmlFor="referenceLrNumber">Reference LR Number</Label>
+                        <Label htmlFor="referenceLrNumber">Pre-printed LR No.</Label>
                         <Input
                             id="referenceLrNumber"
                             value={referenceLrNumber || ''}
                             onChange={(e) => onReferenceLrNumberChange(e.target.value)}
-                            placeholder="Pre-printed LR No."
+                            placeholder="Enter manual LR number"
                             disabled={isViewOnly}
                         />
                     </div>

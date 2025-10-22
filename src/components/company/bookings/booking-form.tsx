@@ -382,12 +382,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else if (companyProfile) {
             // -- New Booking Mode --
-            if (!isOfflineMode) {
-                 const newLrNumber = generateLrNumber(allBookings, companyProfile);
-                 setCurrentLrNumber(newLrNumber);
-            } else {
-                 setCurrentLrNumber('');
-            }
+            const newLrNumber = generateLrNumber(allBookings, companyProfile);
+            setCurrentLrNumber(newLrNumber);
             
             const defaultStationName = companyProfile.defaultFromStation;
             const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
@@ -417,26 +413,20 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     
     // React to offline mode changes
     useEffect(() => {
-        if (!isEditMode && companyProfile) {
-            if (isOfflineMode) {
-                setCurrentLrNumber('');
-            } else {
-                setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
-                setReferenceLrNumber(''); // Clear reference number when not in offline mode
+        if (!isEditMode) {
+            if (!isOfflineMode) {
+                // When switching back to online, clear the reference number
+                setReferenceLrNumber('');
             }
         }
-    }, [isOfflineMode, isEditMode, companyProfile, allBookings]);
+    }, [isOfflineMode, isEditMode]);
 
 
     const handleReset = useCallback(() => {
         if (!companyProfile) return;
         
         setIsOfflineMode(initialIsOffline || false); // Reset to initial mode
-        if (initialIsOffline) {
-            setCurrentLrNumber('');
-        } else {
-            setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
-        }
+        setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -637,7 +627,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (!sender?.name) newErrors.sender = true;
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
-        if (isOfflineMode && !currentLrNumber) newErrors.lrNumber = true;
+        
+        // LR Number is always system-generated, so no check needed here.
+        // if (isOfflineMode && !currentLrNumber) newErrors.lrNumber = true;
 
         setErrors(newErrors);
 
@@ -738,7 +730,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const formTitle = isEditMode ? `Edit Booking: ${currentLrNumber}` : 
                       isViewOnly ? `View Booking: ${currentLrNumber}` :
                       isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
-                      (initialIsOffline ? 'Add Offline/Manual Booking' : 'Create New Booking');
+                      'Create New Booking';
 
   const formContent = (
      <div className="space-y-4">
