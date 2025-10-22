@@ -227,24 +227,26 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
     const systemBookings = allBookings.filter(b => b.source === 'System');
-    let lastSequence = 0;
 
-    if (profile.grnFormat === 'plain') {
-        const plainNumericBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo) && !isNaN(parseInt(b.lrNo, 10)));
-        if (plainNumericBookings.length > 0) {
-            lastSequence = Math.max(...plainNumericBookings.map(b => parseInt(b.lrNo, 10)));
-        }
-        return String(lastSequence + 1);
-    } else { // 'with_char'
-        const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
-        if (!prefix) return '1'; // Fallback if prefix is missing
-        
-        const relevantBookings = systemBookings.filter(b => b.lrNo.toUpperCase().startsWith(prefix));
-        if (relevantBookings.length > 0) {
-             lastSequence = Math.max(...relevantBookings.map(b => parseInt(b.lrNo.substring(prefix.length), 10) || 0));
-        }
-        return `${prefix}${lastSequence + 1}`;
+    if (systemBookings.length === 0) {
+        return profile.grnFormat === 'with_char' ? `${profile.lrPrefix || ''}1` : '1';
     }
+
+    // Sort by date descending to get the most recent booking first
+    systemBookings.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+
+    const lastBooking = systemBookings[0];
+    const prefix = profile.grnFormat === 'with_char' ? profile.lrPrefix?.trim().toUpperCase() : '';
+    let lastSequence = 0;
+    
+    const numericPartMatch = lastBooking.lrNo.match(/\d+$/);
+    if (numericPartMatch) {
+        lastSequence = parseInt(numericPartMatch[0], 10);
+    }
+
+    const newSequence = lastSequence + 1;
+
+    return prefix ? `${prefix}${newSequence}` : String(newSequence);
 };
 
 
@@ -405,38 +407,26 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }
     }, [companyProfile, isOfflineMode, lrNumberInputRef, toast]);
 
-    // Effect to load profile and master data once.
+    // This effect loads the company profile and master data ONCE.
     useEffect(() => {
         const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         loadMasterData();
     }, [loadMasterData]);
 
-    // Effect to set initial state for new booking or load existing booking data.
-    // This now depends on companyProfile being loaded.
+    // This effect runs only after companyProfile is loaded. It sets up the form for a new booking or loads an existing one.
     useEffect(() => {
-        // Wait until profile is loaded
-        if (!companyProfile) return;
+        if (!companyProfile) return; // <-- Guard clause
 
         if (trackingId || bookingData) {
             const bookingToLoad = bookingData || getBookings().find(b => b.trackingId === trackingId);
             if (bookingToLoad) {
                 loadBookingData(bookingToLoad);
             }
-        } else { // This is a new booking
-            const allBookings = getBookings();
-            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, companyProfile));
-            
-            const allCities = getCities();
-            const defaultStationName = companyProfile.defaultFromStation;
-            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-            setFromStation(defaultStation);
-            
-            let keyCounter = 1;
-            const defaultRows = companyProfile.defaultItemRows || 1;
-            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
+        } else {
+            handleReset(false); // Initialize form for a new booking
         }
-    }, [companyProfile, trackingId, bookingData, isOfflineMode, loadBookingData]);
+    }, [companyProfile, trackingId, bookingData, loadBookingData, handleReset]);
 
 
     useEffect(() => {
