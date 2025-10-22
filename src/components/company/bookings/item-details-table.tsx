@@ -35,6 +35,7 @@ import { AddItemDialog } from '../master/add-item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ClientOnly } from '@/components/ui/client-only';
 import { getRateLists } from '@/lib/rate-list-data';
+import { getItems, saveItems } from '@/lib/item-data';
 
 
 export interface ItemRow {
@@ -109,10 +110,7 @@ export function ItemDetailsTable({
 
   const loadItemsAndRates = useCallback(() => {
     try {
-        const savedItems = localStorage.getItem('transwise_items');
-        if (savedItems) {
-            setItemOptions(JSON.parse(savedItems));
-        }
+        setItemOptions(getItems());
         setRateLists(getRateLists());
     } catch (error) {
         console.error("Failed to load master data", error);
@@ -361,10 +359,11 @@ export function ItemDetailsTable({
   
    const handleSaveItem = (itemData: Omit<Item, 'id'>) => {
         try {
-            const newId = itemOptions.length > 0 ? Math.max(...itemOptions.map(i => i.id)) + 1 : 1;
+            const currentItems = getItems();
+            const newId = currentItems.length > 0 ? Math.max(...currentItems.map(i => i.id)) + 1 : 1;
             const newItem: Item = { id: newId, ...itemData };
-            const updatedItems = [newItem, ...itemOptions];
-            localStorage.setItem('transwise_items', JSON.stringify(updatedItems));
+            const updatedItems = [newItem, ...currentItems];
+            saveItems(updatedItems);
             setItemOptions(updatedItems);
             toast({ title: 'Item Added', description: `"${itemData.name}" has been added to your master list.` });
             return true;
