@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -80,16 +81,21 @@ const getNextLrNumber = (): string => {
 
     const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
 
-    const lastSequence = systemBookings.reduce((maxSeq, booking) => {
-      const match = booking.lrNo.match(/\d+$/);
-      if (match) {
-        const currentSeq = parseInt(match[0], 10);
-        if (!isNaN(currentSeq) && currentSeq > maxSeq) {
-          return currentSeq;
-        }
-      }
-      return maxSeq;
-    }, 0);
+    if (systemBookings.length === 0) {
+      const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
+      return `${prefix}1`.padStart(2, '0');
+    }
+
+    // Sort by creation date to find the most recent booking
+    systemBookings.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+    
+    const lastBooking = systemBookings[0];
+    const match = lastBooking.lrNo.match(/\d+$/);
+    
+    let lastSequence = 0;
+    if (match) {
+        lastSequence = parseInt(match[0], 10);
+    }
 
     const newSequence = lastSequence + 1;
     const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
