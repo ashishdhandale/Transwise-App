@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { BookingDetailsSection } from '@/components/company/bookings/booking-details-section';
@@ -442,7 +443,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         loadInitialData();
-    }, [trackingId, bookingData, loadBookingData, loadMasterData, handleReset, toast]);
+    }, [trackingId, bookingData, loadBookingData, loadMasterData, handleReset]);
     
     // Set date on client mount to avoid hydration error
     useEffect(() => {
