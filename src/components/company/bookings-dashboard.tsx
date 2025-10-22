@@ -253,8 +253,9 @@ export function BookingsDashboard() {
     const lowercasedQuery = debouncedSearchQuery.toLowerCase();
     return sortedBookings.filter((booking) => 
         booking.lrNo.toLowerCase().includes(lowercasedQuery) ||
-        booking.sender.toLowerCase().includes(lowercasedQuery) ||
-        booking.receiver.toLowerCase().includes(lowercasedQuery) ||
+        (booking.referenceLrNumber && booking.referenceLrNumber.toLowerCase().includes(lowercasedQuery)) ||
+        (booking.sender.name && booking.sender.name.toLowerCase().includes(lowercasedQuery)) ||
+        (booking.receiver.name && booking.receiver.name.toLowerCase().includes(lowercasedQuery)) ||
         booking.fromCity.toLowerCase().includes(lowercasedQuery) ||
         booking.toCity.toLowerCase().includes(lowercasedQuery)
     );
@@ -339,6 +340,7 @@ export function BookingsDashboard() {
                       <TableHead className={`${thClass} w-[80px]`}>Action</TableHead>
                       <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                       <TableHead className={thClass}>LR No</TableHead>
+                      <TableHead className={thClass}>Pre-printed LR</TableHead>
                       <TableHead className={thClass}>Date</TableHead>
                       <TableHead className={thClass}>From City</TableHead>
                       <TableHead className={thClass}>To City</TableHead>
@@ -406,16 +408,23 @@ export function BookingsDashboard() {
                           <TableCell className={`${tdClass} text-center`}>{index + 1}</TableCell>
                           <TableCell className={tdClass}>
                             <Tooltip>
-                              <TooltipTrigger asChild><p className="cursor-help">{booking.lrNo}</p></TooltipTrigger>
-                              <TooltipContent><p>Tracking ID: {booking.trackingId}</p></TooltipContent>
+                              <TooltipTrigger asChild>
+                                <p className={cn("cursor-help font-semibold", 
+                                    booking.source === 'System' ? 'text-blue-600' : 'text-purple-600'
+                                )}>{booking.lrNo}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Tracking ID: {booking.trackingId}</p>
+                                <p>Source: {booking.source || 'System'}</p>
+                              </TooltipContent>
                             </Tooltip>
                           </TableCell>
+                          <TableCell className={tdClass}>{booking.referenceLrNumber || 'N/A'}</TableCell>
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
-                          <TableCell className={tdClass}>{booking.lrType}</TableCell>
-                          <TableCell className={tdClass}>{booking.sender}</TableCell>
-                          <TableCell className={tdClass}>{booking.receiver}</TableCell>
+                          <TableCell className={tdClass}>{booking.sender.name}</TableCell>
+                          <TableCell className={tdClass}>{booking.receiver.name}</TableCell>
                           <TableCell className={tdClass}>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -439,7 +448,7 @@ export function BookingsDashboard() {
                       ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={15} className="text-center h-24">No bookings found.</TableCell>
+                          <TableCell colSpan={16} className="text-center h-24">No bookings found.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
