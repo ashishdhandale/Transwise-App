@@ -352,7 +352,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (!companyProfile) return;
         
         setIsOfflineMode(initialIsOffline || false);
-        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyProfile));
+        
+        // This is where the updated logic is crucial
+        const allCurrentBookings = getBookings();
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(allCurrentBookings, companyProfile));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -386,7 +389,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [companyProfile, allBookings, cities, lrNumberInputRef, toast, initialIsOffline]);
+    }, [companyProfile, cities, lrNumberInputRef, toast, initialIsOffline]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -455,15 +458,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     useEffect(() => {
         if (!isEditMode) {
              if (isOfflineMode) {
-                setCurrentLrNumber('');
+                // Keep the system LR number, just clear the reference number input
+                setReferenceLrNumber('');
              } else {
-                 if (companyProfile) {
-                    setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
-                 }
                 setReferenceLrNumber('');
              }
         }
-    }, [isOfflineMode, isEditMode, companyProfile, allBookings]);
+    }, [isOfflineMode, isEditMode]);
 
     useEffect(() => {
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
@@ -491,6 +492,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             const newCustomer: Customer = { ...party, id: newId };
             const updatedCustomers = [newCustomer, ...currentCustomers];
             saveCustomers(updatedCustomers);
+            // After saving, reload the customer list in the form
+            setCustomers(updatedCustomers);
             return { name: newCustomer.name, gstin: newCustomer.gstin, address: newCustomer.address, mobile: newCustomer.mobile };
         }
         return { name: party.name, gstin: party.gstin, address: party.address, mobile: party.mobile };
@@ -531,11 +534,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
         try {
             let savedBooking: Booking;
+            const currentAllBookings = getBookings(); // Get the very latest bookings
+
             if ((isEditMode || isPartialCancel) && currentBooking) {
                 savedBooking = { ...currentBooking, ...newBookingData };
                 const changeDetails = generateChangeDetails(currentBooking, savedBooking, isPartialCancel);
                 
-                const updatedBookings = allBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? savedBooking : b);
+                const updatedBookings = currentAllBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? savedBooking : b);
                 saveBookings(updatedBookings);
                 setAllBookings(updatedBookings); // Update local state
                 
@@ -548,7 +553,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             } else {
                 savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
-                const updatedBookings = [...allBookings, savedBooking];
+                const updatedBookings = [...currentAllBookings, savedBooking];
                 saveBookings(updatedBookings);
                 setAllBookings(updatedBookings); // Update local state for next LR generation
                 
@@ -616,7 +621,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 
                 if (onSaveAndNew) {
                     onSaveAndNew(savedBooking, () => {
-                        const nextLrNumber = generateLrNumber(updatedBookings, companyProfile!);
+                         // After save, get the absolute latest bookings and generate the next number.
+                        const latestBookings = getBookings();
+                        const nextLrNumber = generateLrNumber(latestBookings, companyProfile!);
                         handleReset(nextLrNumber);
                     });
                 } else {
@@ -639,7 +646,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
         
-        if (isOfflineMode && !currentLrNumber) newErrors.lrNumber = true;
+        if (isOfflineMode && !referenceLrNumber) newErrors.lrNumber = true;
 
         setErrors(newErrors);
 
@@ -722,9 +729,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        const nextLrNumber = generateLrNumber(allBookings, companyProfile!);
+        const latestBookings = getBookings(); // Get fresh data
+        const nextLrNumber = generateLrNumber(latestBookings, companyProfile!);
         handleReset(nextLrNumber);
-    }, [handleReset, allBookings, companyProfile]);
+    }, [handleReset, companyProfile]);
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
@@ -836,7 +844,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose} 
-                    onReset={() => handleReset()}
+                    onReset={() => {
+                        const nextLrNumber = generateLrNumber(allBookings, companyProfile!);
+                        handleReset(nextLrNumber);
+                    }}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
                     isOfflineMode={isOfflineMode}

@@ -137,7 +137,6 @@ export function BookingDetailsSection({
     };
 
     const errorClass = 'border-red-500 ring-2 ring-red-500/50';
-    const isLrEditable = isOfflineMode || isEditMode;
 
     return (
         <>
@@ -162,23 +161,23 @@ export function BookingDetailsSection({
                         value={lrNumber}
                         onChange={(e) => onLrNumberChange(e.target.value)}
                         className={cn(
-                            'font-bold text-red-600 border-red-300',
-                            errors.lrNumber && errorClass
+                            'font-bold text-red-600 border-red-300'
                         )}
-                        readOnly={!isEditMode}
-                        placeholder={isLrEditable ? "Enter Manual LRN" : ""}
+                        readOnly={true} // System LR is always readonly
+                        placeholder={lrNumber || "Generating..."}
                         autoFocus={!isEditMode}
                     />
                 </div>
                 {isOfflineMode && (
                      <div className="space-y-1">
-                        <Label htmlFor="referenceLrNumber">Pre-printed LR No.</Label>
+                        <Label htmlFor="referenceLrNumber">Pre-printed LR No.*</Label>
                         <Input
                             id="referenceLrNumber"
                             value={referenceLrNumber || ''}
                             onChange={(e) => onReferenceLrNumberChange(e.target.value)}
                             placeholder="Enter manual LR number"
                             disabled={isViewOnly}
+                            className={cn(errors.lrNumber && errorClass)}
                         />
                     </div>
                 )}
