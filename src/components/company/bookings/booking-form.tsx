@@ -347,7 +347,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }
     }, []);
     
-    const handleReset = useCallback(() => {
+     const handleReset = useCallback((showToast = true) => {
         const profile = companyProfile;
         const allBookings = getBookings();
         
@@ -410,12 +410,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         }, 0);
 
-
-        toast({
-            title: "Form Reset",
-            description: "All fields have been cleared.",
-        });
-    }, [companyProfile, isOfflineMode, toast, lrNumberInputRef]);
+        if (showToast) {
+            toast({
+                title: "Form Reset",
+                description: "All fields have been cleared.",
+            });
+        }
+    }, [companyProfile, isOfflineMode, lrNumberInputRef, toast]);
 
 
     useEffect(() => {
@@ -434,7 +435,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         loadBookingData(bookingToLoad);
                     }
                 } else {
-                    handleReset();
+                    // Do nothing here, initial state is handled by useState declarations
                 }
             } catch (error) {
                 console.error("Failed to process bookings or fetch profile", error);
@@ -443,14 +444,15 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         loadInitialData();
-    }, [trackingId, bookingData, loadBookingData, loadMasterData, handleReset]);
+    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast]);
     
-    // Set date on client mount to avoid hydration error
+    // Client-side only initialization for new bookings
     useEffect(() => {
-        if (!bookingDate && !bookingData) { // Only set if it's a new form
-            setBookingDate(new Date());
+        if (!isEditMode && !bookingData) {
+            handleReset(false); // Call reset without showing the toast on initial load
         }
-    }, [bookingDate, bookingData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEditMode, bookingData]); // Only run when these props change
 
 
     useEffect(() => {
@@ -534,7 +536,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
                 if (onSaveAndNew) {
-                    onSaveAndNew(newBooking, handleReset);
+                    onSaveAndNew(newBooking, () => handleReset(false));
                     return; // The parent component handles toast and state
                 }
 
@@ -653,7 +655,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        const callback = onSaveAndNew ? handleReset : undefined;
+        const callback = onSaveAndNew ? () => handleReset(false) : undefined;
         await proceedWithSave(paymentMode, callback);
     };
     
@@ -708,7 +710,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        handleReset();
+        handleReset(false);
     }, [handleReset]);
 
     const formTitle = isEditMode ? `Edit Booking: ${currentLrNumber}` : 
@@ -807,7 +809,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose} 
-                    onReset={handleReset}
+                    onReset={() => handleReset()}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
                     isOfflineMode={isOfflineModeProp}
