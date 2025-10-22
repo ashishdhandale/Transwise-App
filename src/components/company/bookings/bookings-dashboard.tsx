@@ -242,7 +242,8 @@ export function BookingsDashboard() {
 
 
   const filteredBookings = useMemo(() => {
-    const sortedBookings = [...bookings].sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+    const sortedBookings = [...bookings]
+        .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 
     if (!debouncedSearchQuery) {
       return sortedBookings;
@@ -418,6 +419,7 @@ export function BookingsDashboard() {
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
+                          <TableCell className={tdClass}>{booking.lrType}</TableCell>
                           <TableCell className={tdClass}>{booking.sender}</TableCell>
                           <TableCell className={tdClass}>{booking.receiver}</TableCell>
                           <TableCell className={tdClass}>
