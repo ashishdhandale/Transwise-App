@@ -277,9 +277,6 @@ export function BookingsDashboard() {
               <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
                   <Link href="/company/bookings/new">New Booking (Alt+N)</Link>
               </Button>
-              <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
-                  <Link href="/company/bookings/new?mode=offline">Add Offline Booking (Alt+O)</Link>
-              </Button>
               <Button variant="outline" className="border-gray-400">Hold LR</Button>
             </div>
 
@@ -409,7 +406,7 @@ export function BookingsDashboard() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <p className={cn("cursor-help font-semibold", 
-                                    booking.source === 'Offline' ? 'text-purple-600' : 'text-blue-600'
+                                    booking.source === 'System' ? 'text-blue-600' : 'text-purple-600'
                                 )}>{booking.lrNo}</p>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -557,5 +554,3 @@ export function BookingsDashboard() {
     </ClientOnly>
   );
 }
-
-    

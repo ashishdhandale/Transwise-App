@@ -76,13 +76,14 @@ export const getBookings = (): Booking[] => {
                 }
                 
                 // 2. Retroactively assign 'source' property.
-                if (!newBooking.source) {
+                if (newBooking.referenceLrNumber && newBooking.source !== 'Offline') {
                     dataWasCorrected = true;
-                    if (inwardLrNos.has(newBooking.lrNo)) {
-                        newBooking.source = 'Inward';
-                    } else {
-                        newBooking.source = 'System';
-                    }
+                    newBooking.source = 'Offline';
+                } else if (inwardLrNos.has(newBooking.lrNo)) {
+                    newBooking.source = 'Inward';
+                } else if (!newBooking.source) {
+                    dataWasCorrected = true;
+                    newBooking.source = 'System';
                 }
                 
                 if (!newBooking.sender || typeof newBooking.sender === 'string') {
