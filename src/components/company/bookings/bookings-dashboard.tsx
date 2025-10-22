@@ -73,40 +73,6 @@ const statusColors: { [key: string]: string } = {
 
 const thClass = 'bg-cyan-600 text-white h-10 whitespace-nowrap';
 
-// Temporary function to calculate the next LR number
-const getNextLrNumber = (): string => {
-  try {
-    const allBookings = getBookings();
-    const companyProfile = loadCompanySettingsFromStorage();
-
-    const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
-
-    if (systemBookings.length === 0) {
-      const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
-      return `${prefix}1`.padStart(2, '0');
-    }
-
-    // Sort by creation date to find the most recent booking
-    systemBookings.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
-    
-    const lastBooking = systemBookings[0];
-    const match = lastBooking.lrNo.match(/\d+$/);
-    
-    let lastSequence = 0;
-    if (match) {
-        lastSequence = parseInt(match[0], 10);
-    }
-
-    const newSequence = lastSequence + 1;
-    const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
-    
-    return `${prefix}${String(newSequence).padStart(2, '0')}`;
-  } catch (e) {
-    console.error(e);
-    return "Could not calculate";
-  }
-};
-
 
 export function BookingsDashboard() {
   const [fromDate, setFromDate] = useState<Date | undefined>();
@@ -120,7 +86,6 @@ export function BookingsDashboard() {
   const [isPartialCancelDialogOpen, setIsPartialCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
-  const [nextLr, setNextLr] = useState('');
   
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [bookingToPrint, setBookingToPrint] = useState<Booking | null>(null);
@@ -149,7 +114,6 @@ export function BookingsDashboard() {
   useEffect(() => {
     setIsClient(true);
     loadBookings();
-    setNextLr(getNextLrNumber());
   }, []);
   
   useEffect(() => {
@@ -278,9 +242,7 @@ export function BookingsDashboard() {
 
 
   const filteredBookings = useMemo(() => {
-    const sortedBookings = [...bookings]
-        .filter(b => b.source !== 'Inward' && !b.lrNo.includes('-R')) // Exclude inward and return bookings
-        .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+    const sortedBookings = [...bookings].sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 
     if (!debouncedSearchQuery) {
       return sortedBookings;
@@ -306,16 +268,6 @@ export function BookingsDashboard() {
   return (
     <ClientOnly>
       <main className="flex-1 p-4 md:p-6 bg-white">
-        {nextLr && (
-          <Card className="mb-4 bg-blue-50 border-blue-200">
-            <CardHeader>
-              <CardTitle>Next LR Number Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg">If you create a new booking now, the next automatically generated LR number will be: <strong className="text-2xl text-blue-600">{nextLr}</strong></p>
-            </CardContent>
-          </Card>
-        )}
         <Card className="border-2 border-cyan-200">
           <div className="p-4 space-y-4">
             {/* Action Buttons */}
@@ -452,14 +404,20 @@ export function BookingsDashboard() {
                           <TableCell className={`${tdClass} text-center`}>{index + 1}</TableCell>
                           <TableCell className={tdClass}>
                             <Tooltip>
-                              <TooltipTrigger asChild><p className="cursor-help">{booking.lrNo}</p></TooltipTrigger>
-                              <TooltipContent><p>Tracking ID: {booking.trackingId}</p></TooltipContent>
+                              <TooltipTrigger asChild>
+                                <p className={cn("cursor-help font-semibold", 
+                                    booking.source === 'Inward' ? 'text-purple-600' : 'text-blue-600'
+                                )}>{booking.lrNo}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Tracking ID: {booking.trackingId}</p>
+                                <p>Source: {booking.source || 'System'}</p>
+                              </TooltipContent>
                             </Tooltip>
                           </TableCell>
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
-                          <TableCell className={tdClass}>{booking.lrType}</TableCell>
                           <TableCell className={tdClass}>{booking.sender}</TableCell>
                           <TableCell className={tdClass}>{booking.receiver}</TableCell>
                           <TableCell className={tdClass}>
