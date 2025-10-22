@@ -1,4 +1,4 @@
-
+//
 
 'use client';
 
@@ -226,36 +226,47 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     }
 };
 
-const generateLrNumber = (prefix: string | undefined, allBookings: Booking[], grnFormat: 'plain' | 'with_char'): string => {
+const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     let relevantBookings: Booking[];
-    if (grnFormat === 'plain') {
+    if (profile.grnFormat === 'plain') {
+        // Only consider LR numbers that are purely numeric
         relevantBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo));
     } else {
-        relevantBookings = systemBookings.filter(b => prefix && b.lrNo.startsWith(prefix));
+        // Only consider LR numbers that start with the defined prefix
+        const prefix = profile.lrPrefix?.trim() || 'undefined'; // Use a non-matching string if prefix is empty
+        relevantBookings = systemBookings.filter(b => b.lrNo.startsWith(prefix));
     }
-
+    
     if (relevantBookings.length === 0) {
-        return prefix ? `${prefix}1`.padStart(prefix.length + 1, '0') : '1';
+        return profile.grnFormat === 'plain' ? '1' : `${profile.lrPrefix?.trim() || ''}1`;
     }
 
-    const extractNumber = (lrNo: string): number => {
-        const numericPart = grnFormat === 'plain' ? lrNo : lrNo.substring(prefix?.length ?? 0);
-        return parseInt(numericPart, 10) || 0;
-    };
-
-    const highestNumber = Math.max(...relevantBookings.map(b => extractNumber(b.lrNo)));
+    const highestNumber = Math.max(
+        ...relevantBookings.map(b => {
+            const prefix = profile.grnFormat === 'with_char' ? profile.lrPrefix?.trim() : '';
+            const numericPart = prefix ? b.lrNo.substring(prefix.length) : b.lrNo;
+            return parseInt(numericPart, 10) || 0;
+        })
+    );
     
     const newSequence = highestNumber + 1;
     
-    if (grnFormat === 'plain') {
+    if (profile.grnFormat === 'plain') {
         return String(newSequence);
     } else {
-        const padding = relevantBookings[0].lrNo.length - (prefix?.length ?? 0);
-        return `${prefix}${String(newSequence).padStart(padding > 1 ? padding : 2, '0')}`;
+        // Maintain padding if exists in the last highest number
+        const lastBookingWithHighestNumber = relevantBookings.find(b => {
+            const prefix = profile.lrPrefix?.trim() || '';
+            return (parseInt(b.lrNo.substring(prefix.length), 10) || 0) === highestNumber;
+        });
+        const prefix = profile.lrPrefix?.trim() || '';
+        const paddingLength = lastBookingWithHighestNumber ? lastBookingWithHighestNumber.lrNo.length - prefix.length : 1;
+        return `${prefix}${String(newSequence).padStart(paddingLength > 1 ? paddingLength : 2, '0')}`;
     }
 };
+
 
 export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
@@ -363,12 +374,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (!profile) return;
         const allBookings = getBookings();
         
-        let lrPrefix: string | undefined;
-        if (profile.grnFormat === 'with_char') {
-            lrPrefix = (profile.lrPrefix)?.trim() || undefined;
-        }
-        
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings, profile.grnFormat));
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, profile));
         
         let keyCounter = 1;
         const defaultRows = profile?.defaultItemRows || 1;
@@ -425,11 +431,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setCompanyProfile(profile);
         loadMasterData();
 
-        // Initialize only for new bookings
+        // This effect now specifically handles initialization for new bookings and depends on `companyProfile`.
         if (!trackingId && !bookingData && profile) {
             const allBookings = getBookings();
-            const lrPrefix = profile.grnFormat === 'with_char' ? (profile.lrPrefix?.trim() || undefined) : undefined;
-            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings, profile.grnFormat));
+            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, profile));
             
             const defaultStationName = profile.defaultFromStation;
             const allCities = getCities();
