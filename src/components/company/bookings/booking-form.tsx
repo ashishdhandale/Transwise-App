@@ -227,19 +227,17 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
     const systemBookings = allBookings.filter(b => b.source === 'System');
-
-    let relevantBookings: Booking[];
     let lastSequence = 0;
 
     if (profile.grnFormat === 'plain') {
-        relevantBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo));
-        if (relevantBookings.length > 0) {
-            lastSequence = Math.max(...relevantBookings.map(b => parseInt(b.lrNo, 10) || 0));
+        const plainNumericBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo));
+        if (plainNumericBookings.length > 0) {
+            lastSequence = Math.max(...plainNumericBookings.map(b => parseInt(b.lrNo, 10) || 0));
         }
         return String(lastSequence + 1);
     } else { // 'with_char'
         const prefix = profile.lrPrefix?.trim() || '';
-        relevantBookings = systemBookings.filter(b => b.lrNo.startsWith(prefix));
+        const relevantBookings = systemBookings.filter(b => b.lrNo.startsWith(prefix));
         if (relevantBookings.length > 0) {
              lastSequence = Math.max(...relevantBookings.map(b => parseInt(b.lrNo.substring(prefix.length), 10) || 0));
         }
@@ -405,29 +403,26 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }
     }, [companyProfile, isOfflineMode, lrNumberInputRef, toast]);
 
-    // Effect to load profile and master data once
+    // Effect to load profile and master data once, and set initial state for new booking.
     useEffect(() => {
         const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         loadMasterData();
-    }, [loadMasterData]);
 
-    useEffect(() => {
-      // This effect runs when companyProfile is loaded or when creating a new booking.
-      if (companyProfile && !trackingId && !bookingData) {
-        const allBookings = getBookings();
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, companyProfile));
-        
-        const allCities = getCities();
-        const defaultStationName = companyProfile.defaultFromStation;
-        const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-        setFromStation(defaultStation);
-        
-        let keyCounter = 1;
-        const defaultRows = companyProfile.defaultItemRows || 1;
-        setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
-      }
-    }, [companyProfile, trackingId, bookingData, isOfflineMode]);
+        if (profile && !trackingId && !bookingData) { // Only for new bookings
+            const allBookings = getBookings();
+            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, profile));
+            
+            const allCities = getCities();
+            const defaultStationName = profile.defaultFromStation;
+            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+            setFromStation(defaultStation);
+            
+            let keyCounter = 1;
+            const defaultRows = profile.defaultItemRows || 1;
+            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
+        }
+    }, [loadMasterData, trackingId, bookingData, isOfflineMode]);
 
     
     useEffect(() => {
