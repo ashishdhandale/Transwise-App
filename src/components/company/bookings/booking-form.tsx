@@ -227,17 +227,16 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
+    // 1. Get ONLY system bookings
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
-        const numericLrs: number[] = [];
-        systemBookings.forEach(b => {
-            // Check if lrNo contains only digits
-            if (/^\d+$/.test(b.lrNo)) {
-                numericLrs.push(parseInt(b.lrNo, 10));
-            }
-        });
-        
+        // 2. Filter system bookings to get only plain numeric LR numbers
+        const numericLrs = systemBookings
+            .map(b => b.lrNo)
+            .filter(lrNo => /^\d+$/.test(lrNo)) // Check if it's purely a number
+            .map(lrNo => parseInt(lrNo, 10));
+
         const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
 
@@ -332,15 +331,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             const allCities = getCities();
             setCities(allCities);
             
-             // LR Number Generation logic is moved here to ensure it runs after all data is loaded.
-            if (!isEditMode && !isOfflineMode && profile) {
-                const newLrNumber = generateLrNumber(bookings, profile);
-                setCurrentLrNumber(newLrNumber);
-            }
-            if (isOfflineMode) {
-                 setCurrentLrNumber('');
-            }
-            
             // Set default from station based on profile
             if (!isEditMode && profile.defaultFromStation) {
                 const defaultStation = allCities.find(c => c.name.toLowerCase() === profile.defaultFromStation?.toLowerCase()) || null;
@@ -353,7 +343,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsLoading(false);
         }
-    }, [isEditMode, isOfflineMode, toast]);
+    }, [isEditMode, toast]);
 
     useEffect(() => {
         loadInitialData();
@@ -390,6 +380,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else if (companyProfile) {
             // -- New Booking Mode --
+            if (!isOfflineMode) {
+                 const newLrNumber = generateLrNumber(allBookings, companyProfile);
+                 setCurrentLrNumber(newLrNumber);
+            } else {
+                 setCurrentLrNumber('');
+            }
+
             const defaultRows = companyProfile.defaultItemRows || 1;
             setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
             
@@ -409,7 +406,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setFtlDetails({ vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0 });
         }
 
-    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities]);
+    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities, isOfflineMode]);
 
     const handleReset = useCallback(() => {
         if (!companyProfile) return;
