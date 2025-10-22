@@ -4,12 +4,15 @@
 import { Suspense } from 'react';
 import DashboardLayout from '../../(dashboard)/layout';
 import { StockDashboard } from '@/components/company/stock/stock-dashboard';
+import { ClientOnly } from '@/components/ui/client-only';
 
 
 function StockPage() {
   return (
     <DashboardLayout>
-      <StockDashboard />
+      <ClientOnly>
+        <StockDashboard />
+      </ClientOnly>
     </DashboardLayout>
   );
 }
