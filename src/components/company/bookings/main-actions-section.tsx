@@ -47,11 +47,11 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
     if (isPartialCancel) {
         saveButtonText = 'Confirm Cancellation';
     } else if (isEditMode) {
-        saveButtonText = onSaveAndNew ? 'Update & Add' : 'Update Booking';
+        saveButtonText = 'Update Booking';
     } else if (isOfflineMode) {
         saveButtonText = 'Add to List & New';
     } else {
-        saveButtonText = 'Save Booking';
+        saveButtonText = onSaveAndNew ? 'Save & Add New' : 'Save Booking';
     }
 
     let savingButtonText: string;
@@ -81,18 +81,22 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                 </Button>
             ) : (
                 <>
-                    {!onSaveAndNew && (
-                        <>
-                            <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
-                                <RotateCcw className="mr-2 h-4 w-4" />
-                                Reset Form
-                            </Button>
-                            <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
-                                <FileX className="mr-2 h-4 w-4" />
-                                Exit Without Saving
-                            </Button>
-                        </>
+                    {onSaveAndNew && (
+                        <Button variant="outline" type="button" onClick={onSave} disabled={isSubmitting} className="w-full">
+                            <Save className="mr-2 h-4 w-4" />
+                            Save & Exit
+                        </Button>
                     )}
+                    {!onSaveAndNew && (
+                         <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
+                            <FileX className="mr-2 h-4 w-4" />
+                            Exit Without Saving
+                        </Button>
+                    )}
+                     <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Reset Form
+                    </Button>
                 </>
             )}
 
@@ -104,3 +108,5 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
         </div>
     );
 }
+
+    

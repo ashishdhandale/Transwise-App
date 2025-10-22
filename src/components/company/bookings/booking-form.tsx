@@ -227,7 +227,8 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
-    const systemBookings = allBookings.filter(b => b.source === 'System');
+    // Filter for system-generated bookings only
+    const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
 
     if (systemBookings.length === 0) {
         return prefix ? `${prefix}1`.padStart(2, '0') : '1';
@@ -238,10 +239,24 @@ const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): s
         return match ? parseInt(match[0], 10) : 0;
     };
     
-    const lastSequence = systemBookings
-        .map(b => extractNumber(b.lrNo))
-        .reduce((max, current) => Math.max(max, current), 0);
+    // Separate prefixed and non-prefixed LRs
+    const prefixedLrs = systemBookings.filter(b => prefix && b.lrNo.startsWith(prefix));
+    const plainLrs = systemBookings.filter(b => !prefixedLrs.includes(b));
 
+    let lastSequence = 0;
+
+    if (prefixedLrs.length > 0) {
+        // If there are LRs with the current prefix, find the max among them
+        lastSequence = prefixedLrs
+            .map(b => extractNumber(b.lrNo))
+            .reduce((max, current) => Math.max(max, current), 0);
+    } else {
+        // Otherwise, find the max among the plain number LRs
+        lastSequence = plainLrs
+            .map(b => extractNumber(b.lrNo))
+            .reduce((max, current) => Math.max(max, current), 0);
+    }
+    
     const newSequence = lastSequence + 1;
     
     return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
@@ -905,8 +920,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                                 {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                                 Download PDF
                             </Button>
-                             <Button onClick={() => window.print()}>
-                                <Printer className="mr-2 h-4 w-4" /> Print
+                             <Button onClick={() => {
+                                 onClose ? onClose() : router.push('/company/bookings');
+                             }}>
+                                <X className="mr-2 h-4 w-4" /> Close
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -916,3 +933,5 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
+    
