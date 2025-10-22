@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, Printer, X, Plus } from 'lucide-react';
+import { Download, Loader2, Printer, X, Plus, RefreshCcw } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
@@ -226,34 +226,35 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     }
 };
 
-const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
+const generateLrNumber = (prefix: string | undefined, allBookings: Booking[], grnFormat: 'plain' | 'with_char'): string => {
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
-    const extractNumber = (lrNo: string): number => {
-        const match = lrNo.match(/\d+$/);
-        return match ? parseInt(match[0], 10) : 0;
-    };
-    
     let relevantBookings: Booking[];
-    let highestNumber = 0;
-
-    if (prefix) {
-        // Find bookings that start with the exact prefix
-        relevantBookings = systemBookings.filter(b => b.lrNo.startsWith(prefix));
-    } else {
-        // Find bookings that are purely numeric
+    if (grnFormat === 'plain') {
         relevantBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo));
+    } else {
+        relevantBookings = systemBookings.filter(b => prefix && b.lrNo.startsWith(prefix));
     }
 
-    if (relevantBookings.length > 0) {
-        highestNumber = relevantBookings
-            .map(b => extractNumber(b.lrNo))
-            .reduce((max, current) => Math.max(max, current), 0);
+    if (relevantBookings.length === 0) {
+        return prefix ? `${prefix}1`.padStart(prefix.length + 1, '0') : '1';
     }
+
+    const extractNumber = (lrNo: string): number => {
+        const numericPart = grnFormat === 'plain' ? lrNo : lrNo.substring(prefix?.length ?? 0);
+        return parseInt(numericPart, 10) || 0;
+    };
+
+    const highestNumber = Math.max(...relevantBookings.map(b => extractNumber(b.lrNo)));
     
     const newSequence = highestNumber + 1;
     
-    return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
+    if (grnFormat === 'plain') {
+        return String(newSequence);
+    } else {
+        const padding = relevantBookings[0].lrNo.length - (prefix?.length ?? 0);
+        return `${prefix}${String(newSequence).padStart(padding > 1 ? padding : 2, '0')}`;
+    }
 };
 
 export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false, lrNumberInputRef }: BookingFormProps) {
@@ -359,14 +360,15 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     
      const handleReset = useCallback((showToast = true) => {
         const profile = companyProfile;
+        if (!profile) return;
         const allBookings = getBookings();
         
         let lrPrefix: string | undefined;
-        if (profile?.grnFormat === 'with_char') {
+        if (profile.grnFormat === 'with_char') {
             lrPrefix = (profile.lrPrefix)?.trim() || undefined;
         }
         
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings, profile.grnFormat));
         
         let keyCounter = 1;
         const defaultRows = profile?.defaultItemRows || 1;
@@ -376,7 +378,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setLoadType('LTL');
         
         const allCities = getCities();
-        const defaultStationName = profile?.defaultFromStation;
+        const defaultStationName = profile.defaultFromStation;
 
         const defaultStation = defaultStationName
             ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null
@@ -421,40 +423,34 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     useEffect(() => {
         const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
+        loadMasterData();
 
-        // Only generate a new LR number if we are in a new booking context
-        if (!trackingId && !bookingData) {
-            if (profile) {
-                loadMasterData();
-                const allBookings = getBookings();
-                let lrPrefix: string | undefined;
-                if (profile.grnFormat === 'with_char') {
-                    lrPrefix = (profile.lrPrefix)?.trim() || undefined;
-                }
-                
-                setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
+        // Initialize only for new bookings
+        if (!trackingId && !bookingData && profile) {
+            const allBookings = getBookings();
+            const lrPrefix = profile.grnFormat === 'with_char' ? (profile.lrPrefix?.trim() || undefined) : undefined;
+            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings, profile.grnFormat));
+            
+            const defaultStationName = profile.defaultFromStation;
+            const allCities = getCities();
+            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+            setFromStation(defaultStation);
 
-                const defaultStationName = profile.defaultFromStation;
-                const defaultStation = defaultStationName ? getCities().find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-                setFromStation(defaultStation);
-                
-                let keyCounter = 1;
-                const defaultRows = profile.defaultItemRows || 1;
-                setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
-            }
+            let keyCounter = 1;
+            const defaultRows = profile.defaultItemRows || 1;
+            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
         }
     }, [trackingId, bookingData, isOfflineMode, loadMasterData]);
     
     useEffect(() => {
         // Load data for editing or viewing
         if (trackingId || bookingData) {
-            loadMasterData();
             const bookingToLoad = bookingData || getBookings().find(b => b.trackingId === trackingId);
             if (bookingToLoad) {
                 loadBookingData(bookingToLoad);
             }
         }
-    }, [trackingId, bookingData, loadBookingData, loadMasterData]);
+    }, [trackingId, bookingData, loadBookingData]);
 
 
     useEffect(() => {
