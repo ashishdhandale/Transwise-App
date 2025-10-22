@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -34,21 +33,20 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 
 const initialItems: Item[] = [
-    { id: 1, name: 'GENERAL MERCHANDISE', aliasCode: 'GEN', hsnCode: '996511', description: 'General Goods & Mixed Items' },
-    { id: 2, name: 'ELECTRONIC GOODS', aliasCode: 'ELEC', hsnCode: '8542', description: 'Assorted Electronic Components' },
-    { id: 3, name: 'MACHINE SPARE PARTS', aliasCode: 'SPARE', hsnCode: '8431', description: 'Industrial Machine Spare Parts' },
-    { id: 4, name: 'READY MADE GARMENTS', aliasCode: 'RMG', hsnCode: '6204', description: 'Woven Garments and Apparel' },
-    { id: 5, name: 'PHARMACEUTICALS', aliasCode: 'PHARMA', hsnCode: '3004', description: 'Medicaments and Formulations' },
-    { id: 6, name: 'PRINTED BOOKS', aliasCode: 'BOOKS', hsnCode: '4901', description: 'Printed Books and Educational Material' },
-    { id: 7, name: 'PLASTIC GRANULES', aliasCode: 'PLASTIC', hsnCode: '3901', description: 'Polymers of Ethylene in Primary Forms' },
-    { id: 8, name: 'AUTO PARTS', aliasCode: 'AUTO', hsnCode: '8708', description: 'Parts and Accessories of Motor Vehicles' },
-    { id: 9, name: 'STEEL UTENSILS', aliasCode: 'STEEL', hsnCode: '7323', description: 'Table, Kitchen or other household articles of steel' },
-    { id: 10, name: 'COMPUTER & PERIPHERALS', aliasCode: 'COMP', hsnCode: '8471', description: 'Automatic Data Processing Machines' },
-    { id: 11, name: 'FMCG PRODUCTS', aliasCode: 'FMCG', hsnCode: '3304', description: 'Fast-Moving Consumer Goods' },
-    { id: 12, name: 'FURNITURE', aliasCode: 'FURN', hsnCode: '9403', description: 'Wooden and Metal Furniture' },
-    { id: 13, name: 'FABRIC ROLLS', aliasCode: 'FABRIC', hsnCode: '5208', description: 'Woven Fabrics of Cotton' },
-    { id: 14, name: 'HARDWARE & TOOLS', aliasCode: 'HDW', hsnCode: '8205', description: 'Hand tools and implements' },
-    { id: 15, name: 'AGRICULTURAL GOODS', aliasCode: 'AGRI', hsnCode: '0713', description: 'Dried Leguminous Vegetables' },
+    { id: 1, name: 'BOX', aliasCode: 'BOX', hsnCode: '4819', description: 'Corrugated Box / Hardboard Box' },
+    { id: 2, name: 'BAG', aliasCode: 'BAG', hsnCode: '4202', description: 'Woven or Non-Woven Bag' },
+    { id: 3, name: 'BUNDLE', aliasCode: 'BDL', hsnCode: '4802', description: 'Bundled Goods' },
+    { id: 4, name: 'CARTON', aliasCode: 'CTN', hsnCode: '4819', description: 'Carton Box' },
+    { id: 5, name: 'DRUM', aliasCode: 'DRM', hsnCode: '7310', description: 'Metal or Plastic Drum' },
+    { id: 6, name: 'ROLL', aliasCode: 'ROL', hsnCode: '5208', description: 'Fabric or Paper Roll' },
+    { id: 7, name: 'BALE', aliasCode: 'BLE', hsnCode: '5201', description: 'Compressed Bale' },
+    { id: 8, name: 'PALLET', aliasCode: 'PLT', hsnCode: '4415', description: 'Wooden or Plastic Pallet' },
+    { id: 9, name: 'CASE', aliasCode: 'CSE', hsnCode: '4415', description: 'Wooden Case' },
+    { id: 10, name: 'CRATE', aliasCode: 'CRT', hsnCode: '4415', description: 'Wooden Crate' },
+    { id: 11, name: 'PIECE', aliasCode: 'PC', hsnCode: '9999', description: 'Single Piece Goods' },
+    { id: 12, name: 'TIN', aliasCode: 'TIN', hsnCode: '7310', description: 'Metal Tin or Can' },
+    { id: 13, name: 'CYLINDER', aliasCode: 'CYL', hsnCode: '7311', description: 'Gas Cylinder' },
+    { id: 14, name: 'LOOSE', aliasCode: 'LSE', hsnCode: '9999', description: 'Loose Items' },
 ];
 
 const tdClass = "whitespace-nowrap uppercase";
