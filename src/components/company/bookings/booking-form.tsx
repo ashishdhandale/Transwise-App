@@ -227,24 +227,30 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
+    // 1. Get ONLY the system bookings
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
+        // 2. From system bookings, get only the ones that are purely numbers
         const numericLrs = systemBookings
-            .filter(b => /^\d+$/.test(b.lrNo)) // Ensure it's a purely numeric string
+            .filter(b => /^\d+$/.test(b.lrNo))
             .map(b => parseInt(b.lrNo, 10));
 
+        // 3. Find the highest number and add 1
         const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
-    } else { // 'with_char'
+
+    } else { // 'with_char' format
         const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
         if (!prefix) return '1'; // Fallback if prefix is somehow empty
 
+        // 2. From system bookings, get only the ones that start with the correct prefix
         const relevantLrs = systemBookings
             .filter(b => b.lrNo.toUpperCase().startsWith(prefix))
             .map(b => parseInt(b.lrNo.substring(prefix.length), 10))
             .filter(num => !isNaN(num));
             
+        // 3. Find the highest number and add 1
         const lastSequence = relevantLrs.length > 0 ? Math.max(0, ...relevantLrs) : 0;
         return `${prefix}${lastSequence + 1}`;
     }
@@ -335,7 +341,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, [loadInitialData]);
     
     useEffect(() => {
-        if (isLoading) return;
+        if (isLoading) return; // Wait for all data to be loaded
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
         
