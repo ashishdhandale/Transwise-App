@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -51,8 +51,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { EditBookingDialog } from './edit-booking-dialog';
 import { ViewBookingDialog } from './view-booking-dialog';
-import type { CompanyProfileFormValues } from '@/app/company/settings/actions';
-import { getCompanyProfile } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage, type AllCompanySettings } from '@/app/company/settings/actions';
 import { BookingReceipt } from './booking-receipt';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -74,6 +73,42 @@ const statusColors: { [key: string]: string } = {
 
 const thClass = 'bg-cyan-600 text-white h-10 whitespace-nowrap';
 
+// This function calculates the next LR number based only on system-generated bookings.
+const getNextLrNumber = (): string => {
+  try {
+    const allBookings = getBookings();
+    const companyProfile = loadCompanySettingsFromStorage();
+
+    // Filter for system-generated bookings only
+    const systemBookings = allBookings.filter(b => b.source === 'System');
+    
+    if (systemBookings.length === 0) {
+      const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
+      return `${prefix}1`.padStart(2, '0');
+    }
+
+    // Sort by creation date to find the most recent system booking
+    systemBookings.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+    
+    const lastBooking = systemBookings[0];
+    const match = lastBooking.lrNo.match(/\d+$/);
+    
+    let lastSequence = 0;
+    if (match) {
+        lastSequence = parseInt(match[0], 10);
+    }
+
+    const newSequence = lastSequence + 1;
+    const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
+    
+    return `${prefix}${String(newSequence).padStart(2, '0')}`;
+  } catch (e) {
+    console.error(e);
+    return "Could not calculate";
+  }
+};
+
+
 export function BookingsDashboard() {
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
@@ -85,7 +120,8 @@ export function BookingsDashboard() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPartialCancelDialogOpen, setIsPartialCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfileFormValues | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
+  const [nextLr, setNextLr] = useState('');
   
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [bookingToPrint, setBookingToPrint] = useState<Booking | null>(null);
@@ -101,9 +137,9 @@ export function BookingsDashboard() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const loadBookings = async () => {
+  const loadBookings = () => {
     try {
-        const profile = await getCompanyProfile();
+        const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         setBookings(getBookings());
     } catch (error) {
@@ -114,6 +150,7 @@ export function BookingsDashboard() {
   useEffect(() => {
     setIsClient(true);
     loadBookings();
+    setNextLr(getNextLrNumber());
   }, []);
   
   useEffect(() => {
@@ -270,6 +307,16 @@ export function BookingsDashboard() {
   return (
     <ClientOnly>
       <main className="flex-1 p-4 md:p-6 bg-white">
+        {nextLr && (
+          <Card className="mb-4 bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle>Next LR Number Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg">If you create a new booking now, the next automatically generated LR number will be: <strong className="text-2xl text-blue-600">{nextLr}</strong></p>
+            </CardContent>
+          </Card>
+        )}
         <Card className="border-2 border-cyan-200">
           <div className="p-4 space-y-4">
             {/* Action Buttons */}
