@@ -82,7 +82,7 @@ interface BookingFormProps {
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
-    // isOfflineMode is now managed internally
+    isOfflineMode?: boolean; // Now a direct prop
     lrNumberInputRef?: React.Ref<HTMLInputElement>;
 }
 
@@ -227,14 +227,13 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
-    // 1. Get ONLY system bookings
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
         const systemNumericLrs: number[] = [];
-        // Only consider LR numbers that are purely numeric.
         systemBookings.forEach(b => {
-             if (/^\d+$/.test(b.lrNo)) {
+             // This regex ensures we only parse purely numeric strings
+            if (/^\d+$/.test(b.lrNo)) {
                 systemNumericLrs.push(parseInt(b.lrNo, 10));
             }
         });
@@ -261,15 +260,14 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
 };
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const initialModeIsOffline = searchParams.get('mode') === 'offline';
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
     const userBranchName = userRole === 'Branch' ? 'Pune Hub' : undefined; // Hardcoded branch for prototype
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     
-    const [isOfflineMode, setIsOfflineMode] = useState(initialModeIsOffline);
+    const [isOfflineMode, setIsOfflineMode] = useState(initialIsOffline || false);
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
     const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('LTL');
@@ -279,6 +277,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [receiver, setReceiver] = useState<Customer | null>(null);
     const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
     const [currentLrNumber, setCurrentLrNumber] = useState('');
+    const [referenceLrNumber, setReferenceLrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -362,6 +361,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             const receiverProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
 
             setCurrentLrNumber(bookingToLoad.lrNo);
+            setReferenceLrNumber(bookingToLoad.referenceLrNumber || '');
             setBookingDate(new Date(bookingToLoad.bookingDate));
             setBookingType(bookingToLoad.lrType);
             setLoadType(bookingToLoad.loadType || 'LTL');
@@ -403,6 +403,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setSender(null);
             setReceiver(null);
             setBookingDate(new Date());
+            setReferenceLrNumber('');
             setGrandTotal(0);
             setTaxPaidBy('Not Applicable');
             setAdditionalCharges({});
@@ -412,7 +413,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setFtlDetails({ vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0 });
         }
 
-    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities, isOfflineMode, initialModeIsOffline]);
+    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities, initialIsOffline]);
     
     // React to offline mode changes
     useEffect(() => {
@@ -421,6 +422,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 setCurrentLrNumber('');
             } else {
                 setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
+                setReferenceLrNumber(''); // Clear reference number when not in offline mode
             }
         }
     }, [isOfflineMode, isEditMode, companyProfile, allBookings]);
@@ -429,8 +431,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const handleReset = useCallback(() => {
         if (!companyProfile) return;
         
-        setIsOfflineMode(initialModeIsOffline); // Reset to initial mode
-        if (initialModeIsOffline) {
+        setIsOfflineMode(initialIsOffline || false); // Reset to initial mode
+        if (initialIsOffline) {
             setCurrentLrNumber('');
         } else {
             setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
@@ -450,6 +452,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setSender(null);
         setReceiver(null);
         setBookingDate(new Date());
+        setReferenceLrNumber('');
         setGrandTotal(0);
         setTaxPaidBy('Not Applicable');
         setAdditionalCharges({});
@@ -467,7 +470,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [companyProfile, allBookings, cities, lrNumberInputRef, toast, initialModeIsOffline]);
+    }, [companyProfile, allBookings, cities, lrNumberInputRef, toast, initialIsOffline]);
     
     useEffect(() => {
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
@@ -509,6 +512,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
             lrNo: currentLrNumber,
+            referenceLrNumber: isOfflineMode ? referenceLrNumber : undefined,
             bookingDate: bookingDate!.toISOString(),
             fromCity: fromStation!.name,
             toCity: toStation!.name,
@@ -623,7 +627,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -734,7 +738,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const formTitle = isEditMode ? `Edit Booking: ${currentLrNumber}` : 
                       isViewOnly ? `View Booking: ${currentLrNumber}` :
                       isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
-                      (initialModeIsOffline ? 'Add Offline/Manual Booking' : 'Create New Booking');
+                      (initialIsOffline ? 'Add Offline/Manual Booking' : 'Create New Booking');
 
   const formContent = (
      <div className="space-y-4">
@@ -748,6 +752,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             onToStationChange={setToStation}
             lrNumber={currentLrNumber}
             onLrNumberChange={setCurrentLrNumber}
+            referenceLrNumber={referenceLrNumber}
+            onReferenceLrNumberChange={setReferenceLrNumber}
             bookingDate={bookingDate}
             onBookingDateChange={setBookingDate}
             isEditMode={isEditMode}

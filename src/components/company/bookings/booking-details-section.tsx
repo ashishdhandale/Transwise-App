@@ -35,6 +35,8 @@ interface BookingDetailsSectionProps {
     toStation: City | null;
     lrNumber: string;
     onLrNumberChange: (lrNumber: string) => void;
+    referenceLrNumber?: string;
+    onReferenceLrNumberChange: (refLrNumber: string) => void;
     bookingDate?: Date;
     onBookingDateChange: (date?: Date) => void;
     isEditMode: boolean;
@@ -58,6 +60,8 @@ export function BookingDetailsSection({
     toStation,
     lrNumber,
     onLrNumberChange,
+    referenceLrNumber,
+    onReferenceLrNumberChange,
     bookingDate,
     onBookingDateChange,
     isEditMode,
@@ -168,6 +172,18 @@ export function BookingDetailsSection({
                         autoFocus={!isEditMode}
                     />
                 </div>
+                {isOfflineMode && (
+                     <div className="space-y-1">
+                        <Label htmlFor="referenceLrNumber">Reference LR Number</Label>
+                        <Input
+                            id="referenceLrNumber"
+                            value={referenceLrNumber || ''}
+                            onChange={(e) => onReferenceLrNumberChange(e.target.value)}
+                            placeholder="Pre-printed LR No."
+                            disabled={isViewOnly}
+                        />
+                    </div>
+                )}
                 <div className="space-y-1">
                     <Label htmlFor="bookingDate">Booking Date</Label>
                      <ClientOnly>

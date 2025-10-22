@@ -16,6 +16,7 @@ export interface FtlDetails {
 export interface Booking {
   trackingId: string; // New unique internal ID
   lrNo: string;
+  referenceLrNumber?: string; // For manual/offline bookings
   bookingDate: string;
   fromCity: string;
   toCity: string;
@@ -36,7 +37,7 @@ export interface Booking {
   isGstApplicable?: boolean;
   ftlDetails?: FtlDetails;
   branchName?: string; // Link to the branch that created the booking
-  source?: 'System' | 'Inward' | 'Offline'; // To distinguish origin of the booking
+  source?: 'System' | 'Offline' | 'Inward'; // To distinguish origin of the booking
   deliveryMemoNo?: string;
 }
 
