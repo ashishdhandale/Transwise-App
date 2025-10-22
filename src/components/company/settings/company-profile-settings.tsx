@@ -145,7 +145,7 @@ export function CompanyProfileSettings() {
                                 <FormControl>
                                     <Input placeholder="e.g., CONAG" {...field} disabled={grnFormat === 'plain'} />
                                 </FormControl>
-                                 <FormDescription>Prefix for new LR numbers.</FormDescription>
+                                 <FormDescription>Required for 'With Character' format.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}

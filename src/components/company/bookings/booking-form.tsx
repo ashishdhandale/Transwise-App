@@ -348,6 +348,46 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         loadInitialData();
     }, [loadInitialData]);
     
+    const handleReset = useCallback((nextLrNumber?: string) => {
+        if (!companyProfile) return;
+        
+        setIsOfflineMode(initialIsOffline || false);
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyProfile));
+        
+        const defaultRows = companyProfile.defaultItemRows || 1;
+        setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
+        
+        setBookingType('TOPAY');
+        setLoadType('LTL');
+        
+        const defaultStationName = companyProfile.defaultFromStation;
+        const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+        setFromStation(defaultStation);
+
+        setToStation(null);
+        setSender(null);
+        setReceiver(null);
+        setBookingDate(new Date());
+        setReferenceLrNumber('');
+        setGrandTotal(0);
+        setTaxPaidBy('Not Applicable');
+        setAdditionalCharges({});
+        setInitialChargesFromBooking(undefined);
+        setDeliveryAt('Godown Deliv');
+        setErrors({});
+        setFtlDetails({
+            vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0,
+        });
+        
+        setTimeout(() => {
+            if (lrNumberInputRef && 'current' in lrNumberInputRef && lrNumberInputRef.current) {
+                lrNumberInputRef.current.focus();
+            }
+        }, 0);
+
+        toast({ title: "Form Reset", description: "All fields have been cleared." });
+    }, [companyProfile, allBookings, cities, lrNumberInputRef, toast, initialIsOffline]);
+
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
         if (isLoading) return; // Don't run if data isn't ready
@@ -425,47 +465,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }
     }, [isOfflineMode, isEditMode, companyProfile, allBookings]);
 
-
-    const handleReset = useCallback(() => {
-        if (!companyProfile) return;
-        
-        setIsOfflineMode(initialIsOffline || false); // Reset to initial mode
-        setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
-        
-        const defaultRows = companyProfile.defaultItemRows || 1;
-        setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
-        
-        setBookingType('TOPAY');
-        setLoadType('LTL');
-        
-        const defaultStationName = companyProfile.defaultFromStation;
-        const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-        setFromStation(defaultStation);
-
-        setToStation(null);
-        setSender(null);
-        setReceiver(null);
-        setBookingDate(new Date());
-        setReferenceLrNumber('');
-        setGrandTotal(0);
-        setTaxPaidBy('Not Applicable');
-        setAdditionalCharges({});
-        setInitialChargesFromBooking(undefined);
-        setDeliveryAt('Godown Deliv');
-        setErrors({});
-        setFtlDetails({
-            vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0,
-        });
-        
-        setTimeout(() => {
-            if (lrNumberInputRef && 'current' in lrNumberInputRef && lrNumberInputRef.current) {
-                lrNumberInputRef.current.focus();
-            }
-        }, 0);
-
-        toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [companyProfile, allBookings, cities, lrNumberInputRef, toast, initialIsOffline]);
-    
     useEffect(() => {
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
     }, [taxPaidBy]);
@@ -548,13 +547,18 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             } else {
                 const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
+                const updatedBookings = [...allBookings, newBooking];
+                setAllBookings(updatedBookings);
+                saveBookings(updatedBookings);
+                
                 if (onSaveAndNew) {
-                    onSaveAndNew(newBooking, () => handleReset());
+                    onSaveAndNew(newBooking, () => {
+                        const nextLrNumber = generateLrNumber(updatedBookings, companyProfile!);
+                        handleReset(nextLrNumber);
+                    });
                     return; // The parent component handles toast and state
                 }
 
-                const updatedBookings = [...allBookings, newBooking];
-                saveBookings(updatedBookings);
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
                 if (sender && receiver) {
@@ -623,7 +627,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -663,7 +667,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        const callback = onSaveAndNew ? () => handleReset() : undefined;
+        const callback = onSaveAndNew ? () => {
+            const nextBookings = [...allBookings, {} as Booking]; // placeholder for the one about to be saved
+            const nextLrNumber = generateLrNumber(nextBookings, companyProfile!);
+            handleReset(nextLrNumber);
+        } : undefined;
+
         await proceedWithSave(paymentMode, callback);
     };
     
@@ -718,8 +727,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        handleReset();
-    }, [handleReset]);
+        const nextBookings = [...allBookings, receiptData as Booking];
+        const nextLrNumber = generateLrNumber(nextBookings, companyProfile!);
+        handleReset(nextLrNumber);
+    }, [handleReset, allBookings, receiptData, companyProfile]);
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
