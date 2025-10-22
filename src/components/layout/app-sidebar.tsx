@@ -251,7 +251,7 @@ export function AppSidebar() {
       <>
         <Collapsible open={openDashboardMenu} onOpenChange={setOpenDashboardMenu}>
           <CollapsibleTrigger asChild>
-             <SidebarMenuButton href={homeHref} variant="ghost" className="w-full justify-start" isActive={pathname === '/company'} tooltip="Dashboard">
+             <SidebarMenuButton variant="ghost" className="w-full justify-start" tooltip="Dashboard">
               <Home />
               <span>Dashboard</span>
               <ChevronDown
@@ -264,6 +264,9 @@ export function AppSidebar() {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="flex flex-col gap-1 ml-7 pl-2 border-l border-border">
+               <SidebarMenuItem>
+                <SidebarMenuButton href={homeHref} size="sm" isActive={pathname === '/company'} tooltip="Main Dashboard"><BarChart3 />Main Dashboard</SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href={isBranch ? "/company/package-tracking?role=Branch" : "/company/package-tracking"} size="sm" isActive={pathname === '/company/package-tracking'} tooltip="Package Tracking"><PackageSearch />Package Tracking</SidebarMenuButton>
               </SidebarMenuItem>
@@ -464,5 +467,7 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+    
 
     
