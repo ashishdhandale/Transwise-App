@@ -227,26 +227,27 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
     const systemBookings = allBookings.filter(b => b.source === 'System');
-
-    if (systemBookings.length === 0) {
-        return profile.grnFormat === 'with_char' ? `${profile.lrPrefix || ''}1` : '1';
-    }
-
-    // Sort by date descending to get the most recent booking first
-    systemBookings.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
-
-    const lastBooking = systemBookings[0];
-    const prefix = profile.grnFormat === 'with_char' ? profile.lrPrefix?.trim().toUpperCase() : '';
-    let lastSequence = 0;
     
-    const numericPartMatch = lastBooking.lrNo.match(/\d+$/);
-    if (numericPartMatch) {
-        lastSequence = parseInt(numericPartMatch[0], 10);
+    if (profile.grnFormat === 'plain') {
+        const numericLrs = systemBookings
+            .map(b => parseInt(b.lrNo, 10))
+            .filter(num => !isNaN(num) && String(num) === b.lrNo); // Ensure it's a plain number
+        
+        const lastSequence = numericLrs.length > 0 ? Math.max(...numericLrs) : 0;
+        return String(lastSequence + 1);
+
+    } else { // 'with_char'
+        const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
+        if (!prefix) return '1'; // Fallback if prefix is somehow empty
+
+        const relevantLrs = systemBookings
+            .filter(b => b.lrNo.toUpperCase().startsWith(prefix))
+            .map(b => parseInt(b.lrNo.substring(prefix.length), 10))
+            .filter(num => !isNaN(num));
+
+        const lastSequence = relevantLrs.length > 0 ? Math.max(...relevantLrs) : 0;
+        return `${prefix}${lastSequence + 1}`;
     }
-
-    const newSequence = lastSequence + 1;
-
-    return prefix ? `${prefix}${newSequence}` : String(newSequence);
 };
 
 
@@ -266,19 +267,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [toStation, setToStation] = useState<City | null>(null);
     const [sender, setSender] = useState<Customer | null>(null);
     const [receiver, setReceiver] = useState<Customer | null>(null);
-    const [customers, setCustomers] = useState<Customer[]>([]);
     const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
     const [currentLrNumber, setCurrentLrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
-    const [branches, setBranches] = useState<Branch[]>([]);
-    const [drivers, setDrivers] = useState<Driver[]>([]);
-    const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
-    const [vendors, setVendors] = useState<Vendor[]>([]);
-    const [cities, setCities] = useState<City[]>([]);
-
+    
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
     const [isGstApplicable, setIsGstApplicable] = useState(false);
     const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
@@ -303,74 +297,98 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [isDownloading, setIsDownloading] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStationAlertOpen, setIsStationAlertOpen] = useState(false);
-    const [rateLists, setRateLists] = useState<RateList[]>([]);
     
+    // -- Data Loading State --
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
+    const [allBookings, setAllBookings] = useState<Booking[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [branches, setBranches] = useState<Branch[]>([]);
+    const [drivers, setDrivers] = useState<Driver[]>([]);
+    const [vehicles, setVehicles] = useState<VehicleMaster[]>([]);
+    const [vendors, setVendors] = useState<Vendor[]>([]);
+    const [cities, setCities] = useState<City[]>([]);
+    const [rateLists, setRateLists] = useState<RateList[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     const onFromStationChange = useCallback((station: City | null) => {
         setFromStation(station);
     }, []);
 
-    const loadMasterData = useCallback(() => {
+    const loadAllData = useCallback(() => {
         try {
+            setIsLoading(true);
+            setCompanyProfile(loadCompanySettingsFromStorage());
+            setAllBookings(getBookings());
+            setCustomers(getCustomers());
             setDrivers(getDrivers());
             setVehicles(getVehicles());
             setVendors(getVendors());
-            setCustomers(getCustomers());
             setRateLists(getRateLists());
             setBranches(getBranches());
             setCities(getCities());
         } catch (error) {
             console.error("Failed to load master data", error);
+            toast({ title: 'Error', description: 'Failed to load essential application data.', variant: 'destructive'});
+        } finally {
+            setIsLoading(false);
         }
-    }, []);
+    }, [toast]);
 
-    const loadBookingData = useCallback((bookingToLoad: Booking) => {
-        const savedCustomers: Customer[] = getCustomers();
-        const senderProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
-        const receiverProfile = savedCustomers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
-
-        let keyCounter = 1;
-        setCurrentLrNumber(bookingToLoad.lrNo);
-        setBookingDate(new Date(bookingToLoad.bookingDate));
-        setBookingType(bookingToLoad.lrType);
-        setLoadType(bookingToLoad.loadType || 'LTL');
-        const allCities = getCities();
-        setFromStation(allCities.find(c => c.name === bookingToLoad.fromCity) || null);
-        setToStation(allCities.find(c => c.name === bookingToLoad.toCity) || null);
-        setSender(senderProfile);
-        setReceiver(receiverProfile);
-        
-        const itemRowsWithIds = (bookingToLoad.itemRows || []).map(row => ({ ...row, id: row.id || keyCounter++ }));
-        setItemRows(itemRowsWithIds);
-        
-        setGrandTotal(bookingToLoad.totalAmount);
-        setAdditionalCharges(bookingToLoad.additionalCharges || {});
-        setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
-        setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
-        if (bookingToLoad.ftlDetails) {
-            setFtlDetails(bookingToLoad.ftlDetails);
-        }
-    }, []);
+    // This effect runs only once to load all necessary data.
+    useEffect(() => {
+        loadAllData();
+    }, [loadAllData]);
     
-     const handleReset = useCallback((showToast = true) => {
-        const profile = companyProfile;
-        if (!profile) return;
-        const allBookings = getBookings();
-        
-        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, profile));
-        
-        let keyCounter = 1;
-        const defaultRows = profile?.defaultItemRows || 1;
+    // This effect runs only after all data is loaded and sets up the form.
+    useEffect(() => {
+        if (isLoading || !companyProfile) return;
 
-        setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
+        const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
+
+        if (bookingToLoad) {
+            // -- Edit Mode --
+            const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+            const receiverProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
+
+            setCurrentLrNumber(bookingToLoad.lrNo);
+            setBookingDate(new Date(bookingToLoad.bookingDate));
+            setBookingType(bookingToLoad.lrType);
+            setLoadType(bookingToLoad.loadType || 'LTL');
+            setFromStation(cities.find(c => c.name === bookingToLoad.fromCity) || null);
+            setToStation(cities.find(c => c.name === bookingToLoad.toCity) || null);
+            setSender(senderProfile);
+            setReceiver(receiverProfile);
+            
+            const itemRowsWithIds = (bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || index + 1 }));
+            setItemRows(itemRowsWithIds);
+            
+            setGrandTotal(bookingToLoad.totalAmount);
+            setAdditionalCharges(bookingToLoad.additionalCharges || {});
+            setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
+            setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
+            if (bookingToLoad.ftlDetails) {
+                setFtlDetails(bookingToLoad.ftlDetails);
+            }
+        } else {
+            // -- New Booking Mode --
+            handleReset(false); // Initialize form for a new booking
+        }
+    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities]);
+
+
+    const handleReset = useCallback((showToast = true) => {
+        if (!companyProfile) return;
+        
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, companyProfile));
+        
+        const defaultRows = companyProfile.defaultItemRows || 1;
+        setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
+        
         setBookingType('TOPAY');
         setLoadType('LTL');
         
-        const allCities = getCities();
-        const defaultStationName = profile.defaultFromStation;
-
-        const defaultStation = defaultStationName
-            ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null
-            : null;
+        const defaultStationName = companyProfile.defaultFromStation;
+        const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
         setFromStation(defaultStation);
 
         setToStation(null);
@@ -384,13 +402,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setDeliveryAt('Godown Deliv');
         setErrors({});
         setFtlDetails({
-            vehicleNo: '',
-            driverName: '',
-            lorrySupplier: '',
-            truckFreight: 0,
-            advance: 0,
-            commission: 0,
-            otherDeductions: 0,
+            vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0,
         });
         
         setTimeout(() => {
@@ -400,35 +412,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         if (showToast) {
-            toast({
-                title: "Form Reset",
-                description: "All fields have been cleared.",
-            });
+            toast({ title: "Form Reset", description: "All fields have been cleared." });
         }
-    }, [companyProfile, isOfflineMode, lrNumberInputRef, toast]);
-
-    // This effect loads the company profile and master data ONCE.
-    useEffect(() => {
-        const profile = loadCompanySettingsFromStorage();
-        setCompanyProfile(profile);
-        loadMasterData();
-    }, [loadMasterData]);
-
-    // This effect runs only after companyProfile is loaded. It sets up the form for a new booking or loads an existing one.
-    useEffect(() => {
-        if (!companyProfile) return; // <-- Guard clause
-
-        if (trackingId || bookingData) {
-            const bookingToLoad = bookingData || getBookings().find(b => b.trackingId === trackingId);
-            if (bookingToLoad) {
-                loadBookingData(bookingToLoad);
-            }
-        } else {
-            handleReset(false); // Initialize form for a new booking
-        }
-    }, [companyProfile, trackingId, bookingData, loadBookingData, handleReset]);
-
-
+    }, [companyProfile, isOfflineMode, allBookings, cities, lrNumberInputRef, toast]);
+    
     useEffect(() => {
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
     }, [taxPaidBy]);
@@ -463,7 +450,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const finalReceiver = maybeSaveNewParty(receiver);
 
         const currentStatus: Booking['status'] = isOfflineModeProp ? 'In Stock' : 'In Stock';
-        const allBookings = getBookings();
         const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
         const finalBranchName = userBranchName || companyProfile?.companyName;
@@ -590,7 +576,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset, userRole]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -735,7 +721,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             errors={errors}
             isViewOnly={readOnly}
             isOfflineMode={isOfflineMode}
-            onPartyAdded={loadMasterData}
+            onPartyAdded={loadAllData}
         />
         {loadType === 'FTL' && (
             <VehicleDetailsSection 
@@ -744,7 +730,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 drivers={drivers}
                 vehicles={vehicles}
                 vendors={vendors}
-                onMasterDataChange={loadMasterData}
+                onMasterDataChange={loadAllData}
                 loadType={loadType}
                 isViewOnly={readOnly}
             />
@@ -811,7 +797,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                  <h1 className="text-2xl font-bold text-primary">{formTitle}</h1>
             )}
            
-            {isOfflineModeProp ? (
+            {isLoading ? (
+                <div className="h-96 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary"/>
+                </div>
+            ) : isOfflineModeProp ? (
                 formContent
             ) : (
                 <div className="p-4 border-2 border-green-200 rounded-md bg-card">
