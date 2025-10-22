@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { BookingDetailsSection } from '@/components/company/bookings/booking-details-section';
@@ -230,18 +231,20 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
 
     if (profile.grnFormat === 'plain') {
         const numericLrs = systemBookings
-            .map(b => parseInt(b.lrNo, 10))
-            .filter(num => !isNaN(num) && String(num).length === b.lrNo.length);
+            .filter(b => /^\d+$/.test(b.lrNo)) // Ensure it's a purely numeric string
+            .map(b => parseInt(b.lrNo, 10));
+
         const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
     } else { // 'with_char'
         const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
-        if (!prefix) return '1';
+        if (!prefix) return '1'; // Fallback if prefix is somehow empty
 
         const relevantLrs = systemBookings
             .filter(b => b.lrNo.toUpperCase().startsWith(prefix))
             .map(b => parseInt(b.lrNo.substring(prefix.length), 10))
             .filter(num => !isNaN(num));
+            
         const lastSequence = relevantLrs.length > 0 ? Math.max(0, ...relevantLrs) : 0;
         return `${prefix}${lastSequence + 1}`;
     }
