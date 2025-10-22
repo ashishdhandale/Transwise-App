@@ -320,7 +320,10 @@ export function NewChallanForm() {
 
         const lowerQuery = lrSearchTerm.toLowerCase().trim();
         const availableStock = allBookings.filter(b => b.status === 'In Stock');
-        const results = availableStock.filter(b => b.lrNo.toLowerCase().includes(lowerQuery));
+        const results = availableStock.filter(b => 
+            b.lrNo.toLowerCase().includes(lowerQuery) ||
+            (b.referenceLrNumber && b.referenceLrNumber.toLowerCase().includes(lowerQuery))
+        );
         setSearchResults(results);
     }
     
