@@ -252,8 +252,9 @@ export function BookingsDashboard() {
     const lowercasedQuery = debouncedSearchQuery.toLowerCase();
     return sortedBookings.filter((booking) => 
         booking.lrNo.toLowerCase().includes(lowercasedQuery) ||
-        (booking.sender && booking.sender.name.toLowerCase().includes(lowercasedQuery)) ||
-        (booking.receiver && booking.receiver.name.toLowerCase().includes(lowercasedQuery)) ||
+        (booking.referenceLrNumber && booking.referenceLrNumber.toLowerCase().includes(lowercasedQuery)) ||
+        (booking.sender.name && booking.sender.name.toLowerCase().includes(lowercasedQuery)) ||
+        (booking.receiver.name && booking.receiver.name.toLowerCase().includes(lowercasedQuery)) ||
         booking.fromCity.toLowerCase().includes(lowercasedQuery) ||
         booking.toCity.toLowerCase().includes(lowercasedQuery)
     );
@@ -556,3 +557,5 @@ export function BookingsDashboard() {
     </ClientOnly>
   );
 }
+
+    
