@@ -1,5 +1,7 @@
 
 
+import type { CustomerData } from './bookings-dashboard-data';
+
 export interface ChallanSummary {
   grandTotal: number;
   totalTopayAmount: number;
@@ -45,8 +47,8 @@ export interface LrDetail {
   challanId: string;
   lrNo: string;
   lrType: string;
-  sender: string;
-  receiver: string;
+  sender: CustomerData;
+  receiver: CustomerData;
   from: string;
   to: string;
   bookingDate: string;

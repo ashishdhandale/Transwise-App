@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -828,7 +829,7 @@ export function NewChallanForm() {
                                                         <TableCell className="whitespace-nowrap">{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
                                                         <TableCell className="max-w-xs truncate whitespace-nowrap">{lr.itemDescription}</TableCell>
                                                         <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
-                                                        <TableCell className="whitespace-nowrap">{lr.receiver}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">{lr.receiver.name}</TableCell>
                                                         <TableCell className="whitespace-nowrap">{lr.qty}</TableCell>
                                                     </TableRow>
                                                 ))}
@@ -903,8 +904,8 @@ export function NewChallanForm() {
                                                 <TableCell className="whitespace-nowrap">{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
                                                 <TableCell className="max-w-xs truncate whitespace-nowrap">{lr.itemDescription}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
-                                                <TableCell className="whitespace-nowrap">{lr.sender}</TableCell>
-                                                <TableCell className="whitespace-nowrap">{lr.receiver}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.sender.name}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.receiver.name}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap">{lr.qty}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap">{lr.chgWt.toFixed(2)}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.lrType}</TableCell>
