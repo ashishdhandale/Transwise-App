@@ -227,12 +227,13 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
-    const systemBookings = allBookings.filter(b => b.source === 'System');
+    // This now correctly looks at ALL bookings to determine the next number,
+    // to avoid collision between system-generated and manually entered numbers.
+    const systemBookings = allBookings; 
 
     if (profile.grnFormat === 'plain') {
         const systemNumericLrs: number[] = [];
         systemBookings.forEach(b => {
-             // This regex ensures we only parse purely numeric strings
             if (/^\d+$/.test(b.lrNo)) {
                 systemNumericLrs.push(parseInt(b.lrNo, 10));
             }
@@ -353,7 +354,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         
         setIsOfflineMode(initialIsOffline || false);
         
-        // This is where the updated logic is crucial
         const allCurrentBookings = getBookings();
         setCurrentLrNumber(nextLrNumber || generateLrNumber(allCurrentBookings, companyProfile));
         
@@ -542,7 +542,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 
                 const updatedBookings = currentAllBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? savedBooking : b);
                 saveBookings(updatedBookings);
-                setAllBookings(updatedBookings); // Update local state
+                setAllBookings(updatedBookings);
                 
                 if (changeDetails !== 'No changes detected.') {
                     addHistoryLog(currentLrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
@@ -555,7 +555,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 
                 const updatedBookings = [...currentAllBookings, savedBooking];
                 saveBookings(updatedBookings);
-                setAllBookings(updatedBookings); // Update local state for next LR generation
+                setAllBookings(updatedBookings); 
                 
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
@@ -620,12 +620,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 setReceiptData(savedBooking);
                 
                 if (onSaveAndNew) {
-                    onSaveAndNew(savedBooking, () => {
-                         // After save, get the absolute latest bookings and generate the next number.
-                        const latestBookings = getBookings();
-                        const nextLrNumber = generateLrNumber(latestBookings, companyProfile!);
-                        handleReset(nextLrNumber);
-                    });
+                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyProfile!)));
                 } else {
                      setShowReceipt(true);
                 }
@@ -729,7 +724,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        const latestBookings = getBookings(); // Get fresh data
+        const latestBookings = getBookings(); 
         const nextLrNumber = generateLrNumber(latestBookings, companyProfile!);
         handleReset(nextLrNumber);
     }, [handleReset, companyProfile]);
