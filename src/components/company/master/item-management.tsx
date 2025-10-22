@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -47,6 +48,7 @@ const initialItems: Item[] = [
     { id: 12, name: 'TIN', aliasCode: 'TIN', hsnCode: '7310', description: 'Metal Tin or Can' },
     { id: 13, name: 'CYLINDER', aliasCode: 'CYL', hsnCode: '7311', description: 'Gas Cylinder' },
     { id: 14, name: 'LOOSE', aliasCode: 'LSE', hsnCode: '9999', description: 'Loose Items' },
+    { id: 15, name: 'BARREL', aliasCode: 'BRL', hsnCode: '7310', description: 'Wooden or Metal Barrel' },
 ];
 
 const tdClass = "whitespace-nowrap uppercase";
