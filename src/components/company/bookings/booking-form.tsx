@@ -1,4 +1,3 @@
-//
 
 'use client';
 
@@ -228,44 +227,24 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
     const systemBookings = allBookings.filter(b => b.source === 'System');
-    
+
     let relevantBookings: Booking[];
+    let lastSequence = 0;
+
     if (profile.grnFormat === 'plain') {
-        relevantBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo) && !b.lrNo.match(/[a-zA-Z]/));
-    } else {
-        const prefix = profile.lrPrefix?.trim() || 'UNDEFINED_PREFIX_BUG_GUARD';
+        relevantBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo));
+        if (relevantBookings.length > 0) {
+            lastSequence = Math.max(...relevantBookings.map(b => parseInt(b.lrNo, 10) || 0));
+        }
+        return String(lastSequence + 1);
+    } else { // 'with_char'
+        const prefix = profile.lrPrefix?.trim() || '';
         relevantBookings = systemBookings.filter(b => b.lrNo.startsWith(prefix));
+        if (relevantBookings.length > 0) {
+             lastSequence = Math.max(...relevantBookings.map(b => parseInt(b.lrNo.substring(prefix.length), 10) || 0));
+        }
+        return `${prefix}${lastSequence + 1}`;
     }
-
-    if (relevantBookings.length === 0) {
-        return profile.grnFormat === 'plain' ? '1' : `${profile.lrPrefix?.trim() || ''}1`;
-    }
-
-    const highestNumber = Math.max(
-        ...relevantBookings.map(b => {
-            const prefix = profile.grnFormat === 'with_char' ? (profile.lrPrefix?.trim() || '') : '';
-            const numericPart = prefix ? b.lrNo.substring(prefix.length) : b.lrNo;
-            return parseInt(numericPart, 10) || 0;
-        })
-    );
-
-    const newSequence = highestNumber + 1;
-
-    if (profile.grnFormat === 'plain') {
-        return String(newSequence);
-    }
-    
-    const prefix = profile.lrPrefix?.trim() || '';
-    // Find a booking that matches the highest number to determine padding
-    const bookingWithHighestNumber = relevantBookings.find(b => {
-      const numPart = parseInt(prefix ? b.lrNo.substring(prefix.length) : b.lrNo, 10);
-      return numPart === highestNumber;
-    });
-
-    const numericPartString = bookingWithHighestNumber ? (prefix ? bookingWithHighestNumber.lrNo.substring(prefix.length) : bookingWithHighestNumber.lrNo) : '1';
-    const paddingLength = numericPartString.length;
-
-    return `${prefix}${String(newSequence).padStart(paddingLength, '0')}`;
 };
 
 
@@ -433,22 +412,22 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         loadMasterData();
     }, [loadMasterData]);
 
-    // Effect to initialize the form for a new booking
     useEffect(() => {
-        if (!trackingId && !bookingData && companyProfile) {
-            const allBookings = getBookings();
-            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, companyProfile));
-            
-            const allCities = getCities();
-            const defaultStationName = companyProfile.defaultFromStation;
-            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-            setFromStation(defaultStation);
-
-            let keyCounter = 1;
-            const defaultRows = companyProfile.defaultItemRows || 1;
-            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
-        }
-    }, [trackingId, bookingData, companyProfile, isOfflineMode]);
+      // This effect runs when companyProfile is loaded or when creating a new booking.
+      if (companyProfile && !trackingId && !bookingData) {
+        const allBookings = getBookings();
+        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, companyProfile));
+        
+        const allCities = getCities();
+        const defaultStationName = companyProfile.defaultFromStation;
+        const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+        setFromStation(defaultStation);
+        
+        let keyCounter = 1;
+        const defaultRows = companyProfile.defaultItemRows || 1;
+        setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
+      }
+    }, [companyProfile, trackingId, bookingData, isOfflineMode]);
 
     
     useEffect(() => {
