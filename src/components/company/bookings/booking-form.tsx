@@ -227,32 +227,33 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
-    // 1. Filter for system-generated bookings only
-    const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
+    const systemBookings = allBookings.filter(b => b.source === 'System');
 
-    if (systemBookings.length === 0) {
-        return prefix ? `${prefix}1`.padStart(2, '0') : '1';
-    }
-
-    // 2. Helper to extract the numeric part of an LR number
     const extractNumber = (lrNo: string): number => {
         const match = lrNo.match(/\d+$/);
         return match ? parseInt(match[0], 10) : 0;
     };
-
-    // 3. Find the booking with the highest LR number
-    const lastBooking = systemBookings.reduce((latest, current) => {
-        return extractNumber(current.lrNo) > extractNumber(latest.lrNo) ? current : latest;
-    });
-
-    const lastSequence = extractNumber(lastBooking.lrNo);
-    const newSequence = lastSequence + 1;
     
-    // 4. Use the prefix from the latest booking if it exists, otherwise use the profile prefix
-    const lrPrefixMatch = lastBooking.lrNo.match(/^[a-zA-Z]+/);
-    const finalPrefix = lrPrefixMatch ? lrPrefixMatch[0] : prefix;
+    let relevantBookings: Booking[];
+    let highestNumber = 0;
 
-    return finalPrefix ? `${finalPrefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
+    if (prefix) {
+        // Find bookings that start with the exact prefix
+        relevantBookings = systemBookings.filter(b => b.lrNo.startsWith(prefix));
+    } else {
+        // Find bookings that are purely numeric
+        relevantBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo));
+    }
+
+    if (relevantBookings.length > 0) {
+        highestNumber = relevantBookings
+            .map(b => extractNumber(b.lrNo))
+            .reduce((max, current) => Math.max(max, current), 0);
+    }
+    
+    const newSequence = highestNumber + 1;
+    
+    return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
 };
 
 export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false, lrNumberInputRef }: BookingFormProps) {
@@ -364,10 +365,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (profile?.grnFormat === 'with_char') {
             lrPrefix = (profile.lrPrefix)?.trim() || undefined;
         }
-
-        if(profile?.grnFormat === 'plain') {
-          lrPrefix = undefined;
-        }
         
         setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
         
@@ -422,51 +419,42 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
 
     useEffect(() => {
-        const loadInitialData = () => {
-            try {
+        const profile = loadCompanySettingsFromStorage();
+        setCompanyProfile(profile);
+
+        // Only generate a new LR number if we are in a new booking context
+        if (!trackingId && !bookingData) {
+            if (profile) {
                 loadMasterData();
-                const profile = loadCompanySettingsFromStorage();
-                setCompanyProfile(profile);
-
-                if (bookingData) {
-                    loadBookingData(bookingData);
-                } else if (trackingId) {
-                    const parsedBookings = getBookings();
-                    const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId) || null;
-                    if (bookingToLoad) {
-                        loadBookingData(bookingToLoad);
-                    }
-                } else {
-                    // This block runs for new bookings.
-                    // We must ensure companyProfile is loaded before generating LR number.
-                    if (profile) {
-                        const allBookings = getBookings();
-                        const allCities = getCities();
-                        
-                        let lrPrefix: string | undefined;
-                        if (profile.grnFormat === 'with_char') {
-                            lrPrefix = (profile.lrPrefix)?.trim() || undefined;
-                        }
-                        
-                        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
-
-                        const defaultStationName = profile.defaultFromStation;
-                        const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-                        setFromStation(defaultStation);
-                        
-                        let keyCounter = 1;
-                        const defaultRows = profile.defaultItemRows || 1;
-                        setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
-                    }
+                const allBookings = getBookings();
+                let lrPrefix: string | undefined;
+                if (profile.grnFormat === 'with_char') {
+                    lrPrefix = (profile.lrPrefix)?.trim() || undefined;
                 }
-            } catch (error) {
-                console.error("Failed to process bookings or fetch profile", error);
-                toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
-            }
-        };
+                
+                setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
 
-        loadInitialData();
-    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast, isOfflineMode]);
+                const defaultStationName = profile.defaultFromStation;
+                const defaultStation = defaultStationName ? getCities().find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+                setFromStation(defaultStation);
+                
+                let keyCounter = 1;
+                const defaultRows = profile.defaultItemRows || 1;
+                setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
+            }
+        }
+    }, [trackingId, bookingData, isOfflineMode, loadMasterData]);
+    
+    useEffect(() => {
+        // Load data for editing or viewing
+        if (trackingId || bookingData) {
+            loadMasterData();
+            const bookingToLoad = bookingData || getBookings().find(b => b.trackingId === trackingId);
+            if (bookingToLoad) {
+                loadBookingData(bookingToLoad);
+            }
+        }
+    }, [trackingId, bookingData, loadBookingData, loadMasterData]);
 
 
     useEffect(() => {
