@@ -340,7 +340,7 @@ export function BookingsDashboard() {
                       <TableHead className={`${thClass} w-[80px]`}>Action</TableHead>
                       <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                       <TableHead className={thClass}>LR No</TableHead>
-                      <TableHead className={thClass}>Pre-printed LR</TableHead>
+                      <TableHead className={thClass}>Manual LR</TableHead>
                       <TableHead className={thClass}>Date</TableHead>
                       <TableHead className={thClass}>From City</TableHead>
                       <TableHead className={thClass}>To City</TableHead>
