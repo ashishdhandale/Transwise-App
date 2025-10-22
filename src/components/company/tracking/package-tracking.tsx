@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -45,6 +46,7 @@ export function PackageTracking() {
     const lowercasedId = id.toLowerCase();
     const results = allTrackableItems.filter(b => 
         b.lrNo.toLowerCase().includes(lowercasedId) ||
+        (b.referenceLrNumber && b.referenceLrNumber.toLowerCase().includes(lowercasedId)) ||
         String(b.trackingId).toLowerCase().includes(lowercasedId)
     );
     setSearchResults(results);

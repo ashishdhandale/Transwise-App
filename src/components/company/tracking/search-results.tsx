@@ -54,6 +54,7 @@ export function SearchResults({ results, onSelectResult, selectedTrackingId, lrD
                         <TableHeader>
                         <TableRow>
                             <TableHead className={thClass}>LR No.</TableHead>
+                            <TableHead className={thClass}>Pre-printed LR</TableHead>
                             <TableHead className={thClass}>Challan No</TableHead>
                             <TableHead className={thClass}>Date</TableHead>
                             <TableHead className={thClass}>From</TableHead>
@@ -71,13 +72,14 @@ export function SearchResults({ results, onSelectResult, selectedTrackingId, lrD
                                 className={cn("cursor-pointer hover:bg-primary/10", row.trackingId === selectedTrackingId && 'bg-primary/20 hover:bg-primary/20')}
                                 onClick={() => onSelectResult(row)}
                             >
-                                <TableCell className={cn(tdClass, 'font-bold text-primary')}>{row.lrNo}</TableCell>
+                                <TableCell className={cn(tdClass, 'font-bold text-blue-600')}>{row.lrNo}</TableCell>
+                                <TableCell className={cn(tdClass, 'font-bold text-purple-600')}>{row.referenceLrNumber || 'N/A'}</TableCell>
                                 <TableCell className={cn(tdClass)}>{findChallanForLr(row.lrNo) || 'N/A'}</TableCell>
                                 <TableCell className={cn(tdClass)}>{format(parseISO(row.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                                 <TableCell className={cn(tdClass)}>{row.fromCity}</TableCell>
                                 <TableCell className={cn(tdClass)}>{row.toCity}</TableCell>
-                                <TableCell className={cn(tdClass)}>{row.sender}</TableCell>
-                                <TableCell className={cn(tdClass)}>{row.receiver}</TableCell>
+                                <TableCell className={cn(tdClass)}>{row.sender.name}</TableCell>
+                                <TableCell className={cn(tdClass)}>{row.receiver.name}</TableCell>
                                 <TableCell className={cn(tdClass)}>{row.itemDescription}</TableCell>
                                 <TableCell className={cn(tdClass, 'font-semibold')}>{row.status}</TableCell>
                             </TableRow>
