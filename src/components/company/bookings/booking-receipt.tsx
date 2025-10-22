@@ -87,7 +87,6 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <DetailItem label="LR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
                         <DetailItem label="From" value={booking.fromCity} />
                         <DetailItem label="To" value={booking.toCity} />
-                        <DetailItem label="Tracking ID" value={booking.trackingId} />
                     </div>
                     <div className="flex flex-col items-center justify-center border-2 border-black rounded-md p-1">
                         <Image
