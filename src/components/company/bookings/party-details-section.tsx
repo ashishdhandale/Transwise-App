@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -15,8 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { saveCustomers, getCustomers } from '@/lib/customer-data';
 
-const LOCAL_STORAGE_KEY_CUSTOMERS = 'transwise_customers';
 
 interface PartyRowProps {
     side: 'Sender' | 'Receiver';
@@ -50,7 +51,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
                 state: '',
                 mobile: '',
                 email: '',
-                type: 'Company',
+                type: 'Consignor / Consignee',
                 openingBalance: 0
             });
         }
@@ -77,14 +78,13 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
         }
 
         try {
-            const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
-            const currentCustomers: Customer[] = savedCustomers ? JSON.parse(savedCustomers) : [];
+            const currentCustomers = getCustomers();
             const newCustomer: Customer = {
                 id: currentCustomers.length > 0 ? Math.max(...currentCustomers.map(c => c.id)) + 1 : 1,
                 ...customerData
             };
             const updatedCustomers = [newCustomer, ...currentCustomers];
-            localStorage.setItem(LOCAL_STORAGE_KEY_CUSTOMERS, JSON.stringify(updatedCustomers));
+            saveCustomers(updatedCustomers);
             
             toast({ title: 'Customer Added', description: `"${customerData.name}" has been added to your master list.` });
             
@@ -164,6 +164,7 @@ const PartyRow = ({ side, customers, onPartyAdded, onPartyChange, initialParty, 
 };
 
 interface PartyDetailsSectionProps {
+    customers: Customer[]; // Now expects customers as a prop
     onSenderChange: (party: Customer | null | ((prev: Customer | null) => Customer | null)) => void;
     onReceiverChange: (party: Customer | null | ((prev: Customer | null) => Customer | null)) => void;
     sender: Customer | null;
@@ -173,10 +174,11 @@ interface PartyDetailsSectionProps {
     errors: { [key: string]: boolean };
     isViewOnly?: boolean;
     isOfflineMode?: boolean;
-    onPartyAdded: () => void; // New prop to notify parent about new customer
+    onPartyAdded: () => void;
 }
 
 export function PartyDetailsSection({ 
+    customers,
     onSenderChange, 
     onReceiverChange, 
     sender, 
@@ -188,26 +190,11 @@ export function PartyDetailsSection({
     isOfflineMode = false,
     onPartyAdded
 }: PartyDetailsSectionProps) {
-    const [customers, setCustomers] = useState<Customer[]>([]);
     const [billTo, setBillTo] = useState<string>('');
     const [otherBillToParty, setOtherBillToParty] = useState<string | undefined>(undefined);
     const [shippingAddress, setShippingAddress] = useState('');
     const [isSameAsReceiver, setIsSameAsReceiver] = useState(true);
     const [isExtraDetailsOpen, setIsExtraDetailsOpen] = useState(false);
-
-    const loadCustomers = useCallback(() => {
-        try {
-            const savedCustomers = localStorage.getItem(LOCAL_STORAGE_KEY_CUSTOMERS);
-            setCustomers(savedCustomers ? JSON.parse(savedCustomers) : []);
-        } catch (error) {
-            console.error("Failed to load party options", error);
-            setCustomers([]);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadCustomers();
-    }, [loadCustomers]);
     
     useEffect(() => {
         if (sender && !billTo) {

@@ -530,11 +530,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         try {
+            let savedBooking: Booking;
             if ((isEditMode || isPartialCancel) && currentBooking) {
-                const updatedBooking = { ...currentBooking, ...newBookingData };
-                const changeDetails = generateChangeDetails(currentBooking, updatedBooking, isPartialCancel);
+                savedBooking = { ...currentBooking, ...newBookingData };
+                const changeDetails = generateChangeDetails(currentBooking, savedBooking, isPartialCancel);
                 
-                const updatedBookings = allBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? updatedBooking : b);
+                const updatedBookings = allBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? savedBooking : b);
                 saveBookings(updatedBookings);
                 setAllBookings(updatedBookings); // Update local state
                 
@@ -543,48 +544,48 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 }
 
                 toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
-                if (onSaveSuccess) onSaveSuccess(updatedBooking);
+                if (onSaveSuccess) onSaveSuccess(savedBooking);
             } else {
-                const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
+                savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
-                const updatedBookings = [...allBookings, newBooking];
+                const updatedBookings = [...allBookings, savedBooking];
                 saveBookings(updatedBookings);
                 setAllBookings(updatedBookings); // Update local state for next LR generation
                 
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
                 if (sender && receiver) {
-                    updateStandardRateList(newBooking, sender, receiver);
+                    updateStandardRateList(savedBooking, sender, receiver);
                 }
                 
-                if (newBooking.loadType === 'FTL') {
+                if (savedBooking.loadType === 'FTL') {
                     // For FTL, we create a pending challan immediately.
                     const allChallans = getChallanData();
                     const challan: Challan = {
                         challanId: `TEMP-CHLN-${Date.now()}`,
-                        dispatchDate: format(new Date(newBooking.bookingDate), 'yyyy-MM-dd'),
+                        dispatchDate: format(new Date(savedBooking.bookingDate), 'yyyy-MM-dd'),
                         challanType: 'Dispatch',
                         status: 'Pending',
-                        vehicleNo: newBooking.ftlDetails!.vehicleNo,
-                        driverName: newBooking.ftlDetails!.driverName,
-                        fromStation: newBooking.fromCity,
-                        toStation: newBooking.toCity,
-                        dispatchToParty: newBooking.receiver.name,
+                        vehicleNo: savedBooking.ftlDetails!.vehicleNo,
+                        driverName: savedBooking.ftlDetails!.driverName,
+                        fromStation: savedBooking.fromCity,
+                        toStation: savedBooking.toCity,
+                        dispatchToParty: savedBooking.receiver.name,
                         totalLr: 1,
-                        totalPackages: newBooking.qty,
-                        totalItems: newBooking.itemRows.length,
-                        totalActualWeight: newBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
-                        totalChargeWeight: newBooking.chgWt,
-                        vehicleHireFreight: newBooking.ftlDetails!.truckFreight,
-                        advance: newBooking.ftlDetails!.advance,
-                        balance: newBooking.ftlDetails!.truckFreight - newBooking.ftlDetails!.advance,
+                        totalPackages: savedBooking.qty,
+                        totalItems: savedBooking.itemRows.length,
+                        totalActualWeight: savedBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                        totalChargeWeight: savedBooking.chgWt,
+                        vehicleHireFreight: savedBooking.ftlDetails!.truckFreight,
+                        advance: savedBooking.ftlDetails!.advance,
+                        balance: savedBooking.ftlDetails!.truckFreight - savedBooking.ftlDetails!.advance,
                         senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
                         summary: {
-                            grandTotal: newBooking.totalAmount,
-                            totalTopayAmount: newBooking.lrType === 'TOPAY' ? newBooking.totalAmount : 0,
-                            commission: newBooking.ftlDetails!.commission,
+                            grandTotal: savedBooking.totalAmount,
+                            totalTopayAmount: savedBooking.lrType === 'TOPAY' ? savedBooking.totalAmount : 0,
+                            commission: savedBooking.ftlDetails!.commission,
                             labour: 0, crossing: 0, carting: 0, 
-                            balanceTruckHire: newBooking.ftlDetails!.truckFreight - newBooking.ftlDetails!.advance,
+                            balanceTruckHire: savedBooking.ftlDetails!.truckFreight - savedBooking.ftlDetails!.advance,
                             debitCreditAmount: 0
                         }
                     };
@@ -592,18 +593,18 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
                     const lrDetail: LrDetail = {
                         challanId: challan.challanId,
-                        lrNo: newBooking.lrNo,
-                        lrType: newBooking.lrType,
-                        sender: newBooking.sender,
-                        receiver: newBooking.receiver,
-                        from: newBooking.fromCity,
-                        to: newBooking.toCity,
-                        bookingDate: format(new Date(newBooking.bookingDate), 'yyyy-MM-dd'),
-                        itemDescription: newBooking.itemDescription,
-                        quantity: newBooking.qty,
-                        actualWeight: newBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
-                        chargeWeight: newBooking.chgWt,
-                        grandTotal: newBooking.totalAmount
+                        lrNo: savedBooking.lrNo,
+                        lrType: savedBooking.lrType,
+                        sender: savedBooking.sender,
+                        receiver: savedBooking.receiver,
+                        from: savedBooking.fromCity,
+                        to: savedBooking.toCity,
+                        bookingDate: format(new Date(savedBooking.bookingDate), 'yyyy-MM-dd'),
+                        itemDescription: savedBooking.itemDescription,
+                        quantity: savedBooking.qty,
+                        actualWeight: savedBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                        chargeWeight: savedBooking.chgWt,
+                        grandTotal: savedBooking.totalAmount
                     };
                     const allLrDetails = getLrDetailsData();
                     saveLrDetailsData([...allLrDetails, lrDetail]);
@@ -611,10 +612,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     setGeneratedChallan(challan);
                 }
                 
-                setReceiptData(newBooking);
+                setReceiptData(savedBooking);
                 
                 if (onSaveAndNew) {
-                    onSaveAndNew(newBooking, () => {
+                    onSaveAndNew(savedBooking, () => {
                         const nextLrNumber = generateLrNumber(updatedBookings, companyProfile!);
                         handleReset(nextLrNumber);
                     });
@@ -767,6 +768,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             isViewOnly={readOnly}
         />
         <PartyDetailsSection 
+            customers={customers}
             onSenderChange={setSender}
             onReceiverChange={setReceiver}
             sender={sender}
