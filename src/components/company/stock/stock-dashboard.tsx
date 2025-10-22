@@ -290,7 +290,12 @@ export function StockDashboard() {
                                     disabled={item.status !== 'In Stock'}
                                 />
                             </TableCell>
-                            <TableCell className={cn(tdClass, "font-medium")}>{item.lrNo}</TableCell>
+                            <TableCell className={cn(tdClass, "font-medium")}>
+                                {item.source === 'Offline' && item.referenceLrNumber
+                                    ? `${item.lrNo} / ${item.referenceLrNumber}`
+                                    : item.lrNo
+                                }
+                            </TableCell>
                             <TableCell className={cn(tdClass)}>{item.lrType}</TableCell>
                             <TableCell className={cn(tdClass)}>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.fromCity}</TableCell>
