@@ -52,29 +52,34 @@ export function AppHeader() {
     router.push('/');
   };
   
-  let user, email, userRole, avatarSeed, avatarFallback;
+  let user, email, userRole, avatarSeed, avatarFallback, roleLabel;
 
   if (isAdmin) {
     user = 'Sup.Admin';
     email = 'admin@transwise.in';
     userRole = 'Sup.Admin';
+    roleLabel = 'Super Admin';
     avatarSeed = 'admin-avatar';
     avatarFallback = 'SA';
   } else if (isCompany) {
     user = profile?.companyName || 'Company Admin';
     email = profile?.companyEmail || 'company@transwise.in';
     userRole = 'My Account';
+    roleLabel = 'Company';
     avatarSeed = 'company-avatar';
     avatarFallback = user.charAt(0) || 'C';
   } else if (isBranch) {
-    user = 'Priya Singh (Branch)';
+    user = 'Priya Singh';
     email = 'priya.singh@branch.com';
     userRole = 'My Account';
+    roleLabel = 'Branch Staff';
     avatarSeed = 'branch-avatar';
     avatarFallback = 'PS';
   } else {
     user = 'Guest';
     email = 'guest@transwise.in';
+    userRole = 'Guest';
+    roleLabel = 'Guest';
     avatarSeed = 'guest-avatar';
     avatarFallback = 'G';
   }
@@ -109,7 +114,7 @@ export function AppHeader() {
           </PreviousBookingDialog>
         )}
         <div className="text-right">
-            <p className="text-sm font-medium">{user}</p>
+            <p className="text-sm font-medium">{user} ({roleLabel})</p>
             <p className="text-xs text-primary-foreground/80">Login ID: {email}</p>
         </div>
         <DropdownMenu>
