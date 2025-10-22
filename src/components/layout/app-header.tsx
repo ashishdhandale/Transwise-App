@@ -52,7 +52,7 @@ export function AppHeader() {
     router.push('/');
   };
   
-  let user, email, userRole, avatarSeed, avatarFallback, roleLabel;
+  let user, email, userRole, avatarSeed, avatarFallback, roleLabel, settingsHref;
 
   if (isAdmin) {
     user = 'Sup.Admin';
@@ -61,6 +61,7 @@ export function AppHeader() {
     roleLabel = 'Super Admin';
     avatarSeed = 'admin-avatar';
     avatarFallback = 'SA';
+    settingsHref = '/admin/settings';
   } else if (isCompany) {
     user = profile?.companyName || 'Company Admin';
     email = profile?.companyEmail || 'company@transwise.in';
@@ -68,6 +69,7 @@ export function AppHeader() {
     roleLabel = 'Company';
     avatarSeed = 'company-avatar';
     avatarFallback = user.charAt(0) || 'C';
+    settingsHref = '/company/settings';
   } else if (isBranch) {
     user = 'Priya Singh';
     email = 'priya.singh@branch.com';
@@ -75,6 +77,7 @@ export function AppHeader() {
     roleLabel = 'Branch Staff';
     avatarSeed = 'branch-avatar';
     avatarFallback = 'PS';
+    settingsHref = '/company/branch/settings';
   } else {
     user = 'Guest';
     email = 'guest@transwise.in';
@@ -82,6 +85,7 @@ export function AppHeader() {
     roleLabel = 'Guest';
     avatarSeed = 'guest-avatar';
     avatarFallback = 'G';
+    settingsHref = '#';
   }
 
 
@@ -163,7 +167,9 @@ export function AppHeader() {
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             {!isAdmin && <DropdownMenuItem>Billing</DropdownMenuItem>}
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={settingsHref}>Settings</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
