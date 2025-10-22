@@ -237,19 +237,11 @@ const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): s
         const match = lrNo.match(/\d+$/);
         return match ? parseInt(match[0], 10) : 0;
     };
+    
+    const lastSequence = systemBookings
+        .map(b => extractNumber(b.lrNo))
+        .reduce((max, current) => Math.max(max, current), 0);
 
-    systemBookings.sort((a, b) => {
-        const dateA = new Date(a.bookingDate).getTime();
-        const dateB = new Date(b.bookingDate).getTime();
-        if (dateA !== dateB) return dateA - dateB;
-
-        const numA = extractNumber(a.lrNo);
-        const numB = extractNumber(b.lrNo);
-        return numA - numB;
-    });
-
-    const lastBooking = systemBookings[systemBookings.length - 1];
-    const lastSequence = extractNumber(lastBooking.lrNo);
     const newSequence = lastSequence + 1;
     
     return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
