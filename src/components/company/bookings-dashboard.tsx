@@ -73,41 +73,6 @@ const statusColors: { [key: string]: string } = {
 
 const thClass = 'bg-cyan-600 text-white h-10 whitespace-nowrap';
 
-// This function calculates the next LR number based only on system-generated bookings.
-const getNextLrNumber = (): string => {
-  try {
-    const allBookings = getBookings();
-    const companyProfile = loadCompanySettingsFromStorage();
-
-    // Filter for system-generated bookings only
-    const systemBookings = allBookings.filter(b => b.source === 'System');
-    
-    if (systemBookings.length === 0) {
-      const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
-      return `${prefix}1`.padStart(2, '0');
-    }
-
-    // Sort by creation date to find the most recent system booking
-    systemBookings.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
-    
-    const lastBooking = systemBookings[0];
-    const match = lastBooking.lrNo.match(/\d+$/);
-    
-    let lastSequence = 0;
-    if (match) {
-        lastSequence = parseInt(match[0], 10);
-    }
-
-    const newSequence = lastSequence + 1;
-    const prefix = companyProfile?.grnFormat === 'with_char' ? (companyProfile.lrPrefix?.trim() || '') : '';
-    
-    return `${prefix}${String(newSequence).padStart(2, '0')}`;
-  } catch (e) {
-    console.error(e);
-    return "Could not calculate";
-  }
-};
-
 
 export function BookingsDashboard() {
   const [fromDate, setFromDate] = useState<Date | undefined>();
@@ -121,7 +86,6 @@ export function BookingsDashboard() {
   const [isPartialCancelDialogOpen, setIsPartialCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
-  const [nextLr, setNextLr] = useState('');
   
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [bookingToPrint, setBookingToPrint] = useState<Booking | null>(null);
@@ -150,7 +114,6 @@ export function BookingsDashboard() {
   useEffect(() => {
     setIsClient(true);
     loadBookings();
-    setNextLr(getNextLrNumber());
   }, []);
   
   useEffect(() => {
@@ -307,16 +270,6 @@ export function BookingsDashboard() {
   return (
     <ClientOnly>
       <main className="flex-1 p-4 md:p-6 bg-white">
-        {nextLr && (
-          <Card className="mb-4 bg-blue-50 border-blue-200">
-            <CardHeader>
-              <CardTitle>Next LR Number Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg">If you create a new booking now, the next automatically generated LR number will be: <strong className="text-2xl text-blue-600">{nextLr}</strong></p>
-            </CardContent>
-          </Card>
-        )}
         <Card className="border-2 border-cyan-200">
           <div className="p-4 space-y-4">
             {/* Action Buttons */}

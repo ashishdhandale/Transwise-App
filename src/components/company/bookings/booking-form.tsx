@@ -228,22 +228,31 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
 const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
     // Filter for system-generated bookings only, which should follow a sequence.
-    const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
+    const systemBookings = allBookings.filter(b => b.source === 'System');
 
-    const lastSequence = systemBookings.reduce((maxSeq, booking) => {
-        // Use a regular expression to find the number at the end of the string.
-        // This is robust against prefixes or non-numeric parts.
-        const match = booking.lrNo.match(/\d+$/);
-        if (match) {
-            const currentSeq = parseInt(match[0], 10);
-            if (!isNaN(currentSeq) && currentSeq > maxSeq) {
-                return currentSeq;
-            }
-        }
-        return maxSeq;
-    }, 0);
+    if (systemBookings.length === 0) {
+        return prefix ? `${prefix}1`.padStart(2, '0') : '1';
+    }
+
+    // Sort by creation date to find the most recent booking
+    systemBookings.sort((a, b) => {
+        const dateA = new Date(a.bookingDate).getTime();
+        const dateB = new Date(b.bookingDate).getTime();
+        if (dateB !== dateA) return dateB - dateA;
+        // If dates are same, fall back to trackingId for sequence
+        return (b.trackingId > a.trackingId) ? 1 : -1;
+    });
+    
+    const lastBooking = systemBookings[0];
+    const match = lastBooking.lrNo.match(/\d+$/);
+    
+    let lastSequence = 0;
+    if (match) {
+        lastSequence = parseInt(match[0], 10);
+    }
 
     const newSequence = lastSequence + 1;
+    
     return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
 };
 
@@ -715,8 +724,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
-            if (isEditMode || isViewOnly || isPartialCancel) {
-                onClose?.();
+            if (onClose) {
+                onClose();
             } else {
                 router.push('/company/bookings');
             }
