@@ -227,36 +227,35 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): string => {
-    // Filter for system-generated bookings only
+    // 1. Filter for system-generated bookings only
     const systemBookings = allBookings.filter(b => !b.source || b.source === 'System');
 
     if (systemBookings.length === 0) {
         return prefix ? `${prefix}1`.padStart(2, '0') : '1';
     }
 
-    const extractNumber = (lrNo: string) => {
+    // 2. Helper to extract the numeric part of an LR number
+    const extractNumber = (lrNo: string): number => {
         const match = lrNo.match(/\d+$/);
         return match ? parseInt(match[0], 10) : 0;
     };
-    
-    // Separate prefixed and non-prefixed LRs
+
+    // 3. Separate bookings into prefixed and non-prefixed groups
     const prefixedLrs = systemBookings.filter(b => prefix && b.lrNo.startsWith(prefix));
-    const plainLrs = systemBookings.filter(b => !prefixedLrs.includes(b));
+    const plainLrs = systemBookings.filter(b => !b.lrNo.match(/^[a-zA-Z]/));
 
     let lastSequence = 0;
 
+    // 4. Determine which group to use for the sequence
     if (prefixedLrs.length > 0) {
         // If there are LRs with the current prefix, find the max among them
-        lastSequence = prefixedLrs
-            .map(b => extractNumber(b.lrNo))
-            .reduce((max, current) => Math.max(max, current), 0);
-    } else {
+        lastSequence = Math.max(...prefixedLrs.map(b => extractNumber(b.lrNo)));
+    } else if (plainLrs.length > 0) {
         // Otherwise, find the max among the plain number LRs
-        lastSequence = plainLrs
-            .map(b => extractNumber(b.lrNo))
-            .reduce((max, current) => Math.max(max, current), 0);
+        lastSequence = Math.max(...plainLrs.map(b => extractNumber(b.lrNo)));
     }
-    
+    // If neither group has entries (e.g., all LRs have a *different* prefix), lastSequence remains 0.
+
     const newSequence = lastSequence + 1;
     
     return prefix ? `${prefix}${String(newSequence).padStart(2, '0')}` : String(newSequence);
@@ -444,21 +443,27 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         loadBookingData(bookingToLoad);
                     }
                 } else {
-                    // For new bookings, set default station from profile
-                    const allCities = getCities();
-                    const defaultStationName = profile?.defaultFromStation;
-                    const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-                    setFromStation(defaultStation);
-                     // Set other defaults for new booking
-                    const allBookings = getBookings();
-                    let lrPrefix: string | undefined;
-                    if (profile?.grnFormat === 'with_char') {
-                        lrPrefix = (profile.lrPrefix)?.trim() || undefined;
+                    // This block runs for new bookings.
+                    // We must ensure companyProfile is loaded before generating LR number.
+                    if (profile) {
+                        const allBookings = getBookings();
+                        const allCities = getCities();
+                        
+                        let lrPrefix: string | undefined;
+                        if (profile.grnFormat === 'with_char') {
+                            lrPrefix = (profile.lrPrefix)?.trim() || undefined;
+                        }
+                        
+                        setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
+
+                        const defaultStationName = profile.defaultFromStation;
+                        const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+                        setFromStation(defaultStation);
+                        
+                        let keyCounter = 1;
+                        const defaultRows = profile.defaultItemRows || 1;
+                        setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
                     }
-                    setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
-                    let keyCounter = 1;
-                    const defaultRows = profile?.defaultItemRows || 1;
-                    setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
                 }
             } catch (error) {
                 console.error("Failed to process bookings or fetch profile", error);
@@ -467,7 +472,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         loadInitialData();
-    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast, isOfflineMode]);
+    }, [trackingId, bookingData, loadBookingData, loadMasterData, toast, isOfflineMode, companyProfile?.lrPrefix]); // Added dependency on companyProfile
 
 
     useEffect(() => {
@@ -933,5 +938,3 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-
-    
