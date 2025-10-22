@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -89,8 +88,16 @@ export function PackageTracking() {
         
         {selectedBooking ? (
             <ShippingDetails booking={selectedBooking} history={selectedBookingHistory} profile={companyProfile} />
-        ) : (
+        ) : hasSearched && searchResults.length === 0 ? (
             <Card className="flex h-80 items-center justify-center border-dashed border-2">
+                <div className="text-center text-muted-foreground">
+                    <Search className="h-12 w-12 mx-auto" />
+                    <p className="mt-2 font-medium">No bookings found for your search.</p>
+                    <p className="text-sm">Please try a different LR No. or Tracking ID.</p>
+                </div>
+            </Card>
+        ) : (
+             <Card className="flex h-80 items-center justify-center border-dashed border-2">
                 <div className="text-center text-muted-foreground">
                     <Search className="h-12 w-12 mx-auto" />
                     <p className="mt-2 font-medium">Search for an LR No. to see its details.</p>
