@@ -89,6 +89,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <DetailItem label="To" value={booking.toCity} />
                     </div>
                     <div className="flex flex-col items-center justify-center border-2 border-black rounded-md p-1">
+                        <p className="font-bold text-center">Tracking ID: {booking.trackingId}</p>
                         <Image
                             src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.trackingId}&code=Code128&dpi=96`}
                             alt={`Barcode for ${booking.trackingId}`}

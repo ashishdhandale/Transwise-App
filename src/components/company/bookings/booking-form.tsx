@@ -231,11 +231,13 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
-        // 2. Filter system bookings to get only plain numeric LR numbers
-        const numericLrs = systemBookings
-            .map(b => b.lrNo)
-            .filter(lrNo => /^\d+$/.test(lrNo)) // Check if it's purely a number
-            .map(lrNo => parseInt(lrNo, 10));
+        const numericLrs: number[] = [];
+        systemBookings.forEach(b => {
+            // Check if lrNo is a plain number string
+            if (/^\d+$/.test(b.lrNo)) {
+                numericLrs.push(parseInt(b.lrNo, 10));
+            }
+        });
 
         const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
@@ -314,43 +316,34 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [rateLists, setRateLists] = useState<RateList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     
-    const loadInitialData = useCallback(() => {
+    // This effect loads all necessary data once on mount.
+    useEffect(() => {
         try {
             setIsLoading(true);
             const profile = loadCompanySettingsFromStorage();
             const bookings = getBookings();
-            
+            const allCities = getCities();
+
             setCompanyProfile(profile);
             setAllBookings(bookings);
+            setCities(allCities);
             setCustomers(getCustomers());
             setDrivers(getDrivers());
             setVehicles(getVehicles());
             setVendors(getVendors());
             setRateLists(getRateLists());
             setBranches(getBranches());
-            const allCities = getCities();
-            setCities(allCities);
-            
-            // Set default from station based on profile
-            if (!isEditMode && profile.defaultFromStation) {
-                const defaultStation = allCities.find(c => c.name.toLowerCase() === profile.defaultFromStation?.toLowerCase()) || null;
-                setFromStation(defaultStation);
-            }
-
         } catch (error) {
             console.error("Failed to load master data", error);
             toast({ title: 'Error', description: 'Failed to load essential application data.', variant: 'destructive'});
         } finally {
             setIsLoading(false);
         }
-    }, [isEditMode, toast]);
-
-    useEffect(() => {
-        loadInitialData();
-    }, [loadInitialData]);
+    }, [toast]);
     
+    // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
-        if (isLoading) return; // Wait for all data to be loaded
+        if (isLoading) return; // Don't run if data isn't ready
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
         
@@ -386,6 +379,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             } else {
                  setCurrentLrNumber('');
             }
+            
+            const defaultStationName = companyProfile.defaultFromStation;
+            const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+            setFromStation(defaultStation);
 
             const defaultRows = companyProfile.defaultItemRows || 1;
             setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -530,7 +527,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
                 if (onSaveAndNew) {
-                    onSaveAndNew(newBooking, () => handleReset(false));
+                    onSaveAndNew(newBooking, () => handleReset());
                     return; // The parent component handles toast and state
                 }
 
@@ -649,7 +646,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        const callback = onSaveAndNew ? () => handleReset(false) : undefined;
+        const callback = onSaveAndNew ? () => handleReset() : undefined;
         await proceedWithSave(paymentMode, callback);
     };
     
@@ -704,7 +701,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        handleReset(false);
+        handleReset();
     }, [handleReset]);
 
     const handleDialogClose = (open: boolean) => {

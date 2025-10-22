@@ -178,16 +178,18 @@ export function ChargesSection({
                             />
                         </div>
                     ) : (
-                        <Input 
-                            type="number" 
-                            value={bookingCharges[charge.id] || ''}
-                            readOnly={isViewOnly}
-                            className="h-7 text-sm w-[100px] bg-muted/50 justify-self-end" 
-                            onChange={(e) => {
-                                if (isViewOnly) return;
-                                setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))
-                            }}
-                        />
+                         <div className="grid grid-cols-1 w-[100px]">
+                            <Input 
+                                type="number" 
+                                value={bookingCharges[charge.id] || ''}
+                                readOnly={isViewOnly}
+                                className="h-7 text-sm bg-muted/50 justify-self-end" 
+                                onChange={(e) => {
+                                    if (isViewOnly) return;
+                                    setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))
+                                }}
+                            />
+                        </div>
                     )}
                 </div>
             ))}
