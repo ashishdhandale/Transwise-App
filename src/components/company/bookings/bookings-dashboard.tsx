@@ -243,6 +243,7 @@ export function BookingsDashboard() {
 
   const filteredBookings = useMemo(() => {
     const sortedBookings = [...bookings]
+        .filter(b => b.source !== 'Inward') // Exclude inward bookings
         .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 
     if (!debouncedSearchQuery) {
@@ -407,7 +408,7 @@ export function BookingsDashboard() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <p className={cn("cursor-help font-semibold", 
-                                    booking.source === 'Inward' ? 'text-purple-600' : 'text-blue-600'
+                                    booking.source === 'Offline' ? 'text-purple-600' : 'text-blue-600'
                                 )}>{booking.lrNo}</p>
                               </TooltipTrigger>
                               <TooltipContent>

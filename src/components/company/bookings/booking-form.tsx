@@ -231,9 +231,9 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
-        const systemNumericLrs = [];
+        const systemNumericLrs: number[] = [];
         for (const booking of systemBookings) {
-            // Check if lrNo contains only digits
+            // Check if lrNo contains only digits and is not an offline/inward booking
             if (/^\d+$/.test(booking.lrNo)) {
                 systemNumericLrs.push(parseInt(booking.lrNo, 10));
             }
@@ -484,7 +484,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const finalSender = maybeSaveNewParty(sender);
         const finalReceiver = maybeSaveNewParty(receiver);
 
-        const currentStatus: Booking['status'] = isOfflineModeProp ? 'In Stock' : 'In Stock';
+        const currentStatus: Booking['status'] = 'In Stock';
         const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
         const finalBranchName = userBranchName || companyProfile?.companyName;
@@ -503,12 +503,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
             totalAmount: grandTotal,
-            status: isOfflineModeProp ? 'In Stock' : (currentBooking?.status || currentStatus),
+            status: currentBooking?.status || currentStatus,
             itemRows: validRows,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
             branchName: currentBooking?.branchName || finalBranchName,
-            source: isOfflineModeProp ? 'Inward' : 'System',
+            source: isOfflineMode ? 'Offline' : 'System',
             ...(loadType === 'FTL' && { ftlDetails }),
         };
 
@@ -535,8 +535,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     return; // The parent component handles toast and state
                 }
 
-                // If this form is used for manual inward challans, don't save to the main bookings list.
-                if (isOfflineModeProp && newBooking.source !== 'Inward') {
+                // Inward challan bookings are not saved to the main bookings list here.
+                if (isOfflineModeProp) {
                      if (onSaveSuccess) onSaveSuccess(newBooking);
                      return;
                 }
@@ -611,7 +611,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineMode, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -621,7 +621,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (!sender?.name) newErrors.sender = true;
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
-        if ((isOfflineMode || isEditMode || isPartialCancel) && !currentLrNumber) newErrors.lrNumber = true;
+        if (isOfflineMode && !currentLrNumber) newErrors.lrNumber = true;
 
         setErrors(newErrors);
 

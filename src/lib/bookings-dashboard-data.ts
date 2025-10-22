@@ -36,7 +36,7 @@ export interface Booking {
   isGstApplicable?: boolean;
   ftlDetails?: FtlDetails;
   branchName?: string; // Link to the branch that created the booking
-  source?: 'System' | 'Inward'; // To distinguish origin of the booking
+  source?: 'System' | 'Inward' | 'Offline'; // To distinguish origin of the booking
   deliveryMemoNo?: string;
 }
 
@@ -77,6 +77,9 @@ export const getBookings = (): Booking[] => {
                     if (inwardLrNos.has(newBooking.lrNo)) {
                         newBooking.source = 'Inward';
                     } else {
+                        // This logic might be imperfect for old data, but is a reasonable default.
+                        // We assume if it's not explicitly 'Inward', it's 'System'.
+                        // New logic will distinguish between 'System' and 'Offline'.
                         newBooking.source = 'System';
                     }
                 }
@@ -99,14 +102,6 @@ export const getBookings = (): Booking[] => {
                 return newBooking;
             });
             
-            // 5. Remove any bookings that have source: 'Inward' from the main list.
-            const bookingsToKeep = correctedBookings.filter(b => b.source !== 'Inward');
-            if (bookingsToKeep.length !== correctedBookings.length) {
-                dataWasCorrected = true;
-                correctedBookings = bookingsToKeep;
-            }
-
-
             if (dataWasCorrected) {
                 saveBookings(correctedBookings);
                 return correctedBookings;
