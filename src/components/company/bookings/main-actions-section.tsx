@@ -17,7 +17,7 @@ interface MainActionsSectionProps {
     onReset?: () => void;
     isSubmitting: boolean;
     isViewOnly?: boolean;
-    isOfflineMode?: boolean;
+    isOfflineMode: boolean; // Now required
 }
 
 export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isOfflineMode }: MainActionsSectionProps) {
@@ -48,8 +48,6 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
         saveButtonText = 'Confirm Cancellation';
     } else if (isEditMode) {
         saveButtonText = 'Update Booking';
-    } else if (isOfflineMode) {
-        saveButtonText = 'Add to List & New';
     } else {
         saveButtonText = onSaveAndNew ? 'Save & Add New' : 'Save Booking';
     }
@@ -74,7 +72,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                 {isSubmitting ? savingButtonText : saveButtonText}
             </Button>
             
-            {(isEditMode && !onSaveAndNew) || isPartialCancel || (isOfflineMode && !onSaveAndNew) ? (
+            {(isEditMode && !onSaveAndNew) || isPartialCancel ? (
                  <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <X className="mr-2 h-4 w-4" />
                     {isOfflineMode ? 'Cancel' : 'Exit Without Saving'}

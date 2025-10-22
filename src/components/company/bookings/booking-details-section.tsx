@@ -21,6 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getBookings } from '@/lib/bookings-dashboard-data';
 import { ClientOnly } from '@/components/ui/client-only';
 import { getCities, saveCities } from '@/lib/city-data';
+import { Checkbox } from '@/components/ui/checkbox';
+
 
 interface BookingDetailsSectionProps {
     bookingType: string;
@@ -37,6 +39,7 @@ interface BookingDetailsSectionProps {
     onBookingDateChange: (date?: Date) => void;
     isEditMode: boolean;
     isOfflineMode: boolean;
+    onOfflineModeChange: (isOffline: boolean) => void;
     companyProfile: CompanyProfileFormValues | null;
     errors: { [key: string]: boolean };
     isViewOnly?: boolean;
@@ -59,6 +62,7 @@ export function BookingDetailsSection({
     onBookingDateChange,
     isEditMode,
     isOfflineMode,
+    onOfflineModeChange,
     companyProfile,
     errors,
     isViewOnly = false,
@@ -135,7 +139,19 @@ export function BookingDetailsSection({
         <>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                 <div className="space-y-1">
-                    <Label htmlFor="lrNo">LR Number</Label>
+                    <div className="flex items-center space-x-2 mb-1">
+                        <Label htmlFor="lrNo">LR Number</Label>
+                        {!isEditMode && !isViewOnly && (
+                            <div className="flex items-center space-x-1">
+                                <Checkbox 
+                                    id="manualLr" 
+                                    checked={isOfflineMode} 
+                                    onCheckedChange={(checked) => onOfflineModeChange(!!checked)}
+                                />
+                                <Label htmlFor="manualLr" className="text-xs font-normal cursor-pointer">Manual LR</Label>
+                            </div>
+                        )}
+                    </div>
                     <Input 
                         ref={lrNumberInputRef}
                         id="lrNo" 
