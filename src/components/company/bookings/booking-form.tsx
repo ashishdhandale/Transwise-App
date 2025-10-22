@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, Printer, X } from 'lucide-react';
+import { Download, Loader2, Printer, X, Plus } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { loadCompanySettingsFromStorage } from '@/app/company/settings/actions';
@@ -45,7 +45,7 @@ import { VehicleDetailsSection } from './vehicle-details-section';
 import { saveChallanData, getChallanData, saveLrDetailsData, getLrDetailsData, type Challan, type LrDetail } from '@/lib/challan-data';
 import { FtlChallan } from '../challan-tracking/ftl-challan';
 import { PaymentDialog } from './payment-dialog';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ClientOnly } from '@/components/ui/client-only';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
 import type { ChargeSetting } from '../settings/additional-charges-settings';
@@ -248,6 +248,7 @@ const generateLrNumber = (prefix: string | undefined, allBookings: Booking[]): s
 };
 
 export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: isOfflineModeProp = false, lrNumberInputRef }: BookingFormProps) {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode');
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -263,7 +264,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [sender, setSender] = useState<Customer | null>(null);
     const [receiver, setReceiver] = useState<Customer | null>(null);
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [bookingDate, setBookingDate] = useState<Date | undefined>(undefined);
+    const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
     const [currentLrNumber, setCurrentLrNumber] = useState('');
     const [grandTotal, setGrandTotal] = useState(0);
     const { toast } = useToast();
@@ -452,13 +453,27 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     
     // Client-side only initialization for new bookings
     useEffect(() => {
-        if (!isEditMode && !bookingData) {
-            // Call reset, but only if companyProfile is loaded to use its settings.
-            if(companyProfile) {
-                handleReset(false);
+        if (!isEditMode && !bookingData && companyProfile) {
+            // New booking state initialization
+            const allBookings = getBookings();
+            
+            let lrPrefix: string | undefined;
+            if (companyProfile?.grnFormat === 'with_char') {
+                lrPrefix = (companyProfile.lrPrefix)?.trim() || undefined;
             }
+
+            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(lrPrefix, allBookings));
+            
+            let keyCounter = 1;
+            const defaultRows = companyProfile?.defaultItemRows || 1;
+            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
+
+            const allCities = getCities();
+            const defaultStationName = companyProfile?.defaultFromStation;
+            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+            setFromStation(defaultStation);
         }
-    }, [isEditMode, bookingData, companyProfile, handleReset]);
+    }, [isEditMode, bookingData, companyProfile, isOfflineMode]);
 
 
     useEffect(() => {
@@ -719,6 +734,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         handleReset(false);
     }, [handleReset]);
 
+    const handleDialogClose = (open: boolean) => {
+        if (!open) {
+            router.push('/company/bookings');
+        }
+        setShowReceipt(open);
+    };
+
     const formTitle = isEditMode ? `Edit Booking: ${currentLrNumber}` : 
                       isViewOnly ? `View Booking: ${currentLrNumber}` :
                       isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
@@ -869,7 +891,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             />
 
             {receiptData && companyProfile && (
-                <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
+                <Dialog open={showReceipt} onOpenChange={handleDialogClose}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                         <DialogHeader>
                             <DialogTitle>Documents Preview</DialogTitle>
@@ -892,9 +914,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="secondary" onClick={handleNewBooking}>
-                                <X className="mr-2 h-4 w-4" />
-                                Close & New Booking
+                             <Button type="button" variant="secondary" onClick={handleNewBooking}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Booking
                             </Button>
                             <Button onClick={handleDownloadPdf} disabled={isDownloading}>
                                 {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
