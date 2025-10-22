@@ -17,9 +17,9 @@ import { sampleExistingUsers } from "@/lib/sample-data";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LoginForm() {
-  const [userId, setUserId] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole | ''>('');
+  const [userId, setUserId] = useState('contact@transwise.com');
+  const [password, setPassword] = useState('password');
+  const [role, setRole] = useState<UserRole | ''>('Company');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -56,7 +56,7 @@ export default function LoginForm() {
             break;
         case 'Branch':
             // Example of passing role via query param for branch users
-            path = '/company?role=Branch';
+            path = `/company?role=Branch`;
             break;
         }
         router.push(path);
