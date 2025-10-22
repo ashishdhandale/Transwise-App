@@ -226,26 +226,22 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
-    // 1. Filter for system-generated bookings only.
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
-    // 2. Handle based on the GRN Format setting.
     if (profile.grnFormat === 'plain') {
         const numericLrs = systemBookings
             .map(b => parseInt(b.lrNo, 10))
-            .filter(num => !isNaN(num) && String(num).length === b.lrNo.length); // Ensure it's purely numeric
-        
+            .filter(num => !isNaN(num) && String(num).length === b.lrNo.length);
         const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
     } else { // 'with_char'
         const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
-        if (!prefix) return '1'; // Fallback if prefix is missing
+        if (!prefix) return '1';
 
         const relevantLrs = systemBookings
             .filter(b => b.lrNo.toUpperCase().startsWith(prefix))
             .map(b => parseInt(b.lrNo.substring(prefix.length), 10))
             .filter(num => !isNaN(num));
-        
         const lastSequence = relevantLrs.length > 0 ? Math.max(0, ...relevantLrs) : 0;
         return `${prefix}${lastSequence + 1}`;
     }
@@ -310,17 +306,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [cities, setCities] = useState<City[]>([]);
     const [rateLists, setRateLists] = useState<RateList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    const onFromStationChange = useCallback((station: City | null) => {
-        setFromStation(station);
-    }, []);
-
-    // This effect loads all necessary master data when the component mounts.
-    useEffect(() => {
+    
+    const loadInitialData = useCallback(() => {
         try {
             setIsLoading(true);
-            const profile = loadCompanySettingsFromStorage();
-            setCompanyProfile(profile);
+            setCompanyProfile(loadCompanySettingsFromStorage());
             setAllBookings(getBookings());
             setCustomers(getCustomers());
             setDrivers(getDrivers());
@@ -336,13 +326,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setIsLoading(false);
         }
     }, [toast]);
-    
-    // This effect initializes the form state. It runs only when `isLoading` becomes false.
+
     useEffect(() => {
-        if (isLoading || !companyProfile) return; // Wait for data and profile to be loaded
+        loadInitialData();
+    }, [loadInitialData]);
+    
+    useEffect(() => {
+        if (isLoading) return;
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
-
+        
         if (bookingToLoad) {
             // -- Edit Mode --
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
@@ -367,9 +360,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             if (bookingToLoad.ftlDetails) {
                 setFtlDetails(bookingToLoad.ftlDetails);
             }
-        } else {
+        } else if (companyProfile) {
             // -- New Booking Mode --
-             if (isOfflineMode) {
+            if (isOfflineMode) {
                 setCurrentLrNumber('');
             } else {
                 setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
@@ -501,7 +494,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             additionalCharges: additionalCharges,
             taxPaidBy: taxPaidBy,
             branchName: currentBooking?.branchName || finalBranchName,
-            source: isOfflineModeProp ? 'Offline' : 'System',
+            source: isOfflineModeProp ? 'Inward' : 'System',
             ...(loadType === 'FTL' && { ftlDetails }),
         };
 
@@ -529,7 +522,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 }
 
                 // If this form is used for manual inward challans, don't save to the main bookings list.
-                if (isOfflineModeProp && newBooking.source !== 'Offline') {
+                if (isOfflineModeProp && newBooking.source !== 'Inward') {
                      if (onSaveSuccess) onSaveSuccess(newBooking);
                      return;
                 }
@@ -723,10 +716,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             lrNumberInputRef={lrNumberInputRef}
             bookingType={bookingType} 
             onBookingTypeChange={setBookingType}
-            onFromStationChange={onFromStationChange}
-            onToStationChange={setToStation}
             fromStation={fromStation}
+            onFromStationChange={setFromStation}
             toStation={toStation}
+            onToStationChange={setToStation}
             lrNumber={currentLrNumber}
             onLrNumberChange={setCurrentLrNumber}
             bookingDate={bookingDate}
