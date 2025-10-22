@@ -345,43 +345,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setFtlDetails(bookingToLoad.ftlDetails);
         }
     }, []);
-
-    useEffect(() => {
-        const loadInitialData = () => {
-            try {
-                loadMasterData();
-                const profile = loadCompanySettingsFromStorage();
-                setCompanyProfile(profile);
-
-                if (bookingData) {
-                    loadBookingData(bookingData);
-                } else if (trackingId) {
-                    const parsedBookings = getBookings();
-                    const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId) || null;
-                    if (bookingToLoad) {
-                        loadBookingData(bookingToLoad);
-                    }
-                } else {
-                    handleReset();
-                }
-            } catch (error) {
-                console.error("Failed to process bookings or fetch profile", error);
-                toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
-            }
-        };
-
-        loadInitialData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [trackingId, bookingData, loadBookingData]);
     
-    // Set date on client mount to avoid hydration error
-    useEffect(() => {
-        if (!bookingDate && !bookingData) { // Only set if it's a new form
-            setBookingDate(new Date());
-        }
-    }, [bookingDate, bookingData]);
-
-
     const handleReset = useCallback(() => {
         const profile = companyProfile;
         const allBookings = getBookings();
@@ -400,8 +364,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         let keyCounter = 1;
         let defaultRows = 1;
         try {
-            if(companyProfile?.defaultItemRows){
-                defaultRows = companyProfile.defaultItemRows;
+            if(profile?.defaultItemRows){
+                defaultRows = profile.defaultItemRows;
             }
         } catch {
             defaultRows = 1;
@@ -450,7 +414,42 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             title: "Form Reset",
             description: "All fields have been cleared.",
         });
-    }, [companyProfile, isOfflineMode, toast, lrNumberInputRef, userRole, userBranchName, branches]);
+    }, [companyProfile, isOfflineMode, toast, lrNumberInputRef]);
+
+
+    useEffect(() => {
+        const loadInitialData = () => {
+            try {
+                loadMasterData();
+                const profile = loadCompanySettingsFromStorage();
+                setCompanyProfile(profile);
+
+                if (bookingData) {
+                    loadBookingData(bookingData);
+                } else if (trackingId) {
+                    const parsedBookings = getBookings();
+                    const bookingToLoad = parsedBookings.find(b => b.trackingId === trackingId) || null;
+                    if (bookingToLoad) {
+                        loadBookingData(bookingToLoad);
+                    }
+                } else {
+                    handleReset();
+                }
+            } catch (error) {
+                console.error("Failed to process bookings or fetch profile", error);
+                toast({ title: 'Error', description: 'Could not load necessary data.', variant: 'destructive'});
+            }
+        };
+
+        loadInitialData();
+    }, [trackingId, bookingData, loadBookingData, loadMasterData, handleReset, toast]);
+    
+    // Set date on client mount to avoid hydration error
+    useEffect(() => {
+        if (!bookingDate && !bookingData) { // Only set if it's a new form
+            setBookingDate(new Date());
+        }
+    }, [bookingDate, bookingData]);
 
 
     useEffect(() => {
@@ -614,7 +613,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset, isOfflineMode]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile?.companyName, isOfflineModeProp, maybeSaveNewParty, bookingData, handleReset, userRole]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
