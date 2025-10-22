@@ -230,14 +230,16 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
     let lastSequence = 0;
 
     if (profile.grnFormat === 'plain') {
-        const plainNumericBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo));
+        const plainNumericBookings = systemBookings.filter(b => /^\d+$/.test(b.lrNo) && !isNaN(parseInt(b.lrNo, 10)));
         if (plainNumericBookings.length > 0) {
-            lastSequence = Math.max(...plainNumericBookings.map(b => parseInt(b.lrNo, 10) || 0));
+            lastSequence = Math.max(...plainNumericBookings.map(b => parseInt(b.lrNo, 10)));
         }
         return String(lastSequence + 1);
     } else { // 'with_char'
-        const prefix = profile.lrPrefix?.trim() || '';
-        const relevantBookings = systemBookings.filter(b => b.lrNo.startsWith(prefix));
+        const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
+        if (!prefix) return '1'; // Fallback if prefix is missing
+        
+        const relevantBookings = systemBookings.filter(b => b.lrNo.toUpperCase().startsWith(prefix));
         if (relevantBookings.length > 0) {
              lastSequence = Math.max(...relevantBookings.map(b => parseInt(b.lrNo.substring(prefix.length), 10) || 0));
         }
@@ -403,37 +405,38 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }
     }, [companyProfile, isOfflineMode, lrNumberInputRef, toast]);
 
-    // Effect to load profile and master data once, and set initial state for new booking.
+    // Effect to load profile and master data once.
     useEffect(() => {
         const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         loadMasterData();
+    }, [loadMasterData]);
 
-        if (profile && !trackingId && !bookingData) { // Only for new bookings
-            const allBookings = getBookings();
-            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, profile));
-            
-            const allCities = getCities();
-            const defaultStationName = profile.defaultFromStation;
-            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-            setFromStation(defaultStation);
-            
-            let keyCounter = 1;
-            const defaultRows = profile.defaultItemRows || 1;
-            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
-        }
-    }, [loadMasterData, trackingId, bookingData, isOfflineMode]);
-
-    
+    // Effect to set initial state for new booking or load existing booking data.
+    // This now depends on companyProfile being loaded.
     useEffect(() => {
-        // Load data for editing or viewing
+        // Wait until profile is loaded
+        if (!companyProfile) return;
+
         if (trackingId || bookingData) {
             const bookingToLoad = bookingData || getBookings().find(b => b.trackingId === trackingId);
             if (bookingToLoad) {
                 loadBookingData(bookingToLoad);
             }
+        } else { // This is a new booking
+            const allBookings = getBookings();
+            setCurrentLrNumber(isOfflineMode ? '' : generateLrNumber(allBookings, companyProfile));
+            
+            const allCities = getCities();
+            const defaultStationName = companyProfile.defaultFromStation;
+            const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+            setFromStation(defaultStation);
+            
+            let keyCounter = 1;
+            const defaultRows = companyProfile.defaultItemRows || 1;
+            setItemRows(Array.from({ length: defaultRows }, () => createEmptyRow(keyCounter++)));
         }
-    }, [trackingId, bookingData, loadBookingData]);
+    }, [companyProfile, trackingId, bookingData, isOfflineMode, loadBookingData]);
 
 
     useEffect(() => {
