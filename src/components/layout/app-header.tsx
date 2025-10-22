@@ -110,7 +110,7 @@ export function AppHeader() {
         )}
         <div className="text-right">
             <p className="text-sm font-medium">{user}</p>
-            <p className="text-xs text-primary-foreground/80">{email}</p>
+            <p className="text-xs text-primary-foreground/80">Login ID: {email}</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
