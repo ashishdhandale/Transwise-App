@@ -67,12 +67,12 @@ export function ShippingDetails({ booking, history, profile }: ShippingDetailsPr
                 <CardContent className="p-3 space-y-3">
                     <div>
                         <h4 className="font-bold text-sm mb-1">Sender</h4>
-                        <DetailRow label="Name" value={booking.sender} />
+                        <DetailRow label="Name" value={booking.sender.name} />
                         <DetailRow label="Origin" value={booking.fromCity} />
                     </div>
                      <div>
                         <h4 className="font-bold text-sm mb-1">Receiver</h4>
-                        <DetailRow label="Name" value={booking.receiver} />
+                        <DetailRow label="Name" value={booking.receiver.name} />
                         <DetailRow label="Destination" value={booking.toCity} />
                     </div>
                 </CardContent>
