@@ -109,8 +109,6 @@ export interface Item {
   id: number;
   name: string;
   aliasCode: string;
-  hsnCode: string;
-  description: string;
 }
 
 export type VendorType = 

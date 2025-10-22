@@ -34,21 +34,21 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 const LOCAL_STORAGE_KEY_ITEMS = 'transwise_items';
 
 const initialItems: Item[] = [
-    { id: 1, name: 'BOX', aliasCode: 'BOX', hsnCode: '4819', description: 'Corrugated Box / Hardboard Box' },
-    { id: 2, name: 'BAG', aliasCode: 'BAG', hsnCode: '4202', description: 'Woven or Non-Woven Bag' },
-    { id: 3, name: 'BUNDLE', aliasCode: 'BDL', hsnCode: '4802', description: 'Bundled Goods' },
-    { id: 4, name: 'CARTON', aliasCode: 'CTN', hsnCode: '4819', description: 'Carton Box' },
-    { id: 5, name: 'DRUM', aliasCode: 'DRM', hsnCode: '7310', description: 'Metal or Plastic Drum' },
-    { id: 6, name: 'ROLL', aliasCode: 'ROL', hsnCode: '5208', description: 'Fabric or Paper Roll' },
-    { id: 7, name: 'BALE', aliasCode: 'BLE', hsnCode: '5201', description: 'Compressed Bale' },
-    { id: 8, name: 'PALLET', aliasCode: 'PLT', hsnCode: '4415', description: 'Wooden or Plastic Pallet' },
-    { id: 9, name: 'CASE', aliasCode: 'CSE', hsnCode: '4415', description: 'Wooden Case' },
-    { id: 10, name: 'CRATE', aliasCode: 'CRT', hsnCode: '4415', description: 'Wooden Crate' },
-    { id: 11, name: 'PIECE', aliasCode: 'PC', hsnCode: '9999', description: 'Single Piece Goods' },
-    { id: 12, name: 'TIN', aliasCode: 'TIN', hsnCode: '7310', description: 'Metal Tin or Can' },
-    { id: 13, name: 'CYLINDER', aliasCode: 'CYL', hsnCode: '7311', description: 'Gas Cylinder' },
-    { id: 14, name: 'LOOSE', aliasCode: 'LSE', hsnCode: '9999', description: 'Loose Items' },
-    { id: 15, name: 'BARREL', aliasCode: 'BRL', hsnCode: '7310', description: 'Wooden or Metal Barrel' },
+    { id: 1, name: 'BOX', aliasCode: 'BOX'},
+    { id: 2, name: 'BAG', aliasCode: 'BAG'},
+    { id: 3, name: 'BUNDLE', aliasCode: 'BDL'},
+    { id: 4, name: 'CARTON', aliasCode: 'CTN'},
+    { id: 5, name: 'DRUM', aliasCode: 'DRM'},
+    { id: 6, name: 'ROLL', aliasCode: 'ROL'},
+    { id: 7, name: 'BALE', aliasCode: 'BLE'},
+    { id: 8, name: 'PALLET', aliasCode: 'PLT'},
+    { id: 9, name: 'CASE', aliasCode: 'CSE'},
+    { id: 10, name: 'CRATE', aliasCode: 'CRT'},
+    { id: 11, name: 'PIECE', aliasCode: 'PC'},
+    { id: 12, name: 'TIN', aliasCode: 'TIN'},
+    { id: 13, name: 'CYLINDER', aliasCode: 'CYL'},
+    { id: 14, name: 'LOOSE', aliasCode: 'LSE'},
+    { id: 15, name: 'BARREL', aliasCode: 'BRL'},
 ];
 
 const tdClass = "whitespace-nowrap uppercase";
@@ -77,9 +77,7 @@ export function ItemManagement() {
   const filteredItems = useMemo(() => {
     return items.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.aliasCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.hsnCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+        item.aliasCode.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [items, searchTerm]);
 
@@ -137,7 +135,7 @@ export function ItemManagement() {
                 <div className="relative w-full max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                    placeholder="Search by name, HSN, description..."
+                    placeholder="Search by name, alias..."
                     className="pl-8"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -155,8 +153,6 @@ export function ItemManagement() {
               <TableRow>
                 <TableHead>Item Name</TableHead>
                 <TableHead>Alias Code</TableHead>
-                <TableHead>HSN Code</TableHead>
-                <TableHead>Default Description</TableHead>
                 <TableHead className="w-[120px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -165,8 +161,6 @@ export function ItemManagement() {
                 <TableRow key={item.id}>
                   <TableCell className={cn(tdClass, "font-medium")}>{item.name}</TableCell>
                   <TableCell className={cn(tdClass)}>{item.aliasCode}</TableCell>
-                  <TableCell className={cn(tdClass)}>{item.hsnCode}</TableCell>
-                  <TableCell className={cn(tdClass)}>{item.description}</TableCell>
                   <TableCell className={cn(tdClass, "text-right")}>
                       <DropdownMenu>
                           <DropdownMenuTrigger asChild>

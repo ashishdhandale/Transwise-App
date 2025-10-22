@@ -27,21 +27,15 @@ interface AddItemDialogProps {
 export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDialogProps) {
     const [name, setName] = useState('');
     const [aliasCode, setAliasCode] = useState('');
-    const [hsnCode, setHsnCode] = useState('');
-    const [description, setDescription] = useState('');
     const { toast } = useToast();
 
     useEffect(() => {
         if (item) {
             setName(item.name || '');
             setAliasCode(item.aliasCode || '');
-            setHsnCode(item.hsnCode || '');
-            setDescription(item.description || '');
         } else {
             setName('');
             setAliasCode('');
-            setHsnCode('');
-            setDescription('');
         }
     }, [item, isOpen]);
 
@@ -55,8 +49,6 @@ export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDia
         const success = onSave({
             name,
             aliasCode,
-            hsnCode,
-            description,
         });
 
         if (success) {
@@ -78,14 +70,6 @@ export function AddItemDialog({ isOpen, onOpenChange, onSave, item }: AddItemDia
                     <div>
                         <Label htmlFor="alias-code">Alias Code</Label>
                         <Input id="alias-code" value={aliasCode} onChange={(e) => setAliasCode(e.target.value.toUpperCase())} />
-                    </div>
-                     <div>
-                        <Label htmlFor="hsn-code">HSN Code</Label>
-                        <Input id="hsn-code" value={hsnCode} onChange={(e) => setHsnCode(e.target.value)} />
-                    </div>
-                    <div className="md:col-span-2">
-                        <Label htmlFor="description">Default Description</Label>
-                        <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
                     </div>
                 </div>
                 <DialogFooter>
