@@ -496,7 +496,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         return { name: party.name, gstin: party.gstin, address: party.address, mobile: party.mobile };
     }, []);
 
-    const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online', postSaveCallback?: () => void) => {
+    const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
         const finalSender = maybeSaveNewParty(sender);
         const finalReceiver = maybeSaveNewParty(receiver);
 
@@ -536,6 +536,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 
                 const updatedBookings = allBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? updatedBooking : b);
                 saveBookings(updatedBookings);
+                setAllBookings(updatedBookings); // Update local state
                 
                 if (changeDetails !== 'No changes detected.') {
                     addHistoryLog(currentLrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
@@ -543,22 +544,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
                 toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
                 if (onSaveSuccess) onSaveSuccess(updatedBooking);
-                 if (postSaveCallback) postSaveCallback();
             } else {
                 const newBooking: Booking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                 
                 const updatedBookings = [...allBookings, newBooking];
-                setAllBookings(updatedBookings);
                 saveBookings(updatedBookings);
+                setAllBookings(updatedBookings); // Update local state for next LR generation
                 
-                if (onSaveAndNew) {
-                    onSaveAndNew(newBooking, () => {
-                        const nextLrNumber = generateLrNumber(updatedBookings, companyProfile!);
-                        handleReset(nextLrNumber);
-                    });
-                    return; // The parent component handles toast and state
-                }
-
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
                 if (sender && receiver) {
@@ -620,7 +612,15 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 }
                 
                 setReceiptData(newBooking);
-                setShowReceipt(true);
+                
+                if (onSaveAndNew) {
+                    onSaveAndNew(newBooking, () => {
+                        const nextLrNumber = generateLrNumber(updatedBookings, companyProfile!);
+                        handleReset(nextLrNumber);
+                    });
+                } else {
+                     setShowReceipt(true);
+                }
             }
         } catch (error) {
              toast({ title: 'Error Saving Data', description: `Could not save to local storage.`, variant: 'destructive' });
@@ -658,7 +658,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             return;
         }
         
-        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode && !onSaveAndNew) {
+        if (bookingType === 'PAID' && !isEditMode && !isPartialCancel && !paymentMode) {
             setIsPaymentDialogOpen(true);
             return;
         }
@@ -667,13 +667,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        const callback = onSaveAndNew ? () => {
-            const nextBookings = [...allBookings, {} as Booking]; // placeholder for the one about to be saved
-            const nextLrNumber = generateLrNumber(nextBookings, companyProfile!);
-            handleReset(nextLrNumber);
-        } : undefined;
-
-        await proceedWithSave(paymentMode, callback);
+        await proceedWithSave(paymentMode);
     };
     
     const handleDownloadPdf = async () => {
@@ -727,10 +721,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        const nextBookings = [...allBookings, receiptData as Booking];
-        const nextLrNumber = generateLrNumber(nextBookings, companyProfile!);
+        const nextLrNumber = generateLrNumber(allBookings, companyProfile!);
         handleReset(nextLrNumber);
-    }, [handleReset, allBookings, receiptData, companyProfile]);
+    }, [handleReset, allBookings, companyProfile]);
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
