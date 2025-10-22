@@ -828,7 +828,12 @@ export function NewChallanForm() {
                                                                 setSearchSelection(newSelection);
                                                             }}
                                                         /></TableCell>
-                                                        <TableCell className="whitespace-nowrap">{lr.lrNo}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">
+                                                             {lr.source === 'Offline' && lr.referenceLrNumber
+                                                                ? `${lr.lrNo} / ${lr.referenceLrNumber}`
+                                                                : lr.lrNo
+                                                            }
+                                                        </TableCell>
                                                         <TableCell className="whitespace-nowrap">{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
                                                         <TableCell className="max-w-xs truncate whitespace-nowrap">{lr.itemDescription}</TableCell>
                                                         <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
@@ -903,7 +908,12 @@ export function NewChallanForm() {
                                                         }}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="whitespace-nowrap">{lr.lrNo}</TableCell>
+                                                <TableCell className="whitespace-nowrap">
+                                                    {lr.source === 'Offline' && lr.referenceLrNumber
+                                                        ? `${lr.lrNo} / ${lr.referenceLrNumber}`
+                                                        : lr.lrNo
+                                                    }
+                                                </TableCell>
                                                 <TableCell className="whitespace-nowrap">{format(new Date(lr.bookingDate), 'dd-MMM-yy')}</TableCell>
                                                 <TableCell className="max-w-xs truncate whitespace-nowrap">{lr.itemDescription}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
