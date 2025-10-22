@@ -230,13 +230,17 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
-        const numericLrs = systemBookings
-            .map(b => b.lrNo)
-            .filter(lrNo => /^\d+$/.test(lrNo)) // Check if the string consists ONLY of digits
-            .map(lrNo => parseInt(lrNo, 10));
-
+        const numericLrs: number[] = [];
+        systemBookings.forEach(b => {
+            // Check if lrNo contains only digits
+            if (/^\d+$/.test(b.lrNo)) {
+                numericLrs.push(parseInt(b.lrNo, 10));
+            }
+        });
+        
         const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
+
     } else { // 'with_char' format
         const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
         if (!prefix) return '1'; // Fallback if prefix is somehow empty
@@ -314,22 +318,42 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const loadInitialData = useCallback(() => {
         try {
             setIsLoading(true);
-            setCompanyProfile(loadCompanySettingsFromStorage());
-            setAllBookings(getBookings());
+            const profile = loadCompanySettingsFromStorage();
+            const bookings = getBookings();
+            
+            setCompanyProfile(profile);
+            setAllBookings(bookings);
             setCustomers(getCustomers());
             setDrivers(getDrivers());
             setVehicles(getVehicles());
             setVendors(getVendors());
             setRateLists(getRateLists());
             setBranches(getBranches());
-            setCities(getCities());
+            const allCities = getCities();
+            setCities(allCities);
+            
+             // LR Number Generation logic is moved here to ensure it runs after all data is loaded.
+            if (!isEditMode && !isOfflineMode && profile) {
+                const newLrNumber = generateLrNumber(bookings, profile);
+                setCurrentLrNumber(newLrNumber);
+            }
+            if (isOfflineMode) {
+                 setCurrentLrNumber('');
+            }
+            
+            // Set default from station based on profile
+            if (!isEditMode && profile.defaultFromStation) {
+                const defaultStation = allCities.find(c => c.name.toLowerCase() === profile.defaultFromStation?.toLowerCase()) || null;
+                setFromStation(defaultStation);
+            }
+
         } catch (error) {
             console.error("Failed to load master data", error);
             toast({ title: 'Error', description: 'Failed to load essential application data.', variant: 'destructive'});
         } finally {
             setIsLoading(false);
         }
-    }, [toast]);
+    }, [isEditMode, isOfflineMode, toast]);
 
     useEffect(() => {
         loadInitialData();
@@ -366,20 +390,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else if (companyProfile) {
             // -- New Booking Mode --
-            if (isOfflineMode) {
-                setCurrentLrNumber('');
-            } else {
-                setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
-            }
-            
             const defaultRows = companyProfile.defaultItemRows || 1;
             setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
             
-            const defaultStationName = companyProfile.defaultFromStation;
-            const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-            setFromStation(defaultStation);
-            
-            // Reset other fields
+            // Reset other fields for a fresh form
             setBookingType('TOPAY');
             setLoadType('LTL');
             setToStation(null);
@@ -395,9 +409,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setFtlDetails({ vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0 });
         }
 
-    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities, isOfflineMode]);
+    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities]);
 
-    const handleReset = useCallback((showToast = true) => {
+    const handleReset = useCallback(() => {
         if (!companyProfile) return;
         
         if (isOfflineMode) {
@@ -436,9 +450,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         }, 0);
 
-        if (showToast) {
-            toast({ title: "Form Reset", description: "All fields have been cleared." });
-        }
+        toast({ title: "Form Reset", description: "All fields have been cleared." });
     }, [companyProfile, isOfflineMode, allBookings, cities, lrNumberInputRef, toast]);
     
     useEffect(() => {
