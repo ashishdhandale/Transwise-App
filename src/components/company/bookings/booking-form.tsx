@@ -227,24 +227,22 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 
 const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): string => {
     const systemBookings = allBookings.filter(b => b.source === 'System');
-    
+
     if (profile.grnFormat === 'plain') {
         const numericLrs = systemBookings
             .map(b => parseInt(b.lrNo, 10))
-            .filter(num => !isNaN(num) && String(num) === b.lrNo); // Ensure it's a plain number
-        
+            .filter(num => !isNaN(num) && String(num) === b.lrNo);
         const lastSequence = numericLrs.length > 0 ? Math.max(...numericLrs) : 0;
         return String(lastSequence + 1);
-
-    } else { // 'with_char'
+    } else {
         const prefix = profile.lrPrefix?.trim().toUpperCase() || '';
-        if (!prefix) return '1'; // Fallback if prefix is somehow empty
+        if (!prefix) return '1';
 
         const relevantLrs = systemBookings
             .filter(b => b.lrNo.toUpperCase().startsWith(prefix))
             .map(b => parseInt(b.lrNo.substring(prefix.length), 10))
             .filter(num => !isNaN(num));
-
+        
         const lastSequence = relevantLrs.length > 0 ? Math.max(...relevantLrs) : 0;
         return `${prefix}${lastSequence + 1}`;
     }
@@ -341,7 +339,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     
     // This effect runs only after all data is loaded and sets up the form.
     useEffect(() => {
-        if (isLoading || !companyProfile) return;
+        if (isLoading) return; // Wait for data to be loaded
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
 
@@ -369,11 +367,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             if (bookingToLoad.ftlDetails) {
                 setFtlDetails(bookingToLoad.ftlDetails);
             }
-        } else {
+        } else if (companyProfile) { // Ensure profile is loaded before generating LR for new booking
             // -- New Booking Mode --
             handleReset(false); // Initialize form for a new booking
         }
-    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities]);
+    }, [isLoading, companyProfile, trackingId, bookingData]);
 
 
     const handleReset = useCallback((showToast = true) => {
