@@ -15,6 +15,29 @@ export const onlineInquiries: OnlineInquiry[] = [
 
 export const sampleExistingUsers: ExistingUser[] = [
     {
+        id: 0, // Special ID for the admin
+        companyId: 'ADMIN',
+        subIds: 0,
+        companyName: 'Transwise Solutions',
+        gstNo: '',
+        transporterId: '',
+        address: 'Nagpur, MH',
+        contactNo: '9999999999',
+        licenceType: 'Platinum', // Or a special 'Admin' type
+        validTill: 'N/A',
+        maxUsers: 999,
+        maxBranches: 999,
+        logo: true,
+        state: 'Maharashtra',
+        city: 'Nagpur',
+        pan: '',
+        companyEmail: 'admin@transwise.in',
+        authPersonName: 'Super Admin',
+        authContactNo: '9999999999',
+        authEmail: 'admin@transwise.in', // Login ID for Admin
+        role: 'Admin',
+    },
+    {
         id: 1,
         companyId: 'COMP01',
         subIds: 5,
@@ -34,7 +57,8 @@ export const sampleExistingUsers: ExistingUser[] = [
         companyEmail: 'contact@transwise.com',
         authPersonName: 'Ankit Kumar',
         authContactNo: '9876543210',
-        authEmail: 'contact@transwise.com'
+        authEmail: 'contact@transwise.com',
+        role: 'Company',
     },
     {
         id: 2,
@@ -56,7 +80,8 @@ export const sampleExistingUsers: ExistingUser[] = [
         companyEmail: 'contact@sharmatrans.com',
         authPersonName: 'Ravi Sharma',
         authContactNo: '9988776655',
-        authEmail: 'ravi@sharmatrans.com'
+        authEmail: 'ravi@sharmatrans.com',
+        role: 'Company',
     },
      {
         id: 3,
@@ -78,7 +103,31 @@ export const sampleExistingUsers: ExistingUser[] = [
         companyEmail: 'info@quicklogistics.co',
         authPersonName: 'Sunita Reddy',
         authContactNo: '9123456789',
-        authEmail: 'sunita@quicklogistics.co'
+        authEmail: 'sunita@quicklogistics.co',
+        role: 'Company',
+    },
+    {
+        id: 4,
+        companyId: 'BRANCH01',
+        subIds: 0,
+        companyName: 'Pune Hub (My Transwise Company)',
+        gstNo: '27ABCDE1234F1Z5',
+        transporterId: 'T-12345-PUNE',
+        address: '789 Market Yard, Pune',
+        contactNo: '9876543211',
+        licenceType: 'Gold',
+        validTill: '2025-06-30',
+        maxUsers: 0, // Not applicable for branch login
+        maxBranches: 0,
+        logo: false,
+        state: 'Maharashtra',
+        city: 'Pune',
+        pan: '',
+        companyEmail: 'pune.branch@transwise.com',
+        authPersonName: 'Priya Singh',
+        authContactNo: '9876543211',
+        authEmail: 'priya.singh@branch.com', // Login ID for Branch
+        role: 'Branch',
     }
 ];
 

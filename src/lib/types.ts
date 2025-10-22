@@ -155,7 +155,7 @@ export interface ExistingUser {
     transporterId: string;
     address: string;
     contactNo: string;
-    licenceType: "Trial" | "Bronze" | "Gold" | "Platinum";
+    licenceType: "Trial" | "Bronze" | "Gold" | "Platinum" | string;
     validTill: string;
     maxUsers: number;
     maxBranches: number;
@@ -167,6 +167,7 @@ export interface ExistingUser {
     authPersonName: string;
     authContactNo: string;
     authEmail: string; // This is the User ID for login
+    role: UserRole;
 };
 
 export interface Driver {

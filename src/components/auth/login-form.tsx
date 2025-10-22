@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { UserRole } from "@/lib/types";
 import { ClientOnly } from "@/components/ui/client-only";
 import { Chatbot } from "./chatbot";
+import { sampleExistingUsers } from "@/lib/sample-data";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginForm() {
   const [userId, setUserId] = useState('');
@@ -20,29 +22,47 @@ export default function LoginForm() {
   const [role, setRole] = useState<UserRole | ''>('');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSignin = () => {
-    // Navigate based on the selected role
-    let path = '/';
-    switch (role) {
-      case 'Admin':
-        path = '/admin';
-        break;
-      case 'Company':
-        path = '/company';
-        break;
-      case 'Branch':
-        path = '/company?role=Branch';
-        break;
-      default:
-        // Default navigation if no role is selected, or handle error
-        if (!role) {
-            alert("Please select a role.");
-            return;
-        }
-        break;
+    if (!role) {
+        toast({ title: 'Login Failed', description: 'Please select a role.', variant: 'destructive' });
+        return;
     }
-    router.push(path);
+    if (!userId) {
+        toast({ title: 'Login Failed', description: 'Please enter a User ID.', variant: 'destructive' });
+        return;
+    }
+
+    const user = sampleExistingUsers.find(u => u.authEmail.toLowerCase() === userId.toLowerCase());
+
+    let userMatchesRole = false;
+    if (user) {
+        // This logic maps the data role to the form role.
+        if (role === 'Admin' && user.role === 'Admin') userMatchesRole = true;
+        if (role === 'Company' && user.role === 'Company') userMatchesRole = true;
+        if (role === 'Branch' && user.role === 'Branch') userMatchesRole = true;
+    }
+
+    if (user && userMatchesRole) {
+        toast({ title: 'Login Successful', description: `Welcome, ${user.authPersonName}!`});
+        let path = '/';
+        switch (role) {
+        case 'Admin':
+            path = '/admin';
+            break;
+        case 'Company':
+            path = '/company';
+            break;
+        case 'Branch':
+            // Example of passing role via query param for branch users
+            path = '/company?role=Branch';
+            break;
+        }
+        router.push(path);
+    } else {
+        toast({ title: 'Login Failed', description: 'Invalid credentials or role for the selected user.', variant: 'destructive' });
+    }
   };
 
   const handleReset = () => {
