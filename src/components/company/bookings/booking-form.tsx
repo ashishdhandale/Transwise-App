@@ -435,7 +435,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         loadBookingData(bookingToLoad);
                     }
                 } else {
-                    // Do nothing here, initial state is handled by useState declarations
+                    // For new bookings, set default station from profile
+                    const allCities = getCities();
+                    const defaultStationName = profile?.defaultFromStation;
+                    const defaultStation = defaultStationName ? allCities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+                    setFromStation(defaultStation);
                 }
             } catch (error) {
                 console.error("Failed to process bookings or fetch profile", error);
@@ -449,10 +453,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     // Client-side only initialization for new bookings
     useEffect(() => {
         if (!isEditMode && !bookingData) {
-            handleReset(false); // Call reset without showing the toast on initial load
+            // Call reset, but only if companyProfile is loaded to use its settings.
+            if(companyProfile) {
+                handleReset(false);
+            }
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditMode, bookingData]); // Only run when these props change
+    }, [isEditMode, bookingData, companyProfile, handleReset]);
 
 
     useEffect(() => {
