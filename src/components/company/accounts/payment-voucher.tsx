@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -24,7 +23,7 @@ import { useState, useEffect } from 'react';
 import { Combobox } from '@/components/ui/combobox';
 import type { Customer, Vendor } from '@/lib/types';
 import { DatePicker } from '@/components/ui/date-picker';
-import { addVoucher } from '@/lib/accounts-data';
+import { addVoucher, getGroupedAccounts } from '@/lib/accounts-data';
 import { getVendors } from '@/lib/vendor-data';
 import { ClientOnly } from '@/components/ui/client-only';
 
@@ -45,7 +44,9 @@ type PaymentVoucherValues = z.infer<typeof paymentVoucherSchema>;
 
 export function PaymentVoucher() {
   const { toast } = useToast();
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [accountOptions, setAccountOptions] = useState<any[]>([]);
+  const [cashBankOptions, setCashBankOptions] = useState<any[]>([]);
+
   const form = useForm<PaymentVoucherValues>({
     resolver: zodResolver(paymentVoucherSchema),
     defaultValues: {
@@ -55,6 +56,11 @@ export function PaymentVoucher() {
       entries: [{ accountId: '', amount: 0, narration: '' }],
     },
   });
+  
+  useEffect(() => {
+    setAccountOptions(getGroupedAccounts(['Vendor', 'Expense']));
+    setCashBankOptions(getGroupedAccounts(['Cash', 'Bank']));
+  }, []);
 
   useEffect(() => {
     // Set default values on the client side to avoid hydration mismatch
@@ -70,21 +76,6 @@ export function PaymentVoucher() {
     control: form.control,
     name: 'entries',
   });
-  
-  useEffect(() => {
-    setVendors(getVendors());
-  }, []);
-
-  const accountOptions = [
-    { label: 'CASH', value: 'Cash' },
-    ...vendors.map(v => ({ label: v.name, value: v.name }))
-  ];
-  
-  const cashBankOptions = [
-      { label: 'CASH', value: 'Cash' },
-      { label: 'BANK OF INDIA', value: 'Bank of India' }
-  ];
-
 
   const onSubmit = (data: PaymentVoucherValues) => {
     const totalAmount = data.entries.reduce((sum, entry) => sum + entry.amount, 0);

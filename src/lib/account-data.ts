@@ -1,5 +1,5 @@
 
-import type { Account } from './types';
+import type { Account, AccountType } from './types';
 import { getCustomers } from './customer-data';
 import { getVendors } from './vendor-data';
 
@@ -21,6 +21,21 @@ export const saveAccounts = (accounts: Account[]) => {
     const manualAccounts = accounts.filter(acc => acc.id.startsWith('account-'));
     localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(manualAccounts));
 };
+
+const groupAccounts = (accounts: Account[]) => {
+    const groups: { [key in AccountType]?: Account[] } = {};
+    accounts.forEach(account => {
+        if (!groups[account.type]) {
+            groups[account.type] = [];
+        }
+        groups[account.type]!.push(account);
+    });
+    return Object.entries(groups).map(([groupLabel, options]) => ({
+        groupLabel,
+        options: options.map(opt => ({ label: opt.name.toUpperCase(), value: opt.name })),
+    }));
+}
+
 
 export const getAccounts = (): Account[] => {
     const manualAccounts = getManualAccounts();
@@ -46,3 +61,11 @@ export const getAccounts = (): Account[] => {
 
     return [...manualAccounts, ...customers, ...vendors].sort((a, b) => a.name.localeCompare(b.name));
 };
+
+export const getGroupedAccounts = (accountTypes?: AccountType[]) => {
+    let accounts = getAccounts();
+    if(accountTypes) {
+        accounts = accounts.filter(acc => accountTypes.includes(acc.type));
+    }
+    return groupAccounts(accounts);
+}

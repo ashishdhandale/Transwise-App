@@ -10,9 +10,9 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandList,
   CommandItem,
+  CommandInput,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -21,8 +21,11 @@ import {
 } from "@/components/ui/popover"
 import { ClientOnly } from "./client-only"
 
+type ComboboxOption = { label: string; value: string };
+type ComboboxOptionGroup = { groupLabel: string; options: ComboboxOption[] };
+
 interface ComboboxProps {
-    options: { label: string; value: string }[];
+    options: (ComboboxOption | ComboboxOptionGroup)[];
     value?: string;
     onChange: (value: string) => void;
     onBlur?: () => void;
@@ -33,6 +36,10 @@ interface ComboboxProps {
     onAdd?: (query?: string) => void;
     disabled?: boolean;
     autoOpenOnFocus?: boolean;
+}
+
+const isGroup = (option: ComboboxOption | ComboboxOptionGroup): option is ComboboxOptionGroup => {
+    return 'groupLabel' in option;
 }
 
 export function Combobox({ 
@@ -69,7 +76,11 @@ export function Combobox({
     }
   }
   
-  const displayValue = options.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value;
+  const allOptions = React.useMemo(() => 
+    options.flatMap(opt => isGroup(opt) ? opt.options : [opt]), 
+  [options]);
+
+  const displayValue = allOptions.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value;
   
   const handleOpenChange = (isOpen: boolean) => {
       setOpen(isOpen);
@@ -139,23 +150,28 @@ export function Combobox({
                       )}
                   </div>
               </CommandEmpty>
-              <CommandGroup>
-                {options.filter(option => option.label.toLowerCase().includes(inputValue.toLowerCase())).map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    onSelect={() => handleSelect(option.value)}
+              {options.map((option, index) => (
+                  <CommandGroup 
+                    key={isGroup(option) ? option.groupLabel : `group-${index}`}
+                    heading={isGroup(option) ? option.groupLabel : undefined}
                   >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value?.toLowerCase() === option.value.toLowerCase() ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                    {(isGroup(option) ? option.options : [option]).map(item => (
+                       <CommandItem
+                            key={item.value}
+                            value={item.label}
+                            onSelect={() => handleSelect(item.value)}
+                        >
+                            <Check
+                            className={cn(
+                                "mr-2 h-4 w-4",
+                                value?.toLowerCase() === item.value.toLowerCase() ? "opacity-100" : "opacity-0"
+                            )}
+                            />
+                            {item.label}
+                        </CommandItem>
+                    ))}
+                  </CommandGroup>
+              ))}
             </CommandList>
           </Command>
         </PopoverContent>
