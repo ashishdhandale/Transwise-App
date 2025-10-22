@@ -2,7 +2,7 @@
 
 'use client';
 
-import type { Booking } from '@/lib/bookings-dashboard-data';
+import type { Booking, CustomerData } from '@/lib/bookings-dashboard-data';
 import { format, parseISO } from 'date-fns';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +19,16 @@ const DetailItem = ({ label, value, isBold = false }: { label: string; value: st
     <div className="flex">
         <p className="w-28 font-semibold">{label}</p>
         <p className={`flex-1 ${isBold ? 'font-bold' : ''}`}>: {value}</p>
+    </div>
+);
+
+const PartyDetails = ({ title, party }: { title: string; party: CustomerData }) => (
+    <div>
+        <p className="font-bold underline">{title}:</p>
+        <p className="font-semibold">{party.name}</p>
+        <p>{party.address}</p>
+        <p>GSTIN: {party.gstin}</p>
+        <p>Mob: {party.mobile}</p>
     </div>
 );
 
@@ -103,16 +113,8 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                 </section>
 
                 <section className="grid grid-cols-2 gap-4 mt-2 border-b-2 border-black pb-2">
-                    <div>
-                        <p className="font-bold underline">CONSIGNOR:</p>
-                        <p className="font-semibold">{booking.sender}</p>
-                        {/* Add address from customer master if available */}
-                    </div>
-                    <div>
-                        <p className="font-bold underline">CONSIGNEE:</p>
-                        <p className="font-semibold">{booking.receiver}</p>
-                        {/* Add address from customer master if available */}
-                    </div>
+                    <PartyDetails title="CONSIGNOR" party={booking.sender} />
+                    <PartyDetails title="CONSIGNEE" party={booking.receiver} />
                 </section>
                 
                 {isFtl && booking.ftlDetails && shouldShowFinancials && (

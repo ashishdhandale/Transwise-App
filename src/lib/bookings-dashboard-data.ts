@@ -2,6 +2,7 @@
 import type { ItemRow } from "@/components/company/bookings/item-details-table";
 import { initialBookings } from "./sample-data";
 import { getChallanData, getLrDetailsData } from "./challan-data";
+import type { Customer } from "./types";
 
 export interface FtlDetails {
   vehicleNo: string;
@@ -13,6 +14,8 @@ export interface FtlDetails {
   otherDeductions: number;
 }
 
+export type CustomerData = Pick<Customer, 'name' | 'gstin' | 'address' | 'mobile'>;
+
 export interface Booking {
   trackingId: string; // New unique internal ID
   lrNo: string;
@@ -23,8 +26,8 @@ export interface Booking {
   lrType: 'FOC' | 'PAID' | 'TOPAY' | 'TBB';
   loadType: 'PTL' | 'FTL' | 'LTL';
   paymentMode?: 'Cash' | 'Online';
-  sender: string;
-  receiver: string;
+  sender: CustomerData;
+  receiver: CustomerData;
   itemDescription: string;
   qty: number;
   chgWt: number;
@@ -78,12 +81,19 @@ export const getBookings = (): Booking[] => {
                     if (inwardLrNos.has(newBooking.lrNo)) {
                         newBooking.source = 'Inward';
                     } else {
-                        // This logic might be imperfect for old data, but is a reasonable default.
-                        // We assume if it's not explicitly 'Inward', it's 'System'.
-                        // New logic will distinguish between 'System' and 'Offline'.
                         newBooking.source = 'System';
                     }
                 }
+                
+                if (!newBooking.sender || typeof newBooking.sender === 'string') {
+                    dataWasCorrected = true;
+                    newBooking.sender = { name: String(newBooking.sender || ''), gstin: '', address: '', mobile: '' };
+                }
+                 if (!newBooking.receiver || typeof newBooking.receiver === 'string') {
+                    dataWasCorrected = true;
+                    newBooking.receiver = { name: String(newBooking.receiver || ''), gstin: '', address: '', mobile: '' };
+                }
+
 
                 // 3. Ensure a trackingId exists
                 if (!newBooking.trackingId) {

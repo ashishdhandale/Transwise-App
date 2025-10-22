@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
-import type { Booking, FtlDetails } from '@/lib/bookings-dashboard-data';
+import type { Booking, FtlDetails, CustomerData } from '@/lib/bookings-dashboard-data';
 import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate, ChargeDetail, Branch } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
@@ -111,11 +111,11 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isParti
         if (oldBooking.toCity !== newBooking.toCity) {
             changes.push(`- To Station changed from '${oldBooking.toCity}' to '${newBooking.toCity}'`);
         }
-        if (oldBooking.sender !== newBooking.sender) {
-            changes.push(`- Sender changed from '${oldBooking.sender}' to '${newBooking.sender}'`);
+        if (oldBooking.sender.name !== newBooking.sender.name) {
+            changes.push(`- Sender changed from '${oldBooking.sender.name}' to '${newBooking.sender.name}'`);
         }
-        if (oldBooking.receiver !== newBooking.receiver) {
-            changes.push(`- Receiver changed from '${oldBooking.receiver}' to '${newBooking.receiver}'`);
+        if (oldBooking.receiver.name !== newBooking.receiver.name) {
+            changes.push(`- Receiver changed from '${oldBooking.receiver.name}' to '${newBooking.receiver.name}'`);
         }
          if (oldBooking.totalAmount !== newBooking.totalAmount) {
             changes.push(`- Grand Total changed from '${oldBooking.totalAmount.toFixed(2)}' to '${newBooking.totalAmount.toFixed(2)}'`);
@@ -357,9 +357,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (bookingToLoad) {
             // -- Edit Mode --
             setIsOfflineMode(bookingToLoad.source === 'Offline');
-            const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.toLowerCase()) || { id: 0, name: bookingToLoad.sender, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
-            const receiverProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.toLowerCase()) || { id: 0, name: bookingToLoad.receiver, gstin: '', address: '', mobile: '', email: '', type: 'Company', openingBalance: 0 };
-
+            const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
+            const receiverProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.name.toLowerCase()) || { id: 0, ...bookingToLoad.receiver, type: 'Company', openingBalance: 0 };
+            
             setCurrentLrNumber(bookingToLoad.lrNo);
             setReferenceLrNumber(bookingToLoad.referenceLrNumber || '');
             setBookingDate(new Date(bookingToLoad.bookingDate));
@@ -414,12 +414,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     // React to offline mode changes
     useEffect(() => {
         if (!isEditMode) {
-            if (!isOfflineMode) {
-                // When switching back to online, clear the reference number
+             if (isOfflineMode) {
+                setCurrentLrNumber('');
+             } else {
+                 if (companyProfile) {
+                    setCurrentLrNumber(generateLrNumber(allBookings, companyProfile));
+                 }
                 setReferenceLrNumber('');
-            }
+             }
         }
-    }, [isOfflineMode, isEditMode]);
+    }, [isOfflineMode, isEditMode, companyProfile, allBookings]);
 
 
     const handleReset = useCallback(() => {
@@ -479,16 +483,18 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
     
-    const maybeSaveNewParty = useCallback((party: Customer | null) => {
+    const maybeSaveNewParty = useCallback((party: Customer | null): CustomerData => {
+        if (!party) return { name: '', gstin: '', address: '', mobile: '' };
+
         if (party && party.id === 0 && party.name.trim()) { // 0 is the indicator for a new party
             const currentCustomers: Customer[] = getCustomers();
             const newId = currentCustomers.length > 0 ? Math.max(...currentCustomers.map(c => c.id)) + 1 : 1;
             const newCustomer: Customer = { ...party, id: newId };
             const updatedCustomers = [newCustomer, ...currentCustomers];
             saveCustomers(updatedCustomers);
-            return newCustomer;
+            return { name: newCustomer.name, gstin: newCustomer.gstin, address: newCustomer.address, mobile: newCustomer.mobile };
         }
-        return party;
+        return { name: party.name, gstin: party.gstin, address: party.address, mobile: party.mobile };
     }, []);
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online', postSaveCallback?: () => void) => {
@@ -509,8 +515,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             lrType: bookingType as Booking['lrType'],
             paymentMode: bookingType === 'PAID' ? paymentMode : undefined,
             loadType,
-            sender: finalSender!.name,
-            receiver: finalReceiver!.name,
+            sender: finalSender,
+            receiver: finalReceiver,
             itemDescription: validRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
             qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
             chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
@@ -551,8 +557,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 saveBookings(updatedBookings);
                 addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
                 
-                if (finalSender && finalReceiver) {
-                    updateStandardRateList(newBooking, finalSender, finalReceiver);
+                if (sender && receiver) {
+                    updateStandardRateList(newBooking, sender, receiver);
                 }
                 
                 if (newBooking.loadType === 'FTL') {
@@ -567,7 +573,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         driverName: newBooking.ftlDetails!.driverName,
                         fromStation: newBooking.fromCity,
                         toStation: newBooking.toCity,
-                        dispatchToParty: newBooking.receiver,
+                        dispatchToParty: newBooking.receiver.name,
                         totalLr: 1,
                         totalPackages: newBooking.qty,
                         totalItems: newBooking.itemRows.length,
@@ -592,8 +598,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         challanId: challan.challanId,
                         lrNo: newBooking.lrNo,
                         lrType: newBooking.lrType,
-                        sender: newBooking.sender,
-                        receiver: newBooking.receiver,
+                        sender: newBooking.sender.name,
+                        receiver: newBooking.receiver.name,
                         from: newBooking.fromCity,
                         to: newBooking.toCity,
                         bookingDate: format(new Date(newBooking.bookingDate), 'yyyy-MM-dd'),
@@ -628,8 +634,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
         
-        // LR Number is always system-generated, so no check needed here.
-        // if (isOfflineMode && !currentLrNumber) newErrors.lrNumber = true;
+        if (isOfflineMode && !currentLrNumber) newErrors.lrNumber = true;
 
         setErrors(newErrors);
 
