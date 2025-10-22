@@ -93,22 +93,13 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 
                 <section className="grid grid-cols-3 gap-4 mt-2 border-b-2 border-black pb-2">
                     <div className="col-span-2">
-                        <DetailItem label="LR No" value={booking.lrNo} isBold />
+                        <DetailItem label="LR No" value={booking.referenceLrNumber ? `${booking.lrNo} / ${booking.referenceLrNumber}`: booking.lrNo} isBold />
                         <DetailItem label="LR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
                         <DetailItem label="From" value={booking.fromCity} />
                         <DetailItem label="To" value={booking.toCity} />
                     </div>
                     <div className="flex flex-col items-center justify-center border-2 border-black rounded-md p-1">
-                        <p className="font-bold text-center">Tracking ID: {booking.trackingId}</p>
-                        <Image
-                            src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.trackingId}&code=Code128&dpi=96`}
-                            alt={`Barcode for ${booking.trackingId}`}
-                            width={150}
-                            height={40}
-                            unoptimized // External image, next/image optimization not applicable
-                            className="object-contain"
-                        />
-                        <h2 className="text-lg font-extrabold text-center mt-1">{booking.lrType}</h2>
+                        <h2 className="text-lg font-extrabold text-center">{booking.lrType}</h2>
                     </div>
                 </section>
 
