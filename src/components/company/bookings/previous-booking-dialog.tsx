@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -18,15 +19,16 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ItemDetailsTable } from './item-details-table';
 import { format, parseISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface PreviousBookingDialogProps {
     children: React.ReactNode;
 }
 
-const DetailItem = ({ label, value }: { label: string; value: string | number | undefined }) => (
+const DetailItem = ({ label, value, className }: { label: string; value: string | number | undefined, className?: string }) => (
     <div className="text-sm">
         <p className="text-muted-foreground">{label}</p>
-        <p className="font-semibold">{value}</p>
+        <p className={cn("font-semibold", className)}>{value}</p>
     </div>
 );
 
@@ -66,10 +68,10 @@ export function PreviousBookingDialog({ children }: PreviousBookingDialogProps) 
                                 <DetailItem label="To Station" value={previousBooking.toCity} />
                                 <DetailItem label="Sender" value={previousBooking.sender} />
                                 <DetailItem label="Receiver" value={previousBooking.receiver} />
-                                <DetailItem label="Booking Type" value={previousBooking.lrType} />
+                                <DetailItem label="Booking Type" value={previousBooking.lrType} className="font-extrabold text-blue-600 text-base" />
                                 <DetailItem label="Load Type" value={previousBooking.loadType} />
                                 <DetailItem label="Basic Freight" value={basicFreight.toFixed(2)} />
-                                <DetailItem label="Grand Total" value={previousBooking.totalAmount.toFixed(2)} />
+                                <DetailItem label="Grand Total" value={previousBooking.totalAmount.toFixed(2)} className="font-extrabold text-red-600 text-base" />
                            </div>
                             <Separator />
                             <ItemDetailsTable 
