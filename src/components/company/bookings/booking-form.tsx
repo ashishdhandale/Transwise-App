@@ -231,13 +231,11 @@ const generateLrNumber = (allBookings: Booking[], profile: AllCompanySettings): 
     const systemBookings = allBookings.filter(b => b.source === 'System');
 
     if (profile.grnFormat === 'plain') {
-        const numericLrs: number[] = [];
-        systemBookings.forEach(b => {
-            // Check if lrNo is a plain number string
-            if (/^\d+$/.test(b.lrNo)) {
-                numericLrs.push(parseInt(b.lrNo, 10));
-            }
-        });
+         // Filter for purely numeric LR numbers
+        const numericLrs = systemBookings
+            .map(b => b.lrNo)
+            .filter(lrNo => /^\d+$/.test(lrNo)) // Ensure it's a plain number
+            .map(lrNo => parseInt(lrNo, 10));
 
         const lastSequence = numericLrs.length > 0 ? Math.max(0, ...numericLrs) : 0;
         return String(lastSequence + 1);
@@ -315,9 +313,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [cities, setCities] = useState<City[]>([]);
     const [rateLists, setRateLists] = useState<RateList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    
-    // This effect loads all necessary data once on mount.
-    useEffect(() => {
+
+    const loadInitialData = useCallback(() => {
         try {
             setIsLoading(true);
             const profile = loadCompanySettingsFromStorage();
@@ -340,6 +337,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setIsLoading(false);
         }
     }, [toast]);
+    
+    // This effect loads all necessary data once on mount.
+    useEffect(() => {
+        loadInitialData();
+    }, [loadInitialData]);
     
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
