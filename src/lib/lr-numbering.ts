@@ -1,27 +1,10 @@
 
 'use server';
 
-import { firestore } from '@/firebase/config';
-import { collection, doc, runTransaction, getDoc } from 'firebase/firestore';
+import { collection, doc, runTransaction, getDoc, query, where, getDocs } from 'firebase/firestore';
+import { firestore } from '@/firebase'; // Assumes firebase is initialized and exported from here
+import { getCurrentFinancialYear } from '@/lib/utils';
 
-/**
- * Determines the current financial year string.
- * The financial year starts on April 1st.
- * @returns {string} The financial year in "YYYY-YY" format (e.g., "2024-25").
- */
-export function getCurrentFinancialYear(): string {
-  const now = new Date();
-  const currentMonth = now.getMonth(); // 0-indexed (January is 0)
-  let startYear = now.getFullYear();
-
-  // If the current month is before April, the financial year started last year.
-  if (currentMonth < 3) {
-    startYear -= 1;
-  }
-
-  const endYear = (startYear + 1).toString().slice(-2);
-  return `${startYear}-${endYear}`;
-}
 
 /**
  * Generates the next sequential LR number within a Firestore transaction.
@@ -62,8 +45,6 @@ export async function generateNextLrNumber(companyCode: string, branchCode: stri
 /**
  * Validates if a manually entered LR number already exists for the given scope.
  * @param companyCode - The company code.
- *- The branch code.
- * @param financialYear - The financial year.
  * @param manualLrNumber - The LR number to validate.
  * @returns {Promise<boolean>} True if the LR number is unique, false otherwise.
  */

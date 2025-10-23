@@ -55,7 +55,7 @@ import { getCustomers, saveCustomers } from '@/lib/customer-data';
 import { getDrivers } from '@/lib/driver-data';
 import { getVendors } from '@/lib/vendor-data';
 import { getVehicles } from '@/lib/vehicle-data';
-import { getCurrentFinancialYear } from '@/lib/lr-numbering';
+import { getCurrentFinancialYear } from '@/lib/utils';
 
 
 const createEmptyRow = (id: number): ItemRow => ({
@@ -248,6 +248,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
     const userBranchName = userRole === 'Branch' ? 'Pune Hub' : undefined; // Hardcoded branch for prototype
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
+    const isBranch = userRole === 'Branch';
     
     const [isOfflineMode, setIsOfflineMode] = useState(initialIsOffline || false);
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
@@ -530,7 +531,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 
                 const updatedBookings = currentAllBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? savedBooking : b);
                 saveBookings(updatedBookings);
-                setAllBookings(updatedBookings);
+                setAllBookings(updatedBookings); 
                 
                 if (changeDetails !== 'No changes detected.') {
                     addHistoryLog(currentLrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
