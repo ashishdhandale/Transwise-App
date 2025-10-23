@@ -92,7 +92,7 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                             src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.lrNo}&code=Code128&dpi=96`}
                             alt={`Barcode for ${booking.lrNo}`}
                             width={150}
-                            height={30}
+                            height={20}
                             className="ml-auto mt-1"
                         />
                          <p className="text-center font-mono text-[10px] tracking-widest">{booking.trackingId}</p>
