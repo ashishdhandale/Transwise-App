@@ -89,9 +89,9 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                         <p className="font-bold text-sm">Lorry Receipt</p>
                         <p className="font-bold">{copyType} COPY</p>
                         <Image
-                            src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.trackingId}&code=Code128&dpi=96`}
+                            src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.trackingId}&code=Code128&dpi=96&imagetype=Png&height=20`}
                             alt={`Barcode for ${booking.trackingId}`}
-                            width={150}
+                            width={120}
                             height={20}
                             className="ml-auto mt-1"
                         />
@@ -100,7 +100,8 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
 
                 <section className="grid grid-cols-3 gap-4 mt-2 border-b-2 border-black pb-2">
                     <div className="col-span-2">
-                        <DetailItem label="LR No" value={booking.referenceLrNumber ? `${booking.lrNo} / ${booking.referenceLrNumber}`: booking.lrNo} isBold />
+                        <DetailItem label="LR No" value={booking.lrNo} isBold />
+                        {booking.referenceLrNumber && <DetailItem label="Manual LR No" value={booking.referenceLrNumber} isBold />}
                         <DetailItem label="LR Date" value={format(parseISO(booking.bookingDate), 'dd-MMM-yyyy')} isBold />
                         <DetailItem label="From" value={booking.fromCity} />
                         <DetailItem label="To" value={booking.toCity} />
