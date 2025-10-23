@@ -95,7 +95,6 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                             height={20}
                             className="ml-auto mt-1"
                         />
-                         <p className="text-center font-mono text-[10px] tracking-widest">{booking.trackingId}</p>
                     </div>
                 </header>
 
