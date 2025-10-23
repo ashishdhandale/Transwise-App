@@ -75,20 +75,19 @@
     },
     "Booking": {
         "title": "Booking",
-        "description": "Represents a single consignment or booking.",
+        "description": "Represents a single consignment or booking. This is the new Lorry Receipt record.",
         "type": "object",
         "properties": {
-            "bookingId": {
-                "type": "string"
-            },
-            "lrNo": {
-                "type": "string"
-            },
-            "status": {
-                "type": "string"
-            }
+            "trackingId": { "type": "string", "description": "Unique internal tracking ID, used as document ID." },
+            "lrNumber": { "type": "string", "description": "The full formatted LR Number, e.g., ABC/NGP/2025-26/0001." },
+            "companyCode": { "type": "string", "description": "Code of the company." },
+            "branchCode": { "type": "string", "description": "Code of the branch." },
+            "financialYear": { "type": "string", "description": "Financial year, e.g., '2025-26'." },
+            "serialNumber": { "type": "integer", "description": "The sequential part of the LR number." },
+            "lrOrigin": { "type": "string", "enum": ["SYSTEM_GENERATED", "MANUAL"], "description": "Indicates if the LR was system-generated or manually entered." },
+            "status": { "type": "string" }
         },
-        "required": ["bookingId"]
+        "required": ["trackingId", "lrNumber", "companyCode", "branchCode", "financialYear", "serialNumber", "lrOrigin"]
     },
     "Vehicle": {
         "title": "Vehicle",
@@ -103,6 +102,15 @@
             }
         },
         "required": ["vehicleId", "vehicleNo"]
+    },
+    "LrSequence": {
+        "title": "LR Sequence Counter",
+        "description": "Atomically stores the latest serial number for a given company, branch, and year.",
+        "type": "object",
+        "properties": {
+            "currentSerial": { "type": "integer", "description": "The last used serial number." }
+        },
+        "required": ["currentSerial"]
     }
   },
   "auth": {
@@ -127,17 +135,17 @@
       },
       "description": "Sub-collection for employees within a company."
     },
-    "/companies/{companyId}/bookings/{bookingId}": {
+    "/companies/{companyId}/lorryReceipts/{trackingId}": {
         "schema": {
             "$ref": "#/entities/Booking"
         },
-        "description": "Bookings for a specific company."
+        "description": "Stores all LR records for a company. The path ensures data is partitioned by company."
     },
-    "/companies/{companyId}/branches/{branchId}/bookings/{bookingId}": {
+    "/sequences/{companyId}/branches/{branchCode}/years/{financialYear}": {
         "schema": {
-            "$ref": "#/entities/Booking"
+            "$ref": "#/entities/LrSequence"
         },
-        "description": "Bookings specific to a branch."
+        "description": "Stores the auto-incrementing serial number counter for LRs. The document ID is 'lrSequence'."
     },
     "/companies/{companyId}/vehicles/{vehicleId}": {
         "schema": {

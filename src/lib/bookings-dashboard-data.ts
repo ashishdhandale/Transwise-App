@@ -17,9 +17,17 @@ export interface FtlDetails {
 export type CustomerData = Pick<Customer, 'name' | 'gstin' | 'address' | 'mobile'>;
 
 export interface Booking {
-  trackingId: string; // New unique internal ID
-  lrNo: string;
+  trackingId: string; // Unique internal tracking ID
+  lrNo: string; // The full formatted LR Number
   referenceLrNumber?: string; // For manual/offline bookings
+  
+  // New fields for structured LR Number
+  companyCode?: string;
+  branchCode?: string;
+  financialYear?: string;
+  serialNumber?: number;
+  lrOrigin?: 'SYSTEM_GENERATED' | 'MANUAL';
+
   bookingDate: string;
   fromCity: string;
   toCity: string;

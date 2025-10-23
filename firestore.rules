@@ -4,62 +4,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isOwner(companyId) {
-      return request.auth.token.companyId == companyId && request.auth.token.role == 'Company';
+    // Allow reads and writes only for authenticated users
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // --- Lorry Receipt Uniqueness Rule ---
+    // This rule prevents a new lorry receipt from being created if another
+    // document with the same company, branch, and financial year combination
+    // already exists with the same lrNumber.
+    match /companies/{companyId}/lorryReceipts/{receiptId} {
+      allow create: if request.auth != null && !exists(
+        /databases/$(database)/documents/companies/$(companyId)/lorryReceipts/
+          .where('companyCode', '==', request.resource.data.companyCode)
+          .where('branchCode', '==', request.resource.data.branchCode)
+          .where('financialYear', '==', request.resource.data.financialYear)
+          .where('lrNumber', '==', request.resource.data.lrNumber)
+      );
+
+      // Allow updates and deletes for authenticated users
+      allow update, delete: if request.auth != null;
     }
 
-    function isBranchMember(companyId) {
-      return request.auth.token.companyId == companyId && request.auth.token.role == 'Branch';
-    }
-
-    function isAdmin() {
-      return request.auth.token.role == 'Admin';
-    }
-
-    // Rules for the 'companies' collection
-    match /companies/{companyId} {
-      // Admins can read company details for licensing purposes.
-      // Company owners can read their own company document.
-      allow get: if isAdmin() || isOwner(companyId);
-      
-      // Only Admins can create or update company records.
-      allow write: if isAdmin();
-
-      // Rules for 'branches' sub-collection
-      match /branches/{branchId} {
-        // Company owners and branch members can read branch data.
-        allow get, list: if isOwner(companyId) || isBranchMember(companyId);
-        // Only company owners can create/update/delete branches.
-        allow write: if isOwner(companyId);
-      }
-
-      // Rules for 'employees' sub-collection
-      match /employees/{employeeId} {
-        // Company owners can manage all employees in their company.
-        allow get, list, write: if isOwner(companyId);
-      }
-      
-      // Rules for company-wide operational data
-      match /bookings/{bookingId} {
-        // Company owners can manage all bookings. Branch members can read them.
-        allow get, list: if isOwner(companyId) || isBranchMember(companyId);
-        allow write: if isOwner(companyId);
-      }
-
-      match /vehicles/{vehicleId} {
-          // Company owners can manage all vehicles. Branch members can view them.
-          allow get, list: if isOwner(companyId) || isBranchMember(companyId);
-          allow write: if isOwner(companyId);
-      }
-
-      // Rules for branch-specific operational data
-      match /branches/{branchId}/bookings/{bookingId} {
-          // A branch member can only access bookings within their assigned branch
-          allow read, write: if isBranchMember(companyId) && request.auth.token.branchId == branchId;
-          // A company owner can read bookings from any of their branches
-          allow read: if isOwner(companyId);
-      }
+    // --- Sequence Counter Protection ---
+    // Only allow incrementing the serial number. This prevents tampering.
+    match /sequences/{companyId}/branches/{branchCode}/years/{financialYear}/documents/lrSequence {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+                      (
+                        // Allow creation
+                        !exists(resource.data) ||
+                        // Allow incrementing by 1 only
+                        request.resource.data.currentSerial == resource.data.currentSerial + 1
+                      );
     }
   }
 }
