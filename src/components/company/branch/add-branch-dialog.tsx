@@ -207,7 +207,7 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
                         </Select>
                     </div>
                      <div>
-                        <Label htmlFor="lr-prefix">LR Prefix</Label>
+                        <Label htmlFor="lr-prefix">LR Prefix (Branch Code)</Label>
                         <Input id="lr-prefix" value={lrPrefix} onChange={(e) => setLrPrefix(e.target.value.toUpperCase())} placeholder="e.g. NGP, PUN" />
                     </div>
                      <div className="md:col-span-2">
@@ -288,5 +288,4 @@ export function AddBranchDialog({ isOpen, onOpenChange, onSave, branch }: AddBra
         </Dialog>
     );
 }
-
     
