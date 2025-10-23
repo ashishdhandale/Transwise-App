@@ -88,6 +88,13 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     <div className="text-right">
                         <p className="font-bold text-sm">Lorry Receipt</p>
                         <p className="font-bold">{copyType} COPY</p>
+                        <Image
+                            src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.lrNo}&code=Code128&dpi=96`}
+                            alt={`Barcode for ${booking.lrNo}`}
+                            width={150}
+                            height={50}
+                            className="ml-auto mt-1"
+                        />
                     </div>
                 </header>
 
