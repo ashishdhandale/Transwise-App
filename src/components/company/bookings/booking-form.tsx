@@ -227,7 +227,7 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     }
 };
 
-const generateLrNumber = (allBookings: Booking[], companyCode: string, branchCode: string): string => {
+const generateLrNumber = (allBookings: Booking[], companyCode: string, branchCode: string, isBranch: boolean): string => {
     const financialYear = getCurrentFinancialYear();
     
     const systemBookingsThisYear = allBookings.filter(
@@ -238,7 +238,10 @@ const generateLrNumber = (allBookings: Booking[], companyCode: string, branchCod
     const newSerial = lastSerial + 1;
     const formattedSerial = String(newSerial).padStart(4, '0');
 
-    return `${companyCode}/${branchCode}/${financialYear}/${formattedSerial}`;
+    if (isBranch) {
+        return `${companyCode}/${branchCode}/${financialYear}/${formattedSerial}`;
+    }
+    return `${companyCode}/${financialYear}/${formattedSerial}`;
 };
 
 
@@ -337,8 +340,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setIsOfflineMode(initialIsOffline || false);
         
         const allCurrentBookings = getBookings();
-        const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : (companyProfile.lrPrefix || 'MAIN');
-        setCurrentLrNumber(nextLrNumber || generateLrNumber(allCurrentBookings, companyProfile.lrPrefix || 'COMP', branchCode));
+        const companyCode = companyProfile.lrPrefix || 'COMP';
+        const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : companyCode;
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(allCurrentBookings, companyCode, branchCode, isBranch));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -408,8 +412,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else if (companyProfile) {
             // -- New Booking Mode --
-            const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : (companyProfile.lrPrefix || 'MAIN');
-            const newLrNumber = generateLrNumber(allBookings, companyProfile.lrPrefix || 'COMP', branchCode);
+            const companyCode = companyProfile.lrPrefix || 'COMP';
+            const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : companyCode;
+            const newLrNumber = generateLrNumber(allBookings, companyCode, branchCode, isBranch);
             setCurrentLrNumber(newLrNumber);
             
             const defaultStationName = companyProfile.defaultFromStation;
@@ -609,8 +614,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 setReceiptData(savedBooking);
                 
                 if (onSaveAndNew) {
-                    const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : (companyProfile?.lrPrefix || 'MAIN');
-                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyProfile!.lrPrefix || 'COMP', branchCode)));
+                    const companyCode = companyProfile!.lrPrefix || 'COMP';
+                    const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : companyCode;
+                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyCode, branchCode, isBranch)));
                 } else {
                      setShowReceipt(true);
                 }
@@ -620,7 +626,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings, branches]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings, branches, isBranch]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -715,8 +721,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
         const latestBookings = getBookings(); 
-        const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : (companyProfile?.lrPrefix || 'MAIN');
-        const nextLrNumber = generateLrNumber(latestBookings, companyProfile!.lrPrefix || 'COMP', branchCode);
+        const companyCode = companyProfile!.lrPrefix || 'COMP';
+        const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : companyCode;
+        const nextLrNumber = generateLrNumber(latestBookings, companyCode, branchCode, isBranch);
         handleReset(nextLrNumber);
     }, [handleReset, companyProfile, isBranch, branches, userBranchName]);
 
@@ -831,8 +838,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose} 
                     onReset={() => {
-                        const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : (companyProfile?.lrPrefix || 'MAIN');
-                        const nextLrNumber = generateLrNumber(allBookings, companyProfile!.lrPrefix || 'COMP', branchCode);
+                        const companyCode = companyProfile!.lrPrefix || 'COMP';
+                        const branchCode = isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix || 'BRN') : companyCode;
+                        const nextLrNumber = generateLrNumber(allBookings, companyCode, branchCode, isBranch);
                         handleReset(nextLrNumber);
                     }}
                     isSubmitting={isSubmitting}
