@@ -227,21 +227,29 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
     }
 };
 
-const generateLrNumber = (allBookings: Booking[], companyCode: string): string => {
-    const financialYear = getCurrentFinancialYear();
-    
+const generateLrNumber = (
+    allBookings: Booking[], 
+    companyCode: string, 
+    branchCode?: string,
+    isBranchUser?: boolean
+): string => {
+    const financialYear = getCurrentFinancialYear(); // e.g., "2024-25"
+    const currentCode = isBranchUser ? branchCode : companyCode;
+
     const systemBookingsThisYear = allBookings.filter(
-        b => b.financialYear === financialYear && b.companyCode === companyCode && b.lrOrigin === 'SYSTEM_GENERATED'
+        b => b.financialYear === financialYear && 
+             (isBranchUser ? b.branchCode === currentCode : b.companyCode === currentCode) &&
+             b.lrOrigin === 'SYSTEM_GENERATED'
     );
     
     const lastSerial = systemBookingsThisYear.reduce((max, b) => Math.max(max, b.serialNumber || 0), 0);
     const newSerial = lastSerial + 1;
     const formattedSerial = String(newSerial).padStart(4, '0');
 
-    // New format: MT250002
-    const endYear = financialYear.substring(5); // "2024-25" -> "25"
+    // New format: MT240002
+    const startYear = financialYear.substring(2, 4); // "2024-25" -> "24"
     
-    return `${companyCode}${endYear}${formattedSerial}`;
+    return `${currentCode}${startYear}${formattedSerial}`;
 };
 
 
@@ -341,7 +349,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         
         const allCurrentBookings = getBookings();
         const companyCode = companyProfile.lrPrefix || 'COMP';
-        setCurrentLrNumber(nextLrNumber || generateLrNumber(allCurrentBookings, companyCode));
+        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(allCurrentBookings, companyCode, currentBranch?.lrPrefix, isBranch));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -375,7 +384,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [companyProfile, cities, lrNumberInputRef, toast, initialIsOffline]);
+    }, [companyProfile, cities, lrNumberInputRef, toast, initialIsOffline, isBranch, branches, userBranchName]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -412,7 +421,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } else if (companyProfile) {
             // -- New Booking Mode --
             const companyCode = companyProfile.lrPrefix || 'COMP';
-            const newLrNumber = generateLrNumber(allBookings, companyCode);
+            const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
+            const newLrNumber = generateLrNumber(allBookings, companyCode, currentBranch?.lrPrefix, isBranch);
             setCurrentLrNumber(newLrNumber);
             
             const defaultStationName = companyProfile.defaultFromStation;
@@ -613,7 +623,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 
                 if (onSaveAndNew) {
                     const companyCode = companyProfile!.lrPrefix || 'COMP';
-                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyCode)));
+                    const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
+                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyCode, currentBranch?.lrPrefix, isBranch)));
                 } else {
                      setShowReceipt(true);
                 }
@@ -719,7 +730,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setShowReceipt(false);
         const latestBookings = getBookings(); 
         const companyCode = companyProfile!.lrPrefix || 'COMP';
-        const nextLrNumber = generateLrNumber(latestBookings, companyCode);
+        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
+        const nextLrNumber = generateLrNumber(latestBookings, companyCode, currentBranch?.lrPrefix, isBranch);
         handleReset(nextLrNumber);
     }, [handleReset, companyProfile, isBranch, branches, userBranchName]);
 
@@ -835,7 +847,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     onClose={onClose} 
                     onReset={() => {
                         const companyCode = companyProfile!.lrPrefix || 'COMP';
-                        const nextLrNumber = generateLrNumber(allBookings, companyCode);
+                        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
+                        const nextLrNumber = generateLrNumber(allBookings, companyCode, currentBranch?.lrPrefix, isBranch);
                         handleReset(nextLrNumber);
                     }}
                     isSubmitting={isSubmitting}
@@ -939,4 +952,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+    
+
     
