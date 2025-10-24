@@ -244,9 +244,9 @@ const generateLrNumber = (
     
     const lastSerial = systemBookingsThisYear.reduce((max, b) => Math.max(max, b.serialNumber || 0), 0);
     const newSerial = lastSerial + 1;
-    const formattedSerial = String(newSerial).padStart(4, '0');
+    const formattedSerial = String(newSerial).padStart(6, '0');
 
-    // New format: MT240002
+    // New format: MT24000002
     const startYear = financialYear.substring(2, 4); // "2024-25" -> "24"
     
     return `${currentCode}${startYear}${formattedSerial}`;
