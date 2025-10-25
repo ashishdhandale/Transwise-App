@@ -267,7 +267,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     const isBranch = userRole === 'Branch';
     
-    const [isOfflineMode, setIsOfflineMode] = useState(() => isOfflineModeProp || false);
+    const [isOfflineMode, setIsOfflineMode] = useState(false);
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
     const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('LTL');
@@ -638,8 +638,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         onSaveAndNew(savedBooking, () => {
                              handleReset(updatedBookings);
                         });
+                    } else if (onSaveSuccess) {
+                        // This case is for the edit dialog
+                        onSaveSuccess(savedBooking);
                     } else {
-                         setShowReceipt(true);
+                        // This case is for the main new booking page
+                        setShowReceipt(true);
                     }
                 }
             } catch (error) {
