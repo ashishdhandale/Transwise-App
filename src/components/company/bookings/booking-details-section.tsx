@@ -143,7 +143,7 @@ export function BookingDetailsSection({
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                 <div className="space-y-1">
                     <div className="flex items-center space-x-2 mb-1">
-                        <Label htmlFor="lrNo">LR Number</Label>
+                        <Label htmlFor="lrNo">System LR No.</Label>
                         {!isEditMode && !isViewOnly && (
                             <div className="flex items-center space-x-1">
                                 <Checkbox
@@ -160,9 +160,9 @@ export function BookingDetailsSection({
                         value={lrNumber}
                         onChange={(e) => onLrNumberChange(e.target.value)}
                         className={cn(
-                            'font-bold text-red-600 border-red-300'
+                            'font-bold text-muted-foreground bg-muted/50'
                         )}
-                        readOnly={true} // System LR is always readonly
+                        readOnly={true}
                         placeholder={lrNumber || "Generating..."}
                     />
                 </div>

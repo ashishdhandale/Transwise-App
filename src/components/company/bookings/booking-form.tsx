@@ -83,7 +83,7 @@ interface BookingFormProps {
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
-    isOfflineMode?: boolean; // Now a direct prop
+    isOfflineModeProp?: boolean; 
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -258,7 +258,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineModeProp }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -266,7 +266,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     const isBranch = userRole === 'Branch';
     
-    const [isOfflineMode, setIsOfflineMode] = useState(initialIsOffline || false);
+    const [isOfflineMode, setIsOfflineMode] = useState(() => isOfflineModeProp || false);
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
     const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('LTL');
@@ -346,15 +346,14 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         loadInitialData();
     }, [loadInitialData]);
     
-    const handleReset = useCallback((nextLrNumber?: string) => {
+    const handleReset = useCallback((bookings: Booking[], companyProfile: AllCompanySettings, citiesData: City[], currentBranches: Branch[], branchName?: string, nextLrNumber?: string) => {
         if (isLoading) return;
-        const companyProfile = loadCompanySettingsFromStorage();
         
-        setIsOfflineMode(initialIsOffline || false);
+        setIsOfflineMode(isOfflineModeProp || false);
         
         const companyCode = companyProfile.lrPrefix || 'COMP';
-        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix));
+        const currentBranch = isBranch ? currentBranches.find(b => b.name === branchName) : undefined;
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(bookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -363,7 +362,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setLoadType('LTL');
         
         const defaultStationName = companyProfile.defaultFromStation;
-        const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
+        const defaultStation = defaultStationName ? citiesData.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
         setFromStation(defaultStation);
 
         setToStation(null);
@@ -387,7 +386,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         if(!isEditMode) toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [isLoading, initialIsOffline, isBranch, branches, userBranchName, allBookings, cities, toast, isEditMode]);
+    }, [isLoading, isOfflineModeProp, isBranch, isEditMode, toast]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -424,16 +423,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else {
             // -- New Booking Mode --
-            handleReset();
+             const companyProfile = loadCompanySettingsFromStorage();
+             handleReset(allBookings, companyProfile, cities, branches, userBranchName);
         }
 
-    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, initialIsOffline, isBranch, branches, userBranchName, handleReset]);
+    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, branches, userBranchName, handleReset]);
     
-    // React to offline mode changes
+
     useEffect(() => {
         if (!isEditMode) {
              if (isOfflineMode) {
-                // Keep the system LR number, just clear the reference number input
                 setReferenceLrNumber('');
              } else {
                 setReferenceLrNumber('');
@@ -603,7 +602,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 setReceiptData(savedBooking);
                 
                 if (onSaveAndNew) {
-                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyProfile!.lrPrefix || 'COMP', companyProfile!.lrFormat, isBranch, branches.find(b => b.name === userBranchName)?.lrPrefix)));
+                    onSaveAndNew(savedBooking, () => handleReset(updatedBookings, companyProfile, cities, branches, userBranchName));
                 } else {
                      setShowReceipt(true);
                 }
@@ -613,7 +612,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings, branches, isBranch, attachCc]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isOfflineMode, maybeSaveNewParty, bookingData, allBookings, branches, isBranch, attachCc, handleReset, cities]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -709,11 +708,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setShowReceipt(false);
         const latestBookings = getBookings(); 
         const companyProfile = loadCompanySettingsFromStorage();
-        const companyCode = companyProfile!.lrPrefix || 'COMP';
-        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        const nextLrNumber = generateLrNumber(latestBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
-        handleReset(nextLrNumber);
-    }, [handleReset, isBranch, branches, userBranchName]);
+        handleReset(latestBookings, companyProfile, cities, branches, userBranchName);
+    }, [handleReset, cities, branches, userBranchName]);
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
@@ -821,10 +817,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     onClose={onClose} 
                     onReset={() => {
                         const companyProfile = loadCompanySettingsFromStorage();
-                        const companyCode = companyProfile!.lrPrefix || 'COMP';
-                        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-                        const nextLrNumber = generateLrNumber(allBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
-                        handleReset(nextLrNumber);
+                        handleReset(allBookings, companyProfile, cities, branches, userBranchName);
                     }}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
