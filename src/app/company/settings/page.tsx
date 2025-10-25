@@ -23,7 +23,6 @@ import { saveCompanySettings, type AllCompanySettings, getDefaultCompanySettings
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { ClientOnly } from '@/components/ui/client-only';
-import { Separator } from '@/components/ui/separator';
 
 // Combined schema for the entire settings page
 const combinedSettingsSchema = z.object({
@@ -66,13 +65,6 @@ const combinedSettingsSchema = z.object({
             code: z.ZodIssueCode.custom,
             path: ['lrPrefix'],
             message: 'LR Prefix must be at least 2 characters when GRN format is "With Character".'
-        });
-    }
-    if (data.lrFormat === 'serial_only' && data.grnFormat !== 'plain') {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['grnFormat'],
-            message: 'LR Style must be "Plain Number" when LR Format is "Serial Number Only".'
         });
     }
     if (data.grnFormat === 'plain' && data.lrFormat !== 'serial_only') {

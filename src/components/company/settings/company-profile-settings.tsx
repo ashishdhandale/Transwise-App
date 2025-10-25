@@ -42,6 +42,13 @@ export const profileSchema = z.object({
             message: 'LR Prefix must be at least 2 characters when GRN format is "With Character".'
         });
     }
+     if (data.grnFormat === 'plain' && data.lrFormat !== 'serial_only') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['lrFormat'],
+            message: 'LR Format must be "Serial Number Only" when LR Style is "Plain Number".'
+        });
+    }
 });
 
 export type CompanyProfileFormValues = z.infer<typeof profileSchema>;
@@ -51,16 +58,9 @@ export function CompanyProfileSettings() {
     // We get the form context from the parent page
     const form = useFormContext<CompanyProfileFormValues>();
     const grnFormat = form.watch('grnFormat');
-    const lrFormat = form.watch('lrFormat');
-
+    
     useEffect(() => {
-        if (lrFormat === 'serial_only' && form.getValues('grnFormat') !== 'plain') {
-            form.setValue('grnFormat', 'plain');
-        }
-    }, [lrFormat, form]);
-
-    useEffect(() => {
-        if (grnFormat === 'plain' && form.getValues('lrFormat') !== 'serial_only') {
+        if (grnFormat === 'plain') {
             form.setValue('lrFormat', 'serial_only');
         }
     }, [grnFormat, form]);
@@ -136,7 +136,7 @@ export function CompanyProfileSettings() {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>LR Style</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={lrFormat === 'serial_only'}>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select LR format" />
@@ -147,7 +147,6 @@ export function CompanyProfileSettings() {
                                         <SelectItem value="plain">Plain Number (e.g., 01)</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {lrFormat === 'serial_only' && <FormDescription className="text-destructive">Style is set to 'Plain' with this format.</FormDescription>}
                                 <FormMessage />
                             </FormItem>
                         )}
