@@ -75,6 +75,13 @@ const combinedSettingsSchema = z.object({
             message: 'LR Style must be "Plain Number" when LR Format is "Serial Number Only".'
         });
     }
+    if (data.grnFormat === 'plain' && data.lrFormat !== 'serial_only') {
+         ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['lrFormat'],
+            message: 'LR Format must be "Serial Number Only" when LR Style is "Plain Number".'
+        });
+    }
 });
 
 
@@ -198,3 +205,5 @@ export default function CompanySettingsRootPage() {
     </Suspense>
   );
 }
+
+    

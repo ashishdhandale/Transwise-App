@@ -59,6 +59,12 @@ export function CompanyProfileSettings() {
         }
     }, [lrFormat, form]);
 
+    useEffect(() => {
+        if (grnFormat === 'plain' && form.getValues('lrFormat') !== 'serial_only') {
+            form.setValue('lrFormat', 'serial_only');
+        }
+    }, [grnFormat, form]);
+
   return (
     <Card>
         <CardHeader>
@@ -166,7 +172,7 @@ export function CompanyProfileSettings() {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>LR Number Format</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={grnFormat === 'plain'}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select format" />
@@ -179,6 +185,7 @@ export function CompanyProfileSettings() {
                                     </SelectContent>
                                 </Select>
                                 <FormDescription>Format: [CompanyCode][StartYear][SerialNumber].</FormDescription>
+                                {grnFormat === 'plain' && <FormDescription className="text-destructive">Format is set to 'Serial Only' with this style.</FormDescription>}
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -302,5 +309,7 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
+
+    
 
     
