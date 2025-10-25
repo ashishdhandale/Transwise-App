@@ -287,7 +287,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [isGstApplicable, setIsGstApplicable] = useState(false);
     const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
     const [initialChargesFromBooking, setInitialChargesFromBooking] = useState<{ [key: string]: number; } | undefined>(undefined);
-    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
     const [attachCc, setAttachCc] = useState('No');
     const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
     const [ftlDetails, setFtlDetails] = useState<FtlDetails>({
@@ -375,7 +374,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setTaxPaidBy('Not Applicable');
         setAdditionalCharges({});
         setInitialChargesFromBooking(undefined);
-        setDeliveryAt('Godown Deliv');
         setAttachCc('No');
         setErrors({});
         setFtlDetails({
@@ -438,7 +436,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     useEffect(() => {
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
     }, [taxPaidBy]);
-
+    
+    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
     useEffect(() => {
         if (additionalCharges.doorDelivery && additionalCharges.doorDelivery > 0) {
             setDeliveryAt('Door Deliv');
@@ -480,7 +479,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const finalBranchName = userBranchName || companyProfile.companyName;
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
-            lrNo: isOfflineMode ? (referenceLrNumber || currentLrNumber) : currentLrNumber,
+            lrNo: currentLrNumber, // Always use the system-generated LR number
             referenceLrNumber: isOfflineMode ? referenceLrNumber : undefined,
             bookingDate: bookingDate!.toISOString(),
             fromCity: fromStation!.name,
@@ -926,4 +925,3 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-
