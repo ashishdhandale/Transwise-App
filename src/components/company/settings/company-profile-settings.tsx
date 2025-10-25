@@ -165,9 +165,9 @@ export function CompanyProfileSettings() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="compact">Compact (e.g., MT252)</SelectItem>
-                                        <SelectItem value="padded">Padded (e.g., MT250002)</SelectItem>
-                                        <SelectItem value="serial_only">Serial Number Only (e.g., 2)</SelectItem>
+                                        <SelectItem value="compact">Compact (e.g., MT251)</SelectItem>
+                                        <SelectItem value="padded">Padded (e.g., MT250001)</SelectItem>
+                                        <SelectItem value="serial_only">Serial Number Only (e.g., 0001)</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormDescription>Format: [CompanyCode][StartYear][SerialNumber].</FormDescription>
