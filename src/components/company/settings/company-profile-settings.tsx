@@ -168,7 +168,7 @@ export function CompanyProfileSettings() {
                                         <SelectItem value="padded">Padded (e.g., MT250002)</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <FormDescription>Choose serial number style.</FormDescription>
+                                <FormDescription>Format: [CompanyCode][StartYear][SerialNumber].</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
