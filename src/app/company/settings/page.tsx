@@ -11,7 +11,7 @@ import { Settings, Server, Loader2 } from 'lucide-react';
 import { AdditionalChargesSettings, chargeSchema } from '@/components/company/settings/additional-charges-settings';
 import { ItemDetailsSettings, itemDetailsSchema } from '@/components/company/settings/item-details-settings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { GeneralInstructionsSettings } from '@/components/company/settings/general-instructions-settings';
 import { CompanyProfileSettings } from '@/components/company/settings/company-profile-settings';
 import { PrintFormatSettings } from '@/components/company/settings/print-format-settings';
