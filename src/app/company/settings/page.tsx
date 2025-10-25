@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
@@ -40,7 +41,7 @@ const combinedSettingsSchema = z.object({
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
-  lrFormat: z.enum(['compact', 'padded']).default('compact'),
+  lrFormat: z.enum(['compact', 'padded', 'serial_only']).default('compact'),
   
   // General Instructions fields
   defaultFromStation: z.string().optional(),

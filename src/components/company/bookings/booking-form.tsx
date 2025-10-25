@@ -229,7 +229,7 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 const generateLrNumber = (
     allBookings: Booking[],
     companyCode: string,
-    lrFormat: 'compact' | 'padded',
+    lrFormat: 'compact' | 'padded' | 'serial_only',
     isBranch: boolean,
     branchCode?: string
 ): string => {
@@ -244,7 +244,11 @@ const generateLrNumber = (
 
     const lastSerial = relevantBookings.reduce((max, b) => Math.max(max, b.serialNumber || 0), 0);
     const newSerial = lastSerial + 1;
-
+    
+    if (lrFormat === 'serial_only') {
+        return String(newSerial);
+    }
+    
     if (lrFormat === 'padded') {
         return `${companyCode}${startYear}${String(newSerial).padStart(6, '0')}`;
     }
@@ -472,11 +476,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
         const companyProfile = loadCompanySettingsFromStorage();
-        if (!companyProfile) {
-            toast({ title: 'Error', description: 'Company profile not loaded. Cannot save booking.', variant: 'destructive'});
-            return;
-        }
-
+        
         const finalSender = maybeSaveNewParty(sender);
         const finalReceiver = maybeSaveNewParty(receiver);
 
@@ -711,7 +711,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const companyProfile = loadCompanySettingsFromStorage();
         const companyCode = companyProfile!.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        const nextLrNumber = generateLrNumber(latestBookings, companyCode, companyProfile!.lrFormat, isBranch, currentBranch?.lrPrefix);
+        const nextLrNumber = generateLrNumber(latestBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
         handleReset(nextLrNumber);
     }, [handleReset, isBranch, branches, userBranchName]);
 

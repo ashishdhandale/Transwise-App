@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect } from 'react';
@@ -32,7 +33,7 @@ export const profileSchema = z.object({
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
-  lrFormat: z.enum(['compact', 'padded']).default('compact'),
+  lrFormat: z.enum(['compact', 'padded', 'serial_only']).default('compact'),
 }).superRefine((data, ctx) => {
     if (data.grnFormat === 'with_char' && (!data.lrPrefix || data.lrPrefix.length < 2)) {
         ctx.addIssue({
@@ -166,6 +167,7 @@ export function CompanyProfileSettings() {
                                     <SelectContent>
                                         <SelectItem value="compact">Compact (e.g., MT252)</SelectItem>
                                         <SelectItem value="padded">Padded (e.g., MT250002)</SelectItem>
+                                        <SelectItem value="serial_only">Serial Number Only (e.g., 2)</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormDescription>Format: [CompanyCode][StartYear][SerialNumber].</FormDescription>
