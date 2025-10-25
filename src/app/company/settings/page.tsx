@@ -68,6 +68,13 @@ const combinedSettingsSchema = z.object({
             message: 'LR Prefix must be at least 2 characters when GRN format is "With Character".'
         });
     }
+    if (data.lrFormat === 'serial_only' && data.grnFormat !== 'plain') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['grnFormat'],
+            message: 'LR Style must be "Plain Number" when LR Format is "Serial Number Only".'
+        });
+    }
 });
 
 

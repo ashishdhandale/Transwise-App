@@ -51,6 +51,13 @@ export function CompanyProfileSettings() {
     // We get the form context from the parent page
     const form = useFormContext<CompanyProfileFormValues>();
     const grnFormat = form.watch('grnFormat');
+    const lrFormat = form.watch('lrFormat');
+
+    useEffect(() => {
+        if (lrFormat === 'serial_only' && form.getValues('grnFormat') !== 'plain') {
+            form.setValue('grnFormat', 'plain');
+        }
+    }, [lrFormat, form]);
 
   return (
     <Card>
@@ -123,7 +130,7 @@ export function CompanyProfileSettings() {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>LR Style</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={lrFormat === 'serial_only'}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select LR format" />
@@ -134,6 +141,7 @@ export function CompanyProfileSettings() {
                                         <SelectItem value="plain">Plain Number (e.g., 01)</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                {lrFormat === 'serial_only' && <FormDescription className="text-destructive">Style is set to 'Plain' with this format.</FormDescription>}
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -145,7 +153,7 @@ export function CompanyProfileSettings() {
                             <FormItem>
                                 <FormLabel>LR Prefix</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., CONAG" {...field} disabled={grnFormat === 'plain'} />
+                                    <Input placeholder="e.g., MT" {...field} disabled={grnFormat === 'plain'} />
                                 </FormControl>
                                  <FormDescription>Required for 'With Character' style.</FormDescription>
                                 <FormMessage />
