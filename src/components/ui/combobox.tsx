@@ -42,46 +42,46 @@ const isGroup = (option: ComboboxOption | ComboboxOptionGroup): option is Combob
     return 'groupLabel' in option;
 }
 
-export function Combobox({ 
-    options, 
-    value, 
-    onChange, 
+export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(({
+    options,
+    value,
+    onChange,
     onBlur,
-    placeholder = "Select an option...", 
+    placeholder = "Select an option...",
     searchPlaceholder = "Search...",
     notFoundMessage = "No option found.",
     addMessage = "Add new",
     onAdd,
     disabled = false,
     autoOpenOnFocus = false,
-}: ComboboxProps) {
+}, ref) => {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-
 
   const handleSelect = (currentValue: string) => {
     const newValue = currentValue === value ? "" : currentValue;
     onChange(newValue);
     setInputValue('');
     setOpen(false);
-    triggerRef.current?.focus();
+    if (ref && 'current' in ref && ref.current) {
+        ref.current.focus();
+    }
   }
-  
+
   const handleAdd = () => {
     if (onAdd) {
         setOpen(false); // Close the popover first
         onAdd(inputValue);
     }
   }
-  
-  const allOptions = React.useMemo(() => 
-    options.flatMap(opt => isGroup(opt) ? opt.options : [opt]), 
+
+  const allOptions = React.useMemo(() =>
+    options.flatMap(opt => isGroup(opt) ? opt.options : [opt]),
   [options]);
 
   const displayValue = allOptions.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value;
-  
+
   const handleOpenChange = (isOpen: boolean) => {
       setOpen(isOpen);
       if (!isOpen) {
@@ -89,7 +89,7 @@ export function Combobox({
           setInputValue('');
       }
   }
-
+  
   const handleTriggerFocus = () => {
       if (autoOpenOnFocus) {
           setOpen(true);
@@ -100,16 +100,19 @@ export function Combobox({
       if (e.key === 'Escape') {
           e.preventDefault();
           setOpen(false);
-          triggerRef.current?.focus();
+          if (ref && 'current' in ref && ref.current) {
+            ref.current.focus();
+          }
       }
   };
+
 
   return (
     <ClientOnly>
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
-            ref={triggerRef}
+            ref={ref}
             variant="outline"
             role="combobox"
             aria-expanded={open}
@@ -151,7 +154,7 @@ export function Combobox({
                   </div>
               </CommandEmpty>
               {options.map((option, index) => (
-                  <CommandGroup 
+                  <CommandGroup
                     key={isGroup(option) ? option.groupLabel : `group-${index}`}
                     heading={isGroup(option) ? option.groupLabel : undefined}
                   >
@@ -178,4 +181,5 @@ export function Combobox({
       </Popover>
     </ClientOnly>
   )
-}
+});
+Combobox.displayName = "Combobox";

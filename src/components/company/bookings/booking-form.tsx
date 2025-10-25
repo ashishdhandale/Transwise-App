@@ -84,7 +84,6 @@ interface BookingFormProps {
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
     isOfflineMode?: boolean; // Now a direct prop
-    lrNumberInputRef?: React.Ref<HTMLInputElement>;
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -230,15 +229,15 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 const generateLrNumber = (
     allBookings: Booking[],
     companyCode: string,
-    branchCode: string | undefined,
-    isBranchUser: boolean
+    isBranch: boolean,
+    branchCode?: string
 ): string => {
     const financialYear = getCurrentFinancialYear();
     const startYear = financialYear.substring(2, 4);
 
     const relevantBookings = allBookings.filter(b =>
         b.financialYear === financialYear &&
-        (isBranchUser ? b.branchCode === branchCode : !b.branchCode || b.branchCode === b.companyCode) &&
+        (isBranch ? b.branchCode === branchCode : !b.branchCode || b.branchCode === companyCode) &&
         b.lrOrigin === 'SYSTEM_GENERATED'
     );
 
@@ -250,7 +249,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -297,9 +296,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [isDownloading, setIsDownloading] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isStationAlertOpen, setIsStationAlertOpen] = useState(false);
+    const [generatedChallan, setGeneratedChallan] = useState<Challan | null>(null);
     
     // -- Data Loading State --
-    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [branches, setBranches] = useState<Branch[]>([]);
@@ -309,15 +308,14 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [cities, setCities] = useState<City[]>([]);
     const [rateLists, setRateLists] = useState<RateList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const toStationInputRef = useRef<HTMLButtonElement>(null);
 
     const loadInitialData = useCallback(() => {
         try {
             setIsLoading(true);
-            const profile = loadCompanySettingsFromStorage();
             const bookings = getBookings();
             const allCities = getCities();
 
-            setCompanyProfile(profile);
             setAllBookings(bookings);
             setCities(allCities);
             setCustomers(getCustomers());
@@ -340,13 +338,14 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, [loadInitialData]);
     
     const handleReset = useCallback((nextLrNumber?: string) => {
-        if (!companyProfile) return;
+        if (isLoading) return;
+        const companyProfile = loadCompanySettingsFromStorage();
         
         setIsOfflineMode(initialIsOffline || false);
         
         const companyCode = companyProfile.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyCode, currentBranch?.lrPrefix, isBranch));
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyCode, isBranch, currentBranch?.lrPrefix));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -375,16 +374,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         });
         
         setTimeout(() => {
-            if (lrNumberInputRef && 'current' in lrNumberInputRef && lrNumberInputRef.current) {
-                lrNumberInputRef.current.focus();
-            }
+            toStationInputRef.current?.focus();
         }, 0);
 
-        toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [companyProfile, cities, lrNumberInputRef, toast, initialIsOffline, isBranch, branches, userBranchName, allBookings]);
+        if(!isEditMode) toast({ title: "Form Reset", description: "All fields have been cleared." });
+    }, [isLoading, initialIsOffline, isBranch, branches, userBranchName, allBookings, cities, toast, isEditMode]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
+        const companyProfile = loadCompanySettingsFromStorage();
+        setCompanyProfile(companyProfile);
         if (isLoading) return; // Don't run if data isn't ready
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
@@ -418,37 +417,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else if (companyProfile) {
             // -- New Booking Mode --
-            const companyCode = companyProfile.lrPrefix || 'COMP';
-            const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-            const newLrNumber = generateLrNumber(allBookings, companyCode, currentBranch?.lrPrefix, isBranch);
-            setCurrentLrNumber(newLrNumber);
-            
-            const defaultStationName = companyProfile.defaultFromStation;
-            const defaultStation = defaultStationName ? cities.find(c => c.name.toLowerCase() === defaultStationName.toLowerCase()) || null : null;
-            setFromStation(defaultStation);
-
-            const defaultRows = companyProfile.defaultItemRows || 1;
-            setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
-            
-            // Reset other fields for a fresh form
-            setBookingType('TOPAY');
-            setLoadType('LTL');
-            setToStation(null);
-            setSender(null);
-            setReceiver(null);
-            setBookingDate(new Date());
-            setReferenceLrNumber('');
-            setGrandTotal(0);
-            setTaxPaidBy('Not Applicable');
-            setAdditionalCharges({});
-            setInitialChargesFromBooking(undefined);
-            setDeliveryAt('Godown Deliv');
-            setAttachCc('No');
-            setErrors({});
-            setFtlDetails({ vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0 });
+            handleReset();
         }
 
-    }, [isLoading, companyProfile, trackingId, bookingData, allBookings, customers, cities, initialIsOffline, isBranch, branches, userBranchName]);
+    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, initialIsOffline, isBranch, branches, userBranchName, handleReset]);
     
     // React to offline mode changes
     useEffect(() => {
@@ -622,9 +594,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 setReceiptData(savedBooking);
                 
                 if (onSaveAndNew) {
-                    const companyCode = companyProfile!.lrPrefix || 'COMP';
-                    const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyCode, currentBranch?.lrPrefix, isBranch)));
+                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyProfile!.lrPrefix || 'COMP', isBranch, branches.find(b => b.name === userBranchName)?.lrPrefix)));
                 } else {
                      setShowReceipt(true);
                 }
@@ -729,9 +699,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
         const latestBookings = getBookings(); 
+        const companyProfile = loadCompanySettingsFromStorage();
         const companyCode = companyProfile!.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        const nextLrNumber = generateLrNumber(latestBookings, companyCode, currentBranch?.lrPrefix, isBranch);
+        const nextLrNumber = generateLrNumber(latestBookings, companyCode, isBranch, currentBranch?.lrPrefix);
         handleReset(nextLrNumber);
     }, [handleReset, companyProfile, isBranch, branches, userBranchName]);
 
@@ -753,9 +724,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
   const formContent = (
      <div className="space-y-4">
-        <BookingDetailsSection 
-            lrNumberInputRef={lrNumberInputRef}
-            bookingType={bookingType} 
+        <BookingDetailsSection
+            toStationInputRef={toStationInputRef}
+            bookingType={bookingType}
             onBookingTypeChange={setBookingType}
             fromStation={fromStation}
             onFromStationChange={setFromStation}
@@ -848,9 +819,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose} 
                     onReset={() => {
+                        const companyProfile = loadCompanySettingsFromStorage();
                         const companyCode = companyProfile!.lrPrefix || 'COMP';
                         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-                        const nextLrNumber = generateLrNumber(allBookings, companyCode, currentBranch?.lrPrefix, isBranch);
+                        const nextLrNumber = generateLrNumber(allBookings, companyCode, isBranch, currentBranch?.lrPrefix);
                         handleReset(nextLrNumber);
                     }}
                     isSubmitting={isSubmitting}
@@ -954,8 +926,3 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-    
-
-    
-
-

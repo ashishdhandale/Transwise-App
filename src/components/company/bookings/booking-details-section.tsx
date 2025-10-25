@@ -45,12 +45,12 @@ interface BookingDetailsSectionProps {
     companyProfile: CompanyProfileFormValues | null;
     errors: { [key: string]: boolean };
     isViewOnly?: boolean;
-    lrNumberInputRef?: React.Ref<HTMLInputElement>;
+    toStationInputRef?: React.Ref<HTMLButtonElement>;
 }
 
 
-export function BookingDetailsSection({ 
-    bookingType, 
+export function BookingDetailsSection({
+    bookingType,
     onBookingTypeChange,
     loadType,
     onLoadTypeChange,
@@ -70,7 +70,7 @@ export function BookingDetailsSection({
     companyProfile,
     errors,
     isViewOnly = false,
-    lrNumberInputRef,
+    toStationInputRef,
 }: BookingDetailsSectionProps) {
     const { toast } = useToast();
     const [allCities, setAllCities] = useState<City[]>([]);
@@ -130,7 +130,7 @@ export function BookingDetailsSection({
             return false;
         }
     };
-    
+
     const handleDateSelect = (date?: Date) => {
         onBookingDateChange(date);
         setIsDatePickerOpen(false);
@@ -146,18 +146,17 @@ export function BookingDetailsSection({
                         <Label htmlFor="lrNo">LR Number</Label>
                         {!isEditMode && !isViewOnly && (
                             <div className="flex items-center space-x-1">
-                                <Checkbox 
-                                    id="manualLr" 
-                                    checked={isOfflineMode} 
+                                <Checkbox
+                                    id="manualLr"
+                                    checked={isOfflineMode}
                                     onCheckedChange={(checked) => onOfflineModeChange(!!checked)}
                                 />
                                 <Label htmlFor="manualLr" className="text-xs font-normal cursor-pointer">Manual LR</Label>
                             </div>
                         )}
                     </div>
-                    <Input 
-                        ref={lrNumberInputRef}
-                        id="lrNo" 
+                    <Input
+                        id="lrNo"
                         value={lrNumber}
                         onChange={(e) => onLrNumberChange(e.target.value)}
                         className={cn(
@@ -238,6 +237,7 @@ export function BookingDetailsSection({
                 <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
                     <Label htmlFor="toStation">To Station</Label>
                     <Combobox
+                        ref={toStationInputRef}
                         options={stationOptions}
                         value={toStation?.name || ''}
                         onChange={handleToStationChange}
