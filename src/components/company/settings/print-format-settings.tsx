@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,13 +73,12 @@ const createNewFormat = (id: string, name: string): PrintFormat => ({
 
 // --- COMPONENT ---
 export function PrintFormatSettings() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeFormatId, setActiveFormatId] = useState<string | null>(null);
   const [openCollapsibles, setOpenCollapsibles] = useState<string[]>(ALL_FIELDS_CONFIG.map(g => g.groupLabel));
 
   const { toast } = useToast();
 
-  const form = useForm<SettingsFormValues>({
+  const localForm = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       formats: [],
@@ -87,11 +86,11 @@ export function PrintFormatSettings() {
   });
 
   const { fields: formatFields, append, remove } = useFieldArray({
-    control: form.control,
+    control: localForm.control,
     name: 'formats',
   });
 
-  const watchedFormats = form.watch('formats');
+  const watchedFormats = localForm.watch('formats');
 
   useEffect(() => {
     try {
@@ -99,18 +98,18 @@ export function PrintFormatSettings() {
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
         if (parsed.formats && parsed.formats.length > 0) {
-          form.reset(parsed);
+          localForm.reset(parsed);
           setActiveFormatId(parsed.formats[0].id);
         }
       } else {
          const defaultFormat = createNewFormat('default-1', 'Standard Print');
-         form.reset({ formats: [defaultFormat] });
+         localForm.reset({ formats: [defaultFormat] });
          setActiveFormatId(defaultFormat.id);
       }
     } catch (error) {
       console.error("Failed to load print format settings", error);
     }
-  }, [form]);
+  }, [localForm]);
 
   const activeFormatIndex = activeFormatId ? formatFields.findIndex(f => f.id === activeFormatId) : -1;
 
@@ -127,7 +126,7 @@ export function PrintFormatSettings() {
     remove(index);
     
     if(activeFormatId === formatToRemoveId) {
-        const remainingFormats = form.getValues('formats');
+        const remainingFormats = localForm.getValues('formats');
         if (remainingFormats.length > 0) {
             setActiveFormatId(remainingFormats[0].id);
         } else {
@@ -143,23 +142,21 @@ export function PrintFormatSettings() {
     );
   };
   
-  const onSubmit = async (data: SettingsFormValues) => {
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    try {
+  const handleSaveFormats = () => {
+    const data = localForm.getValues();
+     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
       toast({
-        title: 'Settings Saved',
-        description: 'Your print format preferences have been updated.',
+        title: 'Print Formats Saved',
+        description: 'Your print format preferences have been updated locally.',
       });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Could not save settings.',
+        description: 'Could not save print formats.',
         variant: 'destructive',
       });
     }
-    setIsSubmitting(false);
   };
   
   const activeFormatData = activeFormatIndex !== -1 ? watchedFormats[activeFormatIndex] : null;
@@ -216,11 +213,11 @@ export function PrintFormatSettings() {
           {/* Form Editor */}
           <div className="flex-1 border-l pl-6">
             {activeFormatIndex !== -1 && activeFormatData ? (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormProvider {...localForm}>
+                <div className="space-y-6">
                   {/* Format Name */}
                   <FormField
-                    control={form.control}
+                    control={localForm.control}
                     name={`formats.${activeFormatIndex}.name`}
                     render={({ field }) => (
                       <FormItem className="max-w-sm">
@@ -237,7 +234,7 @@ export function PrintFormatSettings() {
                   {/* Field Selection */}
                   <div className="space-y-2">
                     <h3 className="font-semibold">Printable Fields</h3>
-                     {form.getValues(`formats.${activeFormatIndex}.fieldGroups`).map((group, groupIndex) => (
+                     {localForm.getValues(`formats.${activeFormatIndex}.fieldGroups`).map((group, groupIndex) => (
                        <Collapsible key={group.groupLabel} open={openCollapsibles.includes(group.groupLabel)} onOpenChange={() => toggleCollapsible(group.groupLabel)} className="space-y-2">
                             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md bg-muted px-3 py-2 text-sm font-medium">
                                 {group.groupLabel}
@@ -248,7 +245,7 @@ export function PrintFormatSettings() {
                                 {group.fields.map((field, fieldIndex) => (
                                     <FormField
                                         key={field.id}
-                                        control={form.control}
+                                        control={localForm.control}
                                         name={`formats.${activeFormatIndex}.fieldGroups.${groupIndex}.fields.${fieldIndex}.checked`}
                                         render={({ field: checkboxField }) => (
                                             <FormItem className="flex items-center space-x-2 space-y-0">
@@ -259,7 +256,7 @@ export function PrintFormatSettings() {
                                                     />
                                                 </FormControl>
                                                 <FormLabel className="font-normal cursor-pointer">
-                                                    {form.getValues(`formats.${activeFormatIndex}.fieldGroups.${groupIndex}.fields.${fieldIndex}.label`)}
+                                                    {localForm.getValues(`formats.${activeFormatIndex}.fieldGroups.${groupIndex}.fields.${fieldIndex}.label`)}
                                                 </FormLabel>
                                             </FormItem>
                                         )}
@@ -274,8 +271,7 @@ export function PrintFormatSettings() {
                   <Separator />
 
                   <div className="flex items-center gap-4">
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="button" onClick={handleSaveFormats}>
                         Save All Formats
                     </Button>
                     <Dialog>
@@ -292,8 +288,8 @@ export function PrintFormatSettings() {
                         </DialogContent>
                     </Dialog>
                   </div>
-                </form>
-              </Form>
+                </div>
+              </FormProvider>
             ) : (
                 <div className="text-center text-muted-foreground p-8 h-96 flex items-center justify-center border-dashed border-2 rounded-md">
                     <p>Select a format to edit, or add a new one to begin.</p>
