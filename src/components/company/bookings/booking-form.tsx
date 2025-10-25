@@ -347,13 +347,18 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         loadInitialData();
     }, [loadInitialData]);
     
-    const handleReset = useCallback((nextLrNumber?: string, nextSerialNumber?: number) => {
+    const handleReset = useCallback((bookingsToUse?: Booking[]) => {
+        const currentBookings = bookingsToUse || allBookings;
         const companyProfile = loadCompanySettingsFromStorage();
 
         setIsOfflineMode(isOfflineModeProp || false);
         
-        setCurrentLrNumber(nextLrNumber || '');
-        setCurrentSerialNumber(nextSerialNumber || 0);
+        const companyCode = companyProfile.lrPrefix || 'COMP';
+        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
+        const { nextLrNumber, nextSerialNumber } = generateLrNumber(currentBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
+        
+        setCurrentLrNumber(nextLrNumber);
+        setCurrentSerialNumber(nextSerialNumber);
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -385,7 +390,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         if(!isEditMode) toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [isOfflineModeProp, cities, isEditMode, toast]);
+    }, [isOfflineModeProp, cities, isEditMode, toast, allBookings, isBranch, branches, userBranchName]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -423,14 +428,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else {
             // -- New Booking Mode --
-             const companyProfile = loadCompanySettingsFromStorage();
-             const companyCode = companyProfile.lrPrefix || 'COMP';
-             const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-             const { nextLrNumber, nextSerialNumber } = generateLrNumber(allBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
-             handleReset(nextLrNumber, nextSerialNumber);
+             handleReset(allBookings);
         }
 
-    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, branches, userBranchName, isBranch, handleReset]);
+    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, handleReset]);
     
 
     useEffect(() => {
@@ -467,154 +468,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         return { name: party.name, gstin: party.gstin, address: party.address, mobile: party.mobile };
     }, []);
 
-    const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
-        const companyProfile = loadCompanySettingsFromStorage();
-        
-        const finalSender = maybeSaveNewParty(sender);
-        const finalReceiver = maybeSaveNewParty(receiver);
-
-        const currentStatus: Booking['status'] = 'In Stock';
-        const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
-        const validRows = itemRows.filter(row => !isRowEmpty(row));
-        const finalBranchName = userBranchName || companyProfile.companyName;
-
-        const newBookingData: Omit<Booking, 'trackingId'> = {
-            lrNo: currentLrNumber, // Always use the system-generated LR number
-            referenceLrNumber: isOfflineMode ? referenceLrNumber : undefined,
-            bookingDate: bookingDate!.toISOString(),
-            fromCity: fromStation!.name,
-            toCity: toStation!.name,
-            lrType: bookingType as Booking['lrType'],
-            paymentMode: bookingType === 'PAID' ? paymentMode : undefined,
-            loadType,
-            sender: finalSender,
-            receiver: finalReceiver,
-            itemDescription: validRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
-            qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
-            chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
-            totalAmount: grandTotal,
-            status: currentBooking?.status || currentStatus,
-            itemRows: validRows,
-            additionalCharges: additionalCharges,
-            taxPaidBy: taxPaidBy,
-            branchName: currentBooking?.branchName || finalBranchName,
-            source: isOfflineMode ? 'Offline' : 'System',
-            companyCode: companyProfile.lrPrefix,
-            branchCode: isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix) : (companyProfile.lrPrefix),
-            financialYear: getCurrentFinancialYear(),
-            serialNumber: currentSerialNumber,
-            lrOrigin: isOfflineMode ? 'MANUAL' : 'SYSTEM_GENERATED',
-            attachCc,
-            ...(loadType === 'FTL' && { ftlDetails }),
-        };
-
-        try {
-            let savedBooking: Booking;
-            const currentAllBookings = getBookings(); // Get the very latest bookings
-
-            if ((isEditMode || isPartialCancel) && currentBooking) {
-                savedBooking = { ...currentBooking, ...newBookingData };
-                const changeDetails = generateChangeDetails(currentBooking, savedBooking, isPartialCancel);
-                
-                const updatedBookings = currentAllBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? savedBooking : b);
-                saveBookings(updatedBookings);
-                setAllBookings(updatedBookings); 
-                
-                if (changeDetails !== 'No changes detected.') {
-                    addHistoryLog(currentLrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
-                }
-
-                toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
-                if (onSaveSuccess) onSaveSuccess(savedBooking);
-            } else {
-                savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
-                
-                const updatedBookings = [...currentAllBookings, savedBooking];
-                saveBookings(updatedBookings);
-                setAllBookings(updatedBookings); 
-                
-                addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
-                
-                if (sender && receiver) {
-                    updateStandardRateList(savedBooking, sender, receiver);
-                }
-                
-                if (savedBooking.loadType === 'FTL') {
-                    // For FTL, we create a pending challan immediately.
-                    const allChallans = getChallanData();
-                    const challan: Challan = {
-                        challanId: `TEMP-CHLN-${Date.now()}`,
-                        dispatchDate: format(new Date(savedBooking.bookingDate), 'yyyy-MM-dd'),
-                        challanType: 'Dispatch',
-                        status: 'Pending',
-                        vehicleNo: savedBooking.ftlDetails!.vehicleNo,
-                        driverName: savedBooking.ftlDetails!.driverName,
-                        fromStation: savedBooking.fromCity,
-                        toStation: savedBooking.toCity,
-                        dispatchToParty: savedBooking.receiver.name,
-                        totalLr: 1,
-                        totalPackages: savedBooking.qty,
-                        totalItems: savedBooking.itemRows.length,
-                        totalActualWeight: savedBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
-                        totalChargeWeight: savedBooking.chgWt,
-                        vehicleHireFreight: savedBooking.ftlDetails!.truckFreight,
-                        advance: savedBooking.ftlDetails!.advance,
-                        balance: savedBooking.ftlDetails!.truckFreight - savedBooking.ftlDetails!.advance,
-                        senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
-                        summary: {
-                            grandTotal: savedBooking.totalAmount,
-                            totalTopayAmount: savedBooking.lrType === 'TOPAY' ? savedBooking.totalAmount : 0,
-                            commission: savedBooking.ftlDetails!.commission,
-                            labour: 0, crossing: 0, carting: 0, 
-                            balanceTruckHire: savedBooking.ftlDetails!.truckFreight - savedBooking.ftlDetails!.advance,
-                            debitCreditAmount: 0
-                        }
-                    };
-                    saveChallanData([...allChallans, challan]);
-
-                    const lrDetail: LrDetail = {
-                        challanId: challan.challanId,
-                        lrNo: savedBooking.lrNo,
-                        lrType: savedBooking.lrType,
-                        sender: savedBooking.sender,
-                        receiver: savedBooking.receiver,
-                        from: savedBooking.fromCity,
-                        to: savedBooking.toCity,
-                        bookingDate: format(new Date(savedBooking.bookingDate), 'yyyy-MM-dd'),
-                        itemDescription: savedBooking.itemDescription,
-                        quantity: savedBooking.qty,
-                        actualWeight: savedBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
-                        chargeWeight: savedBooking.chgWt,
-                        grandTotal: savedBooking.totalAmount
-                    };
-                    const allLrDetails = getLrDetailsData();
-                    saveLrDetailsData([...allLrDetails, lrDetail]);
-                    
-                    setGeneratedChallan(challan);
-                }
-                
-                setReceiptData(savedBooking);
-                
-                if (onSaveAndNew) {
-                    onSaveAndNew(savedBooking, () => {
-                         const companyCode = companyProfile.lrPrefix || 'COMP';
-                         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-                         const { nextLrNumber, nextSerialNumber } = generateLrNumber(updatedBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
-                         handleReset(nextLrNumber, nextSerialNumber);
-                    });
-                } else {
-                     setShowReceipt(true);
-                }
-            }
-        } catch (error) {
-             toast({ title: 'Error Saving Data', description: `Could not save to local storage.`, variant: 'destructive' });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isOfflineMode, maybeSaveNewParty, bookingData, allBookings, branches, isBranch, attachCc, handleReset, cities, currentSerialNumber]);
-
-
-    const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
+    const handleSaveOrUpdate = useCallback(async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
         const newErrors: { [key: string]: boolean } = {};
         if (!fromStation) newErrors.fromStation = true;
         if (!toStation) newErrors.toStation = true;
@@ -651,8 +505,180 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (isPaymentDialogOpen) setIsPaymentDialogOpen(false);
         await new Promise(resolve => setTimeout(resolve, 100));
         
+        // This is now an async function
+        const proceedWithSave = async (paymentMode?: 'Cash' | 'Online') => {
+            const companyProfile = loadCompanySettingsFromStorage();
+            
+            const finalSender = maybeSaveNewParty(sender);
+            const finalReceiver = maybeSaveNewParty(receiver);
+
+            const currentStatus: Booking['status'] = 'In Stock';
+            const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
+            const validRows = itemRows.filter(row => !isRowEmpty(row));
+            const finalBranchName = userBranchName || companyProfile.companyName;
+
+            const newBookingData: Omit<Booking, 'trackingId'> = {
+                lrNo: currentLrNumber, 
+                referenceLrNumber: isOfflineMode ? referenceLrNumber : undefined,
+                bookingDate: bookingDate!.toISOString(),
+                fromCity: fromStation!.name,
+                toCity: toStation!.name,
+                lrType: bookingType as Booking['lrType'],
+                paymentMode: bookingType === 'PAID' ? paymentMode : undefined,
+                loadType,
+                sender: finalSender,
+                receiver: finalReceiver,
+                itemDescription: validRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
+                qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
+                chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
+                totalAmount: grandTotal,
+                status: currentBooking?.status || currentStatus,
+                itemRows: validRows,
+                additionalCharges: additionalCharges,
+                taxPaidBy: taxPaidBy,
+                branchName: currentBooking?.branchName || finalBranchName,
+                source: isOfflineMode ? 'Offline' : 'System',
+                companyCode: companyProfile.lrPrefix,
+                branchCode: isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix) : (companyProfile.lrPrefix),
+                financialYear: getCurrentFinancialYear(),
+                serialNumber: currentSerialNumber,
+                lrOrigin: isOfflineMode ? 'MANUAL' : 'SYSTEM_GENERATED',
+                attachCc,
+                ...(loadType === 'FTL' && { ftlDetails }),
+            };
+
+            try {
+                let savedBooking: Booking;
+                const currentAllBookings = getBookings(); // Get the very latest bookings
+
+                if ((isEditMode || isPartialCancel) && currentBooking) {
+                    savedBooking = { ...currentBooking, ...newBookingData };
+                    const changeDetails = generateChangeDetails(currentBooking, savedBooking, isPartialCancel);
+                    
+                    const updatedBookings = currentAllBookings.map(b => b.trackingId === (trackingId || bookingData?.trackingId) ? savedBooking : b);
+                    saveBookings(updatedBookings);
+                    setAllBookings(updatedBookings); 
+                    
+                    if (changeDetails !== 'No changes detected.') {
+                        addHistoryLog(currentLrNumber, isPartialCancel ? 'Booking Partially Cancelled' : 'Booking Updated', 'Admin', changeDetails);
+                    }
+
+                    toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
+                    if (onSaveSuccess) onSaveSuccess(savedBooking);
+                } else {
+                    savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
+                    
+                    const updatedBookings = [...currentAllBookings, savedBooking];
+                    saveBookings(updatedBookings);
+                    setAllBookings(updatedBookings); 
+                    
+                    addHistoryLog(currentLrNumber, 'Booking Created', 'Admin');
+                    
+                    if (sender && receiver) {
+                        updateStandardRateList(savedBooking, sender, receiver);
+                    }
+                    
+                    if (savedBooking.loadType === 'FTL') {
+                        // For FTL, we create a pending challan immediately.
+                        const allChallans = getChallanData();
+                        const challan: Challan = {
+                            challanId: `TEMP-CHLN-${Date.now()}`,
+                            dispatchDate: format(new Date(savedBooking.bookingDate), 'yyyy-MM-dd'),
+                            challanType: 'Dispatch',
+                            status: 'Pending',
+                            vehicleNo: savedBooking.ftlDetails!.vehicleNo,
+                            driverName: savedBooking.ftlDetails!.driverName,
+                            fromStation: savedBooking.fromCity,
+                            toStation: savedBooking.toCity,
+                            dispatchToParty: savedBooking.receiver.name,
+                            totalLr: 1,
+                            totalPackages: savedBooking.qty,
+                            totalItems: savedBooking.itemRows.length,
+                            totalActualWeight: savedBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                            totalChargeWeight: savedBooking.chgWt,
+                            vehicleHireFreight: savedBooking.ftlDetails!.truckFreight,
+                            advance: savedBooking.ftlDetails!.advance,
+                            balance: savedBooking.ftlDetails!.truckFreight - savedBooking.ftlDetails!.advance,
+                            senderId: '', inwardId: '', inwardDate: '', receivedFromParty: '',
+                            summary: {
+                                grandTotal: savedBooking.totalAmount,
+                                totalTopayAmount: savedBooking.lrType === 'TOPAY' ? savedBooking.totalAmount : 0,
+                                commission: savedBooking.ftlDetails!.commission,
+                                labour: 0, crossing: 0, carting: 0, 
+                                balanceTruckHire: savedBooking.ftlDetails!.truckFreight - savedBooking.ftlDetails!.advance,
+                                debitCreditAmount: 0
+                            }
+                        };
+                        saveChallanData([...allChallans, challan]);
+
+                        const lrDetail: LrDetail = {
+                            challanId: challan.challanId,
+                            lrNo: savedBooking.lrNo,
+                            lrType: savedBooking.lrType,
+                            sender: savedBooking.sender,
+                            receiver: savedBooking.receiver,
+                            from: savedBooking.fromCity,
+                            to: savedBooking.toCity,
+                            bookingDate: format(new Date(savedBooking.bookingDate), 'yyyy-MM-dd'),
+                            itemDescription: savedBooking.itemDescription,
+                            quantity: savedBooking.qty,
+                            actualWeight: savedBooking.itemRows.reduce((s, i) => s + Number(i.actWt), 0),
+                            chargeWeight: savedBooking.chgWt,
+                            grandTotal: savedBooking.totalAmount
+                        };
+                        const allLrDetails = getLrDetailsData();
+                        saveLrDetailsData([...allLrDetails, lrDetail]);
+                        
+                        setGeneratedChallan(challan);
+                    }
+                    
+                    setReceiptData(savedBooking);
+                    
+                    if (onSaveAndNew) {
+                        onSaveAndNew(savedBooking, () => {
+                             handleReset(updatedBookings);
+                        });
+                    } else {
+                         setShowReceipt(true);
+                    }
+                }
+            } catch (error) {
+                 toast({ title: 'Error Saving Data', description: `Could not save to local storage.`, variant: 'destructive' });
+            } finally {
+                setIsSubmitting(false);
+            }
+        };
+
         await proceedWithSave(paymentMode);
-    };
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isBranch, attachCc, handleReset, cities, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
+
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey) {
+                switch (event.key) {
+                    case 's':
+                        event.preventDefault();
+                        if(!isSubmitting) handleSaveOrUpdate();
+                        break;
+                    case 'e':
+                        event.preventDefault();
+                        router.push('/company/bookings');
+                        break;
+                    case 'r':
+                        event.preventDefault();
+                        if(!isEditMode) handleReset(allBookings);
+                        break;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleSaveOrUpdate, router, handleReset, isEditMode, allBookings, isSubmitting]);
+
     
     const handleDownloadPdf = async () => {
         const input = receiptRef.current;
@@ -706,12 +732,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
         const latestBookings = getBookings(); 
-        const companyProfile = loadCompanySettingsFromStorage();
-        const companyCode = companyProfile.lrPrefix || 'COMP';
-        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        const { nextLrNumber, nextSerialNumber } = generateLrNumber(latestBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
-        handleReset(nextLrNumber, nextSerialNumber);
-    }, [handleReset, isBranch, branches, userBranchName]);
+        handleReset(latestBookings);
+    }, [handleReset]);
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
@@ -817,13 +839,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose} 
-                    onReset={() => {
-                        const companyProfile = loadCompanySettingsFromStorage();
-                        const companyCode = companyProfile.lrPrefix || 'COMP';
-                        const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-                        const { nextLrNumber, nextSerialNumber } = generateLrNumber(allBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
-                        handleReset(nextLrNumber, nextSerialNumber);
-                    }}
+                    onReset={() => handleReset(allBookings)}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
                     isOfflineMode={isOfflineMode}
