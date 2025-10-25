@@ -92,11 +92,6 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
             return;
         }
 
-        if (mobile.trim().length !== 10) {
-            toast({ title: 'Validation Error', description: 'Mobile Number must be 10 digits.', variant: 'destructive' });
-            return;
-        }
-
         const success = onSave({
             name,
             gstin,
@@ -172,7 +167,7 @@ export function AddCustomerDialog({ isOpen, onOpenChange, onSave, customer }: Ad
                     </div>
                     <div>
                         <Label htmlFor="mobile">Mobile No.</Label>
-                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10} />
+                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={19} />
                     </div>
                      <div>
                         <Label htmlFor="email">Email Address</Label>
