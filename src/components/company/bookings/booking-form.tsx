@@ -293,7 +293,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState<Booking | null>(null);
-    const [generatedChallan, setGeneratedChallan] = useState<Challan | null>(null);
     const receiptRef = useRef<HTMLDivElement>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -958,4 +957,5 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     
 
     
+
 

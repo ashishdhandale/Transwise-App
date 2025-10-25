@@ -165,7 +165,6 @@ export function BookingDetailsSection({
                         )}
                         readOnly={true} // System LR is always readonly
                         placeholder={lrNumber || "Generating..."}
-                        autoFocus={!isEditMode}
                     />
                 </div>
                 {isOfflineMode && (
@@ -234,7 +233,6 @@ export function BookingDetailsSection({
                         addMessage="Add New Station"
                         onAdd={handleOpenAddCity}
                         disabled={isViewOnly}
-                        autoOpenOnFocus
                     />
                 </div>
                 <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
