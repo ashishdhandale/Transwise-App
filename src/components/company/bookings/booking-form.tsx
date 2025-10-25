@@ -84,6 +84,7 @@ interface BookingFormProps {
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
     isOfflineMode?: boolean; // Now a direct prop
+    lrNumberInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -249,7 +250,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -307,6 +308,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [rateLists, setRateLists] = useState<RateList[]>([]);
+    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const toStationInputRef = useRef<HTMLButtonElement>(null);
 
@@ -468,13 +470,19 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, []);
 
     const proceedWithSave = useCallback(async (paymentMode?: 'Cash' | 'Online') => {
+        const companyProfile = loadCompanySettingsFromStorage();
+        if (!companyProfile) {
+            toast({ title: 'Error', description: 'Company profile not loaded. Cannot save booking.', variant: 'destructive'});
+            return;
+        }
+
         const finalSender = maybeSaveNewParty(sender);
         const finalReceiver = maybeSaveNewParty(receiver);
 
         const currentStatus: Booking['status'] = 'In Stock';
         const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
         const validRows = itemRows.filter(row => !isRowEmpty(row));
-        const finalBranchName = userBranchName || companyProfile?.companyName;
+        const finalBranchName = userBranchName || companyProfile.companyName;
 
         const newBookingData: Omit<Booking, 'trackingId'> = {
             lrNo: currentLrNumber,
@@ -497,8 +505,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             taxPaidBy: taxPaidBy,
             branchName: currentBooking?.branchName || finalBranchName,
             source: isOfflineMode ? 'Offline' : 'System',
-            companyCode: companyProfile?.lrPrefix,
-            branchCode: isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix) : (companyProfile?.lrPrefix),
+            companyCode: companyProfile.lrPrefix,
+            branchCode: isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix) : (companyProfile.lrPrefix),
             financialYear: getCurrentFinancialYear(),
             serialNumber: Number(currentLrNumber.match(/\d+$/)?.[0]),
             lrOrigin: isOfflineMode ? 'MANUAL' : 'SYSTEM_GENERATED',
@@ -604,7 +612,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings, branches, isBranch, attachCc]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings, branches, isBranch, attachCc]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -704,7 +712,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
         const nextLrNumber = generateLrNumber(latestBookings, companyCode, isBranch, currentBranch?.lrPrefix);
         handleReset(nextLrNumber);
-    }, [handleReset, companyProfile, isBranch, branches, userBranchName]);
+    }, [handleReset, isBranch, branches, userBranchName]);
 
     const handleDialogClose = (open: boolean) => {
         if (!open) {
