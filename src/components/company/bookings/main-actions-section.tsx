@@ -47,9 +47,9 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
     if (isPartialCancel) {
         saveButtonText = 'Confirm Cancellation';
     } else if (isEditMode) {
-        saveButtonText = 'Update Booking';
+        saveButtonText = 'Update Booking (Ctrl+S)';
     } else {
-        saveButtonText = onSaveAndNew ? 'Save & Add New' : 'Save Booking';
+        saveButtonText = onSaveAndNew ? 'Save & Add New (Ctrl+S)' : 'Save Booking (Ctrl+S)';
     }
 
     let savingButtonText: string;
@@ -75,7 +75,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
             {(isEditMode && !onSaveAndNew) || isPartialCancel ? (
                  <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <X className="mr-2 h-4 w-4" />
-                    {isOfflineMode ? 'Cancel' : 'Exit Without Saving'}
+                    {isOfflineMode ? 'Cancel' : 'Exit Without Saving (Ctrl+E)'}
                 </Button>
             ) : (
                 <>
@@ -88,12 +88,12 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                     {!onSaveAndNew && (
                          <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
                             <FileX className="mr-2 h-4 w-4" />
-                            Exit Without Saving
+                            Exit Without Saving (Ctrl+E)
                         </Button>
                     )}
                      <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
                         <RotateCcw className="mr-2 h-4 w-4" />
-                        Reset Form
+                        Reset Form (Ctrl+R)
                     </Button>
                 </>
             )}
@@ -108,3 +108,4 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
 }
 
     
+
