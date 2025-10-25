@@ -228,29 +228,26 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 };
 
 const generateLrNumber = (
-    allBookings: Booking[], 
-    companyCode: string, 
-    branchCode?: string,
-    isBranchUser?: boolean
+    allBookings: Booking[],
+    companyCode: string,
+    branchCode: string | undefined,
+    isBranchUser: boolean
 ): string => {
-    const financialYear = getCurrentFinancialYear(); // e.g., "2024-25"
-    const currentCode = isBranchUser ? branchCode : companyCode;
+    const financialYear = getCurrentFinancialYear();
+    const startYear = financialYear.substring(2, 4);
 
-    const systemBookingsThisYear = allBookings.filter(
-        b => b.financialYear === financialYear && 
-             (isBranchUser ? b.branchCode === currentCode : b.companyCode === currentCode) &&
-             b.lrOrigin === 'SYSTEM_GENERATED'
+    const relevantBookings = allBookings.filter(b =>
+        b.financialYear === financialYear &&
+        (isBranchUser ? b.branchCode === branchCode : !b.branchCode || b.branchCode === b.companyCode) &&
+        b.lrOrigin === 'SYSTEM_GENERATED'
     );
-    
-    const lastSerial = systemBookingsThisYear.reduce((max, b) => Math.max(max, b.serialNumber || 0), 0);
-    const newSerial = lastSerial + 1;
-    const formattedSerial = String(newSerial).padStart(6, '0');
 
-    // New format: MT24000002
-    const startYear = financialYear.substring(2, 4); // "2024-25" -> "24"
+    const lastSerial = relevantBookings.reduce((max, b) => Math.max(max, b.serialNumber || 0), 0);
+    const newSerial = lastSerial + 1;
     
-    return `${currentCode}${startYear}${formattedSerial}`;
+    return `${companyCode}${startYear}${newSerial}`;
 };
+
 
 
 export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline, lrNumberInputRef }: BookingFormProps) {
@@ -281,6 +278,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
     const [initialChargesFromBooking, setInitialChargesFromBooking] = useState<{ [key: string]: number; } | undefined>(undefined);
     const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
+    const [attachCc, setAttachCc] = useState('No');
     const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
     const [ftlDetails, setFtlDetails] = useState<FtlDetails>({
         vehicleNo: '',
@@ -347,10 +345,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         
         setIsOfflineMode(initialIsOffline || false);
         
-        const allCurrentBookings = getBookings();
         const companyCode = companyProfile.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        setCurrentLrNumber(nextLrNumber || generateLrNumber(allCurrentBookings, companyCode, currentBranch?.lrPrefix, isBranch));
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyCode, currentBranch?.lrPrefix, isBranch));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -372,6 +369,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setAdditionalCharges({});
         setInitialChargesFromBooking(undefined);
         setDeliveryAt('Godown Deliv');
+        setAttachCc('No');
         setErrors({});
         setFtlDetails({
             vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0,
@@ -384,7 +382,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [companyProfile, cities, lrNumberInputRef, toast, initialIsOffline, isBranch, branches, userBranchName]);
+    }, [companyProfile, cities, lrNumberInputRef, toast, initialIsOffline, isBranch, branches, userBranchName, allBookings]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -407,6 +405,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setToStation(cities.find(c => c.name === bookingToLoad.toCity) || null);
             setSender(senderProfile);
             setReceiver(receiverProfile);
+            setAttachCc(bookingToLoad.attachCc || 'No');
             
             const itemRowsWithIds = (bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || index + 1 }));
             setItemRows(itemRowsWithIds);
@@ -445,6 +444,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             setAdditionalCharges({});
             setInitialChargesFromBooking(undefined);
             setDeliveryAt('Godown Deliv');
+            setAttachCc('No');
             setErrors({});
             setFtlDetails({ vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0 });
         }
@@ -529,8 +529,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             companyCode: companyProfile?.lrPrefix,
             branchCode: isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix) : (companyProfile?.lrPrefix),
             financialYear: getCurrentFinancialYear(),
-            serialNumber: Number(currentLrNumber.split('/').pop()),
+            serialNumber: Number(currentLrNumber.match(/\d+$/)?.[0]),
             lrOrigin: isOfflineMode ? 'MANUAL' : 'SYSTEM_GENERATED',
+            attachCc,
             ...(loadType === 'FTL' && { ftlDetails }),
         };
 
@@ -634,7 +635,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         } finally {
             setIsSubmitting(false);
         }
-    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings, branches, isBranch]);
+    }, [loadType, isEditMode, isPartialCancel, trackingId, itemRows, currentLrNumber, referenceLrNumber, bookingDate, fromStation, toStation, bookingType, sender, receiver, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, companyProfile, isOfflineMode, maybeSaveNewParty, bookingData, handleReset, userRole, allBookings, branches, isBranch, attachCc]);
 
 
     const handleSaveOrUpdate = async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -830,6 +831,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     deliveryAt={deliveryAt}
                     onDeliveryAtChange={setDeliveryAt}
                     isViewOnly={readOnly}
+                    attachCc={attachCc}
+                    onAttachCcChange={setAttachCc}
                 />
             </div>
             <div className="flex flex-col gap-2">
@@ -955,3 +958,4 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     
 
     
+
