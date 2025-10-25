@@ -22,6 +22,7 @@ import { saveCompanySettings, type AllCompanySettings, getDefaultCompanySettings
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { ClientOnly } from '@/components/ui/client-only';
+import { Separator } from '@/components/ui/separator';
 
 // Combined schema for the entire settings page
 const combinedSettingsSchema = z.object({
@@ -39,6 +40,7 @@ const combinedSettingsSchema = z.object({
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
+  lrFormat: z.enum(['compact', 'padded']).default('compact'),
   
   // General Instructions fields
   defaultFromStation: z.string().optional(),
@@ -137,7 +139,11 @@ function CompanySettingsPage() {
                     <div className="space-y-6">
                         <GeneralInstructionsSettings />
                         <Card>
-                            <CardContent className="p-4">
+                            <CardHeader>
+                                <CardTitle>Booking Form Customization</CardTitle>
+                                <CardDescription>Adjust the rows and columns visible in the item entry table.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-6">
                                 <Tabs defaultValue="item-table-rows" className="space-y-4">
                                     <TabsList>
                                         <TabsTrigger value="item-table-rows">Item Table Rows</TabsTrigger>

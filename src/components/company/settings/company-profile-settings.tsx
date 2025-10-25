@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect } from 'react';
@@ -32,6 +31,7 @@ export const profileSchema = z.object({
   currency: z.string().min(3, 'Currency code is required (e.g., INR).'),
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
+  lrFormat: z.enum(['compact', 'padded']).default('compact'),
 }).superRefine((data, ctx) => {
     if (data.grnFormat === 'with_char' && (!data.lrPrefix || data.lrPrefix.length < 2)) {
         ctx.addIssue({
@@ -59,12 +59,12 @@ export function CompanyProfileSettings() {
         <CardContent>
             {/* The Form and form elements are now part of the parent page's form, so we don't need a new one here. */}
             <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                      <FormField
                         control={form.control}
                         name="companyName"
                         render={({ field }) => (
-                            <FormItem className="md:col-span-2">
+                            <FormItem className="md:col-span-3">
                                 <FormLabel>Company Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Your Company Name" {...field} />
@@ -120,7 +120,7 @@ export function CompanyProfileSettings() {
                         name="grnFormat"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>LR Number Format</FormLabel>
+                                <FormLabel>LR Style</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -145,7 +145,29 @@ export function CompanyProfileSettings() {
                                 <FormControl>
                                     <Input placeholder="e.g., CONAG" {...field} disabled={grnFormat === 'plain'} />
                                 </FormControl>
-                                 <FormDescription>Required for 'With Character' format.</FormDescription>
+                                 <FormDescription>Required for 'With Character' style.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="lrFormat"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>LR Number Format</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select format" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="compact">Compact (e.g., MT252)</SelectItem>
+                                        <SelectItem value="padded">Padded (e.g., MT250002)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormDescription>Choose serial number style.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -164,6 +186,7 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
+                     <div className="md:col-span-3"><Separator className="my-2"/></div>
                     <FormField
                         control={form.control}
                         name="pan"
@@ -219,6 +242,7 @@ export function CompanyProfileSettings() {
                             </FormItem>
                         )}
                     />
+                     <div className="md:col-span-3"><Separator className="my-2"/></div>
                     <FormField
                         control={form.control}
                         name="currency"

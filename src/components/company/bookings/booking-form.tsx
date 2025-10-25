@@ -84,7 +84,6 @@ interface BookingFormProps {
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
     isOfflineMode?: boolean; // Now a direct prop
-    lrNumberInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -230,6 +229,7 @@ const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Cu
 const generateLrNumber = (
     allBookings: Booking[],
     companyCode: string,
+    lrFormat: 'compact' | 'padded',
     isBranch: boolean,
     branchCode?: string
 ): string => {
@@ -244,13 +244,17 @@ const generateLrNumber = (
 
     const lastSerial = relevantBookings.reduce((max, b) => Math.max(max, b.serialNumber || 0), 0);
     const newSerial = lastSerial + 1;
+
+    if (lrFormat === 'padded') {
+        return `${companyCode}${startYear}${String(newSerial).padStart(6, '0')}`;
+    }
     
     return `${companyCode}${startYear}${newSerial}`;
 };
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineMode: initialIsOffline }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -308,7 +312,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [rateLists, setRateLists] = useState<RateList[]>([]);
-    const [companyProfile, setCompanyProfile] = useState<AllCompanySettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const toStationInputRef = useRef<HTMLButtonElement>(null);
 
@@ -347,7 +350,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         
         const companyCode = companyProfile.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyCode, isBranch, currentBranch?.lrPrefix));
+        setCurrentLrNumber(nextLrNumber || generateLrNumber(allBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix));
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -384,8 +387,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
-        const companyProfile = loadCompanySettingsFromStorage();
-        setCompanyProfile(companyProfile);
         if (isLoading) return; // Don't run if data isn't ready
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
@@ -417,7 +418,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             if (bookingToLoad.ftlDetails) {
                 setFtlDetails(bookingToLoad.ftlDetails);
             }
-        } else if (companyProfile) {
+        } else {
             // -- New Booking Mode --
             handleReset();
         }
@@ -602,7 +603,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 setReceiptData(savedBooking);
                 
                 if (onSaveAndNew) {
-                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyProfile!.lrPrefix || 'COMP', isBranch, branches.find(b => b.name === userBranchName)?.lrPrefix)));
+                    onSaveAndNew(savedBooking, () => handleReset(generateLrNumber(updatedBookings, companyProfile!.lrPrefix || 'COMP', companyProfile!.lrFormat, isBranch, branches.find(b => b.name === userBranchName)?.lrPrefix)));
                 } else {
                      setShowReceipt(true);
                 }
@@ -710,7 +711,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const companyProfile = loadCompanySettingsFromStorage();
         const companyCode = companyProfile!.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-        const nextLrNumber = generateLrNumber(latestBookings, companyCode, isBranch, currentBranch?.lrPrefix);
+        const nextLrNumber = generateLrNumber(latestBookings, companyCode, companyProfile!.lrFormat, isBranch, currentBranch?.lrPrefix);
         handleReset(nextLrNumber);
     }, [handleReset, isBranch, branches, userBranchName]);
 
@@ -749,7 +750,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             isEditMode={isEditMode}
             isOfflineMode={isOfflineMode}
             onOfflineModeChange={setIsOfflineMode}
-            companyProfile={companyProfile}
+            companyProfile={loadCompanySettingsFromStorage()}
             errors={errors}
             loadType={loadType}
             onLoadTypeChange={setLoadType}
@@ -792,7 +793,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }}
         />
         
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
             <ChargesSection 
                 basicFreight={basicFreight} 
                 onGrandTotalChange={setGrandTotal} 
@@ -800,11 +801,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 isGstApplicable={isGstApplicable}
                 onChargesChange={setAdditionalCharges}
                 initialCharges={initialChargesFromBooking}
-                profile={companyProfile}
+                profile={loadCompanySettingsFromStorage()}
                 isViewOnly={isViewOnly}
                 itemRows={itemRows}
             />
-            <div className="w-[300px]">
+            <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
                     deliveryAt={deliveryAt}
                     onDeliveryAtChange={setDeliveryAt}
@@ -812,14 +813,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     attachCc={attachCc}
                     onAttachCcChange={setAttachCc}
                 />
-            </div>
-            <div className="flex flex-col gap-2">
-                <Card className="flex-1 flex flex-col items-center justify-center p-2 text-center border-green-300">
-                    <p className="text-sm text-muted-foreground">Booking Type</p>
-                    <p className="text-xl font-bold text-green-600">
-                        {bookingType}
-                    </p>
-                </Card>
                  <MainActionsSection 
                     onSave={() => handleSaveOrUpdate()} 
                     onSaveAndNew={onSaveAndNew ? () => handleSaveOrUpdate() : undefined}
@@ -830,7 +823,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         const companyProfile = loadCompanySettingsFromStorage();
                         const companyCode = companyProfile!.lrPrefix || 'COMP';
                         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
-                        const nextLrNumber = generateLrNumber(allBookings, companyCode, isBranch, currentBranch?.lrPrefix);
+                        const nextLrNumber = generateLrNumber(allBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
                         handleReset(nextLrNumber);
                     }}
                     isSubmitting={isSubmitting}
@@ -889,7 +882,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 amount={grandTotal}
             />
 
-            {receiptData && companyProfile && (
+            {receiptData && (
                 <Dialog open={showReceipt} onOpenChange={handleDialogClose}>
                     <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
                         <DialogHeader>
@@ -897,17 +890,17 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         </DialogHeader>
                         <div className="flex-grow overflow-auto p-4 bg-gray-200">
                         <div ref={receiptRef} className="bg-white shadow-lg mx-auto" style={{width: '210mm'}}>
-                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Receiver" />
+                                <BookingReceipt booking={receiptData} companyProfile={loadCompanySettingsFromStorage()} copyType="Receiver" />
                                 <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Sender" />
+                                <BookingReceipt booking={receiptData} companyProfile={loadCompanySettingsFromStorage()} copyType="Sender" />
                                 <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Driver" />
+                                <BookingReceipt booking={receiptData} companyProfile={loadCompanySettingsFromStorage()} copyType="Driver" />
                                 <div className="border-t-2 border-dashed border-gray-400 my-4"></div>
-                                <BookingReceipt booking={receiptData} companyProfile={companyProfile} copyType="Office" />
+                                <BookingReceipt booking={receiptData} companyProfile={loadCompanySettingsFromStorage()} copyType="Office" />
                                 {generatedChallan && (
                                     <>
                                         <div className="border-t-2 border-dashed border-gray-400 my-4" style={{pageBreakBefore: 'always'}}></div>
-                                        <FtlChallan challan={generatedChallan} booking={receiptData} profile={companyProfile} />
+                                        <FtlChallan challan={generatedChallan} booking={receiptData} profile={loadCompanySettingsFromStorage()} />
                                     </>
                                 )}
                         </div>

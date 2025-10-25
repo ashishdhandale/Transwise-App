@@ -38,6 +38,7 @@ export const defaultSettings: AllCompanySettings = {
     currency: 'INR',
     countryCode: 'en-IN',
     grnFormat: 'with_char',
+    lrFormat: 'compact',
     // General Instructions
     defaultFromStation: 'Nagpur',
     printCopy: ['printAll', 'printSender', 'printReceiver', 'printDriver', 'printOffice'],
