@@ -10,6 +10,7 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
@@ -103,6 +104,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
             <PopoverTrigger asChild>
                 <Input
                     ref={inputRef}
+                    type="text"
                     value={displayValue}
                     onChange={handleInputChange}
                     onFocus={() => setOpen(true)}
