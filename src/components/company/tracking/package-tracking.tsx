@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -67,12 +68,21 @@ export function PackageTracking() {
       setSelectedBookingHistory(null);
       return;
     }
-    const lowercasedId = id.toLowerCase();
-    const results = allTrackableItems.filter(b => 
-        b.lrNo.toLowerCase().includes(lowercasedId) ||
-        (b.referenceLrNumber && b.referenceLrNumber.toLowerCase().includes(lowercasedId)) ||
-        String(b.trackingId).toLowerCase().includes(lowercasedId)
-    );
+    
+    const lowercasedId = id.toLowerCase().trim();
+    const isTrackingIdSearch = lowercasedId.startsWith('trk-');
+
+    const results = allTrackableItems.filter(b => {
+        if (isTrackingIdSearch) {
+            // Exact match for tracking IDs
+            return String(b.trackingId).toLowerCase() === lowercasedId;
+        } else {
+            // Partial match for LR numbers
+            return b.lrNo.toLowerCase().includes(lowercasedId) ||
+                   (b.referenceLrNumber && b.referenceLrNumber.toLowerCase().includes(lowercasedId));
+        }
+    });
+
     setSearchResults(results);
 
     if (results.length === 1) {
