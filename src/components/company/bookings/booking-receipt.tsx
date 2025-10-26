@@ -170,9 +170,9 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     <div className="border border-black p-1">
                         <p className="font-bold underline">TERMS & CONDITIONS:</p>
                         <ol className="list-decimal list-inside text-[10px]">
-                            <li>All disputes subject to Nagpur jurisdiction only.</li>
-                            <li>Goods carried at owner's risk.</li>
-                            <li>Company is not responsible for any leakage/breakage.</li>
+                           {(companyProfile.termsAndConditions || []).map((term, index) => (
+                                <li key={index}>{term.value}</li>
+                           ))}
                         </ol>
                     </div>
                     <div className="border border-black p-1">

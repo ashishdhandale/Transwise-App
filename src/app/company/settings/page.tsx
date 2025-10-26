@@ -19,6 +19,7 @@ import { PrintFormatSettings } from '@/components/company/settings/print-format-
 import { ChallanFormatSettings } from '@/components/company/settings/challan-format-settings';
 import { BackButton } from '@/components/ui/back-button';
 import { DashboardSettings, dashboardSettingsSchema } from '@/components/company/settings/dashboard-settings';
+import { TermsSettings, termsSchema } from '@/components/company/settings/terms-settings';
 import { saveCompanySettings, type AllCompanySettings, getDefaultCompanySettings, loadCompanySettingsFromStorage } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ const combinedSettingsSchema = z.object({
   additionalCharges: z.array(chargeSchema),
   itemColumns: z.array(itemDetailsSchema.shape.columns.element),
   vehicleDocReminderDays: dashboardSettingsSchema.shape.vehicleDocReminderDays,
+  termsAndConditions: termsSchema.shape.termsAndConditions,
 
 }).superRefine((data, ctx) => {
     if (data.grnFormat === 'with_char' && (!data.lrPrefix || data.lrPrefix.length < 2)) {
@@ -177,7 +179,10 @@ function CompanySettingsPage() {
                     </div>
                 </TabsContent>
                 <TabsContent value="print-formats">
-                    <PrintFormatSettings />
+                     <div className="space-y-6">
+                        <PrintFormatSettings />
+                        <TermsSettings />
+                    </div>
                 </TabsContent>
                 <TabsContent value="challan-formats">
                     <ChallanFormatSettings />

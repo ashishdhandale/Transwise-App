@@ -6,6 +6,7 @@ import type { z } from 'zod';
 import type { chargeSchema } from '@/components/company/settings/additional-charges-settings';
 import type { itemDetailsSchema } from '@/components/company/settings/item-details-settings';
 import type { dashboardSettingsSchema } from '@/components/company/settings/dashboard-settings';
+import type { termsSchema } from '@/components/company/settings/terms-settings';
 
 const LOCAL_STORAGE_KEY_COMPANY_SETTINGS = 'transwise_company_settings';
 
@@ -16,13 +17,14 @@ type BookingSettingsValues = z.infer<typeof import('@/components/company/setting
 type AdditionalChargesSettingsValues = z.infer<typeof chargeSchema>[];
 type ItemDetailsSettingsValues = z.infer<typeof itemDetailsSchema>['columns'];
 type DashboardSettingsValues = z.infer<typeof dashboardSettingsSchema>;
+type TermsSettingsValues = z.infer<typeof termsSchema>;
 
 
 // Combine all settings types into a single interface
 export type AllCompanySettings = CompanyProfileFormValues & GeneralInstructionsSettingsValues & BookingSettingsValues & {
     additionalCharges: AdditionalChargesSettingsValues;
     itemColumns: ItemDetailsSettingsValues;
-} & DashboardSettingsValues;
+} & DashboardSettingsValues & TermsSettingsValues;
 
 export const defaultSettings: AllCompanySettings = {
     // Company Profile
@@ -77,6 +79,12 @@ export const defaultSettings: AllCompanySettings = {
     ],
     // Dashboard Settings
     vehicleDocReminderDays: 30,
+    // Terms & Conditions
+    termsAndConditions: [
+        { value: 'All disputes subject to Nagpur jurisdiction only.' },
+        { value: 'Goods carried at owner\'s risk.' },
+        { value: 'Company is not responsible for any leakage/breakage.' },
+    ],
 };
 
 // This function is safe to call on the server and client. It returns only the default values.
