@@ -10,9 +10,9 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandList,
-  CommandItem,
   CommandInput,
+  CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -42,7 +42,7 @@ const isGroup = (option: ComboboxOption | ComboboxOptionGroup): option is Combob
     return 'groupLabel' in option;
 }
 
-export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(({
+export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
     options,
     value,
     onChange,
@@ -57,11 +57,11 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(({
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
   const [popoverWidth, setPopoverWidth] = React.useState(0);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    if (triggerRef.current) {
-        setPopoverWidth(triggerRef.current.offsetWidth);
+    if (inputRef.current) {
+        setPopoverWidth(inputRef.current.offsetWidth);
     }
   }, []);
 
@@ -69,47 +69,85 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(({
     options.flatMap(opt => isGroup(opt) ? opt.options : [opt]),
   [options]);
   
-  const displayValue = allOptions.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value;
+  const displayValue = allOptions.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value || '';
 
   const handleSelect = (currentValue: string) => {
-    onChange(currentValue === value ? "" : currentValue);
-    setInputValue('');
+    onChange(currentValue);
     setOpen(false);
   }
 
   const handleAdd = () => {
     if (onAdd) {
         setOpen(false);
-        onAdd(inputValue || value);
+        onAdd(inputValue);
     }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+    if (!open) {
+      setOpen(true);
+    }
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onChange('');
+      inputRef.current?.focus();
   }
 
   return (
     <ClientOnly>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-           <Button
-            ref={triggerRef}
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-            disabled={disabled}
-            >
-            <span className="truncate">{value ? allOptions.find((option) => option.value === value)?.label : placeholder}</span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-        </PopoverTrigger>
+        <div className="relative">
+            <PopoverTrigger asChild>
+                <Input
+                    ref={inputRef}
+                    value={displayValue}
+                    onChange={handleInputChange}
+                    onBlur={onBlur}
+                    placeholder={placeholder}
+                    className="pr-10"
+                    disabled={disabled}
+                    autoComplete="off"
+                />
+            </PopoverTrigger>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                 {value && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                        onClick={handleClear}
+                        aria-label="Clear"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                )}
+                <ChevronsUpDown 
+                    className="h-4 w-4 shrink-0 opacity-50 cursor-pointer"
+                    onClick={() => {
+                        if (!open) setOpen(true);
+                        inputRef.current?.focus();
+                    }}
+                 />
+            </div>
+        </div>
         <PopoverContent 
             style={{ width: popoverWidth }}
             className="p-0"
             onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <Command>
+          <Command filter={(value, search) => {
+              const extendedValue = allOptions.find(o => o.label.toLowerCase() === value.toLowerCase())?.value || value;
+              if (extendedValue.toLowerCase().includes(search.toLowerCase())) return 1;
+              return 0;
+          }}>
              <CommandInput 
-                placeholder={searchPlaceholder} 
-                value={inputValue} 
-                onValueChange={setInputValue}
+                value={value}
+                onValueChange={onChange}
+                placeholder={searchPlaceholder}
             />
              <CommandList>
               <CommandEmpty>
@@ -118,7 +156,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(({
                       {onAdd && (
                           <Button variant="link" size="sm" className="mt-2" onClick={handleAdd}>
                               <PlusCircle className="mr-2 h-4 w-4"/>
-                              {addMessage} "{inputValue}"
+                              {addMessage} "{value}"
                           </Button>
                       )}
                   </div>
