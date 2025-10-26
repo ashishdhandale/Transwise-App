@@ -56,44 +56,62 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
 }, ref) => {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
-  const [popoverWidth, setPopoverWidth] = React.useState(0);
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [suggestion, setSuggestion] = React.useState('');
 
-  React.useEffect(() => {
-    if (inputRef.current) {
-        setPopoverWidth(inputRef.current.offsetWidth);
-    }
-  }, []);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const suggestionRef = React.useRef<HTMLInputElement>(null);
 
   const allOptions = React.useMemo(() =>
     options.flatMap(opt => isGroup(opt) ? opt.options : [opt]),
   [options]);
-  
-  const displayValue = allOptions.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value || '';
+
+  const displayValue = React.useMemo(() => {
+    return allOptions.find(option => option.value.toLowerCase() === value?.toLowerCase())?.label || value || '';
+  }, [value, allOptions]);
 
   const handleSelect = (currentValue: string) => {
     onChange(currentValue);
     setOpen(false);
+    setSuggestion('');
   }
-
-  const handleAdd = () => {
-    if (onAdd) {
-        setOpen(false);
-        onAdd(inputValue);
-    }
-  }
-
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     onChange(newValue);
     if (!open) {
       setOpen(true);
     }
+
+    if (newValue) {
+        const bestMatch = allOptions.find(opt => opt.label.toLowerCase().startsWith(newValue.toLowerCase()));
+        if (bestMatch && bestMatch.label.toLowerCase() !== newValue.toLowerCase()) {
+            setSuggestion(bestMatch.label);
+        } else {
+            setSuggestion('');
+        }
+    } else {
+        setSuggestion('');
+    }
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === 'Tab' || e.key === 'ArrowRight') && suggestion && inputRef.current) {
+        const cursorPosition = e.currentTarget.selectionStart;
+        if (cursorPosition === e.currentTarget.value.length) {
+            e.preventDefault();
+            const matchedOption = allOptions.find(opt => opt.label === suggestion);
+            if (matchedOption) {
+                handleSelect(matchedOption.value);
+            }
+        }
+    }
+  };
+
 
   const handleClear = (e: React.MouseEvent) => {
       e.stopPropagation();
       onChange('');
+      setSuggestion('');
       inputRef.current?.focus();
   }
 
@@ -102,18 +120,28 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
       <Popover open={open} onOpenChange={setOpen}>
         <div className="relative">
             <PopoverTrigger asChild>
-                <Input
-                    ref={inputRef}
-                    type="text"
-                    value={displayValue}
-                    onChange={handleInputChange}
-                    onFocus={() => setOpen(true)}
-                    onBlur={onBlur}
-                    placeholder={placeholder}
-                    className="pr-10"
-                    disabled={disabled}
-                    autoComplete="off"
-                />
+                 <div className="relative">
+                    <Input
+                        ref={suggestionRef}
+                        value={suggestion ? `${displayValue}${suggestion.substring(displayValue.length)}` : displayValue}
+                        className="pr-10 absolute inset-0 text-muted-foreground/70 pointer-events-none"
+                        readOnly
+                        tabIndex={-1}
+                    />
+                    <Input
+                        ref={inputRef}
+                        type="text"
+                        value={displayValue}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => setOpen(true)}
+                        onBlur={onBlur}
+                        placeholder={placeholder}
+                        className="pr-10 relative bg-transparent"
+                        disabled={disabled}
+                        autoComplete="off"
+                    />
+                 </div>
             </PopoverTrigger>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                  {value && (
@@ -137,7 +165,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
             </div>
         </div>
         <PopoverContent 
-            style={{ width: popoverWidth }}
+            style={{ width: inputRef.current?.offsetWidth }}
             className="p-0"
             onOpenAutoFocus={(e) => e.preventDefault()}
         >
@@ -156,7 +184,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
                   <div className="py-4 text-center text-sm">
                       <p>{notFoundMessage}</p>
                       {onAdd && (
-                          <Button variant="link" size="sm" className="mt-2" onClick={handleAdd}>
+                          <Button variant="link" size="sm" className="mt-2" onClick={() => onAdd(value)}>
                               <PlusCircle className="mr-2 h-4 w-4"/>
                               {addMessage} "{value}"
                           </Button>
@@ -193,3 +221,6 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
   )
 });
 Combobox.displayName = "Combobox";
+
+
+    
