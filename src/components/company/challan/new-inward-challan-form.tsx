@@ -280,11 +280,25 @@ export function NewInwardChallanForm() {
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
         
+        // Add finalized LRs to the main bookings data as 'In Stock'
+        const currentBookings = getBookings();
+        const newBookingsFromInward = addedLrs.map(inwardLr => ({
+            ...inwardLr,
+            lrNo: inwardLr.referenceLrNumber!, // Use the manual number as the official LR number
+            status: 'In Stock' as const,
+            source: 'Inward' as const,
+            trackingId: inwardLr.trackingId.startsWith('temp-') ? `TRK-${Date.now()}-${Math.random()}` : inwardLr.trackingId,
+        }));
+
+        const updatedBookings = [...currentBookings, ...newBookingsFromInward];
+        saveBookings(updatedBookings);
+
+
         lrDetails.forEach(lr => {
              addHistoryLog(lr.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
-        toast({ title: isEditMode ? 'Inward Challan Updated' : 'Inward Challan Saved', description: `Successfully processed Inward Challan ${data.inwardId}.`});
+        toast({ title: isEditMode ? 'Inward Challan Updated' : 'Inward Challan Saved', description: `Successfully processed Inward Challan ${data.inwardId}. ${newBookingsFromInward.length} LRs added to stock.`});
         router.push('/company/challan');
     };
 
@@ -362,7 +376,6 @@ export function NewInwardChallanForm() {
                                 <CardContent>
                                     <BookingForm
                                         isForInward={true}
-                                        isOfflineMode={true} 
                                         onSaveAndNew={handleAddOrUpdateLr}
                                         lrNumberInputRef={lrNumberInputRef}
                                     />
@@ -480,6 +493,8 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
+
+    
 
     
 
