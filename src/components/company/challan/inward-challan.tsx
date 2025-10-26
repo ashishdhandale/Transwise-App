@@ -18,8 +18,15 @@ const tdClass = "text-xs border border-black p-1 align-top";
 
 export function InwardChallan({ challan, lrDetails, profile }: InwardChallanProps) {
     const totalPackages = lrDetails.reduce((sum, lr) => sum + lr.quantity, 0);
-    const totalWeight = lrDetails.reduce((sum, lr) => sum + lr.chargeWeight, 0);
-    
+    const totalActualWeight = lrDetails.reduce((sum, lr) => sum + lr.actualWeight, 0);
+    const totalChargeWeight = lrDetails.reduce((sum, lr) => sum + lr.chargeWeight, 0);
+    const totalAmount = lrDetails.reduce((sum, lr) => sum + lr.grandTotal, 0);
+
+    const formatValue = (amount: number) => {
+        if (!profile) return amount.toFixed(2);
+        return amount.toLocaleString(profile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
     return (
         <div className="p-4 font-sans text-black bg-white uppercase">
             <header className="text-center pb-2 space-y-1">
@@ -52,7 +59,10 @@ export function InwardChallan({ challan, lrDetails, profile }: InwardChallanProp
                             <TableHead className={thClass}>Consignee</TableHead>
                             <TableHead className={thClass}>Pkgs</TableHead>
                             <TableHead className={thClass}>Contents</TableHead>
-                            <TableHead className={thClass}>Charge Wt.</TableHead>
+                            <TableHead className={thClass}>Booking Type</TableHead>
+                            <TableHead className={`${thClass} text-right`}>Actual Wt.</TableHead>
+                            <TableHead className={`${thClass} text-right`}>Charge Wt.</TableHead>
+                            <TableHead className={`${thClass} text-right`}>Amount</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -63,7 +73,10 @@ export function InwardChallan({ challan, lrDetails, profile }: InwardChallanProp
                                 <TableCell className={tdClass}>{lr.receiver.name}</TableCell>
                                 <TableCell className={`${tdClass} text-center`}>{lr.quantity}</TableCell>
                                 <TableCell className={tdClass}>{lr.itemDescription}</TableCell>
+                                <TableCell className={tdClass}>{lr.lrType}</TableCell>
+                                <TableCell className={`${tdClass} text-right`}>{lr.actualWeight.toFixed(2)}</TableCell>
                                 <TableCell className={`${tdClass} text-right`}>{lr.chargeWeight.toFixed(2)}</TableCell>
+                                <TableCell className={`${tdClass} text-right`}>{formatValue(lr.grandTotal)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -71,8 +84,10 @@ export function InwardChallan({ challan, lrDetails, profile }: InwardChallanProp
                         <TableRow className="font-bold">
                             <TableCell className={`${tdClass} text-right`} colSpan={3}>TOTAL:</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
-                            <TableCell className={tdClass}></TableCell>
-                            <TableCell className={`${tdClass} text-right`}>{totalWeight.toFixed(2)}</TableCell>
+                            <TableCell className={tdClass} colSpan={2}></TableCell>
+                            <TableCell className={`${tdClass} text-right`}>{totalActualWeight.toFixed(2)}</TableCell>
+                            <TableCell className={`${tdClass} text-right`}>{totalChargeWeight.toFixed(2)}</TableCell>
+                            <TableCell className={`${tdClass} text-right`}>{formatValue(totalAmount)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 </Table>
