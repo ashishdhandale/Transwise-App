@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -34,12 +33,12 @@ import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
 
 const inwardChallanSchema = z.object({
   inwardId: z.string(),
-  inwardDate: z.date(),
   originalChallanNo: z.string().optional(),
+  inwardDate: z.date(),
+  fromStation: z.string().min(1, 'From station is required'),
   receivedFromParty: z.string().min(1, 'Received from is required'),
   vehicleNo: z.string().min(1, 'Vehicle number is required'),
   driverName: z.string().optional(),
-  fromStation: z.string().min(1, 'From station is required'),
   remarks: z.string().optional(),
 });
 
@@ -269,36 +268,11 @@ export function NewInwardChallanForm() {
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
 
-        const allBookings = getBookings();
-        const newInwardBookings = addedLrs.map(b => ({
-            ...b,
-            trackingId: b.trackingId.startsWith('temp-') ? `TRK-${Date.now()}-${b.lrNo}` : b.trackingId,
-            source: 'Inward' as const,
-            status: 'In Stock' as const,
-        }));
+        // Unlike regular bookings, inward LRs are just added to stock, not the main booking list.
+        // The record of them exists in the `lrDetails` linked to the challan.
+        // We can create a history log for them.
         
-        const existingLrNos = new Set(allBookings.map(b => b.lrNo));
-        const bookingsToUpdate: Booking[] = [];
-        const bookingsToAdd: Booking[] = [];
-
-        newInwardBookings.forEach(inwardBooking => {
-            if (existingLrNos.has(inwardBooking.lrNo)) {
-                bookingsToUpdate.push(inwardBooking);
-            } else {
-                bookingsToAdd.push(inwardBooking);
-            }
-        });
-
-        const updatedBookings = allBookings
-            .map(b => {
-                const updatedVersion = bookingsToUpdate.find(ub => ub.lrNo === b.lrNo);
-                return updatedVersion || b;
-            })
-            .concat(bookingsToAdd);
-
-        saveBookings(updatedBookings);
-        
-        newInwardBookings.forEach(lr => {
+        addedLrs.forEach(lr => {
              addHistoryLog(lr.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
@@ -371,7 +345,7 @@ export function NewInwardChallanForm() {
                              <CollapsibleTrigger className="w-full">
                                 <CardHeader className="cursor-pointer p-4">
                                      <div className="flex items-center justify-between">
-                                        <CardTitle className="text-lg">Add LR Manually</CardTitle>
+                                        <CardTitle className="text-lg">Add Received LR</CardTitle>
                                         <ChevronsUpDown className={cn("h-5 w-5 transition-transform", isLrFormOpen && "rotate-180")} />
                                     </div>
                                 </CardHeader>
