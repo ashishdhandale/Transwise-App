@@ -71,6 +71,13 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                 {isSubmitting ? savingButtonText : saveButtonText}
             </Button>
             
+            {onSaveAndNew && (
+                <Button variant="outline" type="button" onClick={onSave} disabled={isSubmitting} className="w-full">
+                    <Save className="mr-2 h-4 w-4" />
+                    Save & Exit
+                </Button>
+            )}
+            
             {(isEditMode && !onSaveAndNew) || isPartialCancel ? (
                  <Button variant="destructive" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <FileX className="mr-2 h-4 w-4" />
@@ -78,18 +85,10 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                 </Button>
             ) : (
                 <>
-                    {onSaveAndNew && (
-                        <Button variant="outline" type="button" onClick={onSave} disabled={isSubmitting} className="w-full">
-                            <Save className="mr-2 h-4 w-4" />
-                            Save & Exit
-                        </Button>
-                    )}
-                    {!onSaveAndNew && (
-                         <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
-                            <FileX className="mr-2 h-4 w-4" />
-                            Exit Without Saving (Ctrl+Alt+E)
-                        </Button>
-                    )}
+                     <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
+                        <FileX className="mr-2 h-4 w-4" />
+                        Exit Without Saving (Ctrl+Alt+E)
+                    </Button>
                      <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
                         <RotateCcw className="mr-2 h-4 w-4" />
                         Reset Form (Ctrl+Alt+R)
@@ -105,10 +104,3 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
         </div>
     );
 }
-
-    
-
-
-
-
-
