@@ -348,7 +348,6 @@ export function BookingsDashboard() {
                       <TableHead className={`${thClass} w-[80px]`}>Action</TableHead>
                       <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                       <TableHead className={thClass}>LR No</TableHead>
-                      <TableHead className={thClass}>Manual LR</TableHead>
                       <TableHead className={thClass}>Date</TableHead>
                       <TableHead className={thClass}>From City</TableHead>
                       <TableHead className={thClass}>To City</TableHead>
@@ -429,7 +428,6 @@ export function BookingsDashboard() {
                               </TooltipContent>
                             </Tooltip>
                           </TableCell>
-                          <TableCell className={tdClass}>{booking.referenceLrNumber || 'N/A'}</TableCell>
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
@@ -459,7 +457,7 @@ export function BookingsDashboard() {
                       ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={17} className="text-center h-24">No bookings found.</TableCell>
+                          <TableCell colSpan={16} className="text-center h-24">No bookings found.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
