@@ -72,9 +72,9 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
             </Button>
             
             {onSaveAndNew && (
-                <Button variant="outline" type="button" onClick={onSave} disabled={isSubmitting} className="w-full">
-                    <Save className="mr-2 h-4 w-4" />
-                    Save & Exit
+                 <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
+                    <FileX className="mr-2 h-4 w-4" />
+                    Exit Without Saving (Ctrl+Alt+E)
                 </Button>
             )}
             
@@ -83,7 +83,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                     <FileX className="mr-2 h-4 w-4" />
                     Exit Without Saving (Ctrl+Alt+E)
                 </Button>
-            ) : (
+            ) : !onSaveAndNew ? (
                 <>
                      <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
                         <FileX className="mr-2 h-4 w-4" />
@@ -94,7 +94,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                         Reset Form (Ctrl+Alt+R)
                     </Button>
                 </>
-            )}
+            ) : null}
 
             <Button variant="outline" onClick={() => setIsCalculatorOpen(true)} type="button" disabled={isSubmitting} className="w-full">
                 <Calculator className="mr-2 h-4 w-4" />
