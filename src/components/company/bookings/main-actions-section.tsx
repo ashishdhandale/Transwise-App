@@ -72,8 +72,8 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
             </Button>
             
             {(isEditMode && !onSaveAndNew) || isPartialCancel ? (
-                 <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
-                    <X className="mr-2 h-4 w-4" />
+                 <Button variant="destructive" onClick={handleExit} disabled={isSubmitting} className="w-full">
+                    <FileX className="mr-2 h-4 w-4" />
                     Exit Without Saving (Ctrl+Alt+E)
                 </Button>
             ) : (
@@ -107,6 +107,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
 }
 
     
+
 
 
 
