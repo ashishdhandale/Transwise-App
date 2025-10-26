@@ -8,10 +8,12 @@ import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Separator } from '@/components/ui/separator';
 import React from 'react';
 import Image from 'next/image';
+import type { PrintFormat } from '../settings/print-format-settings';
 
 interface BookingReceiptProps {
     booking: Booking;
     companyProfile: AllCompanySettings;
+    printFormat?: PrintFormat | null;
     copyType: 'Receiver' | 'Sender' | 'Driver' | 'Office';
 }
 
@@ -32,7 +34,7 @@ const PartyDetails = ({ title, party }: { title: string; party: CustomerData }) 
     </div>
 );
 
-export function BookingReceipt({ booking, companyProfile, copyType }: BookingReceiptProps) {
+export function BookingReceipt({ booking, companyProfile, printFormat, copyType }: BookingReceiptProps) {
 
     const validItemRows = booking.itemRows.filter(item => (item.description || item.itemName) && item.qty && item.actWt && item.chgWt);
     const subTotal = validItemRows.reduce((s, i) => s + Number(i.lumpsum), 0);
@@ -64,6 +66,10 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
         return value.toLocaleString(companyProfile.countryCode, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
+    const isBarcodeVisible = printFormat 
+        ? printFormat.fieldGroups.find(g => g.groupLabel === 'Header')?.fields.find(f => f.id === 'barcode')?.checked ?? true
+        : true;
+
 
     return (
         <div className="relative p-4 font-mono text-xs text-black bg-white">
@@ -88,13 +94,15 @@ export function BookingReceipt({ booking, companyProfile, copyType }: BookingRec
                     <div className="text-right">
                         <p className="font-bold text-sm">Lorry Receipt</p>
                         <p className="font-bold">{copyType} COPY</p>
-                        <Image
-                            src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.trackingId}&code=Code128&dpi=96&imagetype=Png&height=20`}
-                            alt={`Barcode for ${booking.trackingId}`}
-                            width={120}
-                            height={20}
-                            className="ml-auto mt-1"
-                        />
+                        {isBarcodeVisible && (
+                             <Image
+                                src={`https://barcode.tec-it.com/barcode.ashx?data=${booking.trackingId}&code=Code128&dpi=96&imagetype=Png&height=20`}
+                                alt={`Barcode for ${booking.trackingId}`}
+                                width={120}
+                                height={20}
+                                className="ml-auto mt-1"
+                            />
+                        )}
                     </div>
                 </header>
 

@@ -59,6 +59,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { PartialCancellationDialog } from './partial-cancellation-dialog';
 import { Label } from '@/components/ui/label';
 import { ClientOnly } from '@/components/ui/client-only';
+import type { PrintFormat } from '../settings/print-format-settings';
 
 const LOCAL_STORAGE_KEY_BOOKINGS = 'transwise_bookings';
 
@@ -90,6 +91,8 @@ export function BookingsDashboard() {
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [bookingToPrint, setBookingToPrint] = useState<Booking | null>(null);
   const [copyTypeToPrint, setCopyTypeToPrint] = useState<'Sender' | 'Receiver' | 'Driver' | 'Office' | null>(null);
+  const [printFormatToUse, setPrintFormatToUse] = useState<PrintFormat | null>(null);
+  const [printFormats, setPrintFormats] = useState<PrintFormat[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +109,10 @@ export function BookingsDashboard() {
         const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
         setBookings(getBookings());
+        const savedFormats = localStorage.getItem('transwise_print_formats');
+        if (savedFormats) {
+            setPrintFormats(JSON.parse(savedFormats).formats);
+        }
     } catch (error) {
         console.error("Failed to load bookings from localStorage", error);
     }
@@ -148,9 +155,10 @@ export function BookingsDashboard() {
     setSelectedBookingId(null);
   };
 
-  const handlePrintOpen = (booking: Booking, copyType: 'Sender' | 'Receiver' | 'Driver' | 'Office') => {
+  const handlePrintOpen = (booking: Booking, copyType: 'Sender' | 'Receiver' | 'Driver' | 'Office', format: PrintFormat) => {
       setBookingToPrint(booking);
       setCopyTypeToPrint(copyType);
+      setPrintFormatToUse(format);
       setIsPrintDialogOpen(true);
   }
 
@@ -276,7 +284,10 @@ export function BookingsDashboard() {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
-                  <Link href="/company/bookings/new">New Booking (Alt+N)</Link>
+                  <Link href="/company/bookings/new">New Booking (Ctrl+Alt+S)</Link>
+              </Button>
+              <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
+                  <Link href="/company/bookings/new?mode=offline">Add Offline Booking (Alt+O)</Link>
               </Button>
               <Button variant="outline" className="border-gray-400">Hold LR</Button>
             </div>
@@ -337,6 +348,7 @@ export function BookingsDashboard() {
                       <TableHead className={`${thClass} w-[80px]`}>Action</TableHead>
                       <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                       <TableHead className={thClass}>LR No</TableHead>
+                      <TableHead className={thClass}>Manual LR</TableHead>
                       <TableHead className={thClass}>Date</TableHead>
                       <TableHead className={thClass}>From City</TableHead>
                       <TableHead className={thClass}>To City</TableHead>
@@ -383,10 +395,12 @@ export function BookingsDashboard() {
                                       </DropdownMenuSubTrigger>
                                       <DropdownMenuPortal>
                                         <DropdownMenuSubContent>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender')}>Sender Copy</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver')}>Receiver Copy</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver')}>Driver Copy</DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Office')}>Office Copy</DropdownMenuItem>
+                                          <DropdownMenuLabel>Copies</DropdownMenuLabel>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Sender', printFormats.find(f => f.id === 'default-1')!)}>Sender Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Receiver', printFormats.find(f => f.id === 'default-1')!)}>Receiver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Driver', printFormats.find(f => f.id === 'default-1')!)}>Driver Copy</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handlePrintOpen(booking, 'Office', printFormats.find(f => f.id === 'default-1')!)}>Office Copy</DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                       </DropdownMenuPortal>
                                     </DropdownMenuSub>
@@ -407,12 +421,7 @@ export function BookingsDashboard() {
                               <TooltipTrigger asChild>
                                 <p className={cn("cursor-help font-semibold", 
                                     booking.source === 'System' ? 'text-blue-600' : 'text-purple-600'
-                                )}>
-                                  {booking.referenceLrNumber 
-                                      ? `${booking.lrNo} / ${booking.referenceLrNumber}`
-                                      : booking.lrNo
-                                  }
-                                </p>
+                                )}>{booking.lrNo}</p>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>Tracking ID: {booking.trackingId}</p>
@@ -420,6 +429,7 @@ export function BookingsDashboard() {
                               </TooltipContent>
                             </Tooltip>
                           </TableCell>
+                          <TableCell className={tdClass}>{booking.referenceLrNumber || 'N/A'}</TableCell>
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
@@ -449,7 +459,7 @@ export function BookingsDashboard() {
                       ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={16} className="text-center h-24">No bookings found.</TableCell>
+                          <TableCell colSpan={17} className="text-center h-24">No bookings found.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
@@ -489,7 +499,7 @@ export function BookingsDashboard() {
                 </DialogHeader>
                 <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
                     <div ref={printRef}>
-                       <BookingReceipt booking={bookingToPrint} companyProfile={companyProfile} copyType={copyTypeToPrint} />
+                       <BookingReceipt booking={bookingToPrint} companyProfile={companyProfile} printFormat={printFormatToUse} copyType={copyTypeToPrint} />
                     </div>
                 </div>
                 <DialogFooter>

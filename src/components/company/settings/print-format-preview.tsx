@@ -61,6 +61,7 @@ export function PrintFormatPreview({ format }: PrintFormatPreviewProps) {
                     <div className="text-right">
                         {getField('Header', 'grNote') && <p className="font-bold text-sm">GR / CN NOTE</p>}
                         {getField('Header', 'copyType') && <p className="font-bold">PREVIEW COPY</p>}
+                        {getField('Header', 'barcode') && <div className="mt-1 ml-auto h-5 w-24 bg-gray-300 flex items-center justify-center text-[8px]">BARCODE</div>}
                     </div>
                 </div>
             </PreviewSection>
