@@ -10,7 +10,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
@@ -106,6 +105,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
                     ref={inputRef}
                     value={displayValue}
                     onChange={handleInputChange}
+                    onFocus={() => setOpen(true)}
                     onBlur={onBlur}
                     placeholder={placeholder}
                     className="pr-10"
@@ -128,7 +128,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(({
                 <ChevronsUpDown 
                     className="h-4 w-4 shrink-0 opacity-50 cursor-pointer"
                     onClick={() => {
-                        if (!open) setOpen(true);
+                        setOpen(o => !o);
                         inputRef.current?.focus();
                     }}
                  />
