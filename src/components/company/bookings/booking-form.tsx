@@ -385,10 +385,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setFtlDetails({
             vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0,
         });
-        
-        setTimeout(() => {
-            toStationInputRef.current?.focus();
-        }, 0);
 
         if(!isEditMode) toast({ title: "Form Reset", description: "All fields have been cleared." });
     }, [searchParams, cities, isEditMode, toast, allBookings, isBranch, branches, userBranchName]);
@@ -945,4 +941,3 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-

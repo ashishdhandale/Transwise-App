@@ -247,7 +247,6 @@ export function BookingDetailsSection({
                         addMessage="Add New Station"
                         onAdd={handleOpenAddCity}
                         disabled={isViewOnly}
-                        autoOpenOnFocus
                     />
                 </div>
                 <div className="space-y-1">
