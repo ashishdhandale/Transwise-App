@@ -284,7 +284,10 @@ export function BookingsDashboard() {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
-                  <Link href="/company/bookings/new">New Booking (Ctrl+Alt+S)</Link>
+                  <Link href="/company/bookings/new">New Booking (Alt+N)</Link>
+              </Button>
+               <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
+                  <Link href="/company/bookings/new?mode=offline">Add Offline Booking (Alt+O)</Link>
               </Button>
               <Button variant="outline" className="border-gray-400">Hold LR</Button>
             </div>
@@ -431,7 +434,6 @@ export function BookingsDashboard() {
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
-                          <TableCell className={tdClass}>{booking.lrType}</TableCell>
                           <TableCell className={tdClass}>{booking.sender.name}</TableCell>
                           <TableCell className={tdClass}>{booking.receiver.name}</TableCell>
                           <TableCell className={tdClass}>
