@@ -446,7 +446,7 @@ export function ItemDetailsTable({
                     <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed' || isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="Private Mark" className={inputClass} value={row.pvtMark} onChange={(e) => handleInputChange(index, 'pvtMark', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="Invoice No" className={inputClass} value={row.invoiceNo} onChange={(e) => handleInputChange(index, 'invoiceNo', e.target.value)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" placeholder="Declared Value" className={inputClass} value={row.dValue} onChange={(e) => handleInputChange(index, 'dValue', e.target.value)} readOnly={isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="number" placeholder="Declared Value" className={inputClass} value={row.dValue} onChange={(e) => handleInputChange(index, 'dValue', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={`${tdClass} text-center`}>
                         {!isViewOnly && <AlertDialog>
                             <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" disabled={rows.length <= 1}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
