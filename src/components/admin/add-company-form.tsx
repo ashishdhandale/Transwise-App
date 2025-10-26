@@ -400,7 +400,7 @@ export default function AddCompanyForm() {
                     <FormItem>
                       <FormLabel>PAN</FormLabel>
                       <FormControl>
-                        <Input placeholder="ABCDE1234F" {...field} disabled={isDisabled} />
+                        <Input placeholder="ABCDE1234F" {...field} disabled={isDisabled} maxLength={10} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -541,4 +541,3 @@ export default function AddCompanyForm() {
     </ClientOnly>
   );
 }
-

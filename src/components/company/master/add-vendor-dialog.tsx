@@ -168,11 +168,11 @@ export function AddVendorDialog({ isOpen, onOpenChange, onSave, vendor }: AddVen
 
                      <div>
                         <Label htmlFor="gstin">GSTIN</Label>
-                        <Input id="gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} />
+                        <Input id="gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} maxLength={15} />
                     </div>
                      <div>
                         <Label htmlFor="pan">PAN</Label>
-                        <Input id="pan" value={pan} onChange={(e) => setPan(e.target.value)} />
+                        <Input id="pan" value={pan} onChange={(e) => setPan(e.target.value)} maxLength={10} />
                     </div>
                     
                     <div className="md:col-span-2">

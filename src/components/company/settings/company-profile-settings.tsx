@@ -217,7 +217,7 @@ export function CompanyProfileSettings() {
                             <FormItem>
                                 <FormLabel>PAN*</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="ABCDE1234F" {...field} />
+                                    <Input placeholder="ABCDE1234F" {...field} maxLength={10} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -388,4 +388,3 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
-
