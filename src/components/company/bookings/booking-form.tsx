@@ -396,13 +396,14 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }
         
         setTimeout(() => {
-            if (forceFullReset) {
-                 loadTypeInputRef.current?.focus();
-            } else if (lrNumberInputRef?.current) {
+            if (isForInward && lrNumberInputRef?.current) {
                 lrNumberInputRef.current.focus();
+            } else if (forceFullReset && loadTypeInputRef.current) {
+                loadTypeInputRef.current.focus();
             }
         }, 0);
-    }, [searchParams, cities, isEditMode, toast, isBranch, branches, userBranchName, lrNumberInputRef]);
+    }, [searchParams, cities, isEditMode, toast, isBranch, branches, userBranchName, lrNumberInputRef, isForInward]);
+
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -969,5 +970,3 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
-
-    
