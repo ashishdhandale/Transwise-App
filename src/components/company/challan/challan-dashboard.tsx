@@ -49,6 +49,7 @@ import { ClientOnly } from '@/components/ui/client-only';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { InwardChallan } from './inward-challan';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -417,12 +418,20 @@ export function ChallanDashboard() {
                 </DialogHeader>
                 <div className="max-h-[70vh] overflow-y-auto p-2 bg-gray-200 rounded-md">
                     <div ref={printRef} className="bg-white">
-                        <DispatchChallan 
-                            challan={previewData.challan} 
-                            bookings={previewData.bookings}
-                            profile={companyProfile}
-                            driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
-                        />
+                        {previewData.challan.challanType === 'Dispatch' ? (
+                            <DispatchChallan 
+                                challan={previewData.challan} 
+                                bookings={previewData.bookings}
+                                profile={companyProfile}
+                                driverMobile={drivers.find(d => d.name === previewData.challan.driverName)?.mobile}
+                            />
+                        ) : (
+                            <InwardChallan
+                                challan={previewData.challan}
+                                lrDetails={getLrDetailsData().filter(lr => lr.challanId === previewData.challan.challanId)}
+                                profile={companyProfile}
+                            />
+                        )}
                     </div>
                 </div>
                 <DialogFooter>
