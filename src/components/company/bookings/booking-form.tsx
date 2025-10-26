@@ -83,8 +83,6 @@ interface BookingFormProps {
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
-    isOfflineModeProp?: boolean;
-    lrNumberInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -156,13 +154,16 @@ const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isParti
 }
 
 const isRowEmpty = (row: ItemRow) => {
-    return !row.description && !row.qty && !row.actWt && !row.chgWt && row.itemName === '';
+    return !row.itemName && !row.description && !row.qty && !row.actWt && !row.chgWt;
 };
 
 const isRowPartiallyFilled = (row: ItemRow) => {
-    const filledFields = [row.description, row.qty, row.actWt, row.chgWt].filter(Boolean);
-    return filledFields.length > 0 && filledFields.length < 4;
+    const requiredFields = [row.itemName, row.description, row.qty, row.actWt, row.chgWt];
+    const filledCount = requiredFields.filter(Boolean).length;
+    // It's partially filled if it's not empty (filledCount > 0) and not fully filled (filledCount < 5)
+    return filledCount > 0 && filledCount < requiredFields.length;
 };
+
 
 // --- Auto-Learn Standard Rate Logic ---
 const updateStandardRateList = (booking: Booking, sender: Customer, receiver: Customer) => {
@@ -259,7 +260,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isOfflineModeProp, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -267,7 +268,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const isEditMode = (!!trackingId || !!bookingData) && !isViewOnly && !isPartialCancel;
     const isBranch = userRole === 'Branch';
     
-    const [isOfflineMode, setIsOfflineMode] = useState(false);
+    const [isOfflineMode, setIsOfflineMode] = useState(searchParams.get('mode') === 'offline');
     const [itemRows, setItemRows] = useState<ItemRow[]>([]);
     const [bookingType, setBookingType] = useState('TOPAY');
     const [loadType, setLoadType] = useState<'PTL' | 'FTL' | 'LTL'>('LTL');
@@ -351,7 +352,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         const currentBookings = bookingsToUse || allBookings;
         const companyProfile = loadCompanySettingsFromStorage();
 
-        setIsOfflineMode(isOfflineModeProp || false);
+        setIsOfflineMode(searchParams.get('mode') === 'offline');
         
         const companyCode = companyProfile.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
@@ -390,7 +391,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         }, 0);
 
         if(!isEditMode) toast({ title: "Form Reset", description: "All fields have been cleared." });
-    }, [isOfflineModeProp, cities, isEditMode, toast, allBookings, isBranch, branches, userBranchName]);
+    }, [searchParams, cities, isEditMode, toast, allBookings, isBranch, branches, userBranchName]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -654,7 +655,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         await proceedWithSave(paymentMode);
-    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isBranch, attachCc, handleReset, cities, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isBranch, attachCc, handleReset, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
 
 
     useEffect(() => {
@@ -846,7 +847,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     onReset={() => handleReset(allBookings)}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
-                    isOfflineMode={isOfflineMode}
                 />
             </div>
         </div>
@@ -945,3 +945,4 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+

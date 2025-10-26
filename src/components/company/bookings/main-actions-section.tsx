@@ -17,10 +17,9 @@ interface MainActionsSectionProps {
     onReset?: () => void;
     isSubmitting: boolean;
     isViewOnly?: boolean;
-    isOfflineMode: boolean; // Now required
 }
 
-export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isOfflineMode }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
@@ -75,7 +74,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
             {(isEditMode && !onSaveAndNew) || isPartialCancel ? (
                  <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <X className="mr-2 h-4 w-4" />
-                    {isOfflineMode ? 'Cancel' : 'Exit Without Saving (Ctrl+E)'}
+                    Exit Without Saving (Ctrl+E)
                 </Button>
             ) : (
                 <>
@@ -108,4 +107,5 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
 }
 
     
+
 
