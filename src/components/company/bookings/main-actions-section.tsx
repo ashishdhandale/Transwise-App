@@ -76,7 +76,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                 Exit Without Saving (Ctrl+Alt+E)
             </Button>
             
-            {onReset && !isEditMode && !onSaveAndNew && (
+            {onReset && !isEditMode && (
                  <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Reset Form (Ctrl+Alt+R)
@@ -91,3 +91,4 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
         </div>
     );
 }
+
