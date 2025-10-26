@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,10 +26,35 @@ export function PackageTracking() {
   useEffect(() => {
     function loadData() {
         const bookings = getBookings();
-        setAllTrackableItems(bookings);
+        const lrDetails = getLrDetailsData();
+        setAllLrDetails(lrDetails);
+
+        const inwardChallans = getChallanData().filter(c => c.challanType === 'Inward');
+        const inwardChallanIds = new Set(inwardChallans.map(c => c.challanId));
+        const inwardLrs = lrDetails.filter(lr => inwardChallanIds.has(lr.challanId));
+        
+        const inwardBookings: Booking[] = inwardLrs.map(lr => ({
+            trackingId: `inward-${lr.challanId}-${lr.lrNo}`,
+            lrNo: lr.lrNo,
+            bookingDate: lr.bookingDate,
+            fromCity: lr.from,
+            toCity: lr.to,
+            lrType: lr.lrType as any,
+            sender: lr.sender,
+            receiver: lr.receiver,
+            itemDescription: lr.itemDescription,
+            qty: lr.quantity,
+            chgWt: lr.chargeWeight,
+            totalAmount: lr.grandTotal,
+            status: 'In Stock', // Default status for inward items
+            source: 'Inward',
+            itemRows: [],
+        }));
+
+
+        setAllTrackableItems([...bookings, ...inwardBookings]);
         const profile = loadCompanySettingsFromStorage();
         setCompanyProfile(profile);
-        setAllLrDetails(getLrDetailsData());
     }
     loadData();
   }, []);
