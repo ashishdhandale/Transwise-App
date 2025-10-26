@@ -164,9 +164,9 @@ export function PrintFormatSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Print Format Settings</CardTitle>
+        <CardTitle className="font-headline">LR Receipt Format Settings</CardTitle>
         <CardDescription>
-          Create and customize different receipt formats by selecting which fields to print. 
+          Create and customize different LR receipt formats by selecting which fields to print. 
           These formats will appear in the "Print" dropdown on the booking page.
         </CardDescription>
       </CardHeader>

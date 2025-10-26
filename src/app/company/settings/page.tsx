@@ -142,7 +142,7 @@ function CompanySettingsPage() {
                 <TabsList className="h-auto flex-wrap">
                     <TabsTrigger value="profile">Company Profile</TabsTrigger>
                     <TabsTrigger value="booking-form">Booking Form</TabsTrigger>
-                    <TabsTrigger value="print-formats">Print Formats</TabsTrigger>
+                    <TabsTrigger value="print-formats">LR Receipt Format</TabsTrigger>
                     <TabsTrigger value="challan-formats">Challan Formats</TabsTrigger>
                     <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 </TabsList>
