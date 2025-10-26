@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -129,8 +130,13 @@ export function NewInwardChallanForm() {
                         return {
                             ...(booking || {}),
                             trackingId: booking?.trackingId || `temp-${lr.lrNo}-${Math.random()}`,
-                            lrNo: lr.lrNo, lrType: lr.lrType as any, bookingDate: lr.bookingDate,
-                            fromCity: lr.from, toCity: lr.to, sender: lr.sender, receiver: lr.receiver,
+                            lrNo: lr.lrNo,
+                            referenceLrNumber: lr.lrNo, // For inward, lrNo is the manual number
+                            lrType: lr.lrType as any, 
+                            bookingDate: lr.bookingDate,
+                            fromCity: lr.from, toCity: lr.to, 
+                            sender: booking?.sender || { name: lr.sender, gstin: '', address: '', mobile: '' },
+                            receiver: booking?.receiver || { name: lr.receiver, gstin: '', address: '', mobile: '' },
                             itemDescription: lr.itemDescription, qty: lr.quantity, chgWt: lr.chargeWeight,
                             totalAmount: lr.grandTotal,
                             itemRows: booking?.itemRows || [],
@@ -221,7 +227,10 @@ export function NewInwardChallanForm() {
         };
         
         const newLrDetails: LrDetail[] = addedLrs.map(b => ({
-            challanId: finalChallanId, lrNo: b.lrNo, lrType: b.lrType, sender: b.sender, receiver: b.receiver,
+            challanId: finalChallanId, 
+            lrNo: b.referenceLrNumber || b.lrNo, // Use manual LR number
+            lrType: b.lrType, 
+            sender: b.sender, receiver: b.receiver,
             from: b.fromCity, to: b.toCity, bookingDate: b.bookingDate, itemDescription: b.itemDescription,
             quantity: b.qty, actualWeight: b.itemRows.reduce((s, i) => s + Number(i.actWt), 0), chargeWeight: b.chgWt, grandTotal: b.totalAmount
         }));
@@ -230,7 +239,9 @@ export function NewInwardChallanForm() {
     }
 
     const handleSaveAsTemp = () => {
-        const { challan, lrDetails } = createChallanObject('Pending');
+        const result = createChallanObject('Pending');
+        if (!result) return;
+        const { challan, lrDetails } = result;
         
         const allChallans = getChallanData();
         const existingIndex = allChallans.findIndex(c => c.challanId === challan.challanId);
@@ -255,7 +266,9 @@ export function NewInwardChallanForm() {
             return;
         }
         
-        const { challan, lrDetails } = createChallanObject('Finalized', data.inwardId);
+        const result = createChallanObject('Finalized', data.inwardId);
+        if (!result) return;
+        const { challan, lrDetails } = result;
 
         let allChallans = getChallanData();
         
@@ -267,12 +280,8 @@ export function NewInwardChallanForm() {
         let allLrDetails = getLrDetailsData().filter(d => d.challanId !== existingChallanId && d.challanId !== tempChallanId);
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
-
-        // Unlike regular bookings, inward LRs are just added to stock, not the main booking list.
-        // The record of them exists in the `lrDetails` linked to the challan.
-        // We can create a history log for them.
         
-        addedLrs.forEach(lr => {
+        lrDetails.forEach(lr => {
              addHistoryLog(lr.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
@@ -352,7 +361,8 @@ export function NewInwardChallanForm() {
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                                 <CardContent>
-                                    <BookingForm 
+                                    <BookingForm
+                                        isForInward={true}
                                         isOfflineMode={true} 
                                         onSaveAndNew={handleAddOrUpdateLr}
                                         lrNumberInputRef={lrNumberInputRef}
@@ -388,7 +398,7 @@ export function NewInwardChallanForm() {
                                     <TableBody>
                                         {addedLrs.map(lr => (
                                             <TableRow key={lr.trackingId}>
-                                                <TableCell className="whitespace-nowrap">{lr.lrNo}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.referenceLrNumber}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.fromCity}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.sender.name}</TableCell>

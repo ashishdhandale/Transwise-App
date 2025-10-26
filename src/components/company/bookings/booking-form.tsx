@@ -83,6 +83,7 @@ interface BookingFormProps {
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
+    isForInward?: boolean; // New prop for inward context
     lrNumberInputRef?: React.RefObject<HTMLInputElement>;
 }
 
@@ -261,7 +262,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -479,7 +480,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         if (!receiver?.name) newErrors.receiver = true;
         if (!bookingDate) newErrors.bookingDate = true;
         
-        if (isOfflineMode && !referenceLrNumber) newErrors.lrNumber = true;
+        if ((isOfflineMode || isForInward) && !referenceLrNumber) newErrors.lrNumber = true;
 
         setErrors(newErrors);
 
@@ -521,8 +522,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             const finalBranchName = userBranchName || companyProfile.companyName;
 
             const newBookingData: Omit<Booking, 'trackingId'> = {
-                lrNo: currentLrNumber, 
-                referenceLrNumber: isOfflineMode ? referenceLrNumber : undefined,
+                lrNo: (isForInward ? referenceLrNumber : currentLrNumber) || '', 
+                referenceLrNumber: (isOfflineMode || isForInward) ? referenceLrNumber : undefined,
                 bookingDate: bookingDate!.toISOString(),
                 fromCity: fromStation!.name,
                 toCity: toStation!.name,
@@ -540,7 +541,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 additionalCharges: additionalCharges,
                 taxPaidBy: taxPaidBy,
                 branchName: currentBooking?.branchName || finalBranchName,
-                source: isOfflineMode ? 'Offline' : 'System',
+                source: isForInward ? 'Inward' : (isOfflineMode ? 'Offline' : 'System'),
                 companyCode: companyProfile.lrPrefix,
                 branchCode: isBranch ? (branches.find(b => b.name === userBranchName)?.lrPrefix) : (companyProfile.lrPrefix),
                 financialYear: getCurrentFinancialYear(),
@@ -552,6 +553,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
             try {
                 let savedBooking: Booking;
+
+                // Handle inward bookings separately
+                if (isForInward) {
+                    savedBooking = { trackingId: (bookingData?.trackingId) || `temp-inward-${Date.now()}`, ...newBookingData };
+                    if (onSaveAndNew) {
+                        onSaveAndNew(savedBooking, handleReset);
+                    }
+                    return; // Stop execution for inward LRs
+                }
+                
                 const currentAllBookings = getBookings(); // Get the very latest bookings
 
                 if ((isEditMode || isPartialCancel) && currentBooking) {
@@ -657,7 +668,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         await proceedWithSave(paymentMode);
-    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isBranch, attachCc, handleReset, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isBranch, attachCc, handleReset, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
 
 
     useEffect(() => {
@@ -757,6 +768,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const formTitle = isEditMode ? `Edit Booking: ${currentLrNumber}` : 
                       isViewOnly ? `View Booking: ${currentLrNumber}` :
                       isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
+                      isForInward ? 'Add Inward LR' :
                       'Create New Booking';
 
   const formContent = (
@@ -777,6 +789,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             onBookingDateChange={setBookingDate}
             isEditMode={isEditMode}
             isOfflineMode={isOfflineMode}
+            isForInward={isForInward}
             onOfflineModeChange={setIsOfflineMode}
             companyProfile={loadCompanySettingsFromStorage()}
             errors={errors}

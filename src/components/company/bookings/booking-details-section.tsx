@@ -41,6 +41,7 @@ interface BookingDetailsSectionProps {
     onBookingDateChange: (date?: Date) => void;
     isEditMode: boolean;
     isOfflineMode: boolean;
+    isForInward?: boolean; // New prop to identify inward context
     onOfflineModeChange: (isOffline: boolean) => void;
     companyProfile: CompanyProfileFormValues | null;
     errors: { [key: string]: boolean };
@@ -66,6 +67,7 @@ export function BookingDetailsSection({
     onBookingDateChange,
     isEditMode,
     isOfflineMode,
+    isForInward = false,
     onOfflineModeChange,
     companyProfile,
     errors,
@@ -141,44 +143,61 @@ export function BookingDetailsSection({
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
-                <div className="space-y-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                        <Label htmlFor="lrNo">System LR No.</Label>
-                        {!isEditMode && !isViewOnly && (
-                            <div className="flex items-center space-x-1">
-                                <Checkbox
-                                    id="manualLr"
-                                    checked={isOfflineMode}
-                                    onCheckedChange={(checked) => onOfflineModeChange(!!checked)}
-                                />
-                                <Label htmlFor="manualLr" className="text-xs font-normal cursor-pointer">Manual LR</Label>
-                            </div>
-                        )}
-                    </div>
-                    <Input
-                        id="lrNo"
-                        value={lrNumber}
-                        onChange={(e) => onLrNumberChange(e.target.value)}
-                        className={cn(
-                            'font-bold text-muted-foreground bg-muted/50'
-                        )}
-                        readOnly={true}
-                        placeholder={lrNumber || "Generating..."}
-                    />
-                </div>
-                {isOfflineMode && (
-                     <div className="space-y-1">
-                        <Label htmlFor="referenceLrNumber">Pre-printed LR No.*</Label>
+                {isForInward ? (
+                    <div className="space-y-1">
+                        <Label htmlFor="manualLrNumberInput">Enter Manual LR No.*</Label>
                         <Input
-                            id="referenceLrNumber"
+                            id="manualLrNumberInput"
                             value={referenceLrNumber || ''}
                             onChange={(e) => onReferenceLrNumberChange(e.target.value)}
-                            placeholder="Enter manual LR number"
+                            placeholder="Enter pre-printed LR number"
                             disabled={isViewOnly}
-                            className={cn(errors.lrNumber && errorClass)}
+                            className={cn(errors.lrNumber && errorClass, 'font-bold')}
                         />
                     </div>
+                ) : (
+                    <>
+                         <div className="space-y-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                                <Label htmlFor="lrNo">System LR No.</Label>
+                                {!isEditMode && !isViewOnly && (
+                                    <div className="flex items-center space-x-1">
+                                        <Checkbox
+                                            id="manualLr"
+                                            checked={isOfflineMode}
+                                            onCheckedChange={(checked) => onOfflineModeChange(!!checked)}
+                                        />
+                                        <Label htmlFor="manualLr" className="text-xs font-normal cursor-pointer">Manual LR</Label>
+                                    </div>
+                                )}
+                            </div>
+                            <Input
+                                id="lrNo"
+                                value={lrNumber}
+                                onChange={(e) => onLrNumberChange(e.target.value)}
+                                className={cn(
+                                    'font-bold text-muted-foreground bg-muted/50'
+                                )}
+                                readOnly={true}
+                                placeholder={lrNumber || "Generating..."}
+                            />
+                        </div>
+                        {isOfflineMode && (
+                             <div className="space-y-1">
+                                <Label htmlFor="referenceLrNumber">Pre-printed LR No.*</Label>
+                                <Input
+                                    id="referenceLrNumber"
+                                    value={referenceLrNumber || ''}
+                                    onChange={(e) => onReferenceLrNumberChange(e.target.value)}
+                                    placeholder="Enter manual LR number"
+                                    disabled={isViewOnly}
+                                    className={cn(errors.lrNumber && errorClass)}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
+               
                 <div className="space-y-1">
                     <Label htmlFor="bookingDate">Booking Date</Label>
                      <ClientOnly>
