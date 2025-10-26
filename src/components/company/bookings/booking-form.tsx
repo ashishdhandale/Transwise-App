@@ -349,8 +349,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         loadInitialData();
     }, [loadInitialData]);
     
-    const handleReset = useCallback((bookingsToUse?: Booking[]) => {
-        const currentBookings = bookingsToUse || allBookings;
+    const handleReset = useCallback(() => {
+        // Always get the freshest data from storage on reset
+        const currentBookings = getBookings(); 
         const companyProfile = loadCompanySettingsFromStorage();
 
         setIsOfflineMode(searchParams.get('mode') === 'offline');
@@ -392,7 +393,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setTimeout(() => {
             loadTypeInputRef.current?.focus();
         }, 0);
-    }, [searchParams, cities, isEditMode, toast, allBookings, isBranch, branches, userBranchName]);
+    }, [searchParams, cities, isEditMode, toast, isBranch, branches, userBranchName]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -430,7 +431,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else {
             // -- New Booking Mode --
-             handleReset(allBookings);
+             handleReset();
         }
 
     }, [isLoading, trackingId, bookingData, allBookings, customers, cities, handleReset]);
@@ -638,7 +639,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     
                     if (onSaveAndNew) {
                         onSaveAndNew(savedBooking, () => {
-                             handleReset(updatedBookings);
+                             handleReset();
                         });
                     } else if (onSaveSuccess) {
                         // This case is for the edit dialog
@@ -675,7 +676,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         }
                         break;
                     case 'r':
-                        if(!isEditMode && onReset) handleReset(allBookings);
+                        if(!isEditMode && handleReset) handleReset();
                         break;
                 }
             }
@@ -685,7 +686,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [handleSaveOrUpdate, router, handleReset, isEditMode, allBookings, isSubmitting, onClose]);
+    }, [handleSaveOrUpdate, router, handleReset, isEditMode, isSubmitting, onClose]);
 
     
     const handleDownloadPdf = async () => {
@@ -739,8 +740,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        const latestBookings = getBookings(); 
-        handleReset(latestBookings);
+        handleReset();
     }, [handleReset]);
 
     const handleDialogClose = (open: boolean) => {
@@ -847,7 +847,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose ? onClose : () => router.push('/company/bookings')}
-                    onReset={!isEditMode ? () => handleReset(allBookings) : undefined}
+                    onReset={!isEditMode ? handleReset : undefined}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
                 />
