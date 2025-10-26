@@ -106,17 +106,18 @@ export function StockDashboard() {
   }, []);
   
   const filteredStock = useMemo(() => {
-      if (!searchTerm) {
-          return stock;
-      }
-      const lowercasedQuery = searchTerm.toLowerCase();
-      return stock.filter(item => 
-          item.lrNo.toLowerCase().includes(lowercasedQuery) ||
-          item.fromCity.toLowerCase().includes(lowercasedQuery) ||
-          item.toCity.toLowerCase().includes(lowercasedQuery) ||
-          item.sender.name.toLowerCase().includes(lowercasedQuery) ||
-          item.receiver.name.toLowerCase().includes(lowercasedQuery)
-      );
+    let filteredData = stock;
+    if (searchTerm) {
+        const lowercasedQuery = searchTerm.toLowerCase();
+        filteredData = stock.filter(item => 
+            item.lrNo.toLowerCase().includes(lowercasedQuery) ||
+            item.fromCity.toLowerCase().includes(lowercasedQuery) ||
+            item.toCity.toLowerCase().includes(lowercasedQuery) ||
+            item.sender.name.toLowerCase().includes(lowercasedQuery) ||
+            item.receiver.name.toLowerCase().includes(lowercasedQuery)
+        );
+    }
+    return filteredData.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
   }, [stock, searchTerm]);
 
   const totalQty = useMemo(() => filteredStock.reduce((acc, item) => acc + item.qty, 0), [filteredStock]);
