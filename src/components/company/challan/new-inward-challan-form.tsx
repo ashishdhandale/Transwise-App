@@ -342,6 +342,13 @@ export function NewInwardChallanForm() {
                                     <FormField name="inwardDate" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Inward Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
                                     )}/>
+                                    <FormField name="fromStation" control={form.control} render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel>From Station</FormLabel>
+                                            <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
                                     <FormField name="receivedFromParty" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Received From Party</FormLabel><FormControl><Input placeholder="e.g. Origin Branch Name" {...field} /></FormControl><FormMessage /></FormItem>
                                     )}/>
@@ -353,13 +360,6 @@ export function NewInwardChallanForm() {
                                     )}/>
                                     <FormField name="driverName" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Driver Name" {...field} /></FormControl></FormItem>
-                                    )}/>
-                                    <FormField name="fromStation" control={form.control} render={({ field }) => (
-                                        <FormItem className="md:col-span-2">
-                                            <FormLabel>From Station</FormLabel>
-                                            <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
-                                            <FormMessage />
-                                        </FormItem>
                                     )}/>
                                 </CardContent>
                             </CollapsibleContent>
@@ -417,8 +417,8 @@ export function NewInwardChallanForm() {
                                                 <TableCell className="whitespace-nowrap">{lr.lrNo}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.fromCity}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.toCity}</TableCell>
-                                                <TableCell className="whitespace-nowrap">{lr.sender}</TableCell>
-                                                <TableCell className="whitespace-nowrap">{lr.receiver}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.sender.name}</TableCell>
+                                                <TableCell className="whitespace-nowrap">{lr.receiver.name}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.itemDescription}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.qty}</TableCell>
                                                 <TableCell className="whitespace-nowrap">{lr.chgWt.toFixed(2)}</TableCell>
@@ -462,6 +462,20 @@ export function NewInwardChallanForm() {
                     <div id="form-actions-placeholder"></div>
                 </form>
             </Form>
+            
+            <div id="save-temp-button-handler" onClick={handleSaveAsTemp} style={{ display: 'none' }} />
+            <script
+                dangerouslySetInnerHTML={{
+                __html: `
+                    const button = document.getElementById('save-temp-button');
+                    const handler = document.getElementById('save-temp-button-handler');
+                    if (button && handler) {
+                        button.addEventListener('click', () => handler.click());
+                    }
+                `,
+                }}
+            />
+
 
             {bookingDataToEdit && (
                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
