@@ -420,7 +420,10 @@ export function BookingsDashboard() {
                               <TooltipTrigger asChild>
                                 <p className={cn("cursor-help font-semibold", 
                                     booking.source === 'System' ? 'text-blue-600' : 'text-purple-600'
-                                )}>{booking.lrNo}</p>
+                                )}>
+                                    {booking.lrNo}
+                                    {booking.source === 'Offline' && booking.referenceLrNumber && ` / ${booking.referenceLrNumber}`}
+                                </p>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>Tracking ID: {booking.trackingId}</p>
