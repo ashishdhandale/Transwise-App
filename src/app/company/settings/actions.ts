@@ -40,6 +40,11 @@ export const defaultSettings: AllCompanySettings = {
     countryCode: 'en-IN',
     grnFormat: 'with_char',
     lrFormat: 'compact',
+    bankName: '',
+    accountHolderName: '',
+    accountNo: '',
+    ifscCode: '',
+    bankBranch: '',
     // General Instructions
     defaultFromStation: 'Nagpur',
     printCopy: ['printAll', 'printSender', 'printReceiver', 'printDriver', 'printOffice'],

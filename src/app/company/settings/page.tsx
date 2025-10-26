@@ -41,6 +41,11 @@ const combinedSettingsSchema = z.object({
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
   lrFormat: z.enum(['compact', 'padded', 'serial_only']).default('compact'),
+  bankName: z.string().optional(),
+  accountHolderName: z.string().optional(),
+  accountNo: z.string().optional(),
+  ifscCode: z.string().optional(),
+  bankBranch: z.string().optional(),
   
   // General Instructions fields
   defaultFromStation: z.string().optional(),
@@ -197,5 +202,3 @@ export default function CompanySettingsRootPage() {
     </Suspense>
   );
 }
-
-    

@@ -34,6 +34,12 @@ export const profileSchema = z.object({
   countryCode: z.string().min(2, 'Country code is required (e.g., en-IN).'),
   grnFormat: z.enum(['plain', 'with_char']).default('with_char'),
   lrFormat: z.enum(['compact', 'padded', 'serial_only']).default('compact'),
+  // Bank Details
+  bankName: z.string().optional(),
+  accountHolderName: z.string().optional(),
+  accountNo: z.string().optional(),
+  ifscCode: z.string().optional(),
+  bankBranch: z.string().optional(),
 }).superRefine((data, ctx) => {
     if (data.grnFormat === 'with_char' && (!data.lrPrefix || data.lrPrefix.length < 2)) {
         ctx.addIssue({
@@ -260,6 +266,80 @@ export function CompanyProfileSettings() {
                         )}
                     />
                      <div className="md:col-span-3"><Separator className="my-2"/></div>
+
+                    <div className="md:col-span-3">
+                        <h3 className="text-lg font-semibold mb-4 text-primary">Bank Account Details</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                            <FormField
+                                control={form.control}
+                                name="bankName"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Bank Name</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="e.g., State Bank of India" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="accountHolderName"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Account Holder Name</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="e.g., Your Company Name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="accountNo"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Account Number</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="Enter Account Number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="ifscCode"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>IFSC Code</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="Enter IFSC Code" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="bankBranch"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Bank Branch</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="e.g., Main Branch, Nagpur" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+
+                     <div className="md:col-span-3"><Separator className="my-2"/></div>
                     <FormField
                         control={form.control}
                         name="currency"
@@ -308,7 +388,3 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
-
-    
-
-    
