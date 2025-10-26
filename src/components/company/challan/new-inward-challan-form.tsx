@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -135,15 +134,15 @@ export function NewInwardChallanForm() {
                             lrType: lr.lrType as any, 
                             bookingDate: lr.bookingDate,
                             fromCity: lr.from, toCity: lr.to, 
-                            sender: booking?.sender || { name: lr.sender, gstin: '', address: '', mobile: '' },
-                            receiver: booking?.receiver || { name: lr.receiver, gstin: '', address: '', mobile: '' },
+                            sender: booking?.sender || { name: lr.sender.name, gstin: lr.sender.gstin, address: lr.sender.address, mobile: lr.sender.mobile },
+                            receiver: booking?.receiver || { name: lr.receiver.name, gstin: lr.receiver.gstin, address: lr.receiver.address, mobile: lr.receiver.mobile },
                             itemDescription: lr.itemDescription, qty: lr.quantity, chgWt: lr.chargeWeight,
                             totalAmount: lr.grandTotal,
                             itemRows: booking?.itemRows || [],
                             status: booking?.status || 'In Stock',
                             source: 'Inward',
                             loadType: booking?.loadType || 'LTL'
-                        }
+                        } as Booking;
                     });
                     setAddedLrs(reconstructedBookings);
                 }
@@ -481,5 +480,7 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
+
+    
 
     

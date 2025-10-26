@@ -350,12 +350,14 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         loadInitialData();
     }, [loadInitialData]);
     
-    const handleReset = useCallback(() => {
+    const handleReset = useCallback((forceFullReset: boolean = true) => {
         // Always get the freshest data from storage on reset
         const currentBookings = getBookings(); 
         const companyProfile = loadCompanySettingsFromStorage();
 
-        setIsOfflineMode(searchParams.get('mode') === 'offline');
+        if (forceFullReset) {
+            setIsOfflineMode(searchParams.get('mode') === 'offline');
+        }
         
         const companyCode = companyProfile.lrPrefix || 'COMP';
         const currentBranch = isBranch ? branches.find(b => b.name === userBranchName) : undefined;
@@ -389,12 +391,18 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0,
         });
 
-        if(!isEditMode) toast({ title: "Form Reset", description: "All fields have been cleared." });
+        if (forceFullReset && !isEditMode) {
+            toast({ title: "Form Reset", description: "All fields have been cleared." });
+        }
         
         setTimeout(() => {
-            loadTypeInputRef.current?.focus();
+            if (forceFullReset) {
+                 loadTypeInputRef.current?.focus();
+            } else if (lrNumberInputRef?.current) {
+                lrNumberInputRef.current.focus();
+            }
         }, 0);
-    }, [searchParams, cities, isEditMode, toast, isBranch, branches, userBranchName]);
+    }, [searchParams, cities, isEditMode, toast, isBranch, branches, userBranchName, lrNumberInputRef]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
@@ -522,7 +530,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             const finalBranchName = userBranchName || companyProfile.companyName;
 
             const newBookingData: Omit<Booking, 'trackingId'> = {
-                lrNo: (isForInward ? referenceLrNumber : currentLrNumber) || '', 
+                lrNo: (isForInward && referenceLrNumber ? referenceLrNumber : currentLrNumber) || '', 
                 referenceLrNumber: (isOfflineMode || isForInward) ? referenceLrNumber : undefined,
                 bookingDate: bookingDate!.toISOString(),
                 fromCity: fromStation!.name,
@@ -558,7 +566,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 if (isForInward) {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `temp-inward-${Date.now()}`, ...newBookingData };
                     if (onSaveAndNew) {
-                        onSaveAndNew(savedBooking, handleReset);
+                        onSaveAndNew(savedBooking, () => handleReset(false));
                     }
                     return; // Stop execution for inward LRs
                 }
@@ -650,7 +658,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     
                     if (onSaveAndNew) {
                         onSaveAndNew(savedBooking, () => {
-                             handleReset();
+                             handleReset(true);
                         });
                     } else if (onSaveSuccess) {
                         // This case is for the edit dialog
@@ -687,7 +695,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         }
                         break;
                     case 'r':
-                        if(!isEditMode && handleReset) handleReset();
+                        if(!isEditMode) handleReset(true);
                         break;
                 }
             }
@@ -751,7 +759,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     const handleNewBooking = useCallback(() => {
         setShowReceipt(false);
-        handleReset();
+        handleReset(true);
     }, [handleReset]);
 
     const handleDialogClose = (open: boolean) => {
@@ -860,7 +868,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose ? onClose : () => router.push('/company/bookings')}
-                    onReset={!isEditMode ? handleReset : undefined}
+                    onReset={!isEditMode ? () => handleReset(true) : undefined}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
                 />
@@ -961,3 +969,5 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     </ClientOnly>
   );
 }
+
+    
