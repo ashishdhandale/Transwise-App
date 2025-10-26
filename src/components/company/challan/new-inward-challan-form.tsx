@@ -339,11 +339,14 @@ export function NewInwardChallanForm() {
                                     <FormField name="inwardId" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Inward ID</FormLabel><FormControl><Input {...field} readOnly className="font-bold text-red-600 bg-red-50"/></FormControl></FormItem>
                                     )}/>
+                                    <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Original Challan No</FormLabel><FormControl><Input placeholder="Original Challan No" {...field} /></FormControl></FormItem>
+                                    )}/>
                                     <FormField name="inwardDate" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Inward Date</FormLabel><FormControl><DatePicker date={field.value} setDate={field.onChange} /></FormControl></FormItem>
                                     )}/>
                                     <FormField name="fromStation" control={form.control} render={({ field }) => (
-                                        <FormItem className="md:col-span-2">
+                                        <FormItem>
                                             <FormLabel>From Station</FormLabel>
                                             <Combobox options={cityOptions} value={field.value} onChange={field.onChange} placeholder="Select Origin..." />
                                             <FormMessage />
@@ -351,9 +354,6 @@ export function NewInwardChallanForm() {
                                     )}/>
                                     <FormField name="receivedFromParty" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Received From Party</FormLabel><FormControl><Input placeholder="e.g. Origin Branch Name" {...field} /></FormControl><FormMessage /></FormItem>
-                                    )}/>
-                                    <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
-                                        <FormItem><FormLabel>Original Challan No</FormLabel><FormControl><Input placeholder="Original Challan No" {...field} /></FormControl></FormItem>
                                     )}/>
                                     <FormField name="vehicleNo" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Vehicle No.</FormLabel><FormControl><Input placeholder="e.g. MH31CQ1234" {...field} /></FormControl><FormMessage /></FormItem>
