@@ -46,9 +46,9 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
     if (isPartialCancel) {
         saveButtonText = 'Confirm Cancellation';
     } else if (isEditMode) {
-        saveButtonText = 'Update Booking (Ctrl+S)';
+        saveButtonText = 'Update Booking (Alt+S)';
     } else {
-        saveButtonText = onSaveAndNew ? 'Save & Add New (Ctrl+S)' : 'Save Booking (Ctrl+S)';
+        saveButtonText = onSaveAndNew ? 'Save & Add New (Alt+S)' : 'Save Booking (Alt+S)';
     }
 
     let savingButtonText: string;
@@ -74,7 +74,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
             {(isEditMode && !onSaveAndNew) || isPartialCancel ? (
                  <Button variant="outline" onClick={handleExit} disabled={isSubmitting} className="w-full">
                     <X className="mr-2 h-4 w-4" />
-                    Exit Without Saving (Ctrl+E)
+                    Exit Without Saving (Alt+E)
                 </Button>
             ) : (
                 <>
@@ -87,12 +87,12 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                     {!onSaveAndNew && (
                          <Button variant="destructive" type="button" onClick={() => router.push('/company/bookings')} disabled={isSubmitting} className="w-full">
                             <FileX className="mr-2 h-4 w-4" />
-                            Exit Without Saving (Ctrl+E)
+                            Exit Without Saving (Alt+E)
                         </Button>
                     )}
                      <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
                         <RotateCcw className="mr-2 h-4 w-4" />
-                        Reset Form (Ctrl+R)
+                        Reset Form (Alt+R)
                     </Button>
                 </>
             )}
@@ -107,5 +107,6 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
 }
 
     
+
 
 

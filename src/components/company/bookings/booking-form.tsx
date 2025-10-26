@@ -661,7 +661,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey) {
+            if (event.altKey) {
                 switch (event.key) {
                     case 's':
                         event.preventDefault();
