@@ -45,7 +45,7 @@ interface BookingDetailsSectionProps {
     companyProfile: CompanyProfileFormValues | null;
     errors: { [key: string]: boolean };
     isViewOnly?: boolean;
-    toStationInputRef?: React.Ref<HTMLButtonElement>;
+    loadTypeInputRef?: React.Ref<HTMLButtonElement>;
 }
 
 
@@ -70,7 +70,7 @@ export function BookingDetailsSection({
     companyProfile,
     errors,
     isViewOnly = false,
-    toStationInputRef,
+    loadTypeInputRef,
 }: BookingDetailsSectionProps) {
     const { toast } = useToast();
     const [allCities, setAllCities] = useState<City[]>([]);
@@ -212,7 +212,7 @@ export function BookingDetailsSection({
                 <div className="space-y-1">
                     <Label htmlFor="loadType">Load Type</Label>
                     <Select value={loadType} onValueChange={onLoadTypeChange} disabled={isViewOnly}>
-                        <SelectTrigger id="loadType">
+                        <SelectTrigger id="loadType" ref={loadTypeInputRef}>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -237,7 +237,6 @@ export function BookingDetailsSection({
                 <div className={cn('space-y-1 rounded-md', errors.toStation && 'ring-2 ring-red-500/50')}>
                     <Label htmlFor="toStation">To Station</Label>
                     <Combobox
-                        ref={toStationInputRef}
                         options={stationOptions}
                         value={toStation?.name || ''}
                         onChange={handleToStationChange}

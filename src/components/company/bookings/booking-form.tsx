@@ -83,6 +83,7 @@ interface BookingFormProps {
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
+    lrNumberInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 const generateChangeDetails = (oldBooking: Booking, newBooking: Booking, isPartialCancel = false): string => {
@@ -260,7 +261,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -319,7 +320,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [cities, setCities] = useState<City[]>([]);
     const [rateLists, setRateLists] = useState<RateList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const toStationInputRef = useRef<HTMLButtonElement>(null);
+    const loadTypeInputRef = useRef<HTMLButtonElement>(null);
 
     const loadInitialData = useCallback(() => {
         try {
@@ -387,6 +388,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         });
 
         if(!isEditMode) toast({ title: "Form Reset", description: "All fields have been cleared." });
+        
+        setTimeout(() => {
+            loadTypeInputRef.current?.focus();
+        }, 0);
     }, [searchParams, cities, isEditMode, toast, allBookings, isBranch, branches, userBranchName]);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
@@ -755,7 +760,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
   const formContent = (
      <div className="space-y-4">
         <BookingDetailsSection
-            toStationInputRef={toStationInputRef}
+            loadTypeInputRef={loadTypeInputRef}
             bookingType={bookingType}
             onBookingTypeChange={setBookingType}
             fromStation={fromStation}
