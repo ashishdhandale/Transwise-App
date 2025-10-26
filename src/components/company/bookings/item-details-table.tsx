@@ -89,6 +89,13 @@ interface ItemDetailsTableProps {
     onQuotationApply: (lrType: string) => void;
 }
 
+const MandetoryHeader = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex items-center justify-center">
+        {children}
+        <span className="text-destructive">*</span>
+    </div>
+);
+
 export function ItemDetailsTable({ 
     rows, 
     onRowsChange, 
@@ -406,12 +413,12 @@ export function ItemDetailsTable({
               <TableRow>
                 <TableHead className={cn(thClass, 'w-[30px]')}>#</TableHead>
                 <TableHead className={cn(thClass, 'w-[160px]')}>EWB No</TableHead>
-                <TableHead className={cn(thClass, 'w-[160px]')}>Item Name*</TableHead>
-                <TableHead className={cn(thClass, 'w-[160px]')}>Description*</TableHead>
+                <TableHead className={cn(thClass, 'w-[160px]')}><MandetoryHeader>Item Name</MandetoryHeader></TableHead>
+                <TableHead className={cn(thClass, 'w-[160px]')}><MandetoryHeader>Description</MandetoryHeader></TableHead>
                 <TableHead className={cn(thClass, 'w-[80px]')}>Wt/Unit</TableHead>
-                <TableHead className={cn(thClass, 'w-[60px]')}>Qty*</TableHead>
-                <TableHead className={cn(thClass, 'w-[60px]')}>Act.wt*</TableHead>
-                <TableHead className={cn(thClass, 'w-[60px]')}>Chg.wt*</TableHead>
+                <TableHead className={cn(thClass, 'w-[60px]')}><MandetoryHeader>Qty</MandetoryHeader></TableHead>
+                <TableHead className={cn(thClass, 'w-[60px]')}><MandetoryHeader>Act.wt</MandetoryHeader></TableHead>
+                <TableHead className={cn(thClass, 'w-[60px]')}><MandetoryHeader>Chg.wt</MandetoryHeader></TableHead>
                 <TableHead className={cn(thClass, 'w-[60px]')}>Rate</TableHead>
                 <TableHead className={cn(thClass, 'w-[100px]')}>Freight ON</TableHead>
                 <TableHead className={cn(thClass, 'w-[100px]')}>Lumpsum</TableHead>
