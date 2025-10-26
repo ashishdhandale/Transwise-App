@@ -662,18 +662,20 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.ctrlKey && event.altKey) {
+                event.preventDefault();
                 switch (event.key.toLowerCase()) {
                     case 's':
-                        event.preventDefault();
                         if(!isSubmitting) handleSaveOrUpdate();
                         break;
                     case 'e':
-                        event.preventDefault();
-                        router.push('/company/bookings');
+                        if (onClose) {
+                            onClose();
+                        } else {
+                            router.push('/company/bookings');
+                        }
                         break;
                     case 'r':
-                        event.preventDefault();
-                        if(!isEditMode) handleReset(allBookings);
+                        if(!isEditMode && onReset) handleReset(allBookings);
                         break;
                 }
             }
@@ -683,7 +685,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [handleSaveOrUpdate, router, handleReset, isEditMode, allBookings, isSubmitting]);
+    }, [handleSaveOrUpdate, router, handleReset, isEditMode, allBookings, isSubmitting, onClose]);
 
     
     const handleDownloadPdf = async () => {
@@ -844,8 +846,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     onSaveAndNew={onSaveAndNew ? () => handleSaveOrUpdate() : undefined}
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
-                    onClose={onClose} 
-                    onReset={() => handleReset(allBookings)}
+                    onClose={onClose ? onClose : () => router.push('/company/bookings')}
+                    onReset={!isEditMode ? () => handleReset(allBookings) : undefined}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
                 />

@@ -71,30 +71,17 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                 {isSubmitting ? savingButtonText : saveButtonText}
             </Button>
             
-            {onSaveAndNew && (
-                 <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
-                    <FileX className="mr-2 h-4 w-4" />
-                    Exit Without Saving (Ctrl+Alt+E)
+            <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
+                <FileX className="mr-2 h-4 w-4" />
+                Exit Without Saving (Ctrl+Alt+E)
+            </Button>
+            
+            {onReset && !isEditMode && !onSaveAndNew && (
+                 <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset Form (Ctrl+Alt+R)
                 </Button>
             )}
-            
-            {(isEditMode && !onSaveAndNew) || isPartialCancel ? (
-                 <Button variant="destructive" onClick={handleExit} disabled={isSubmitting} className="w-full">
-                    <FileX className="mr-2 h-4 w-4" />
-                    Exit Without Saving (Ctrl+Alt+E)
-                </Button>
-            ) : !onSaveAndNew ? (
-                <>
-                     <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
-                        <FileX className="mr-2 h-4 w-4" />
-                        Exit Without Saving (Ctrl+Alt+E)
-                    </Button>
-                     <Button variant="outline" type="button" onClick={onReset} disabled={isSubmitting} className="w-full">
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Reset Form (Ctrl+Alt+R)
-                    </Button>
-                </>
-            ) : null}
 
             <Button variant="outline" onClick={() => setIsCalculatorOpen(true)} type="button" disabled={isSubmitting} className="w-full">
                 <Calculator className="mr-2 h-4 w-4" />
