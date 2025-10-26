@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -437,13 +436,13 @@ export function ItemDetailsTable({
                         <Combobox options={uppercaseItemOptions} value={row.itemName} onChange={(val) => handleInputChange(index, 'itemName', val)} placeholder="Search item..." searchPlaceholder="Search items..." notFoundMessage="No item found." addMessage="Add New Item" onAdd={handleOpenAddItem} disabled={isViewOnly} />
                     </TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="type description" className={inputClass} value={row.description} onChange={(e) => handleInputChange(index, 'description', e.target.value)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.wtPerUnit} onChange={(e) => handleInputChange(index, 'wtPerUnit', e.target.value)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} readOnly={isViewOnly} /></TableCell>
-                    <TableCell className={tdClass}><Input type="text" ref={el => inputRefs.current[`rate-${row.id}`] = el} inputMode="decimal" className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed' || isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="number" className={inputClass} value={row.wtPerUnit} onChange={(e) => handleInputChange(index, 'wtPerUnit', e.target.value)} readOnly={isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="number" className={inputClass} value={row.qty} onChange={(e) => handleInputChange(index, 'qty', e.target.value)} readOnly={isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="number" className={inputClass} value={row.actWt} onChange={(e) => handleInputChange(index, 'actWt', e.target.value)} readOnly={isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="number" ref={el => inputRefs.current[`chgWt-${row.id}`] = el} className={inputClass} value={row.chgWt} onChange={(e) => handleInputChange(index, 'chgWt', e.target.value)} onBlur={() => handleChgWtBlur(index)} readOnly={isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="number" ref={el => inputRefs.current[`rate-${row.id}`] = el} className={inputClass} value={row.rate} onChange={(e) => handleInputChange(index, 'rate', e.target.value)} readOnly={row.freightOn === 'Fixed' || isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Select value={row.freightOn} onValueChange={(val) => handleInputChange(index, 'freightOn', val)} disabled={isViewOnly}><SelectTrigger className={inputClass}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Act.wt">Act.wt</SelectItem><SelectItem value="Chg.wt">Chg.wt</SelectItem><SelectItem value="Fixed">Fixed</SelectItem><SelectItem value="Quantity">Quantity</SelectItem></SelectContent></Select></TableCell>
-                    <TableCell className={tdClass}><Input type="text" inputMode="decimal" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed' || isViewOnly} /></TableCell>
+                    <TableCell className={tdClass}><Input type="number" className={inputClass} value={row.lumpsum} onChange={(e) => handleInputChange(index, 'lumpsum', e.target.value)} readOnly={row.freightOn !== 'Fixed' || isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="Private Mark" className={inputClass} value={row.pvtMark} onChange={(e) => handleInputChange(index, 'pvtMark', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="text" placeholder="Invoice No" className={inputClass} value={row.invoiceNo} onChange={(e) => handleInputChange(index, 'invoiceNo', e.target.value)} readOnly={isViewOnly} /></TableCell>
                     <TableCell className={tdClass}><Input type="number" placeholder="Declared Value" className={inputClass} value={row.dValue} onChange={(e) => handleInputChange(index, 'dValue', e.target.value)} readOnly={isViewOnly} /></TableCell>
