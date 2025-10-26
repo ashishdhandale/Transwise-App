@@ -230,7 +230,7 @@ export function CompanyProfileSettings() {
                             <FormItem>
                                 <FormLabel>GST No</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="15-digit GSTIN" {...field} />
+                                    <Input placeholder="15-digit GSTIN" {...field} maxLength={15} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -388,3 +388,4 @@ export function CompanyProfileSettings() {
     </Card>
   );
 }
+

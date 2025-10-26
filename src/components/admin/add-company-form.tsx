@@ -414,7 +414,7 @@ export default function AddCompanyForm() {
                   <FormItem>
                     <FormLabel>GST No</FormLabel>
                     <FormControl>
-                      <Input placeholder="15-digit GSTIN" {...field} disabled={isDisabled} />
+                      <Input placeholder="15-digit GSTIN" {...field} disabled={isDisabled} maxLength={15} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -541,3 +541,4 @@ export default function AddCompanyForm() {
     </ClientOnly>
   );
 }
+
