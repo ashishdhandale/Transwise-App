@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import type { Challan } from '@/lib/challan-data';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
+import { format } from 'date-fns';
 
 interface ChallanDetailsProps {
     challan: Challan;
@@ -34,8 +35,8 @@ export function ChallanDetails({ challan, profile }: ChallanDetailsProps) {
                         <h4 className="font-semibold text-sm border-b pb-1">Challan Information</h4>
                         <DetailItem label="Challan No" value={challan.challanId} isEmphasized profile={profile} />
                         <DetailItem label="Challan Type" value={challan.challanType} isEmphasized profile={profile} />
-                        <DetailItem label="Dispatch Date" value={challan.dispatchDate} isEmphasized profile={profile} />
-                        <DetailItem label="Inward Date" value={challan.inwardDate} isEmphasized profile={profile} />
+                        <DetailItem label="Dispatch Date" value={format(new Date(challan.dispatchDate), 'dd-MMM-yyyy')} isEmphasized profile={profile} />
+                        <DetailItem label="Inward Date" value={challan.inwardDate ? format(new Date(challan.inwardDate), 'dd-MMM-yyyy') : 'N/A'} isEmphasized profile={profile} />
                          <DetailItem label="From Station" value={challan.fromStation} profile={profile} />
                         <DetailItem label="To Station" value={challan.toStation} profile={profile} />
                     </div>

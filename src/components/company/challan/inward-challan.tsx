@@ -1,11 +1,11 @@
 
-
 'use client';
 
 import type { Challan, LrDetail } from '@/lib/challan-data';
 import type { AllCompanySettings } from '@/app/company/settings/actions';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import React from 'react';
+import { format } from 'date-fns';
 
 interface InwardChallanProps {
     challan: Challan;
@@ -37,7 +37,7 @@ export function InwardChallan({ challan, lrDetails, profile }: InwardChallanProp
                     <p><span className="font-semibold">Received From:</span> {challan.receivedFromParty}</p>
                 </div>
                 <div>
-                    <p><span className="font-semibold">Inward Date:</span> {challan.inwardDate}</p>
+                    <p><span className="font-semibold">Inward Date:</span> {format(new Date(challan.inwardDate), 'dd-MMM-yyyy')}</p>
                     <p><span className="font-semibold">Vehicle No:</span> {challan.vehicleNo}</p>
                     <p><span className="font-semibold">Driver:</span> {challan.driverName}</p>
                 </div>
@@ -59,7 +59,7 @@ export function InwardChallan({ challan, lrDetails, profile }: InwardChallanProp
                         {lrDetails.map((lr) => (
                             <TableRow key={lr.lrNo}>
                                 <TableCell className={tdClass}>{lr.lrNo}</TableCell>
-                                <TableCell className={tdClass}>{lr.bookingDate}</TableCell>
+                                <TableCell className={tdClass}>{format(new Date(lr.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                                 <TableCell className={tdClass}>{lr.receiver.name}</TableCell>
                                 <TableCell className={`${tdClass} text-center`}>{lr.quantity}</TableCell>
                                 <TableCell className={tdClass}>{lr.itemDescription}</TableCell>

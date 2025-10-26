@@ -50,6 +50,7 @@ import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InwardChallan } from './inward-challan';
+import { format } from 'date-fns';
 
 const thClass = "bg-primary/10 text-primary font-semibold whitespace-nowrap";
 const tdClass = "whitespace-nowrap";
@@ -93,7 +94,7 @@ const ChallanTable = ({ title, challans, onDelete, onReprint, onEdit, onCancel, 
                         {challan.challanType}
                     </Badge>
                   </TableCell>}
-                  <TableCell className={tdClass}>{challan.dispatchDate}</TableCell>
+                  <TableCell className={tdClass}>{format(new Date(challan.dispatchDate), 'dd-MMM-yyyy')}</TableCell>
                   <TableCell className={tdClass}>{challan.fromStation}</TableCell>
                   <TableCell className={tdClass}>{challan.toStation}</TableCell>
                   <TableCell className={tdClass}>{challan.vehicleNo || 'N/A'}</TableCell>
