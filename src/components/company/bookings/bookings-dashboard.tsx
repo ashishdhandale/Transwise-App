@@ -243,6 +243,7 @@ export function BookingsDashboard() {
 
   const filteredBookings = useMemo(() => {
     const sortedBookings = [...bookings]
+        .filter(b => b.source !== 'Inward' && !b.lrNo.includes('-R')) // Exclude inward and return bookings
         .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
 
     if (!debouncedSearchQuery) {
@@ -276,6 +277,9 @@ export function BookingsDashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
                   <Link href="/company/bookings/new">New Booking (Alt+N)</Link>
+              </Button>
+              <Button asChild className="bg-cyan-500 hover:bg-cyan-600">
+                  <Link href="/company/bookings/new?mode=offline">Add Offline Booking (Alt+O)</Link>
               </Button>
               <Button variant="outline" className="border-gray-400">Hold LR</Button>
             </div>
@@ -336,7 +340,6 @@ export function BookingsDashboard() {
                       <TableHead className={`${thClass} w-[80px]`}>Action</TableHead>
                       <TableHead className={`${thClass} w-[50px]`}>#</TableHead>
                       <TableHead className={thClass}>LR No</TableHead>
-                      <TableHead className={thClass}>Pre-printed LR</TableHead>
                       <TableHead className={thClass}>Date</TableHead>
                       <TableHead className={thClass}>From City</TableHead>
                       <TableHead className={thClass}>To City</TableHead>
@@ -407,7 +410,12 @@ export function BookingsDashboard() {
                               <TooltipTrigger asChild>
                                 <p className={cn("cursor-help font-semibold", 
                                     booking.source === 'System' ? 'text-blue-600' : 'text-purple-600'
-                                )}>{booking.lrNo}</p>
+                                )}>
+                                  {booking.referenceLrNumber 
+                                      ? `${booking.lrNo} / ${booking.referenceLrNumber}`
+                                      : booking.lrNo
+                                  }
+                                </p>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>Tracking ID: {booking.trackingId}</p>
@@ -415,7 +423,6 @@ export function BookingsDashboard() {
                               </TooltipContent>
                             </Tooltip>
                           </TableCell>
-                          <TableCell className={tdClass}>{booking.referenceLrNumber || 'N/A'}</TableCell>
                           <TableCell className={tdClass}>{format(parseISO(booking.bookingDate), 'dd-MMM-yy')}</TableCell>
                           <TableCell className={tdClass}>{booking.fromCity}</TableCell>
                           <TableCell className={tdClass}>{booking.toCity}</TableCell>
@@ -554,3 +561,5 @@ export function BookingsDashboard() {
     </ClientOnly>
   );
 }
+
+    
