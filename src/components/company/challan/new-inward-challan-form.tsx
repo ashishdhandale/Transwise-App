@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -113,12 +114,12 @@ export function NewInwardChallanForm() {
                     }
                     form.reset({
                         inwardId: challan.inwardId,
-                        inwardDate: challan.inwardDate ? new Date(challan.inwardDate) : new Date(),
                         originalChallanNo: challan.originalChallanNo,
+                        inwardDate: challan.inwardDate ? new Date(challan.inwardDate) : new Date(),
+                        fromStation: challan.fromStation,
                         receivedFromParty: challan.receivedFromParty,
                         vehicleNo: challan.vehicleNo,
                         driverName: challan.driverName,
-                        fromStation: challan.fromStation,
                         remarks: challan.remark
                     });
                     
@@ -163,18 +164,20 @@ export function NewInwardChallanForm() {
             const updatedLrs = [...addedLrs];
             updatedLrs[existingLrIndex] = booking;
             setAddedLrs(updatedLrs);
-            toast({ title: 'LR Updated', description: `LR# ${booking.lrNo} has been updated in the list.` });
+            toast({ title: 'LR Updated', description: `LR# ${booking.referenceLrNumber} has been updated in the list.` });
             setIsEditDialogOpen(false); // Close dialog on update
         } else {
             // Add new LR
             setAddedLrs(prev => [...prev, { ...booking, trackingId: `temp-${Date.now()}` }]);
-            toast({ title: 'LR Added', description: `LR# ${booking.lrNo} has been added to the list.` });
+            toast({ title: 'LR Added', description: `LR# ${booking.referenceLrNumber} has been added to the list.` });
         }
         setBookingDataToEdit(null); // Reset editing state
         if (resetFormCallback) {
             resetFormCallback();
         }
-        lrNumberInputRef.current?.focus();
+        if (lrNumberInputRef.current) {
+            lrNumberInputRef.current.focus();
+        }
     };
     
     const handleEditLrClick = (lrToEdit: Booking) => {
@@ -280,25 +283,11 @@ export function NewInwardChallanForm() {
         allLrDetails.push(...lrDetails);
         saveLrDetailsData(allLrDetails);
         
-        // Add finalized LRs to the main bookings data as 'In Stock'
-        const currentBookings = getBookings();
-        const newBookingsFromInward = addedLrs.map(inwardLr => ({
-            ...inwardLr,
-            lrNo: inwardLr.referenceLrNumber!, // Use the manual number as the official LR number
-            status: 'In Stock' as const,
-            source: 'Inward' as const,
-            trackingId: inwardLr.trackingId.startsWith('temp-') ? `TRK-${Date.now()}-${Math.random()}` : inwardLr.trackingId,
-        }));
-
-        const updatedBookings = [...currentBookings, ...newBookingsFromInward];
-        saveBookings(updatedBookings);
-
-
         lrDetails.forEach(lr => {
              addHistoryLog(lr.lrNo, 'In Stock', 'System (Inward)', `Received via Inward Challan ${data.inwardId} at ${challan.toStation}.`);
         });
         
-        toast({ title: isEditMode ? 'Inward Challan Updated' : 'Inward Challan Saved', description: `Successfully processed Inward Challan ${data.inwardId}. ${newBookingsFromInward.length} LRs added to stock.`});
+        toast({ title: isEditMode ? 'Inward Challan Updated' : 'Inward Challan Saved', description: `Successfully processed Inward Challan ${data.inwardId}. ${lrDetails.length} LRs recorded.`});
         router.push('/company/challan');
     };
 
@@ -335,7 +324,7 @@ export function NewInwardChallanForm() {
                                     <FormField name="inwardId" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Inward ID</FormLabel><FormControl><Input {...field} readOnly className="font-bold text-red-600 bg-red-50"/></FormControl></FormItem>
                                     )}/>
-                                    <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
+                                     <FormField name="originalChallanNo" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Original Challan No</FormLabel><FormControl><Input placeholder="Original Challan No" {...field} /></FormControl></FormItem>
                                     )}/>
                                     <FormField name="inwardDate" control={form.control} render={({ field }) => (
@@ -356,6 +345,9 @@ export function NewInwardChallanForm() {
                                     )}/>
                                     <FormField name="driverName" control={form.control} render={({ field }) => (
                                         <FormItem><FormLabel>Driver Name</FormLabel><FormControl><Input placeholder="Driver Name" {...field} /></FormControl></FormItem>
+                                    )}/>
+                                     <FormField name="remarks" control={form.control} render={({ field }) => (
+                                        <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Note any damages, etc." {...field} rows={1}/></FormControl></FormItem>
                                     )}/>
                                 </CardContent>
                             </CollapsibleContent>
@@ -447,14 +439,6 @@ export function NewInwardChallanForm() {
                         </CardContent>
                     </Card>
                     
-                    <Card>
-                        <CardHeader><CardTitle>Remarks</CardTitle></CardHeader>
-                        <CardContent>
-                            <FormField name="remarks" control={form.control} render={({ field }) => (
-                                <FormItem><Textarea placeholder="Note any damages, shortages, or other remarks..." {...field} /></FormItem>
-                            )}/>
-                        </CardContent>
-                    </Card>
                     <div id="form-actions-placeholder"></div>
                 </form>
             </Form>
@@ -477,11 +461,11 @@ export function NewInwardChallanForm() {
                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                     <DialogContent className="max-w-7xl h-[90vh] flex flex-col">
                         <DialogHeader>
-                            <DialogTitle>Edit Inward LR Details: {bookingDataToEdit.lrNo}</DialogTitle>
+                            <DialogTitle>Edit Inward LR Details: {bookingDataToEdit.referenceLrNumber}</DialogTitle>
                         </DialogHeader>
                         <div className="flex-grow overflow-auto pr-6">
                             <BookingForm
-                                isOfflineMode={true}
+                                isForInward={true}
                                 bookingData={bookingDataToEdit}
                                 onSaveSuccess={handleAddOrUpdateLr}
                                 onClose={() => setIsEditDialogOpen(false)}

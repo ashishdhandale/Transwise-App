@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -62,11 +63,39 @@ export function StockDashboard() {
   const loadStock = () => {
      try {
         const allBookings = getBookings();
+        // Regular bookings in stock
         const currentStockBookings = allBookings.filter(booking => 
             ['In Stock', 'In Loading', 'In HOLD'].includes(booking.status)
         );
-        setStock(currentStockBookings);
-        setLrDetails(getLrDetailsData());
+
+        // LRs from inward challans
+        const allLrDetails = getLrDetailsData();
+        setLrDetails(allLrDetails);
+
+        const inwardChallans = getChallanData().filter(c => c.challanType === 'Inward' && c.status === 'Finalized');
+        const inwardChallanIds = new Set(inwardChallans.map(c => c.challanId));
+        const inwardLrs = allLrDetails.filter(lr => inwardChallanIds.has(lr.challanId));
+        
+        const inwardBookingsAsStock: Booking[] = inwardLrs.map(lr => ({
+            trackingId: `inward-${lr.challanId}-${lr.lrNo}`,
+            lrNo: lr.lrNo,
+            bookingDate: lr.bookingDate,
+            fromCity: lr.from,
+            toCity: lr.to,
+            lrType: lr.lrType as any,
+            sender: lr.sender,
+            receiver: lr.receiver,
+            itemDescription: lr.itemDescription,
+            qty: lr.quantity,
+            chgWt: lr.chargeWeight,
+            totalAmount: lr.grandTotal,
+            status: 'In Stock',
+            source: 'Inward',
+            itemRows: [],
+        }));
+
+
+        setStock([...currentStockBookings, ...inwardBookingsAsStock]);
     } catch (error) {
         console.error("Failed to load stock from localStorage", error);
     }
@@ -165,8 +194,8 @@ export function StockDashboard() {
       challanId: newChallanId,
       lrNo: b.lrNo,
       lrType: b.lrType,
-      sender: b.sender.name,
-      receiver: b.receiver.name,
+      sender: b.sender,
+      receiver: b.receiver,
       from: b.fromCity,
       to: b.toCity,
       bookingDate: format(new Date(b.bookingDate), 'yyyy-MM-dd'),
@@ -261,7 +290,7 @@ export function StockDashboard() {
                             />
                         </TableHead>
                         <TableHead className={cn(thClass)}>LR No.</TableHead>
-                        <TableHead className={cn(thClass)}>Booking Type</TableHead>
+                        <TableHead className={cn(thClass)}>Source</TableHead>
                         <TableHead className={cn(thClass)}>Booking Date</TableHead>
                         <TableHead className={cn(thClass)}>From</TableHead>
                         <TableHead className={cn(thClass)}>To</TableHead>
@@ -296,7 +325,9 @@ export function StockDashboard() {
                                     : item.lrNo
                                 }
                             </TableCell>
-                            <TableCell className={cn(tdClass)}>{item.lrType}</TableCell>
+                             <TableCell className={cn(tdClass)}>
+                                <Badge variant={item.source === 'Inward' ? 'secondary' : 'outline'}>{item.source}</Badge>
+                            </TableCell>
                             <TableCell className={cn(tdClass)}>{format(parseISO(item.bookingDate), 'dd-MMM-yyyy')}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.fromCity}</TableCell>
                             <TableCell className={cn(tdClass)}>{item.toCity}</TableCell>
