@@ -82,7 +82,7 @@ export function InwardChallan({ challan, lrDetails, profile }: InwardChallanProp
                     </TableBody>
                     <TableFooter>
                         <TableRow className="font-bold">
-                            <TableCell className={`${tdClass} text-right`} colSpan={3}>TOTAL:</TableCell>
+                            <TableCell className={`${tdClass} text-right`} colSpan={3}>TOTAL LR: {lrDetails.length}</TableCell>
                             <TableCell className={`${tdClass} text-center`}>{totalPackages}</TableCell>
                             <TableCell className={tdClass} colSpan={2}></TableCell>
                             <TableCell className={`${tdClass} text-right`}>{totalActualWeight.toFixed(2)}</TableCell>
