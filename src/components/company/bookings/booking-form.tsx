@@ -349,8 +349,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     useEffect(() => {
         loadInitialData();
     }, [loadInitialData]);
-    
-    const handleReset = useCallback((forceFullReset: boolean = true) => {
+
+    const handleReset = useCallback((forceFullReset: boolean) => {
         const currentBookings = getBookings(); 
         const companyProfile = loadCompanySettingsFromStorage();
 
@@ -439,13 +439,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 setFtlDetails(bookingToLoad.ftlDetails);
             }
         } else if (!isEditMode) {
-            // -- New Booking Mode --
-             handleReset(false); // Pass false to avoid the toast on initial load
+            handleReset(false); // Pass false to avoid the toast on initial load
         }
-
-    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, handleReset, isEditMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, isEditMode]);
     
-    // Stable reset function that doesn't depend on many props.
     const stableReset = useCallback(() => {
         handleReset(true);
     }, [handleReset]);
