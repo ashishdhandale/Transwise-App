@@ -164,7 +164,7 @@ export function AddDriverDialog({ isOpen, onOpenChange, onSave, driver }: AddDri
                     </div>
                     <div>
                         <Label htmlFor="mobile">Mobile No.</Label>
-                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={15} />
+                        <Input id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10} />
                     </div>
                      <div>
                         <Label htmlFor="blood-group">Blood Group</Label>
