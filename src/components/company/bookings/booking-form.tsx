@@ -443,7 +443,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
              handleReset(false); // Pass false to avoid the toast on initial load
         }
 
-    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, handleReset]);
+    }, [isLoading, trackingId, bookingData, allBookings, customers, cities]);
+    
+    // Stable reset function that doesn't depend on many props.
+    const stableReset = useCallback(() => {
+        handleReset(true);
+    }, [handleReset]);
     
 
     useEffect(() => {
@@ -695,7 +700,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                         }
                         break;
                     case 'r':
-                        if(!isEditMode) handleReset(true);
+                        if(!isEditMode) stableReset();
                         break;
                 }
             }
@@ -705,7 +710,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [handleSaveOrUpdate, router, handleReset, isEditMode, isSubmitting, onClose]);
+    }, [handleSaveOrUpdate, router, stableReset, isEditMode, isSubmitting, onClose]);
 
     
     const handleDownloadPdf = async () => {
