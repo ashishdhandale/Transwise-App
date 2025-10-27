@@ -52,59 +52,97 @@ export function ChargesSection({
     useEffect(() => {
       if (profile?.additionalCharges) {
         setChargeSettings(profile.additionalCharges.filter(c => c.isVisible));
-      }
-    }, [profile]);
-    
-    const handleLiveCalcChange = (chargeId: string, field: 'rate' | 'type', value: string | number) => {
-         setLiveCalc(prev => {
-            const current = prev[chargeId] || { 
-                rate: chargeSettings.find(c => c.id === chargeId)?.value || 0,
-                type: chargeSettings.find(c => c.id === chargeId)?.calculationType || 'fixed'
-            };
-            const numericValue = field === 'rate' ? Number(value) : value;
-            return {
-                ...prev,
-                [chargeId]: { ...current, [field]: numericValue }
-            };
-        });
-    }
-
-    const calculateCharge = useCallback((charge: ChargeSetting, currentLiveCalc: typeof liveCalc) => {
-        const calcDetails = currentLiveCalc[charge.id];
-        const rate = calcDetails ? calcDetails.rate : charge.value || 0;
-        const type = calcDetails ? calcDetails.type : charge.calculationType;
         
-        switch (type) {
-            case 'fixed': return rate;
-            case 'per_kg_actual': return itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0) * rate;
-            case 'per_kg_charge': return itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0) * rate;
-            case 'per_quantity': return itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate;
-            default: return 0;
-        }
-    }, [itemRows]);
+        // Initialize booking charges from initial values or defaults
+        const initialBookingCharges: { [key: string]: number } = {};
+        const initialLiveCalc: typeof liveCalc = {};
 
-    useEffect(() => {
-        const newBookingCharges: { [key: string]: number } = {};
-        
-        chargeSettings.forEach(charge => {
-             if (charge.isEditable) {
-                newBookingCharges[charge.id] = calculateCharge(charge, liveCalc);
-            } else if (initialCharges && initialCharges[charge.id] !== undefined) {
-                newBookingCharges[charge.id] = initialCharges[charge.id];
-            } else {
-                newBookingCharges[charge.id] = charge.value || 0;
+        profile.additionalCharges.forEach(charge => {
+            if (charge.isVisible) {
+                initialBookingCharges[charge.id] = initialCharges?.[charge.id] ?? charge.value ?? 0;
+                if (charge.isEditable) {
+                    initialLiveCalc[charge.id] = {
+                        rate: initialCharges?.[charge.id] && charge.calculationType === 'fixed' ? initialCharges[charge.id] : (charge.value || 0),
+                        type: charge.calculationType,
+                    };
+                }
             }
         });
-        
-        if (JSON.stringify(newBookingCharges) !== JSON.stringify(bookingCharges)) {
-            setBookingCharges(newBookingCharges);
-        }
-
-    }, [chargeSettings, itemRows, calculateCharge, liveCalc, initialCharges, bookingCharges]);
+        setBookingCharges(initialBookingCharges);
+        setLiveCalc(initialLiveCalc);
+      }
+    }, [profile, initialCharges]);
     
+    const handleLiveCalcChange = (chargeId: string, field: 'rate' | 'type', value: string | number) => {
+         const newLiveCalcState = {
+            ...liveCalc,
+            [chargeId]: {
+                ...(liveCalc[chargeId] || { rate: 0, type: 'fixed' }),
+                [field]: value,
+            },
+        };
+        setLiveCalc(newLiveCalcState);
+        recalculateCharge(chargeId, newLiveCalcState[chargeId].rate, newLiveCalcState[chargeId].type);
+    }
+    
+    const recalculateCharge = useCallback((chargeId: string, rate: number, type: ChargeSetting['calculationType']) => {
+        let calculatedValue = 0;
+        switch (type) {
+            case 'fixed': calculatedValue = rate; break;
+            case 'per_kg_actual': calculatedValue = itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0) * rate; break;
+            case 'per_kg_charge': calculatedValue = itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0) * rate; break;
+            case 'per_quantity': calculatedValue = itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate; break;
+        }
+        
+        setBookingCharges(prev => {
+            const newCharges = { ...prev, [chargeId]: calculatedValue };
+            notifyParentOfChanges(newCharges);
+            return newCharges;
+        });
+
+    }, [itemRows, notifyParentOfChanges]);
+
+
+    // Effect to recalculate all dynamic charges when itemRows change
     useEffect(() => {
-        notifyParentOfChanges(bookingCharges);
-    }, [bookingCharges, notifyParentOfChanges]);
+        let hasChanged = false;
+        const newCharges = { ...bookingCharges };
+
+        chargeSettings.forEach(charge => {
+            if (charge.isEditable) { // Recalculate only dynamic charges
+                const calcDetails = liveCalc[charge.id];
+                if (calcDetails) {
+                    let calculatedValue = 0;
+                    const { rate, type } = calcDetails;
+                     switch (type) {
+                        case 'fixed': calculatedValue = rate; break;
+                        case 'per_kg_actual': calculatedValue = itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0) * rate; break;
+                        case 'per_kg_charge': calculatedValue = itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0) * rate; break;
+                        case 'per_quantity': calculatedValue = itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate; break;
+                    }
+                    if (newCharges[charge.id] !== calculatedValue) {
+                        newCharges[charge.id] = calculatedValue;
+                        hasChanged = true;
+                    }
+                }
+            }
+        });
+
+        if (hasChanged) {
+            setBookingCharges(newCharges);
+            notifyParentOfChanges(newCharges);
+        }
+    }, [itemRows, chargeSettings, liveCalc, bookingCharges, notifyParentOfChanges]);
+
+
+    const handleManualChargeChange = (chargeId: string, value: string) => {
+        const numericValue = Number(value) || 0;
+        setBookingCharges(prev => {
+            const newCharges = { ...prev, [chargeId]: numericValue };
+            notifyParentOfChanges(newCharges);
+            return newCharges;
+        });
+    };
     
     const additionalChargesTotal = useMemo(() => {
         return Object.values(bookingCharges).reduce((sum, charge) => sum + Number(charge || 0), 0);
@@ -173,23 +211,18 @@ export function ChargesSection({
                             <Input 
                                 type="number" 
                                 value={bookingCharges[charge.id]?.toFixed(2) || '0.00'}
-                                readOnly
-                                className="h-7 text-sm w-full bg-muted" 
+                                onChange={(e) => handleManualChargeChange(charge.id, e.target.value)}
+                                className="h-7 text-sm w-full bg-card" 
                             />
                         </div>
                     ) : (
                          <div className="grid grid-cols-1 w-[100px]">
                             <Input 
                                 type="number" 
-                                value={bookingCharges[charge.id] || ''}
+                                value={bookingCharges[charge.id] ?? ''}
+                                onChange={(e) => handleManualChargeChange(charge.id, e.target.value)}
                                 readOnly={isViewOnly}
-                                className="h-7 text-sm bg-muted/50 justify-self-end" 
-                                onChange={(e) => {
-                                    if (isViewOnly) return;
-                                    const newCharges = { ...bookingCharges, [charge.id]: Number(e.target.value) || 0 };
-                                    setBookingCharges(newCharges);
-                                    notifyParentOfChanges(newCharges);
-                                }}
+                                className="h-7 text-sm bg-card justify-self-end" 
                             />
                         </div>
                     )}
