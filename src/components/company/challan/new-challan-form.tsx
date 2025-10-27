@@ -319,8 +319,37 @@ export function NewChallanForm() {
         };
 
         const lowerQuery = lrSearchTerm.toLowerCase().trim();
+
+        // 1. Get regular bookings in stock
         const availableStock = allBookings.filter(b => b.status === 'In Stock');
-        const results = availableStock.filter(b => 
+        
+        // 2. Get LRs from finalized Inward Challans
+        const inwardChallans = getChallanData().filter(c => c.challanType === 'Inward' && c.status === 'Finalized');
+        const inwardChallanIds = new Set(inwardChallans.map(c => c.challanId));
+        const inwardLrDetails = getLrDetailsData().filter(lr => inwardChallanIds.has(lr.challanId));
+
+        const inwardBookings: Booking[] = inwardLrDetails.map(lr => ({
+            trackingId: `inward-${lr.challanId}-${lr.lrNo}`,
+            lrNo: lr.lrNo,
+            bookingDate: lr.bookingDate,
+            fromCity: lr.from,
+            toCity: lr.to,
+            lrType: lr.lrType as any,
+            sender: lr.sender,
+            receiver: lr.receiver,
+            itemDescription: lr.itemDescription,
+            qty: lr.quantity,
+            chgWt: lr.chargeWeight,
+            totalAmount: lr.grandTotal,
+            status: 'In Stock',
+            source: 'Inward',
+            itemRows: [], // Inward items don't have detailed rows in this context
+        }));
+
+        // 3. Combine both sources
+        const allAvailableLrs = [...availableStock, ...inwardBookings];
+        
+        const results = allAvailableLrs.filter(b => 
             b.lrNo.toLowerCase().includes(lowerQuery) ||
             (b.referenceLrNumber && b.referenceLrNumber.toLowerCase().includes(lowerQuery))
         );
