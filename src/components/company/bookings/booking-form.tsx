@@ -351,7 +351,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     }, [loadInitialData]);
     
     const handleReset = useCallback((forceFullReset: boolean = true) => {
-        // Always get the freshest data from storage on reset
         const currentBookings = getBookings(); 
         const companyProfile = loadCompanySettingsFromStorage();
 
@@ -402,7 +401,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 loadTypeInputRef.current.focus();
             }
         }, 0);
-    }, [searchParams, cities, isEditMode, toast, isBranch, branches, userBranchName, lrNumberInputRef, isForInward]);
+    }, [searchParams, isEditMode, toast, isBranch, userBranchName, lrNumberInputRef, isForInward, branches, cities]);
 
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
@@ -441,7 +440,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             }
         } else {
             // -- New Booking Mode --
-             handleReset();
+             handleReset(false); // Pass false to avoid the toast on initial load
         }
 
     }, [isLoading, trackingId, bookingData, allBookings, customers, cities, handleReset]);
