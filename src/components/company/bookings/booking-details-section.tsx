@@ -176,7 +176,7 @@ export function BookingDetailsSection({
                                 value={lrNumber}
                                 onChange={(e) => onLrNumberChange(e.target.value)}
                                 className={cn(
-                                    'font-bold text-muted-foreground bg-muted/50'
+                                    'font-bold text-lg text-foreground bg-muted/50'
                                 )}
                                 readOnly={true}
                                 placeholder={lrNumber || "Generating..."}
