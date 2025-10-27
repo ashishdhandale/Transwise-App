@@ -186,7 +186,9 @@ export function ChargesSection({
                                 className="h-7 text-sm bg-muted/50 justify-self-end" 
                                 onChange={(e) => {
                                     if (isViewOnly) return;
-                                    setBookingCharges(prev => ({...prev, [charge.id]: Number(e.target.value) || 0 }))
+                                    const newCharges = { ...bookingCharges, [charge.id]: Number(e.target.value) || 0 };
+                                    setBookingCharges(newCharges);
+                                    notifyParentOfChanges(newCharges);
                                 }}
                             />
                         </div>
