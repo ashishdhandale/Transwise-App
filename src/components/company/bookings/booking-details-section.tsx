@@ -159,7 +159,7 @@ export function BookingDetailsSection({
                     <>
                          <div className="space-y-1">
                             <div className="flex items-center space-x-2 mb-1">
-                                <Label htmlFor="lrNo">System LR No.</Label>
+                                <Label htmlFor="lrNo" className="font-bold">LR No</Label>
                                 {!isEditMode && !isViewOnly && (
                                     <div className="flex items-center space-x-1">
                                         <Checkbox
