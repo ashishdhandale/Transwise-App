@@ -401,7 +401,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 loadTypeInputRef.current.focus();
             }
         }, 0);
-    }, [searchParams, isEditMode, toast, isBranch, userBranchName, lrNumberInputRef, isForInward, branches, cities]);
+    }, [isBranch, userBranchName, branches, cities, toast, isEditMode, isForInward, lrNumberInputRef, searchParams]);
 
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
@@ -438,12 +438,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             if (bookingToLoad.ftlDetails) {
                 setFtlDetails(bookingToLoad.ftlDetails);
             }
-        } else {
+        } else if (!isEditMode) {
             // -- New Booking Mode --
              handleReset(false); // Pass false to avoid the toast on initial load
         }
 
-    }, [isLoading, trackingId, bookingData, allBookings, customers, cities]);
+    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, handleReset, isEditMode]);
     
     // Stable reset function that doesn't depend on many props.
     const stableReset = useCallback(() => {
