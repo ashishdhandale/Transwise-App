@@ -82,34 +82,15 @@ export function ChargesSection({
             },
         };
         setLiveCalc(newLiveCalcState);
-        recalculateCharge(chargeId, newLiveCalcState[chargeId].rate, newLiveCalcState[chargeId].type);
     }
     
-    const recalculateCharge = useCallback((chargeId: string, rate: number, type: ChargeSetting['calculationType']) => {
-        let calculatedValue = 0;
-        switch (type) {
-            case 'fixed': calculatedValue = rate; break;
-            case 'per_kg_actual': calculatedValue = itemRows.reduce((sum, row) => sum + (parseFloat(row.actWt) || 0), 0) * rate; break;
-            case 'per_kg_charge': calculatedValue = itemRows.reduce((sum, row) => sum + (parseFloat(row.chgWt) || 0), 0) * rate; break;
-            case 'per_quantity': calculatedValue = itemRows.reduce((sum, row) => sum + (parseInt(row.qty, 10) || 0), 0) * rate; break;
-        }
-        
-        setBookingCharges(prev => {
-            const newCharges = { ...prev, [chargeId]: calculatedValue };
-            notifyParentOfChanges(newCharges);
-            return newCharges;
-        });
-
-    }, [itemRows, notifyParentOfChanges]);
-
-
-    // Effect to recalculate all dynamic charges when itemRows change
+    // Effect to recalculate all dynamic charges when itemRows or liveCalc change
     useEffect(() => {
         let hasChanged = false;
         const newCharges = { ...bookingCharges };
 
         chargeSettings.forEach(charge => {
-            if (charge.isEditable) { // Recalculate only dynamic charges
+            if (charge.isEditable) { 
                 const calcDetails = liveCalc[charge.id];
                 if (calcDetails) {
                     let calculatedValue = 0;
@@ -130,18 +111,18 @@ export function ChargesSection({
 
         if (hasChanged) {
             setBookingCharges(newCharges);
-            notifyParentOfChanges(newCharges);
         }
-    }, [itemRows, chargeSettings, liveCalc, bookingCharges, notifyParentOfChanges]);
+    }, [itemRows, chargeSettings, liveCalc]);
+    
+    // This effect will run AFTER the state has been updated, solving the render issue.
+    useEffect(() => {
+        notifyParentOfChanges(bookingCharges);
+    }, [bookingCharges, notifyParentOfChanges]);
 
 
     const handleManualChargeChange = (chargeId: string, value: string) => {
         const numericValue = Number(value) || 0;
-        setBookingCharges(prev => {
-            const newCharges = { ...prev, [chargeId]: numericValue };
-            notifyParentOfChanges(newCharges);
-            return newCharges;
-        });
+        setBookingCharges(prev => ({ ...prev, [chargeId]: numericValue }));
     };
     
     const additionalChargesTotal = useMemo(() => {
@@ -221,7 +202,7 @@ export function ChargesSection({
                                 type="number" 
                                 value={bookingCharges[charge.id] ?? ''}
                                 onChange={(e) => handleManualChargeChange(charge.id, e.target.value)}
-                                readOnly={isViewOnly}
+                                readOnly={isViewOnly || charge.isEditable}
                                 className="h-7 text-sm bg-card justify-self-end" 
                             />
                         </div>
