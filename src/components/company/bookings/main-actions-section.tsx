@@ -17,9 +17,10 @@ interface MainActionsSectionProps {
     onReset?: () => void;
     isSubmitting: boolean;
     isViewOnly?: boolean;
+    isForInward?: boolean;
 }
 
-export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isForInward }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
@@ -71,7 +72,7 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
                 {isSubmitting ? savingButtonText : saveButtonText}
             </Button>
             
-            {!onSaveAndNew && (
+            {!onSaveAndNew && !isForInward && (
                 <>
                     <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
                         <FileX className="mr-2 h-4 w-4" />
@@ -88,13 +89,16 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
             )}
 
 
-            <Button variant="outline" onClick={() => setIsCalculatorOpen(true)} type="button" disabled={isSubmitting} className="w-full">
-                <Calculator className="mr-2 h-4 w-4" />
-                Calculator
-            </Button>
+            {!isForInward && (
+                <Button variant="outline" onClick={() => setIsCalculatorOpen(true)} type="button" disabled={isSubmitting} className="w-full">
+                    <Calculator className="mr-2 h-4 w-4" />
+                    Calculator
+                </Button>
+            )}
             <CalculatorDialog isOpen={isCalculatorOpen} onOpenChange={setIsCalculatorOpen} />
         </div>
     );
 }
+
 
 

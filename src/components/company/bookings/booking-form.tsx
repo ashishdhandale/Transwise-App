@@ -421,7 +421,7 @@ setCurrentSerialNumber(nextSerialNumber);
         
         if (bookingToLoad) {
             // -- Edit Mode --
-            setItemRows((bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
+            setItemRows((bookingToLoad.itemRows || [createEmptyRow(1)]).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
 
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
@@ -449,7 +449,7 @@ setCurrentSerialNumber(nextSerialNumber);
             handleReset(false); // Pass false to avoid the toast on initial load
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoading, trackingId, bookingData, customers, cities, isEditMode]);
+    }, [isLoading, trackingId, bookingData, isEditMode]);
     
     const stableReset = useCallback(() => {
         handleReset(true);
@@ -539,7 +539,6 @@ setCurrentSerialNumber(nextSerialNumber);
             
             const filledRows = itemRows.filter(row => !isRowEmpty(row)).map(row => {
                 const newRow = { ...row };
-                // Ensure all non-mandatory fields have a value, defaulting to "0".
                 const fieldsToDefault: (keyof ItemRow)[] = ['ewbNo', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue', 'wtPerUnit', 'itemName', 'description'];
                 fieldsToDefault.forEach(field => {
                     if (newRow[field] === '' || newRow[field] === null || newRow[field] === undefined) {
@@ -864,12 +863,10 @@ setCurrentSerialNumber(nextSerialNumber);
         
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
              <ChargesSection
-                basicFreight={basicFreightMemo}
                 itemRows={itemRows}
                 onGrandTotalChange={handleGrandTotalChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
-                onChargesChange={setAdditionalCharges}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
@@ -879,12 +876,14 @@ setCurrentSerialNumber(nextSerialNumber);
                 />
                  <MainActionsSection 
                     onSave={() => handleSaveOrUpdate()} 
+                    onSaveAndNew={isForInward ? (() => handleSaveOrUpdate()) : undefined}
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose}
                     onReset={!isEditMode ? () => handleReset(true) : undefined}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
+                    isForInward={isForInward}
                 />
             </div>
         </div>
