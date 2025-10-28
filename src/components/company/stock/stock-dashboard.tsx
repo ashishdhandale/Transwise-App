@@ -91,7 +91,7 @@ export function StockDashboard() {
                 qty: lr.quantity,
                 chgWt: lr.chargeWeight,
                 totalAmount: lr.grandTotal,
-                status: 'In Stock',
+                status: 'In Stock', // Default status for inward items
                 source: 'Inward',
                 itemRows: originalBooking?.itemRows || [],
             }
