@@ -372,7 +372,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         const { nextLrNumber, nextSerialNumber } = generateLrNumber(currentBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
         
         setCurrentLrNumber(nextLrNumber);
-        setCurrentSerialNumber(nextSerialNumber);
+setCurrentSerialNumber(nextSerialNumber);
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -421,8 +421,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         
         if (bookingToLoad) {
             // -- Edit Mode --
-            const itemRowsWithIds = (bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) }));
-            setItemRows(itemRowsWithIds);
+            setItemRows((bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
 
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
@@ -472,7 +471,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
 
     const basicFreight = useMemo(() => {
         if (!itemRows) return 0;
-        return (itemRows || []).reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+        return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
     
     const maybeSaveNewParty = useCallback((party: Customer | null): CustomerData => {
@@ -540,16 +539,13 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
             
             const filledRows = itemRows.filter(row => !isRowEmpty(row)).map(row => {
                 const newRow = { ...row };
-                // Ensure all fields have a value, defaulting to "0" or an empty string for description.
-                const fieldsToDefault: (keyof ItemRow)[] = ['ewbNo', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue', 'wtPerUnit', 'itemName'];
+                // Ensure all non-mandatory fields have a value, defaulting to "0".
+                const fieldsToDefault: (keyof ItemRow)[] = ['ewbNo', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue', 'wtPerUnit', 'itemName', 'description'];
                 fieldsToDefault.forEach(field => {
                     if (newRow[field] === '' || newRow[field] === null || newRow[field] === undefined) {
                         newRow[field] = '0';
                     }
                 });
-                if (!newRow.description) {
-                    newRow.description = '';
-                }
                 return newRow;
             });
 
@@ -868,11 +864,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
              <ChargesSection
+                basicFreight={basicFreightMemo}
                 itemRows={itemRows}
                 onGrandTotalChange={handleGrandTotalChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
-                onChargesChange={handleAdditionalChargesChange}
+                onChargesChange={setAdditionalCharges}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
