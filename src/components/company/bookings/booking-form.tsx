@@ -7,12 +7,11 @@ import { PartyDetailsSection } from '@/components/company/bookings/party-details
 import { ItemDetailsTable, type ItemRow } from '@/components/company/bookings/item-details-table';
 import { ChargesSection } from '@/components/company/bookings/charges-section';
 import { DeliveryInstructionsSection } from '@/components/company/bookings/delivery-instructions-section';
-import { Card, CardContent } from '@/components/ui/card';
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { MainActionsSection } from '@/components/company/bookings/main-actions-section';
 import type { Booking, FtlDetails, CustomerData } from '@/lib/bookings-dashboard-data';
-import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate, ChargeDetail, Branch } from '@/lib/types';
+import type { City, Customer, Driver, VehicleMaster, Vendor, RateList, StationRate, Branch } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { addHistoryLog } from '@/lib/history-data';
 import { getBookings, saveBookings } from '@/lib/bookings-dashboard-data';
@@ -48,7 +47,6 @@ import { PaymentDialog } from './payment-dialog';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ClientOnly } from '@/components/ui/client-only';
 import { getRateLists, saveRateLists } from '@/lib/rate-list-data';
-import type { ChargeSetting } from '../settings/additional-charges-settings';
 import { getBranches } from '@/lib/branch-data';
 import { getCities, saveCities } from '@/lib/city-data';
 import { getCustomers, saveCustomers } from '@/lib/customer-data';
@@ -78,8 +76,7 @@ const createEmptyRow = (id: number): ItemRow => ({
 interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     bookingData?: Booking | null; // Pass full booking object for editing transient data
-    onSaveSuccess?: (booking: Booking) => void;
-    onSaveAndNew?: (booking: Booking, callback: () => void) => void; // New prop for save and new
+    onSave?: (booking: Booking) => void;
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
@@ -262,7 +259,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess, onSaveAndNew, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -289,7 +286,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
     const [isGstApplicable, setIsGstApplicable] = useState(false);
     const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
-    const [initialChargesFromBooking, setInitialChargesFromBooking] = useState<{ [key: string]: number; } | undefined>(undefined);
     const [attachCc, setAttachCc] = useState('No');
     const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
     const [ftlDetails, setFtlDetails] = useState<FtlDetails>({
@@ -301,6 +297,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         commission: 0,
         otherDeductions: 0,
     });
+    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
 
 
     const [showReceipt, setShowReceipt] = useState(false);
@@ -383,12 +380,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setGrandTotal(0);
         setTaxPaidBy('Not Applicable');
         setAdditionalCharges({});
-        setInitialChargesFromBooking(undefined);
         setAttachCc('No');
         setErrors({});
         setFtlDetails({
             vehicleNo: '', driverName: '', lorrySupplier: '', truckFreight: 0, advance: 0, commission: 0, otherDeductions: 0,
         });
+        setDeliveryAt('Godown Deliv');
 
         if (forceFullReset && !isEditMode) {
             toast({ title: "Form Reset", description: "All fields have been cleared." });
@@ -433,7 +430,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
             
             setGrandTotal(bookingToLoad.totalAmount);
             setAdditionalCharges(bookingToLoad.additionalCharges || {});
-            setInitialChargesFromBooking(bookingToLoad.additionalCharges || {});
             setTaxPaidBy(bookingToLoad.taxPaidBy || 'Not Applicable');
             if (bookingToLoad.ftlDetails) {
                 setFtlDetails(bookingToLoad.ftlDetails);
@@ -453,7 +449,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         setIsGstApplicable(taxPaidBy !== 'Not Applicable');
     }, [taxPaidBy]);
     
-    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
     useEffect(() => {
         if (additionalCharges.doorDelivery && additionalCharges.doorDelivery > 0) {
             setDeliveryAt('Door Deliv');
@@ -568,8 +563,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 // Handle inward bookings separately
                 if (isForInward) {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `temp-inward-${Date.now()}`, ...newBookingData };
-                    if (onSaveAndNew) {
-                        onSaveAndNew(savedBooking, () => handleReset(false));
+                    if (onSave) {
+                        onSave(savedBooking);
                     }
                     return; // Stop execution for inward LRs
                 }
@@ -589,7 +584,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     }
 
                     toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
-                    if (onSaveSuccess) onSaveSuccess(savedBooking);
+                    if (onSave) onSave(savedBooking);
                 } else {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                     
@@ -659,13 +654,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                     
                     setReceiptData(savedBooking);
                     
-                    if (onSaveAndNew) {
-                        onSaveAndNew(savedBooking, () => {
-                             handleReset(true);
-                        });
-                    } else if (onSaveSuccess) {
-                        // This case is for the edit dialog
-                        onSaveSuccess(savedBooking);
+                    if (onSave) {
+                        onSave(savedBooking);
                     } else {
                         // This case is for the main new booking page
                         setShowReceipt(true);
@@ -679,7 +669,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         };
 
         await proceedWithSave(paymentMode);
-    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, onSaveAndNew, toast, userBranchName, isBranch, attachCc, handleReset, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSave, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
 
 
     useEffect(() => {
@@ -781,31 +771,41 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                       isPartialCancel ? `Partial Cancellation: ${currentLrNumber}` :
                       isForInward ? 'Add Inward LR' :
                       'Create New Booking';
+    
+    const handleBookingTypeChange = useCallback((value: string) => setBookingType(value), []);
+    const handleLoadTypeChange = useCallback((value: 'PTL' | 'FTL' | 'LTL') => setLoadType(value), []);
+    const handleFromStationChange = useCallback((station: City | null) => setFromStation(station), []);
+    const handleToStationChange = useCallback((station: City | null) => setToStation(station), []);
+    const handleLrNumberChange = useCallback((value: string) => setCurrentLrNumber(value), []);
+    const handleReferenceLrNumberChange = useCallback((value: string) => setReferenceLrNumber(value), []);
+    const handleBookingDateChange = useCallback((date?: Date) => setBookingDate(date), []);
+    const handleOfflineModeChange = useCallback((isOffline: boolean) => setIsOfflineMode(isOffline), []);
+
 
   const formContent = (
      <div className="space-y-4">
         <BookingDetailsSection
             loadTypeInputRef={loadTypeInputRef}
             bookingType={bookingType}
-            onBookingTypeChange={setBookingType}
+            onBookingTypeChange={handleBookingTypeChange}
             fromStation={fromStation}
-            onFromStationChange={setFromStation}
+            onFromStationChange={handleFromStationChange}
             toStation={toStation}
-            onToStationChange={setToStation}
+            onToStationChange={handleToStationChange}
             lrNumber={currentLrNumber}
-            onLrNumberChange={setCurrentLrNumber}
+            onLrNumberChange={handleLrNumberChange}
             referenceLrNumber={referenceLrNumber}
-            onReferenceLrNumberChange={setReferenceLrNumber}
+            onReferenceLrNumberChange={handleReferenceLrNumberChange}
             bookingDate={bookingDate}
-            onBookingDateChange={setBookingDate}
+            onBookingDateChange={handleBookingDateChange}
             isEditMode={isEditMode}
             isOfflineMode={isOfflineMode}
             isForInward={isForInward}
-            onOfflineModeChange={setIsOfflineMode}
+            onOfflineModeChange={handleOfflineModeChange}
             companyProfile={loadCompanySettingsFromStorage()}
             errors={errors}
             loadType={loadType}
-            onLoadTypeChange={setLoadType}
+            onLoadTypeChange={handleLoadTypeChange}
             isViewOnly={readOnly}
         />
         <PartyDetailsSection 
@@ -846,31 +846,22 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
         />
         
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
-            <ChargesSection 
-                basicFreight={basicFreight} 
-                onGrandTotalChange={setGrandTotal} 
-                initialGrandTotal={isEditMode || isPartialCancel ? grandTotal : undefined}
-                isGstApplicable={isGstApplicable}
-                onChargesChange={setAdditionalCharges}
-                initialCharges={initialChargesFromBooking}
-                profile={loadCompanySettingsFromStorage()}
-                isViewOnly={isViewOnly}
+             <ChargesSection 
                 itemRows={itemRows}
-            />
+                onGrandTotalChange={setGrandTotal}
+                isGstApplicable={isGstApplicable}
+             />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
                     deliveryAt={deliveryAt}
                     onDeliveryAtChange={setDeliveryAt}
                     isViewOnly={readOnly}
-                    attachCc={attachCc}
-                    onAttachCcChange={setAttachCc}
                 />
                  <MainActionsSection 
                     onSave={() => handleSaveOrUpdate()} 
-                    onSaveAndNew={onSaveAndNew ? () => handleSaveOrUpdate() : undefined}
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
-                    onClose={onClose ? onClose : () => router.push('/company/bookings')}
+                    onClose={onClose}
                     onReset={!isEditMode ? () => handleReset(true) : undefined}
                     isSubmitting={isSubmitting}
                     isViewOnly={isViewOnly}
@@ -883,7 +874,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
   return (
     <ClientOnly>
         <div className="space-y-4">
-            {!onSaveAndNew && (
+            {!onSave && (
                  <h1 className="text-2xl font-bold text-primary">{formTitle}</h1>
             )}
            
@@ -891,7 +882,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSaveSuccess,
                 <div className="h-96 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary"/>
                 </div>
-            ) : onSaveAndNew ? (
+            ) : onSave ? (
                 formContent
             ) : (
                 <div className="p-4 border-2 border-green-200 rounded-md bg-card">

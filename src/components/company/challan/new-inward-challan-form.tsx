@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -69,6 +69,8 @@ export function NewInwardChallanForm() {
     const [bookingDataToEdit, setBookingDataToEdit] = useState<Booking | null>(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isFinalized, setIsFinalized] = useState(false);
+    const [bookingFormKey, setBookingFormKey] = useState(Date.now());
+
 
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
     const [isLrFormOpen, setIsLrFormOpen] = useState(true);
@@ -156,7 +158,7 @@ export function NewInwardChallanForm() {
         loadInitialData();
     }, [searchParams, form]);
     
-    const handleAddOrUpdateLr = (booking: Booking, resetFormCallback?: () => void) => {
+    const handleAddOrUpdateLr = useCallback((booking: Booking) => {
         const existingLrIndex = addedLrs.findIndex(lr => lr.trackingId === booking.trackingId);
         
         if (existingLrIndex > -1) {
@@ -172,18 +174,21 @@ export function NewInwardChallanForm() {
             toast({ title: 'LR Added', description: `LR# ${booking.referenceLrNumber} has been added to the list.` });
         }
         setBookingDataToEdit(null); // Reset editing state
-        if (resetFormCallback) {
-            resetFormCallback();
-        }
+        setBookingFormKey(Date.now()); // Reset booking form
         if (lrNumberInputRef.current) {
             lrNumberInputRef.current.focus();
         }
-    };
+    }, [addedLrs, toast]);
     
     const handleEditLrClick = (lrToEdit: Booking) => {
         setBookingDataToEdit(lrToEdit);
         setIsEditDialogOpen(true);
     };
+
+    const handleCloseEditDialog = useCallback(() => {
+        setIsEditDialogOpen(false);
+        setBookingDataToEdit(null);
+    }, []);
 
     const handleRemoveLr = (trackingId: string) => {
         setAddedLrs(prevLrs => prevLrs.filter(lr => lr.trackingId !== trackingId));
@@ -367,8 +372,9 @@ export function NewInwardChallanForm() {
                             <CollapsibleContent>
                                 <CardContent>
                                     <BookingForm
+                                        key={bookingFormKey}
                                         isForInward={true}
-                                        onSaveAndNew={handleAddOrUpdateLr}
+                                        onSave={handleAddOrUpdateLr}
                                         lrNumberInputRef={lrNumberInputRef}
                                     />
                                 </CardContent>
@@ -464,11 +470,11 @@ export function NewInwardChallanForm() {
                             <DialogTitle>Edit Inward LR Details: {bookingDataToEdit.referenceLrNumber}</DialogTitle>
                         </DialogHeader>
                         <div className="flex-grow overflow-auto pr-6">
-                            <BookingForm
+                            <BookingForm 
                                 isForInward={true}
                                 bookingData={bookingDataToEdit}
-                                onSaveSuccess={handleAddOrUpdateLr}
-                                onClose={() => setIsEditDialogOpen(false)}
+                                onSave={handleAddOrUpdateLr}
+                                onClose={handleCloseEditDialog}
                             />
                         </div>
                     </DialogContent>
@@ -477,9 +483,3 @@ export function NewInwardChallanForm() {
         </div>
     );
 }
-
-    
-
-    
-
-    
