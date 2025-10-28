@@ -76,23 +76,26 @@ export function StockDashboard() {
         const inwardChallanIds = new Set(inwardChallans.map(c => c.challanId));
         const inwardLrs = allLrDetails.filter(lr => inwardChallanIds.has(lr.challanId));
         
-        const inwardBookingsAsStock: Booking[] = inwardLrs.map(lr => ({
-            trackingId: `inward-${lr.challanId}-${lr.lrNo}`,
-            lrNo: lr.lrNo,
-            bookingDate: lr.bookingDate,
-            fromCity: lr.from,
-            toCity: lr.to,
-            lrType: lr.lrType as any,
-            sender: lr.sender,
-            receiver: lr.receiver,
-            itemDescription: lr.itemDescription,
-            qty: lr.quantity,
-            chgWt: lr.chargeWeight,
-            totalAmount: lr.grandTotal,
-            status: 'In Stock',
-            source: 'Inward',
-            itemRows: [],
-        }));
+        const inwardBookingsAsStock: Booking[] = inwardLrs.map(lr => {
+            const originalBooking = allBookings.find(b => b.lrNo === lr.lrNo);
+            return {
+                trackingId: originalBooking?.trackingId || `inward-${lr.challanId}-${lr.lrNo}`,
+                lrNo: lr.lrNo,
+                bookingDate: lr.bookingDate,
+                fromCity: lr.from,
+                toCity: lr.to,
+                lrType: lr.lrType as any,
+                sender: lr.sender,
+                receiver: lr.receiver,
+                itemDescription: lr.itemDescription,
+                qty: lr.quantity,
+                chgWt: lr.chargeWeight,
+                totalAmount: lr.grandTotal,
+                status: 'In Stock',
+                source: 'Inward',
+                itemRows: originalBooking?.itemRows || [],
+            }
+        });
 
 
         setStock([...currentStockBookings, ...inwardBookingsAsStock]);
