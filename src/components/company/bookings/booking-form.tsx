@@ -416,20 +416,21 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
         if (isLoading) return;
-
+    
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
-        
+    
         if (bookingToLoad) {
+            // Directly set item rows from the provided booking data.
             setItemRows(
               bookingToLoad.itemRows && bookingToLoad.itemRows.length > 0
                 ? bookingToLoad.itemRows.map((row, index) => ({ ...row, id: row.id || Date.now() + index }))
                 : [createEmptyRow(1)]
             );
-
+    
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
             const receiverProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.name.toLowerCase()) || { id: 0, ...bookingToLoad.receiver, type: 'Company', openingBalance: 0 };
-            
+    
             setCurrentLrNumber(bookingToLoad.lrNo);
             setReferenceLrNumber(bookingToLoad.referenceLrNumber || '');
             setCurrentSerialNumber(bookingToLoad.serialNumber || 0);
@@ -476,7 +477,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
     }, [itemRows]);
     
     const maybeSaveNewParty = useCallback((party: Customer | null): CustomerData => {
-        if (!party) return { name: '', gstin: 'NA', address: 'NA', mobile: 'NA' };
+        const defaultPartyData: CustomerData = { name: '', gstin: 'NA', address: 'NA', mobile: 'NA' };
+        if (!party) return defaultPartyData;
     
         const finalPartyData: CustomerData = {
             name: party.name || '',
