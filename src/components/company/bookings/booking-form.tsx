@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { BookingDetailsSection } from '@/components/company/bookings/booking-details-section';
@@ -466,23 +467,37 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
     }, [additionalCharges]);
 
     const basicFreight = useMemo(() => {
+        if (!itemRows) return 0;
         return (itemRows || []).reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
     
     const maybeSaveNewParty = useCallback((party: Customer | null): CustomerData => {
-        if (!party) return { name: '', gstin: '', address: '', mobile: '' };
-
+        if (!party) return { name: '', gstin: 'NA', address: 'NA', mobile: 'NA' };
+    
+        const finalPartyData: CustomerData = {
+            name: party.name || '',
+            gstin: party.gstin || 'NA',
+            address: party.address || 'NA',
+            mobile: party.mobile || 'NA',
+        };
+    
         if (party && party.id === 0 && party.name.trim()) { // 0 is the indicator for a new party
             const currentCustomers: Customer[] = getCustomers();
             const newId = currentCustomers.length > 0 ? Math.max(...currentCustomers.map(c => c.id)) + 1 : 1;
-            const newCustomer: Customer = { ...party, id: newId };
+            const newCustomer: Customer = { 
+                ...party, 
+                id: newId,
+                gstin: party.gstin || 'NA',
+                address: party.address || 'NA',
+                mobile: party.mobile || 'NA',
+            };
             const updatedCustomers = [newCustomer, ...currentCustomers];
             saveCustomers(updatedCustomers);
             // After saving, reload the customer list in the form
             setCustomers(updatedCustomers);
-            return { name: newCustomer.name, gstin: newCustomer.gstin, address: newCustomer.address, mobile: newCustomer.mobile };
+            return finalPartyData;
         }
-        return { name: party.name, gstin: party.gstin, address: party.address, mobile: party.mobile };
+        return finalPartyData;
     }, []);
 
     const handleSaveOrUpdate = useCallback(async (paymentMode?: 'Cash' | 'Online', forceSave: boolean = false) => {
@@ -534,16 +549,25 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
             
             const filledRows = itemRows.filter(row => !isRowEmpty(row)).map(row => {
                 const newRow = { ...row };
-                const fieldsToDefault: (keyof ItemRow)[] = ['ewbNo', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue', 'wtPerUnit', 'itemName', 'description'];
-                fieldsToDefault.forEach(field => {
+                const textFields: (keyof ItemRow)[] = ['ewbNo', 'pvtMark', 'invoiceNo'];
+                const numericFields: (keyof ItemRow)[] = ['qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'dValue', 'wtPerUnit'];
+                
+                textFields.forEach(field => {
                     if (newRow[field] === '' || newRow[field] === null || newRow[field] === undefined) {
-                        if (['ewbNo', 'pvtMark', 'invoiceNo', 'description'].includes(field)) {
-                            newRow[field] = 'NA';
-                        } else {
-                            newRow[field] = '0';
-                        }
+                        newRow[field] = 'NA';
                     }
                 });
+
+                numericFields.forEach(field => {
+                     if (newRow[field] === '' || newRow[field] === null || newRow[field] === undefined) {
+                        newRow[field] = '0';
+                    }
+                });
+                
+                 if (!newRow.itemName) newRow.itemName = 'N/A';
+                 if (!newRow.description) newRow.description = 'N/A';
+
+
                 return newRow;
             });
 
@@ -855,9 +879,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
              <ChargesSection
                 itemRows={itemRows}
                 onGrandTotalChange={handleGrandTotalChange}
+                onChargesChange={handleAdditionalChargesChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
-                onChargesChange={handleAdditionalChargesChange}
                 isViewOnly={readOnly}
              />
             <div className="flex flex-col gap-2">
