@@ -23,21 +23,17 @@ function NewBookingPage() {
     const [isDownloading, setIsDownloading] = useState(false);
     const printRef = React.useRef<HTMLDivElement>(null);
     
-    // A key to force re-mounting the BookingForm component on reset
     const [formKey, setFormKey] = useState(Date.now());
 
-    const handleSaveAndNew = useCallback((booking: Booking, callback: () => void) => {
+    const handleSaveSuccess = useCallback((booking: Booking) => {
         setCompanyProfile(loadCompanySettingsFromStorage());
         setReceiptData(booking);
         setShowReceipt(true);
-        // The callback will reset the form's internal state
-        callback();
     }, []);
 
     const handleNewBooking = () => {
         setShowReceipt(false);
         setReceiptData(null);
-        // Change the key to force a complete re-mount and reset of the BookingForm
         setFormKey(Date.now());
     };
 
@@ -99,7 +95,7 @@ function NewBookingPage() {
     return (
         <DashboardLayout>
             <main className="flex-1 p-4 md:p-6">
-                <BookingForm key={formKey} onSaveAndNew={handleSaveAndNew} />
+                <BookingForm key={formKey} onSaveSuccess={handleSaveSuccess} />
 
                  {receiptData && companyProfile && (
                     <Dialog open={showReceipt} onOpenChange={handleDialogClose}>
@@ -146,3 +142,5 @@ export default function NewBookingRootPage() {
         </Suspense>
     )
 }
+
+    

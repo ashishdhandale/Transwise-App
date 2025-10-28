@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { BookingDetailsSection } from '@/components/company/bookings/booking-details-section';
@@ -77,6 +76,7 @@ interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     bookingData?: Booking | null; // Pass full booking object for editing transient data
     onSave?: (booking: Booking) => void;
+    onSaveSuccess?: () => void;
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
@@ -259,7 +259,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -419,7 +419,7 @@ setCurrentSerialNumber(nextSerialNumber);
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
         
         if (bookingToLoad) {
-            setItemRows((bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
+            setItemRows((bookingToLoad.itemRows || [createEmptyRow(1)]).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
 
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
@@ -465,8 +465,7 @@ setCurrentSerialNumber(nextSerialNumber);
         }
     }, [additionalCharges]);
 
-
-    const basicFreight = useMemo(() => {
+    const basicFreightMemo = useMemo(() => {
         if (!itemRows) return 0;
         return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
@@ -670,7 +669,11 @@ setCurrentSerialNumber(nextSerialNumber);
                     }
                     
                     setReceiptData(savedBooking);
-                    setShowReceipt(true);
+                    if (onSaveSuccess) {
+                        onSaveSuccess();
+                    } else {
+                        setShowReceipt(true);
+                    }
                 }
             } catch (error) {
                  toast({ title: 'Error Saving Data', description: `Could not save to local storage.`, variant: 'destructive' });
@@ -680,7 +683,7 @@ setCurrentSerialNumber(nextSerialNumber);
         };
 
         await proceedWithSave(paymentMode);
-    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onClose, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber, onSave]);
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onClose, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber, onSave, onSaveSuccess]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -782,12 +785,6 @@ setCurrentSerialNumber(nextSerialNumber);
                       isForInward ? 'Add Inward LR' :
                       'Create New Booking';
     
-    const basicFreightMemo = useMemo(() => {
-        if (!itemRows) return 0;
-        return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
-    }, [itemRows]);
-
-
   const formContent = (
      <div className="space-y-4">
         <BookingDetailsSection
@@ -858,6 +855,7 @@ setCurrentSerialNumber(nextSerialNumber);
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
                 onChargesChange={handleAdditionalChargesChange}
+                isViewOnly={readOnly}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
@@ -972,3 +970,5 @@ setCurrentSerialNumber(nextSerialNumber);
     </ClientOnly>
   );
 }
+
+    

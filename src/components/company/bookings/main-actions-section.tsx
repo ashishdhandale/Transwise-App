@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { useRouter } from 'next/navigation';
 
 interface MainActionsSectionProps {
     onSave: () => void;
-    onSaveAndNew?: () => void; // New prop
     isEditMode: boolean;
     isPartialCancel?: boolean;
     onClose?: () => void;
@@ -20,7 +18,7 @@ interface MainActionsSectionProps {
     isForInward?: boolean;
 }
 
-export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isForInward }: MainActionsSectionProps) {
+export function MainActionsSection({ onSave, isEditMode, isPartialCancel, onClose, onReset, isSubmitting, isViewOnly, isForInward }: MainActionsSectionProps) {
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const router = useRouter();
 
@@ -48,8 +46,10 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
         saveButtonText = 'Confirm Cancellation';
     } else if (isEditMode) {
         saveButtonText = 'Update Booking (Ctrl+Alt+S)';
+    } else if (isForInward) {
+        saveButtonText = 'Add LR to List';
     } else {
-        saveButtonText = onSaveAndNew ? 'Save & Add New (Ctrl+Alt+S)' : 'Save Booking (Ctrl+Alt+S)';
+        saveButtonText = 'Save Booking (Ctrl+Alt+S)';
     }
 
     let savingButtonText: string;
@@ -62,17 +62,16 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
     }
 
 
-    const mainButtonAction = onSaveAndNew ? onSaveAndNew : onSave;
-    const mainButtonIcon = isEditMode || isPartialCancel ? <RefreshCcw className="mr-2 h-4 w-4" /> : onSaveAndNew ? <Plus className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />;
+    const mainButtonIcon = isEditMode || isPartialCancel ? <RefreshCcw className="mr-2 h-4 w-4" /> : isForInward ? <Plus className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />;
     
     return (
         <div className="flex flex-col gap-2">
-            <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={mainButtonAction} disabled={isSubmitting}>
+            <Button className="bg-green-600 hover:bg-green-700 w-full" onClick={onSave} disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : mainButtonIcon}
                 {isSubmitting ? savingButtonText : saveButtonText}
             </Button>
             
-            {!onSaveAndNew && !isForInward && (
+            {!isForInward && (
                 <>
                     <Button variant="destructive" type="button" onClick={handleExit} disabled={isSubmitting} className="w-full">
                         <FileX className="mr-2 h-4 w-4" />
@@ -100,5 +99,4 @@ export function MainActionsSection({ onSave, onSaveAndNew, isEditMode, isPartial
     );
 }
 
-
-
+    
