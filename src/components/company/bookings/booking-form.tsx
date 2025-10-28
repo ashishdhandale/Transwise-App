@@ -57,7 +57,7 @@ import { getCurrentFinancialYear } from '@/lib/utils';
 
 const createEmptyRow = (id: number): ItemRow => ({
   id,
-  ewbNo: '0',
+  ewbNo: 'NA',
   itemName: '',
   description: '',
   wtPerUnit: '',
@@ -67,8 +67,8 @@ const createEmptyRow = (id: number): ItemRow => ({
   rate: '0',
   freightOn: 'Act.wt',
   lumpsum: '',
-  pvtMark: '0',
-  invoiceNo: '0',
+  pvtMark: 'NA',
+  invoiceNo: 'NA',
   dValue: '0',
 });
 
@@ -371,7 +371,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         const { nextLrNumber, nextSerialNumber } = generateLrNumber(currentBookings, companyCode, companyProfile.lrFormat, isBranch, currentBranch?.lrPrefix);
         
         setCurrentLrNumber(nextLrNumber);
-setCurrentSerialNumber(nextSerialNumber);
+        setCurrentSerialNumber(nextSerialNumber);
         
         const defaultRows = companyProfile.defaultItemRows || 1;
         setItemRows(Array.from({ length: defaultRows }, (_, i) => createEmptyRow(i + 1)));
@@ -419,7 +419,7 @@ setCurrentSerialNumber(nextSerialNumber);
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
         
         if (bookingToLoad) {
-            setItemRows((bookingToLoad.itemRows || [createEmptyRow(1)]).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
+            setItemRows((bookingToLoad.itemRows && bookingToLoad.itemRows.length > 0 ? bookingToLoad.itemRows : [createEmptyRow(1)]).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
 
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
@@ -465,9 +465,8 @@ setCurrentSerialNumber(nextSerialNumber);
         }
     }, [additionalCharges]);
 
-    const basicFreightMemo = useMemo(() => {
-        if (!itemRows) return 0;
-        return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+    const basicFreight = useMemo(() => {
+        return (itemRows || []).reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
     
     const maybeSaveNewParty = useCallback((party: Customer | null): CustomerData => {
@@ -538,7 +537,11 @@ setCurrentSerialNumber(nextSerialNumber);
                 const fieldsToDefault: (keyof ItemRow)[] = ['ewbNo', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue', 'wtPerUnit', 'itemName', 'description'];
                 fieldsToDefault.forEach(field => {
                     if (newRow[field] === '' || newRow[field] === null || newRow[field] === undefined) {
-                        newRow[field] = '0';
+                        if (['ewbNo', 'pvtMark', 'invoiceNo', 'description'].includes(field)) {
+                            newRow[field] = 'NA';
+                        } else {
+                            newRow[field] = '0';
+                        }
                     }
                 });
                 return newRow;
@@ -970,5 +973,3 @@ setCurrentSerialNumber(nextSerialNumber);
     </ClientOnly>
   );
 }
-
-    
