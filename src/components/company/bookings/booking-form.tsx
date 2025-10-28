@@ -420,7 +420,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
         
         if (bookingToLoad) {
-            setItemRows((bookingToLoad.itemRows && bookingToLoad.itemRows.length > 0 ? bookingToLoad.itemRows : [createEmptyRow(1)]).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
+            // Correctly set itemRows from the booking data being loaded
+            setItemRows(
+                bookingToLoad.itemRows && bookingToLoad.itemRows.length > 0
+                    ? bookingToLoad.itemRows.map((row, index) => ({ ...row, id: row.id || Date.now() + index }))
+                    : [createEmptyRow(1)]
+            );
 
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
