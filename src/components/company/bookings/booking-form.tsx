@@ -61,13 +61,13 @@ const createEmptyRow = (id: number): ItemRow => ({
   ewbNo: 'NA',
   itemName: '',
   description: '',
-  wtPerUnit: '',
+  wtPerUnit: '0',
   qty: '',
   actWt: '',
   chgWt: '',
   rate: '0',
   freightOn: 'Act.wt',
-  lumpsum: '',
+  lumpsum: '0',
   pvtMark: 'NA',
   invoiceNo: 'NA',
   dValue: '0',
@@ -77,7 +77,7 @@ interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     bookingData?: Booking | null; // Pass full booking object for editing transient data
     onSave?: (booking: Booking) => void;
-    onSaveSuccess?: () => void;
+    onSaveSuccess?: (booking: Booking) => void;
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
@@ -701,7 +701,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
                     
                     setReceiptData(savedBooking);
                     if (onSaveSuccess) {
-                        onSaveSuccess();
+                        onSaveSuccess(savedBooking);
                     } else {
                         setShowReceipt(true);
                     }
@@ -883,7 +883,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
              <ChargesSection
                 itemRows={itemRows}
                 onGrandTotalChange={handleGrandTotalChange}
-                onChargesChange={setAdditionalCharges}
+                onChargesChange={handleAdditionalChargesChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
                 isViewOnly={readOnly}
