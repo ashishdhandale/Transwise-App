@@ -540,12 +540,16 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
             
             const filledRows = itemRows.filter(row => !isRowEmpty(row)).map(row => {
                 const newRow = { ...row };
-                const nonMandatoryFields: (keyof ItemRow)[] = ['ewbNo', 'wtPerUnit', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue'];
-                nonMandatoryFields.forEach(field => {
+                // Ensure all fields have a value, defaulting to "0" or an empty string for description.
+                const fieldsToDefault: (keyof ItemRow)[] = ['ewbNo', 'qty', 'actWt', 'chgWt', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue', 'wtPerUnit', 'itemName'];
+                fieldsToDefault.forEach(field => {
                     if (newRow[field] === '' || newRow[field] === null || newRow[field] === undefined) {
                         newRow[field] = '0';
                     }
                 });
+                if (!newRow.description) {
+                    newRow.description = '';
+                }
                 return newRow;
             });
 
@@ -868,7 +872,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
                 onGrandTotalChange={handleGrandTotalChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
-                onChargesChange={setAdditionalCharges}
+                onChargesChange={handleAdditionalChargesChange}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
