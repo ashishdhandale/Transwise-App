@@ -58,19 +58,19 @@ import { getCurrentFinancialYear } from '@/lib/utils';
 
 const createEmptyRow = (id: number): ItemRow => ({
   id,
-  ewbNo: '',
+  ewbNo: '0',
   itemName: '',
   description: '',
   wtPerUnit: '',
   qty: '',
   actWt: '',
   chgWt: '',
-  rate: '',
+  rate: '0',
   freightOn: 'Act.wt',
   lumpsum: '',
-  pvtMark: '',
-  invoiceNo: '',
-  dValue: '',
+  pvtMark: '0',
+  invoiceNo: '0',
+  dValue: '0',
 });
 
 interface BookingFormProps {
@@ -414,13 +414,12 @@ setCurrentSerialNumber(nextSerialNumber);
 
     // This effect runs ONLY after the data is loaded and sets up the form state.
     useEffect(() => {
-        if (isLoading) return; // Don't run if data isn't ready
+        if (isLoading) return;
 
         const bookingToLoad = bookingData || allBookings.find(b => b.trackingId === trackingId);
         
         if (bookingToLoad) {
-            // -- Edit Mode --
-            setItemRows((bookingToLoad.itemRows || [createEmptyRow(1)]).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
+            setItemRows((bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) })));
 
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
@@ -445,10 +444,9 @@ setCurrentSerialNumber(nextSerialNumber);
                 setFtlDetails(bookingToLoad.ftlDetails);
             }
         } else if (!isEditMode) {
-            handleReset(false); // Pass false to avoid the toast on initial load
+            handleReset(false);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoading, trackingId, bookingData, isEditMode]);
+    }, [isLoading, trackingId, bookingData, isEditMode, allBookings, customers, cities, handleReset]);
     
     const stableReset = useCallback(() => {
         handleReset(true);
@@ -465,7 +463,7 @@ setCurrentSerialNumber(nextSerialNumber);
         } else {
             setDeliveryAt('Godown Deliv');
         }
-    }, [additionalCharges.doorDelivery]);
+    }, [additionalCharges]);
 
 
     const basicFreight = useMemo(() => {
