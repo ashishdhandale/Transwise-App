@@ -77,7 +77,6 @@ interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     bookingData?: Booking | null; // Pass full booking object for editing transient data
     onSave?: (booking: Booking) => void;
-    onSaveSuccess?: (booking: Booking, resetForm: () => void) => void;
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
@@ -260,7 +259,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -287,7 +286,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
     const [isGstApplicable, setIsGstApplicable] = useState(false);
     const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
-    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
     const [attachCc, setAttachCc] = useState('No');
     const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
     const [ftlDetails, setFtlDetails] = useState<FtlDetails>({
@@ -299,6 +297,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         commission: 0,
         otherDeductions: 0,
     });
+    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
 
 
     const [showReceipt, setShowReceipt] = useState(false);
@@ -604,7 +603,7 @@ setCurrentSerialNumber(nextSerialNumber);
                     }
 
                     toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
-                    if (onSaveSuccess) onSaveSuccess(savedBooking, () => {});
+                    if (onClose) onClose();
                 } else {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                     
@@ -673,13 +672,7 @@ setCurrentSerialNumber(nextSerialNumber);
                     }
                     
                     setReceiptData(savedBooking);
-                    
-                    if (onSaveSuccess) {
-                        onSaveSuccess(savedBooking, handleReset);
-                    } else {
-                        // This case is for the main new booking page
-                        setShowReceipt(true);
-                    }
+                    setShowReceipt(true);
                 }
             } catch (error) {
                  toast({ title: 'Error Saving Data', description: `Could not save to local storage.`, variant: 'destructive' });
@@ -689,8 +682,7 @@ setCurrentSerialNumber(nextSerialNumber);
         };
 
         await proceedWithSave(paymentMode);
-    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber, handleReset, onSave]);
-
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onClose, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber, onSave]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -867,6 +859,7 @@ setCurrentSerialNumber(nextSerialNumber);
                 onGrandTotalChange={handleGrandTotalChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
+                onChargesChange={handleAdditionalChargesChange}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
@@ -876,7 +869,6 @@ setCurrentSerialNumber(nextSerialNumber);
                 />
                  <MainActionsSection 
                     onSave={() => handleSaveOrUpdate()} 
-                    onSaveAndNew={isForInward ? (() => handleSaveOrUpdate()) : undefined}
                     isEditMode={isEditMode || !!bookingData}
                     isPartialCancel={isPartialCancel} 
                     onClose={onClose}
@@ -893,7 +885,7 @@ setCurrentSerialNumber(nextSerialNumber);
   return (
     <ClientOnly>
         <div className="space-y-4">
-            {!onSaveSuccess && (
+            {!onSave && (
                  <h1 className="text-2xl font-bold text-primary">{formTitle}</h1>
             )}
            
