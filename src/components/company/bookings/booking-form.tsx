@@ -459,6 +459,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
 
 
     const basicFreight = useMemo(() => {
+        if (!itemRows) return 0;
         return (itemRows || []).reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
     
@@ -779,6 +780,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
     const handleReferenceLrNumberChange = useCallback((value: string) => setReferenceLrNumber(value), []);
     const handleBookingDateChange = useCallback((date?: Date) => setBookingDate(date), []);
     const handleOfflineModeChange = useCallback((isOffline: boolean) => setIsOfflineMode(isOffline), []);
+    const handleGrandTotalChange = useCallback((total: number) => setGrandTotal(total), []);
 
 
   const formContent = (
@@ -847,11 +849,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
              <ChargesSection 
                 itemRows={itemRows}
-                onGrandTotalChange={setGrandTotal}
+                onGrandTotalChange={handleGrandTotalChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
-                onChargesChange={setAdditionalCharges}
-                profile={companyProfile}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 

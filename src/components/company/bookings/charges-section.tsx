@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { ChargeSetting } from '@/components/company/settings/additional-charges-settings';
-import type { AllCompanySettings } from '@/app/company/settings/actions';
+import { loadCompanySettingsFromStorage, type AllCompanySettings } from '@/app/company/settings/actions';
 import type { ItemRow } from './item-details-table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -20,45 +20,40 @@ const calculationTypes: { value: ChargeSetting['calculationType'], label: string
 ];
 
 interface ChargesSectionProps {
-    basicFreight: number;
-    onGrandTotalChange: (total: number) => void;
-    initialGrandTotal?: number;
-    isGstApplicable: boolean;
-    onChargesChange: (charges: { [key: string]: number }) => void;
-    initialCharges?: { [key: string]: number };
-    profile: AllCompanySettings | null;
-    isViewOnly?: boolean;
     itemRows: ItemRow[];
+    onGrandTotalChange: (total: number) => void;
+    initialCharges?: { [key: string]: number };
+    isGstApplicable: boolean;
+    isViewOnly?: boolean;
 }
 
 export function ChargesSection({ 
-    basicFreight, 
+    itemRows, 
     onGrandTotalChange, 
-    initialGrandTotal, 
-    isGstApplicable, 
-    onChargesChange: notifyParentOfChanges, 
     initialCharges, 
-    profile, 
+    isGstApplicable, 
     isViewOnly = false,
-    itemRows,
 }: ChargesSectionProps) {
     const [chargeSettings, setChargeSettings] = useState<ChargeSetting[]>([]);
     const [bookingCharges, setBookingCharges] = useState<{ [key:string]: number }>({});
     const [gstValue, setGstValue] = useState(0);
     const [gstAmount, setGstAmount] = useState(0);
+    const [profile, setProfile] = useState<AllCompanySettings | null>(null);
     
     const [liveCalc, setLiveCalc] = useState<{[key: string]: { rate: number; type: ChargeSetting['calculationType'] } }>({});
 
     useEffect(() => {
-      if (profile?.additionalCharges) {
-        setChargeSettings(profile.additionalCharges.filter(c => c.isVisible));
+        const loadedProfile = loadCompanySettingsFromStorage();
+        setProfile(loadedProfile);
         
-        // Initialize booking charges from initial values or defaults
-        const initialBookingCharges: { [key: string]: number } = {};
-        const initialLiveCalc: typeof liveCalc = {};
+        if (loadedProfile?.additionalCharges) {
+            const visibleCharges = loadedProfile.additionalCharges.filter(c => c.isVisible);
+            setChargeSettings(visibleCharges);
+            
+            const initialBookingCharges: { [key: string]: number } = {};
+            const initialLiveCalc: typeof liveCalc = {};
 
-        profile.additionalCharges.forEach(charge => {
-            if (charge.isVisible) {
+            visibleCharges.forEach(charge => {
                 initialBookingCharges[charge.id] = initialCharges?.[charge.id] ?? charge.value ?? 0;
                 if (charge.isEditable) {
                     initialLiveCalc[charge.id] = {
@@ -66,12 +61,11 @@ export function ChargesSection({
                         type: charge.calculationType,
                     };
                 }
-            }
-        });
-        setBookingCharges(initialBookingCharges);
-        setLiveCalc(initialLiveCalc);
-      }
-    }, [profile, initialCharges]);
+            });
+            setBookingCharges(initialBookingCharges);
+            setLiveCalc(initialLiveCalc);
+        }
+    }, [initialCharges]);
     
     const handleLiveCalcChange = (chargeId: string, field: 'rate' | 'type', value: string | number) => {
          const newLiveCalcState = {
@@ -84,7 +78,6 @@ export function ChargesSection({
         setLiveCalc(newLiveCalcState);
     }
     
-    // Effect to recalculate all dynamic charges when itemRows or liveCalc change
     useEffect(() => {
         let hasChanged = false;
         const newCharges = { ...bookingCharges };
@@ -113,17 +106,15 @@ export function ChargesSection({
             setBookingCharges(newCharges);
         }
     }, [itemRows, chargeSettings, liveCalc]);
-    
-    // This effect will run AFTER the state has been updated, solving the render issue.
-    useEffect(() => {
-        notifyParentOfChanges(bookingCharges);
-    }, [bookingCharges, notifyParentOfChanges]);
-
 
     const handleManualChargeChange = (chargeId: string, value: string) => {
         const numericValue = Number(value) || 0;
         setBookingCharges(prev => ({ ...prev, [chargeId]: numericValue }));
     };
+    
+    const basicFreight = useMemo(() => {
+        return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+    }, [itemRows]);
     
     const additionalChargesTotal = useMemo(() => {
         return Object.values(bookingCharges).reduce((sum, charge) => sum + Number(charge || 0), 0);
@@ -145,19 +136,6 @@ export function ChargesSection({
     useEffect(() => {
         onGrandTotalChange(grandTotal);
     }, [grandTotal, onGrandTotalChange]);
-
-    useEffect(() => {
-        if (initialGrandTotal !== undefined && isGstApplicable) {
-            const currentSubTotal = basicFreight + additionalChargesTotal;
-            if (initialGrandTotal > 0 && currentSubTotal > 0) {
-                 const inferredGstAmount = initialGrandTotal - currentSubTotal;
-                 const inferredGstRate = (inferredGstAmount / currentSubTotal) * 100;
-                 if (inferredGstRate > 0 && inferredGstRate < 100) {
-                     setGstValue(Math.round(inferredGstRate));
-                 }
-            }
-        }
-    }, [initialGrandTotal, isGstApplicable, basicFreight, additionalChargesTotal]);
 
   return (
     <Card className="p-2 border-cyan-200 h-full flex flex-col">
