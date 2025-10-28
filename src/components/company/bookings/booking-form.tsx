@@ -437,7 +437,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
             setReceiver(receiverProfile);
             setAttachCc(bookingToLoad.attachCc || 'No');
             
-            const itemRowsWithIds = (bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || index + 1 }));
+            const itemRowsWithIds = (bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) }));
             setItemRows(itemRowsWithIds);
             
             setGrandTotal(bookingToLoad.totalAmount);
@@ -450,7 +450,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
             handleReset(false); // Pass false to avoid the toast on initial load
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoading, trackingId, bookingData, allBookings, customers, cities, isEditMode]);
+    }, [isLoading, trackingId, bookingData, customers, cities, isEditMode]);
     
     const stableReset = useCallback(() => {
         handleReset(true);
@@ -863,12 +863,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         />
         
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
-             <ChargesSection 
-                basicFreight={basicFreightMemo}
+             <ChargesSection
+                itemRows={itemRows}
                 onGrandTotalChange={handleGrandTotalChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
-                onChargesChange={handleAdditionalChargesChange}
+                onChargesChange={setAdditionalCharges}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
