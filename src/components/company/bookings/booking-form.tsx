@@ -76,7 +76,8 @@ const createEmptyRow = (id: number): ItemRow => ({
 interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     bookingData?: Booking | null; // Pass full booking object for editing transient data
-    onSave: (booking: Booking, callback: () => void) => void;
+    onSave?: (booking: Booking) => void;
+    onSaveSuccess?: (booking: Booking, resetForm: () => void) => void;
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
@@ -259,7 +260,7 @@ const generateLrNumber = (
 
 
 
-export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
+export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSaveSuccess, onClose, isViewOnly = false, isPartialCancel = false, isForInward = false, lrNumberInputRef }: BookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userRole = searchParams.get('role') === 'Branch' ? 'Branch' : 'Company';
@@ -319,6 +320,17 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
     const [rateLists, setRateLists] = useState<RateList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const loadTypeInputRef = useRef<HTMLButtonElement>(null);
+    
+    const handleBookingTypeChange = useCallback((value: string) => setBookingType(value), []);
+    const handleLoadTypeChange = useCallback((value: 'PTL' | 'FTL' | 'LTL') => setLoadType(value), []);
+    const handleFromStationChange = useCallback((station: City | null) => setFromStation(station), []);
+    const handleToStationChange = useCallback((station: City | null) => setToStation(station), []);
+    const handleLrNumberChange = useCallback((value: string) => setCurrentLrNumber(value), []);
+    const handleReferenceLrNumberChange = useCallback((value: string) => setReferenceLrNumber(value), []);
+    const handleBookingDateChange = useCallback((date?: Date) => setBookingDate(date), []);
+    const handleOfflineModeChange = useCallback((isOffline: boolean) => setIsOfflineMode(isOffline), []);
+    const handleGrandTotalChange = useCallback((total: number) => setGrandTotal(total), []);
+    const handleAdditionalChargesChange = useCallback((charges: { [key: string]: number; }) => setAdditionalCharges(charges), []);
 
     const loadInitialData = useCallback(() => {
         try {
@@ -525,7 +537,18 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
 
             const currentStatus: Booking['status'] = 'In Stock';
             const currentBooking = (isEditMode || isPartialCancel) ? (allBookings.find(b => b.trackingId === trackingId) || bookingData) : undefined;
-            const validRows = itemRows.filter(row => !isRowEmpty(row));
+            
+            const filledRows = itemRows.filter(row => !isRowEmpty(row)).map(row => {
+                const newRow = { ...row };
+                const nonMandatoryFields: (keyof ItemRow)[] = ['ewbNo', 'wtPerUnit', 'rate', 'lumpsum', 'pvtMark', 'invoiceNo', 'dValue'];
+                nonMandatoryFields.forEach(field => {
+                    if (newRow[field] === '' || newRow[field] === null || newRow[field] === undefined) {
+                        newRow[field] = '0';
+                    }
+                });
+                return newRow;
+            });
+
             const finalBranchName = userBranchName || companyProfile.companyName;
 
             const newBookingData: Omit<Booking, 'trackingId'> = {
@@ -539,12 +562,12 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
                 loadType,
                 sender: finalSender,
                 receiver: finalReceiver,
-                itemDescription: validRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
-                qty: validRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
-                chgWt: validRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
+                itemDescription: filledRows.map(r => `${r.itemName} - ${r.description}`).join(', '),
+                qty: filledRows.reduce((sum, r) => sum + (parseInt(r.qty, 10) || 0), 0),
+                chgWt: filledRows.reduce((sum, r) => sum + (parseFloat(r.chgWt) || 0), 0),
                 totalAmount: grandTotal,
                 status: currentBooking?.status || currentStatus,
-                itemRows: validRows,
+                itemRows: filledRows,
                 additionalCharges: additionalCharges,
                 taxPaidBy: taxPaidBy,
                 branchName: currentBooking?.branchName || finalBranchName,
@@ -561,11 +584,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
             try {
                 let savedBooking: Booking;
                 
-                if (isForInward) {
+                if (isForInward && onSave) {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `temp-inward-${Date.now()}`, ...newBookingData };
-                    if (onSave) {
-                        onSave(savedBooking, handleReset);
-                    }
+                    onSave(savedBooking);
                     return; // Stop execution for inward LRs
                 }
                 
@@ -584,7 +605,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
                     }
 
                     toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
-                    if (onSave) onSave(savedBooking, () => {});
+                    if (onSaveSuccess) onSaveSuccess(savedBooking, () => {});
                 } else {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                     
@@ -654,8 +675,8 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
                     
                     setReceiptData(savedBooking);
                     
-                    if (onSave) {
-                        onSave(savedBooking, handleReset);
+                    if (onSaveSuccess) {
+                        onSaveSuccess(savedBooking, handleReset);
                     } else {
                         // This case is for the main new booking page
                         setShowReceipt(true);
@@ -669,7 +690,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
         };
 
         await proceedWithSave(paymentMode);
-    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSave, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber, handleReset]);
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSaveSuccess, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber, handleReset, onSave]);
 
 
     useEffect(() => {
@@ -772,15 +793,10 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
                       isForInward ? 'Add Inward LR' :
                       'Create New Booking';
     
-    const handleBookingTypeChange = useCallback((value: string) => setBookingType(value), []);
-    const handleLoadTypeChange = useCallback((value: 'PTL' | 'FTL' | 'LTL') => setLoadType(value), []);
-    const handleFromStationChange = useCallback((station: City | null) => setFromStation(station), []);
-    const handleToStationChange = useCallback((station: City | null) => setToStation(station), []);
-    const handleLrNumberChange = useCallback((value: string) => setCurrentLrNumber(value), []);
-    const handleReferenceLrNumberChange = useCallback((value: string) => setReferenceLrNumber(value), []);
-    const handleBookingDateChange = useCallback((date?: Date) => setBookingDate(date), []);
-    const handleOfflineModeChange = useCallback((isOffline: boolean) => setIsOfflineMode(isOffline), []);
-    const handleGrandTotalChange = useCallback((total: number) => setGrandTotal(total), []);
+    const basicFreightMemo = useMemo(() => {
+        if (!itemRows) return 0;
+        return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+    }, [itemRows]);
 
 
   const formContent = (
@@ -848,10 +864,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
         
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
              <ChargesSection 
-                itemRows={itemRows}
+                basicFreight={basicFreightMemo}
                 onGrandTotalChange={handleGrandTotalChange}
                 isGstApplicable={isGstApplicable}
                 initialCharges={additionalCharges}
+                onChargesChange={handleAdditionalChargesChange}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
@@ -876,7 +893,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
   return (
     <ClientOnly>
         <div className="space-y-4">
-            {!onSave && (
+            {!onSaveSuccess && (
                  <h1 className="text-2xl font-bold text-primary">{formTitle}</h1>
             )}
            
