@@ -287,6 +287,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
     const [taxPaidBy, setTaxPaidBy] = useState('Not Applicable');
     const [isGstApplicable, setIsGstApplicable] = useState(false);
     const [additionalCharges, setAdditionalCharges] = useState<{ [key: string]: number; }>({});
+    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
     const [attachCc, setAttachCc] = useState('No');
     const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
     const [ftlDetails, setFtlDetails] = useState<FtlDetails>({
@@ -298,7 +299,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         commission: 0,
         otherDeductions: 0,
     });
-    const [deliveryAt, setDeliveryAt] = useState('Godown Deliv');
 
 
     const [showReceipt, setShowReceipt] = useState(false);
@@ -421,6 +421,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
         
         if (bookingToLoad) {
             // -- Edit Mode --
+            const itemRowsWithIds = (bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) }));
+            setItemRows(itemRowsWithIds);
+
             setIsOfflineMode(bookingToLoad.source === 'Offline');
             const senderProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.sender.name.toLowerCase()) || { id: 0, ...bookingToLoad.sender, type: 'Company', openingBalance: 0 };
             const receiverProfile = customers.find(c => c.name.toLowerCase() === bookingToLoad.receiver.name.toLowerCase()) || { id: 0, ...bookingToLoad.receiver, type: 'Company', openingBalance: 0 };
@@ -436,9 +439,6 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onSave
             setSender(senderProfile);
             setReceiver(receiverProfile);
             setAttachCc(bookingToLoad.attachCc || 'No');
-            
-            const itemRowsWithIds = (bookingToLoad.itemRows || []).map((row, index) => ({ ...row, id: row.id || (Date.now() + index) }));
-            setItemRows(itemRowsWithIds);
             
             setGrandTotal(bookingToLoad.totalAmount);
             setAdditionalCharges(bookingToLoad.additionalCharges || {});
