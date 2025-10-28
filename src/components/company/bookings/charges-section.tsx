@@ -22,6 +22,7 @@ const calculationTypes: { value: ChargeSetting['calculationType'], label: string
 interface ChargesSectionProps {
     itemRows: ItemRow[];
     onGrandTotalChange: (total: number) => void;
+    onChargesChange: (charges: { [key: string]: number; }) => void;
     initialCharges?: { [key: string]: number };
     isGstApplicable: boolean;
     isViewOnly?: boolean;
@@ -30,6 +31,7 @@ interface ChargesSectionProps {
 export function ChargesSection({ 
     itemRows, 
     onGrandTotalChange, 
+    onChargesChange,
     initialCharges, 
     isGstApplicable, 
     isViewOnly = false,
@@ -85,7 +87,7 @@ export function ChargesSection({
         chargeSettings.forEach(charge => {
             if (charge.isEditable) { 
                 const calcDetails = liveCalc[charge.id];
-                if (calcDetails) {
+                if (calcDetails && itemRows) {
                     let calculatedValue = 0;
                     const { rate, type } = calcDetails;
                      switch (type) {
@@ -103,17 +105,19 @@ export function ChargesSection({
         });
 
         if (hasChanged) {
-            setBookingCharges(newCharges);
+            onChargesChange(newCharges);
         }
-    }, [itemRows, chargeSettings, liveCalc]);
+    }, [itemRows, chargeSettings, liveCalc, bookingCharges, onChargesChange]);
 
     const handleManualChargeChange = (chargeId: string, value: string) => {
         const numericValue = Number(value) || 0;
-        setBookingCharges(prev => ({ ...prev, [chargeId]: numericValue }));
+        const newCharges = { ...bookingCharges, [chargeId]: numericValue };
+        onChargesChange(newCharges);
     };
     
     const basicFreight = useMemo(() => {
-        return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+        if (!itemRows) return 0;
+        return (itemRows || []).reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
     
     const additionalChargesTotal = useMemo(() => {
