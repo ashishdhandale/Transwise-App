@@ -76,7 +76,7 @@ const createEmptyRow = (id: number): ItemRow => ({
 interface BookingFormProps {
     bookingId?: string; // This is now trackingId
     bookingData?: Booking | null; // Pass full booking object for editing transient data
-    onSave?: (booking: Booking) => void;
+    onSave: (booking: Booking, callback: () => void) => void;
     onClose?: () => void;
     isViewOnly?: boolean;
     isPartialCancel?: boolean;
@@ -459,7 +459,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
 
 
     const basicFreight = useMemo(() => {
-        return itemRows.reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
+        return (itemRows || []).reduce((sum, row) => sum + (parseFloat(row.lumpsum) || 0), 0);
     }, [itemRows]);
     
     const maybeSaveNewParty = useCallback((party: Customer | null): CustomerData => {
@@ -559,12 +559,11 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
 
             try {
                 let savedBooking: Booking;
-
-                // Handle inward bookings separately
+                
                 if (isForInward) {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `temp-inward-${Date.now()}`, ...newBookingData };
                     if (onSave) {
-                        onSave(savedBooking);
+                        onSave(savedBooking, handleReset);
                     }
                     return; // Stop execution for inward LRs
                 }
@@ -584,7 +583,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
                     }
 
                     toast({ title: isPartialCancel ? 'Partial Cancellation Confirmed' : 'Booking Updated', description: `Successfully updated LR Number: ${currentLrNumber}` });
-                    if (onSave) onSave(savedBooking);
+                    if (onSave) onSave(savedBooking, () => {});
                 } else {
                     savedBooking = { trackingId: (bookingData?.trackingId) || `TRK-${Date.now()}`, ...newBookingData };
                     
@@ -655,7 +654,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
                     setReceiptData(savedBooking);
                     
                     if (onSave) {
-                        onSave(savedBooking);
+                        onSave(savedBooking, handleReset);
                     } else {
                         // This case is for the main new booking page
                         setShowReceipt(true);
@@ -669,7 +668,7 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
         };
 
         await proceedWithSave(paymentMode);
-    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSave, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber]);
+    }, [fromStation, toStation, sender, receiver, bookingDate, isOfflineMode, isForInward, referenceLrNumber, itemRows, bookingType, isEditMode, isPartialCancel, loadType, grandTotal, additionalCharges, taxPaidBy, ftlDetails, onSave, toast, userBranchName, isBranch, attachCc, currentSerialNumber, allBookings, trackingId, bookingData, branches, isPaymentDialogOpen, maybeSaveNewParty, currentLrNumber, handleReset]);
 
 
     useEffect(() => {
@@ -850,6 +849,9 @@ export function BookingForm({ bookingId: trackingId, bookingData, onSave, onClos
                 itemRows={itemRows}
                 onGrandTotalChange={setGrandTotal}
                 isGstApplicable={isGstApplicable}
+                initialCharges={additionalCharges}
+                onChargesChange={setAdditionalCharges}
+                profile={companyProfile}
              />
             <div className="flex flex-col gap-2">
                 <DeliveryInstructionsSection 
